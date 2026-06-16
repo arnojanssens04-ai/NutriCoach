@@ -387,8 +387,14 @@ async function signup() {
   if (r.error) { showMsg('se', r.error.message); return; }
   if (r.data && r.data.user) {
     await sb.from('profiles').upsert({ id: r.data.user.id, prenom: pre, nom: nom });
+    // Auto login after signup
+    var login = await sb.auth.signInWithPassword({ email: e, password: p });
+    if (!login.error) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
   }
-  showMsg('so', '✅ Compte créé ! Vérifiez votre email puis connectez-vous.', 'ok');
+  showMsg('so', '✅ Compte créé ! Connectez-vous maintenant.', 'ok');
 }
 
 async function reset(e) {
