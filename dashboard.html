@@ -417,6 +417,10 @@ body {
 .btn-nav-row { display: flex; gap: 9px; margin-top: 8px; }
 .btn-back { flex: 1; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background: none; color: var(--text2); font-family: 'Inter', sans-serif; font-size: .88rem; cursor: pointer; transition: all .15s; }
 .btn-back:hover { border-color: var(--gold); color: var(--gold); }
+.btn-skip { width:100%; margin-top:10px; padding:9px; background:none; border:none; color:var(--text2); font-family:'Inter',sans-serif; font-size:.78rem; cursor:pointer; text-decoration:underline; text-decoration-color:transparent; transition:all .15s; }
+.btn-skip:hover { color:var(--gold); text-decoration-color:var(--gold); }
+.st4-total-row { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; margin-top:6px; font-size:.85rem; color:var(--text); }
+.st4-total-row span:last-child { color:var(--gold); font-weight:600; font-family:'Cormorant Garamond',serif; font-size:1.05rem; }
 .btn-next { flex: 2; padding: 11px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--gold), #a8833a); color: #0e100d; font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .2s; }
 .btn-next:hover { transform: translateY(-1px); }
 
@@ -642,8 +646,40 @@ body {
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
-      <button class="btn-next" onclick="finSetup()">Commencer →</button>
+      <button class="btn-next" onclick="goSt(4)">Continuer →</button>
     </div>
+  </div>
+
+  <div class="ov-step" id="st-4">
+    <div class="ov-badge">🍽️ Journée type</div>
+    <h2 class="ov-title" style="font-size:1.5rem">Votre journée alimentaire</h2>
+    <p class="ov-sub">Ajoutez ce que vous mangez habituellement un jour normal — ça nous permet de personnaliser vos recommandations dès le premier jour. Vous pouvez aussi passer cette étape.</p>
+
+    <div class="meal-tabs" id="st4-meal-tabs">
+      <div class="mtab on" id="st4-tab-breakfast" onclick="selMeal('breakfast')"><span class="ti">☀️</span>Petit-déj.</div>
+      <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
+      <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
+      <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input class="search-inp" id="st4-srch" type="text" placeholder="Rechercher un aliment..." oninput="st4OnSearch(this.value)">
+    </div>
+    <div id="st4-srch-zone"></div>
+    <div class="div-line"></div>
+    <div id="st4-added-zone"></div>
+
+    <div class="st4-total-row">
+      <span>Total aujourd'hui</span>
+      <span><span id="st4-total-kcal">0</span> kcal</span>
+    </div>
+
+    <div class="btn-nav-row">
+      <button class="btn-back" onclick="goSt(3)">← Retour</button>
+      <button class="btn-next" onclick="finSetup()">Terminer →</button>
+    </div>
+    <button class="btn-skip" onclick="finSetup()">Passer cette étape pour l'instant</button>
   </div>
 </div>
 </div>
@@ -756,6 +792,13 @@ async function getEntries(){
   var r=await sb.from('journal').select('*').eq('user_id',USER.id).eq('date',today());
   return r.data||[];
 }
+function afterJournalChange(){
+  refreshDash();
+  refreshJournal();
+  var ov=document.getElementById('ov');
+  if(ov && ov.classList.contains('on')) refreshSetupJournal();
+}
+
 async function addEntry(food,qty){
   var r = await sb.from('journal').insert({
     user_id:USER.id,date:today(),repas:activeMeal,aliment:food.nom,
@@ -771,17 +814,17 @@ async function addEntry(food,qty){
   });
   if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
-  refreshJournal(); refreshDash();
+  afterJournalChange();
 }
 async function delEntry(id){
   var r = await sb.from('journal').delete().eq('id',id);
   if(r.error){ toast('❌ Erreur suppression'); console.error(r.error); return; }
-  refreshJournal(); refreshDash();
+  afterJournalChange();
 }
 async function updQty(id,qty,e){
   var r = await sb.from('journal').update({quantite:qty,kcal:(e.food_kcal_100||0)*qty/100,proteines:(e.food_prot_100||0)*qty/100,glucides:(e.food_gluc_100||0)*qty/100,lipides:(e.food_lip_100||0)*qty/100}).eq('id',id);
   if(r.error){ toast('❌ Erreur mise à jour'); console.error(r.error); return; }
-  refreshDash();
+  afterJournalChange();
 }
 
 // ── DASHBOARD RENDER ──
@@ -855,9 +898,84 @@ function goJournal(meal){
 function selMeal(m){
   activeMeal=m;
   document.querySelectorAll('.mtab').forEach(function(t){t.classList.remove('on');});
-  document.getElementById('tab-'+m).classList.add('on');
-  document.getElementById('added-ttl').textContent=MEAL_META[m].i+' '+MEAL_META[m].l;
+  var mt=document.getElementById('tab-'+m); if(mt)mt.classList.add('on');
+  var st4mt=document.getElementById('st4-tab-'+m); if(st4mt)st4mt.classList.add('on');
+  var ttl=document.getElementById('added-ttl'); if(ttl)ttl.textContent=MEAL_META[m].i+' '+MEAL_META[m].l;
   refreshJournal();
+  refreshSetupJournal();
+}
+
+// ── Recherche dédiée à l'étape 4 (journée type pendant l'inscription) ──
+var st4SrchRes=[], st4SrchTimer=null;
+function st4OnSearch(val){
+  clearTimeout(st4SrchTimer);
+  var sz=document.getElementById('st4-srch-zone');
+  if(!val||val.trim().length<2){sz.innerHTML='';return;}
+  sz.innerHTML='<div class="spin-row"><div class="spin"></div>Recherche…</div>';
+  st4SrchTimer=setTimeout(function(){st4DoSearch(val.trim());},350);
+}
+function st4DoSearch(q){
+  var db=getDB();
+  var qt=tok(q);
+  var qNorm=normQ(q);
+  var ciq=[];
+  var blocked=CIQUAL_BLOCKLIST.indexOf(qNorm)>=0;
+  if(!blocked && db.length){
+    var dbL=db.map(function(d){return{food:d,tokens:tok(d.nom)};});
+    var sc=dbL.map(function(e){return{food:e.food,score:scoreFn(qt,e.tokens,e.food.nom),source:'ciqual'};}).filter(function(x){return x.score>=5;});
+    sc.sort(function(a,b){return b.score-a.score;});
+    ciq=sc.slice(0,6);
+    var aliasCode=CIQUAL_ALIAS[qNorm];
+    if(aliasCode){
+      var aliasFood=db.find(function(d){return d.code===aliasCode;});
+      if(aliasFood){ciq=ciq.filter(function(x){return x.food.code!==aliasCode;});ciq.unshift({food:aliasFood,score:50,source:'ciqual'});}
+    }
+  }
+  searchOFF(q,function(off){
+    var all=ciq.concat(off);
+    all.sort(function(a,b){return b.score-a.score;});
+    var seen={};st4SrchRes=[];
+    all.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seen[k]){seen[k]=true;st4SrchRes.push(r);}});
+    st4SrchRes=st4SrchRes.slice(0,8);
+    st4RenderRes(st4SrchRes);
+  });
+}
+function st4RenderRes(res){
+  var sz=document.getElementById('st4-srch-zone');
+  if(!res.length){sz.innerHTML='<div class="empty"><p>Aucun résultat</p></div>';return;}
+  sz.innerHTML=res.map(function(r,i){
+    var f=r.food;var kcal=pN(f.kcal);
+    var sc=r.source==='off'?'src-o':'src-c';var sl=r.source==='off'?'OFF':'Ciqual';
+    return '<div class="res-item" onclick="st4PickRes('+i+')">'
+      +'<div class="res-info"><div class="res-name">'+esc(f.nom)+'</div>'
+      +'<div class="res-meta">P:'+esc(f.prot)+'g · G:'+esc(f.gluc)+'g · L:'+esc(f.lip)+'g</div></div>'
+      +'<span class="src-pill '+sc+'">'+sl+'</span>'
+      +(kcal?'<span class="res-kcal">'+kcal+' kcal</span>':'')
+      +'</div>';
+  }).join('');
+}
+function st4PickRes(i){
+  var r=st4SrchRes[i]; if(!r)return;
+  pendingFood=r.food;
+  openPortionPicker(r.food);
+}
+async function refreshSetupJournal(){
+  var el=document.getElementById('st4-added-zone');
+  if(!el) return;
+  var entries=await getEntries();
+  var mine=entries.filter(function(e){return e.repas===activeMeal;});
+  if(!mine.length){
+    el.innerHTML='<div class="empty" style="padding:14px 0"><p style="font-size:.8rem">Aucun aliment pour ce repas</p></div>';
+  } else {
+    el.innerHTML=mine.map(function(e){
+      return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><span style="font-size:.7rem;color:var(--text2);margin-right:4px">'+e.quantite+'g</span><span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span><button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
+    }).join('');
+  }
+  var totEl=document.getElementById('st4-total-kcal');
+  if(totEl){
+    var total=entries.reduce(function(s,e){return s+(e.kcal||0);},0);
+    totEl.textContent=Math.round(total);
+  }
 }
 async function refreshJournal(){
   var entries=await getEntries();
@@ -966,6 +1084,106 @@ function pickRes(i){
   openPortionPicker(r.food);
 }
 
+// ── DÉTECTION DE CATÉGORIE D'ALIMENT — pour des unités de portion logiques ──
+// Vérifié dans l'ordre : la première catégorie dont un mot-clé matche le nom gagne.
+// Les catégories plus spécifiques (ex: yaourt) sont placées avant les plus
+// génériques (ex: fromage) pour éviter les faux déclenchements.
+var PORTION_CATEGORIES = [
+  { id:'yaourt', keywords:['yaourt','yogourt','yoghourt','skyr','fromage blanc','fromage frais'],
+    options:[
+      {label:'Petit pot', sub:'~100g', grams:100, icon:'🥛'},
+      {label:'1 pot', sub:'~125g', grams:125, icon:'🥛'},
+      {label:'2 pots', sub:'~250g', grams:250, icon:'🥛'}
+    ]},
+  { id:'oleagineux', keywords:['amande','noix','noisette','cacahuete','cacahuète','pistache','cajou','pecan','pignon','graine de tournesol','graine de courge','graines','fruit a coque','fruit à coque'],
+    options:[
+      {label:'Petite poignée', sub:'~10g', grams:10, icon:'✊'},
+      {label:'Poignée moyenne', sub:'~20g', grams:20, icon:'✊'},
+      {label:'Grande poignée', sub:'~30g', grams:30, icon:'✊'}
+    ]},
+  { id:'oeuf', keywords:['oeuf','œuf'],
+    options:[
+      {label:'1 œuf', sub:'~50g', grams:50, icon:'🥚'},
+      {label:'2 œufs', sub:'~100g', grams:100, icon:'🥚'},
+      {label:'3 œufs', sub:'~150g', grams:150, icon:'🥚'}
+    ]},
+  { id:'huile_sauce', keywords:['huile','vinaigrette','mayonnaise','moutarde','sauce soja','sauce tomate','sauce'],
+    options:[
+      {label:'1 c. à café', sub:'~5g', grams:5, icon:'🥄'},
+      {label:'1 c. à soupe', sub:'~15g', grams:15, icon:'🥄'},
+      {label:'2 c. à soupe', sub:'~30g', grams:30, icon:'🥄'}
+    ]},
+  { id:'sucre_confiture', keywords:['sucre','confiture','miel','pate a tartiner','pâte à tartiner','nutella'],
+    options:[
+      {label:'1 c. à café', sub:'~5g', grams:5, icon:'🍯'},
+      {label:'1 c. à soupe', sub:'~15g', grams:15, icon:'🍯'},
+      {label:'2 c. à soupe', sub:'~30g', grams:30, icon:'🍯'}
+    ]},
+  { id:'beurre', keywords:['beurre','margarine'],
+    options:[
+      {label:'Une noix', sub:'~10g', grams:10, icon:'🧈'},
+      {label:'Une portion', sub:'~15g', grams:15, icon:'🧈'},
+      {label:'Grosse noix', sub:'~25g', grams:25, icon:'🧈'}
+    ]},
+  { id:'pain', keywords:['pain','baguette','tartine'],
+    options:[
+      {label:'1 tranche', sub:'~30g', grams:30, icon:'🍞'},
+      {label:'2 tranches', sub:'~60g', grams:60, icon:'🍞'},
+      {label:'3 tranches', sub:'~90g', grams:90, icon:'🍞'}
+    ]},
+  { id:'fromage', keywords:['fromage','emmental','comte','comté','gruyere','gruyère','cheddar','edam','cantal'],
+    options:[
+      {label:'1 tranche', sub:'~20g', grams:20, icon:'🧀'},
+      {label:'2 tranches', sub:'~40g', grams:40, icon:'🧀'},
+      {label:'Portion généreuse', sub:'~60g', grams:60, icon:'🧀'}
+    ]},
+  { id:'charcuterie', keywords:['jambon','saucisson','chorizo','salami','mortadelle','rillette'],
+    options:[
+      {label:'1 tranche', sub:'~15g', grams:15, icon:'🥓'},
+      {label:'2 tranches', sub:'~30g', grams:30, icon:'🥓'},
+      {label:'3 tranches', sub:'~45g', grams:45, icon:'🥓'}
+    ]},
+  { id:'chocolat', keywords:['chocolat','tablette'],
+    options:[
+      {label:'2 carrés', sub:'~10g', grams:10, icon:'🍫'},
+      {label:'4 carrés', sub:'~20g', grams:20, icon:'🍫'},
+      {label:'1/2 tablette', sub:'~50g', grams:50, icon:'🍫'}
+    ]},
+  { id:'fruit_unite', keywords:['pomme','banane','orange','poire','peche','pêche','abricot','kiwi','mandarine','clementine','clémentine','nectarine','prune'],
+    options:[
+      {label:'Petit fruit', sub:'~100g', grams:100, icon:'🍎'},
+      {label:'Fruit moyen', sub:'~150g', grams:150, icon:'🍎'},
+      {label:'Gros fruit', sub:'~200g', grams:200, icon:'🍎'}
+    ]},
+  { id:'boisson', keywords:['lait','jus','boisson','cola','soda','smoothie','the','thé','cafe','café'],
+    options:[
+      {label:'Petit verre', sub:'~150ml', grams:150, icon:'🥤'},
+      {label:'Verre', sub:'~250ml', grams:250, icon:'🥤'},
+      {label:'Grand verre', sub:'~350ml', grams:350, icon:'🥤'}
+    ]}
+];
+
+function normFoodName(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+// Détection par MOT ENTIER (tokenisé), pas par sous-chaîne — pour éviter les
+// faux positifs comme "lait" qui matcherait à l'intérieur de "laitue".
+function detectPortionCategory(nom){
+  var toks = tok(nom);
+  var joined = ' ' + toks.join(' ') + ' ';
+  for(var i=0;i<PORTION_CATEGORIES.length;i++){
+    var cat = PORTION_CATEGORIES[i];
+    for(var j=0;j<cat.keywords.length;j++){
+      var kwToks = tok(cat.keywords[j]);
+      if(!kwToks.length) continue;
+      var kwJoined = ' ' + kwToks.join(' ') + ' ';
+      if(joined.indexOf(kwJoined) >= 0) return cat;
+    }
+  }
+  return null;
+}
+
 function openPortionPicker(food){
   var isMainMeal = (activeMeal==='lunch' || activeMeal==='dinner');
   var pp = document.getElementById('portion-picker');
@@ -973,8 +1191,11 @@ function openPortionPicker(food){
   var grid = document.getElementById('pp-options');
   title.textContent = food.nom;
 
+  var cat = detectPortionCategory(food.nom);
   var options;
-  if(isMainMeal){
+  if(cat){
+    options = cat.options;
+  } else if(isMainMeal){
     options = [
       {label:'1/4 assiette', sub:'portion légère', grams:100, icon:'◔'},
       {label:'1/2 assiette', sub:'portion moyenne', grams:200, icon:'◑'},
@@ -1017,8 +1238,10 @@ function confirmPrecise(){
 function closePortionPicker(){
   document.getElementById('portion-picker').classList.remove('on');
   pendingFood = null;
-  document.getElementById('srch').value='';
-  document.getElementById('srch-zone').innerHTML='';
+  var s1=document.getElementById('srch'); if(s1)s1.value='';
+  var z1=document.getElementById('srch-zone'); if(z1)z1.innerHTML='';
+  var s2=document.getElementById('st4-srch'); if(s2)s2.value='';
+  var z2=document.getElementById('st4-srch-zone'); if(z2)z2.innerHTML='';
 }
 
 // ── WEEKLY ──
@@ -1093,7 +1316,8 @@ function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
   document.getElementById('st-'+n).classList.add('on');
-  var pts={1:25,2:60,3:90};document.getElementById('ov-pf').style.width=pts[n]+'%';
+  var pts={1:18,2:42,3:66,4:95};document.getElementById('ov-pf').style.width=pts[n]+'%';
+  if(n===4){ refreshSetupJournal(); }
 }
 async function finSetup(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,poids_vise:parseFloat(document.getElementById('s-gw').value)||null,activite:setup.act,pathologies:setup.pathos};
