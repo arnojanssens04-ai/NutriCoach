@@ -726,6 +726,12 @@ sb.auth.onAuthStateChange(function(ev,sess){
 // ── PROFILE ──
 async function loadProf(){
   var r=await sb.from('profiles').select('*').eq('id',USER.id).single();
+  if(r.error){
+    console.error('loadProf error:', r.error);
+    toast('❌ Erreur de chargement du profil : '+r.error.message);
+    PROF = PROF || {}; // keep any previously loaded profile rather than wiping it
+    return PROF;
+  }
   PROF=r.data||{};
   return PROF;
 }
