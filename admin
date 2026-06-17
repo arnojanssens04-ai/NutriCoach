@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1); --gold-g:rgba(201,169,110,0.06);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
+  --blue:#6ea8c9; --blue-l:rgba(110,168,201,0.1);
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-badge { font-size:.68rem; background:var(--rose-l); color:var(--rose); padding:3px 10px; border-radius:999px; margin-left:10px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
+
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; text-align:center; box-shadow:var(--sh); }
+.stat-val { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:700; color:var(--gold); }
+.stat-lbl { font-size:.68rem; color:var(--text2); margin-top:2px; text-transform:uppercase; letter-spacing:.5px; }
+
+.search-row { display:flex; gap:10px; margin-bottom:16px; }
+.search-inp { flex:1; padding:11px 15px; background:var(--card); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.9rem; outline:none; }
+.search-inp:focus { border-color:rgba(201,169,110,0.45); }
+.search-inp::placeholder { color:var(--text3); }
+
+.user-table { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; box-shadow:var(--sh); }
+.user-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:10px; align-items:center; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.user-row:last-child { border-bottom:none; }
+.user-row:hover { background:var(--card2); }
+.user-row.header { cursor:default; background:var(--bg2); font-size:.68rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); font-weight:600; }
+.user-row.header:hover { background:var(--bg2); }
+.u-name { font-size:.86rem; font-weight:500; }
+.u-email { font-size:.72rem; color:var(--text2); margin-top:1px; }
+.u-meta { font-size:.78rem; color:var(--text2); }
+.u-role { font-size:.66rem; padding:2px 9px; border-radius:999px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+.role-admin { background:var(--rose-l); color:var(--rose); }
+.role-user { background:var(--sage-l); color:var(--sage); }
+.u-pathos { display:flex; gap:3px; flex-wrap:wrap; }
+.u-patho-dot { font-size:.85rem; }
+
+.empty { text-align:center; padding:50px 16px; color:var(--text2); }
+.empty-i { font-size:2.2rem; margin-bottom:10px; }
+
+/* ── EDIT PANEL ── */
+.ov { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:30px 16px; }
+.ov.on { display:flex; }
+.ov-card { background:var(--bg2); border:1px solid var(--border2); border-radius:18px; max-width:560px; width:100%; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.ov-card-hdr { padding:18px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.ov-card-hdr h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; }
+.ov-close { background:none; border:none; color:var(--text2); font-size:1.3rem; cursor:pointer; line-height:1; }
+.ov-close:hover { color:var(--text); }
+.ov-card-body { padding:20px 22px; max-height:70vh; overflow-y:auto; }
+
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:.68rem; font-weight:500; color:var(--text2); margin-bottom:5px; text-transform:uppercase; letter-spacing:.6px; }
+.field input, .field select { width:100%; padding:10px 13px; background:var(--card); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.88rem; outline:none; }
+.field input:focus, .field select:focus { border-color:rgba(201,169,110,0.45); }
+.field input:disabled { opacity:.6; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.patho-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:6px; }
+.pc { display:flex; align-items:center; gap:8px; padding:9px 11px; border:1px solid var(--border); border-radius:9px; cursor:pointer; background:var(--card); font-size:.78rem; }
+.pc.on { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
+.pc-chk { margin-left:auto; width:14px; height:14px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.55rem; color:#fff; }
+.pc.on .pc-chk { background:var(--sage); border-color:var(--sage); }
+
+.ov-card-ftr { padding:16px 22px; border-top:1px solid var(--border); display:flex; gap:10px; }
+.btn { flex:1; padding:11px; border-radius:10px; border:none; font-family:'Inter',sans-serif; font-size:.86rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-save { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; }
+.btn-save:hover { transform:translateY(-1px); }
+.btn-cancel { background:none; border:1px solid var(--border); color:var(--text2); }
+.btn-cancel:hover { border-color:var(--gold); color:var(--gold); }
+.btn-danger { background:var(--rose-l); border:1px solid rgba(201,122,110,0.3); color:var(--rose); flex:0 0 auto; padding:11px 16px; }
+.btn-danger:hover { background:rgba(201,122,110,0.18); }
+
+.journal-mini { background:var(--card); border-radius:9px; padding:10px 12px; margin-top:6px; max-height:140px; overflow-y:auto; }
+.jm-row { display:flex; justify-content:space-between; font-size:.76rem; padding:4px 0; border-bottom:1px solid var(--border); }
+.jm-row:last-child { border-bottom:none; }
+.jm-name { color:var(--text); }
+.jm-kcal { color:var(--gold); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:640px){
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .user-row { grid-template-columns:1.5fr 1fr auto; }
+  .user-row .u-age-col, .user-row .u-pathos { display:none; }
+  .row2, .patho-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span> <span class="t-badge">Admin</span></div>
+  <a href="dashboard.html" class="t-back">← Retour à l'app</a>
+</header>
+
+<div class="wrap">
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-val" id="st-total">—</div><div class="stat-lbl">Utilisateurs</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-active">—</div><div class="stat-lbl">Actifs 7j</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-age">—</div><div class="stat-lbl">Âge moyen</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-patho">—</div><div class="stat-lbl">Patho. + fréquente</div></div>
+  </div>
+
+  <div class="search-row">
+    <input class="search-inp" id="search-users" placeholder="Rechercher par nom ou email..." oninput="filterUsers(this.value)">
+  </div>
+
+  <div class="user-table" id="user-table">
+    <div class="user-row header">
+      <span>Utilisateur</span>
+      <span class="u-age-col">Âge / Poids</span>
+      <span>Pathologies</span>
+      <span>Rôle</span>
+      <span></span>
+    </div>
+    <div id="user-rows"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="ov" id="edit-ov">
+  <div class="ov-card">
+    <div class="ov-card-hdr">
+      <h3 id="edit-title">Modifier l'utilisateur</h3>
+      <button class="ov-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="ov-card-body">
+      <div class="field"><label>Email (non modifiable)</label><input type="text" id="e-email" disabled></div>
+      <div class="row2">
+        <div class="field"><label>Prénom</label><input type="text" id="e-prenom"></div>
+        <div class="field"><label>Nom</label><input type="text" id="e-nom"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Âge</label><input type="number" id="e-age"></div>
+        <div class="field"><label>Sexe</label>
+          <select id="e-sexe"><option value="F">Femme</option><option value="M">Homme</option><option value="A">Autre</option></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Taille (cm)</label><input type="number" id="e-taille"></div>
+        <div class="field"><label>Poids (kg)</label><input type="number" id="e-poids" step="0.1"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Poids visé (kg)</label><input type="number" id="e-poids-vise" step="0.1"></div>
+        <div class="field"><label>Objectif kcal/j</label><input type="number" id="e-kcal"></div>
+      </div>
+      <div class="field"><label>Niveau d'activité</label>
+        <select id="e-activite">
+          <option value="sedentary">Sédentaire</option>
+          <option value="light">Légèrement actif</option>
+          <option value="moderate">Modérément actif</option>
+          <option value="active">Très actif</option>
+        </select>
+      </div>
+      <div class="field"><label>Rôle</label>
+        <select id="e-role"><option value="user">Utilisateur</option><option value="admin">Administrateur</option></select>
+      </div>
+      <div class="field"><label>Pathologies</label>
+        <div class="patho-grid" id="e-pathos">
+          <div class="pc" data-p="diabetes" onclick="toggleEditPatho(this)">🩸 Diabète<div class="pc-chk"></div></div>
+          <div class="pc" data-p="cholesterol" onclick="toggleEditPatho(this)">🫀 Cholestérol<div class="pc-chk"></div></div>
+          <div class="pc" data-p="hypertension" onclick="toggleEditPatho(this)">💉 Hypertension<div class="pc-chk"></div></div>
+          <div class="pc" data-p="cardiac" onclick="toggleEditPatho(this)">❤️ Cardiaque<div class="pc-chk"></div></div>
+          <div class="pc" data-p="renal" onclick="toggleEditPatho(this)">🫘 Rénal<div class="pc-chk"></div></div>
+          <div class="pc" data-p="obesity" onclick="toggleEditPatho(this)">⚖️ Obésité<div class="pc-chk"></div></div>
+        </div>
+      </div>
+      <div class="field"><label>Journal récent (7 derniers jours)</label>
+        <div class="journal-mini" id="e-journal"><div style="color:var(--text3);font-size:.78rem">Chargement…</div></div>
+      </div>
+    </div>
+    <div class="ov-card-ftr">
+      <button class="btn-danger" onclick="deleteUserData()">Supprimer les données</button>
+      <button class="btn btn-cancel" onclick="closeEdit()">Annuler</button>
+      <button class="btn btn-save" onclick="saveUser()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var ALL_USERS = [];
+var EDITING_ID = null;
+var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Cardiaque',i:'❤️'}, renal:{l:'Rénal',i:'🫘'}, obesity:{l:'Obésité',i:'⚖️'} };
+
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2500);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── AUTH + ADMIN CHECK ──
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role').eq('id',uid).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){
+      toast('⛔ Accès refusé — réservé aux administrateurs');
+      setTimeout(function(){ window.location.href='dashboard.html'; }, 1500);
+      return;
+    }
+    loadUsers();
+  });
+});
+
+// ── LOAD USERS ──
+async function loadUsers(){
+  var res = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  if(res.error){ toast('❌ '+res.error.message); return; }
+  ALL_USERS = res.data || [];
+  renderStats();
+  renderUsers(ALL_USERS);
+}
+
+function renderStats(){
+  document.getElementById('st-total').textContent = ALL_USERS.length;
+  var ages = ALL_USERS.filter(function(u){return u.age;}).map(function(u){return u.age;});
+  document.getElementById('st-age').textContent = ages.length ? Math.round(ages.reduce(function(a,b){return a+b;},0)/ages.length) : '—';
+  var pathoCounts = {};
+  ALL_USERS.forEach(function(u){(u.pathologies||[]).forEach(function(p){pathoCounts[p]=(pathoCounts[p]||0)+1;});});
+  var topPatho = Object.keys(pathoCounts).sort(function(a,b){return pathoCounts[b]-pathoCounts[a];})[0];
+  document.getElementById('st-patho').textContent = topPatho ? (PATHO_META[topPatho]||{l:topPatho}).l : '—';
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  var recent = ALL_USERS.filter(function(u){return u.created_at && new Date(u.created_at) > weekAgo;});
+  document.getElementById('st-active').textContent = recent.length;
+}
+
+function renderUsers(list){
+  var el = document.getElementById('user-rows');
+  if(!list.length){ el.innerHTML = '<div class="empty"><div class="empty-i">👤</div><p>Aucun utilisateur trouvé</p></div>'; return; }
+  el.innerHTML = list.map(function(u){
+    var name = (u.prenom||'')+' '+(u.nom||'') || '(sans nom)';
+    var pathoDots = (u.pathologies||[]).slice(0,4).map(function(p){return '<span class="u-patho-dot" title="'+(PATHO_META[p]||{l:p}).l+'">'+(PATHO_META[p]||{i:'•'}).i+'</span>';}).join('');
+    var roleCls = u.role==='admin' ? 'role-admin' : 'role-user';
+    var roleLbl = u.role==='admin' ? 'Admin' : 'User';
+    return '<div class="user-row" onclick="openEdit(\''+u.id+'\')">'
+      +'<div><div class="u-name">'+esc(name)+'</div><div class="u-email">'+esc(u.email||'—')+'</div></div>'
+      +'<div class="u-meta u-age-col">'+(u.age||'—')+' ans · '+(u.poids||'—')+'kg</div>'
+      +'<div class="u-pathos">'+(pathoDots||'<span style="color:var(--text3);font-size:.72rem">—</span>')+'</div>'
+      +'<div><span class="u-role '+roleCls+'">'+roleLbl+'</span></div>'
+      +'<div style="color:var(--text3)">→</div>'
+      +'</div>';
+  }).join('');
+}
+
+function filterUsers(q){
+  q = q.toLowerCase().trim();
+  if(!q){ renderUsers(ALL_USERS); return; }
+  var filtered = ALL_USERS.filter(function(u){
+    return ((u.prenom||'')+' '+(u.nom||'')+' '+(u.email||'')).toLowerCase().indexOf(q) >= 0;
+  });
+  renderUsers(filtered);
+}
+
+// ── EDIT MODAL ──
+function openEdit(id){
+  var u = ALL_USERS.find(function(x){return x.id===id;});
+  if(!u) return;
+  EDITING_ID = id;
+  document.getElementById('edit-title').textContent = (u.prenom||'')+' '+(u.nom||'') || 'Utilisateur';
+  document.getElementById('e-email').value = u.email||'';
+  document.getElementById('e-prenom').value = u.prenom||'';
+  document.getElementById('e-nom').value = u.nom||'';
+  document.getElementById('e-age').value = u.age||'';
+  document.getElementById('e-sexe').value = u.sexe||'F';
+  document.getElementById('e-taille').value = u.taille||'';
+  document.getElementById('e-poids').value = u.poids||'';
+  document.getElementById('e-poids-vise').value = u.poids_vise||'';
+  document.getElementById('e-kcal').value = u.kcal_target||'';
+  document.getElementById('e-activite').value = u.activite||'sedentary';
+  document.getElementById('e-role').value = u.role||'user';
+
+  var pathos = u.pathologies||[];
+  document.querySelectorAll('#e-pathos .pc').forEach(function(pc){
+    var p = pc.getAttribute('data-p');
+    pc.classList.toggle('on', pathos.indexOf(p)>=0);
+  });
+
+  loadUserJournal(id);
+  document.getElementById('edit-ov').classList.add('on');
+}
+
+function toggleEditPatho(el){ el.classList.toggle('on'); }
+
+function closeEdit(){
+  document.getElementById('edit-ov').classList.remove('on');
+  EDITING_ID = null;
+}
+
+async function loadUserJournal(uid){
+  var el = document.getElementById('e-journal');
+  el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Chargement…</div>';
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  var weekAgoStr = weekAgo.toISOString().slice(0,10);
+  var res = await sb.from('journal').select('*').eq('user_id',uid).gte('date',weekAgoStr).order('date',{ascending:false}).limit(20);
+  if(res.error || !res.data || !res.data.length){
+    el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Aucune entrée récente</div>';
+    return;
+  }
+  el.innerHTML = res.data.map(function(e){
+    return '<div class="jm-row"><span class="jm-name">'+esc((e.aliment||'').slice(0,38))+' ('+e.date+')</span><span class="jm-kcal">'+Math.round(e.kcal||0)+' kcal</span></div>';
+  }).join('');
+}
+
+async function saveUser(){
+  if(!EDITING_ID) return;
+  var pathos = [];
+  document.querySelectorAll('#e-pathos .pc.on').forEach(function(pc){ pathos.push(pc.getAttribute('data-p')); });
+
+  var data = {
+    prenom: document.getElementById('e-prenom').value.trim(),
+    nom: document.getElementById('e-nom').value.trim(),
+    age: parseInt(document.getElementById('e-age').value)||null,
+    sexe: document.getElementById('e-sexe').value,
+    taille: parseInt(document.getElementById('e-taille').value)||null,
+    poids: parseFloat(document.getElementById('e-poids').value)||null,
+    poids_vise: parseFloat(document.getElementById('e-poids-vise').value)||null,
+    kcal_target: parseInt(document.getElementById('e-kcal').value)||null,
+    activite: document.getElementById('e-activite').value,
+    role: document.getElementById('e-role').value,
+    pathologies: pathos
+  };
+
+  var r = await sb.from('profiles').update(data).eq('id',EDITING_ID);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Profil mis à jour');
+  closeEdit();
+  loadUsers();
+}
+
+async function deleteUserData(){
+  if(!EDITING_ID) return;
+  if(!confirm('Supprimer toutes les données de ce profil (journal, historique, infos) ? Le compte de connexion devra être supprimé séparément via le dashboard Supabase Auth si besoin. Action irréversible.')) return;
+
+  await sb.from('journal').delete().eq('user_id',EDITING_ID);
+  await sb.from('poids_history').delete().eq('user_id',EDITING_ID);
+  var r = await sb.from('profiles').delete().eq('id',EDITING_ID);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Données supprimées');
+  closeEdit();
+  loadUsers();
+}
+</script>
+</body>
+</html>
