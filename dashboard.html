@@ -873,6 +873,22 @@ function normQ(q){return q.trim().toLowerCase().normalize('NFD').replace(/[\u030
 function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
 function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;s*=(0.4+0.6*Math.min(qt.length/Math.max(ft.length,1),1));return s;}
 
+// ── ALIAS & BLOCKLIST — corrections ciblées pour cas connus testés ──
+// Découverts en testant 5 journées types (29 aliments) contre Ciqual+OFF.
+// Plutôt que de retoucher l'algo général (risque de régressions), on force
+// les cas problématiques connus ici. À enrichir à chaque nouveau bug trouvé.
+var CIQUAL_ALIAS = {
+  'amande':  '15000',  // → "Amande, avec peau, sans sel ajouté" (au lieu de "Croissant aux amandes")
+  'amandes': '15000',
+  'lait d amande': '18111',  // → "Boisson à l'amande, préemballée" (au lieu de "Kéfir de lait")
+  'lait amande':   '18111'
+};
+var CIQUAL_BLOCKLIST = [
+  'big mac', 'kellogg s', 'kelloggs', 'special k'
+  // Produits de marque : Ciqual ne les a pas, on laisse OFF répondre seul
+  // plutôt que de risquer un faux match (ex: "big mac" → "Mâche, crue")
+];
+
 var offCache={};
 function nv(v){if(v===null||v===undefined||v==='')return '-';var n=parseFloat(v);return isNaN(n)?'-':String(n);}
 function parseOFF(prods,q){var r=[];(prods||[]).forEach(function(p){var nom=(p.product_name||'').trim();if(!nom||nom.length<2)return;if(p.brands){var b=p.brands.split(',')[0].trim();if(b&&nom.toLowerCase().indexOf(b.toLowerCase())<0)nom=nom+' ('+b+')';}var n=p.nutriments||{};var kcal=n['energy-kcal_100g'];if(!kcal&&n['energy_100g']&&n['energy_100g']>0)kcal=Math.round(n['energy_100g']/4.184);r.push({food:{code:'off_'+Math.random().toString(36).slice(2,8),nom:nom,kcal:kcal!=null?String(Math.round(kcal)):'-',prot:nv(n['proteins_100g']),gluc:nv(n['carbohydrates_100g']),lip:nv(n['fat_100g']),ags:nv(n['saturated-fat_100g']),mono:nv(n['monounsaturated-fat_100g']),o3a:nv(n['alpha-linolenic-acid_100g']),o3e:nv(n['eicosapentaenoic-acid_100g']),o3d:nv(n['docosahexaenoic-acid_100g']),fer:n['iron_100g']!=null?String((n['iron_100g']*1000).toFixed(2)):'-',cal:n['calcium_100g']!=null?String(Math.round(n['calcium_100g']*1000)):'-',pot:n['potassium_100g']!=null?String(Math.round(n['potassium_100g']*1000)):'-',_source:'off'},score:scoreFn(tok(q),tok(nom),nom),source:'off'});});r.sort(function(a,b){return b.score-a.score;});return r;}
@@ -889,13 +905,30 @@ function onSearch(val){
 function doSearch(q){
   var db=getDB();
   var qt=tok(q);
+  var qNorm=normQ(q);
   var ciq=[];
-  if(db.length){
+
+  // 1. Liste de blocage : on ne cherche même pas dans Ciqual pour ces termes
+  var blocked = CIQUAL_BLOCKLIST.indexOf(qNorm) >= 0;
+
+  if(!blocked && db.length){
     var dbL=db.map(function(d){return{food:d,tokens:tok(d.nom)};});
     var sc=dbL.map(function(e){return{food:e.food,score:scoreFn(qt,e.tokens,e.food.nom),source:'ciqual'};}).filter(function(x){return x.score>=5;});
     sc.sort(function(a,b){return b.score-a.score;});
     ciq=sc.slice(0,6);
+
+    // 2. Alias forcé : si on a un code Ciqual connu pour cette requête exacte,
+    // on le place en tête avec un score garanti, même si l'algo général le sous-note
+    var aliasCode = CIQUAL_ALIAS[qNorm];
+    if(aliasCode){
+      var aliasFood = db.find(function(d){return d.code===aliasCode;});
+      if(aliasFood){
+        ciq = ciq.filter(function(x){return x.food.code!==aliasCode;});
+        ciq.unshift({food:aliasFood,score:50,source:'ciqual'});
+      }
+    }
   }
+
   searchOFF(q,function(off){
     var all=ciq.concat(off);
     all.sort(function(a,b){return b.score-a.score;});
