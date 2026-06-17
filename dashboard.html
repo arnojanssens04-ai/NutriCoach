@@ -757,26 +757,30 @@ async function getEntries(){
   return r.data||[];
 }
 async function addEntry(food,qty){
-  await sb.from('journal').insert({
+  var r = await sb.from('journal').insert({
     user_id:USER.id,date:today(),repas:activeMeal,aliment:food.nom,
     kcal:pN(food.kcal)*qty/100,proteines:pN(food.prot)*qty/100,
     glucides:pN(food.gluc)*qty/100,lipides:pN(food.lip)*qty/100,
     quantite:qty,
+    food_code:food.code||null,food_source:food._source||'ciqual',
     food_kcal_100:pN(food.kcal),food_prot_100:pN(food.prot),
     food_gluc_100:pN(food.gluc),food_lip_100:pN(food.lip),
     food_ags_100:pN(food.ags),food_o3a_100:pN(food.o3a),
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
     food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot)
   });
+  if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
   refreshJournal(); refreshDash();
 }
 async function delEntry(id){
-  await sb.from('journal').delete().eq('id',id);
+  var r = await sb.from('journal').delete().eq('id',id);
+  if(r.error){ toast('❌ Erreur suppression'); console.error(r.error); return; }
   refreshJournal(); refreshDash();
 }
 async function updQty(id,qty,e){
-  await sb.from('journal').update({quantite:qty,kcal:(e.food_kcal_100||0)*qty/100,proteines:(e.food_prot_100||0)*qty/100,glucides:(e.food_gluc_100||0)*qty/100,lipides:(e.food_lip_100||0)*qty/100}).eq('id',id);
+  var r = await sb.from('journal').update({quantite:qty,kcal:(e.food_kcal_100||0)*qty/100,proteines:(e.food_prot_100||0)*qty/100,glucides:(e.food_gluc_100||0)*qty/100,lipides:(e.food_lip_100||0)*qty/100}).eq('id',id);
+  if(r.error){ toast('❌ Erreur mise à jour'); console.error(r.error); return; }
   refreshDash();
 }
 
@@ -954,9 +958,65 @@ function renderRes(res){
   }).join('');
 }
 
+var pendingFood = null;
+
 function pickRes(i){
   var r=srchRes[i];if(!r)return;
-  addEntry(r.food,100);
+  pendingFood = r.food;
+  openPortionPicker(r.food);
+}
+
+function openPortionPicker(food){
+  var isMainMeal = (activeMeal==='lunch' || activeMeal==='dinner');
+  var pp = document.getElementById('portion-picker');
+  var title = document.getElementById('pp-food-name');
+  var grid = document.getElementById('pp-options');
+  title.textContent = food.nom;
+
+  var options;
+  if(isMainMeal){
+    options = [
+      {label:'1/4 assiette', sub:'portion légère', grams:100, icon:'◔'},
+      {label:'1/2 assiette', sub:'portion moyenne', grams:200, icon:'◑'},
+      {label:'3/4 assiette', sub:'bonne portion', grams:300, icon:'◕'},
+      {label:'Assiette pleine', sub:'grande portion', grams:400, icon:'●'}
+    ];
+  } else {
+    options = [
+      {label:'Petite portion', sub:'~50g', grams:50, icon:'◔'},
+      {label:'Portion normale', sub:'~100g', grams:100, icon:'◑'},
+      {label:'Grande portion', sub:'~200g', grams:200, icon:'●'}
+    ];
+  }
+
+  grid.innerHTML = options.map(function(o){
+    var kcal = Math.round(pN(food.kcal)*o.grams/100);
+    return '<div class="pp-opt" onclick="confirmPortion('+o.grams+')">'
+      +'<div class="pp-opt-icon">'+o.icon+'</div>'
+      +'<div class="pp-opt-label">'+o.label+'</div>'
+      +'<div class="pp-opt-sub">'+o.sub+' · '+(kcal||'?')+' kcal</div>'
+      +'</div>';
+  }).join('');
+
+  document.getElementById('pp-precise-input').value = 100;
+  pp.classList.add('on');
+}
+
+function confirmPortion(grams){
+  if(!pendingFood)return;
+  addEntry(pendingFood, grams);
+  closePortionPicker();
+}
+
+function confirmPrecise(){
+  var g = parseFloat(document.getElementById('pp-precise-input').value);
+  if(!g || g<=0){ toast('Entrez un grammage valide'); return; }
+  confirmPortion(g);
+}
+
+function closePortionPicker(){
+  document.getElementById('portion-picker').classList.remove('on');
+  pendingFood = null;
   document.getElementById('srch').value='';
   document.getElementById('srch-zone').innerHTML='';
 }
@@ -1062,7 +1122,45 @@ async function logout(){
 }
 </script>
 
+<!-- PORTION PICKER -->
+<div class="ov" id="portion-picker" style="z-index:300">
+  <div class="ov-inner" style="padding-top:60px;max-width:420px">
+    <div class="ov-badge">🍽️ Quantité</div>
+    <h2 class="ov-title" id="pp-food-name" style="font-size:1.3rem">Aliment</h2>
+    <p class="ov-sub" style="margin-bottom:18px">Pas besoin de peser — choisissez la portion qui correspond le mieux à votre assiette.</p>
+    <div class="pp-grid" id="pp-options"></div>
+    <div class="pp-precise">
+      <span class="pp-precise-lbl">Précis (grammes)</span>
+      <div class="pp-precise-row">
+        <input type="number" id="pp-precise-input" value="100" min="1" max="2000">
+        <button class="btn-next" style="flex:0 0 auto;padding:10px 18px" onclick="confirmPrecise()">OK</button>
+      </div>
+    </div>
+    <button class="btn-back" style="width:100%;margin-top:14px" onclick="closePortionPicker()">Annuler</button>
+  </div>
+</div>
+<style>
+.pp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+.pp-opt {
+  background:var(--card); border:1px solid var(--border); border-radius:12px;
+  padding:16px 10px; text-align:center; cursor:pointer; transition:all .15s;
+}
+.pp-opt:hover { border-color:var(--gold); background:var(--card2); }
+.pp-opt-icon { font-size:1.8rem; color:var(--gold); margin-bottom:6px; }
+.pp-opt-label { font-size:.84rem; font-weight:600; color:var(--text); margin-bottom:2px; }
+.pp-opt-sub { font-size:.68rem; color:var(--text2); }
+.pp-precise { border-top:1px solid var(--border); padding-top:14px; }
+.pp-precise-lbl { font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; display:block; margin-bottom:8px; }
+.pp-precise-row { display:flex; gap:8px; }
+.pp-precise-row input {
+  flex:1; padding:10px 13px; background:var(--card); border:1px solid var(--border);
+  border-radius:9px; color:var(--text); font-size:.9rem; outline:none;
+}
+.pp-precise-row input:focus { border-color:rgba(201,169,110,0.45); }
+</style>
+
 <!-- Note: La base Ciqual (data/ciqual.json) sera chargée séparément -->
+
 <script>
 // Chargement asynchrone de la base Ciqual
 var DB = [];
