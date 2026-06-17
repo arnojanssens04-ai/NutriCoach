@@ -444,6 +444,7 @@ body {
 <header class="topbar">
   <div class="t-logo">Nutri<span>Coach</span></div>
   <div class="t-right">
+    <a href="admin.html" id="admin-btn" style="display:none;font-size:.68rem;background:rgba(201,122,110,0.12);color:var(--rose);border:1px solid rgba(201,122,110,0.3);padding:5px 11px;border-radius:7px;text-decoration:none;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">⚙ Admin</a>
     <span class="t-greeting" id="t-greet"></span>
     <div class="t-av" id="t-av" onclick="goPage('profile')">?</div>
   </div>
@@ -689,7 +690,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
@@ -743,6 +744,8 @@ function initGreeting(){
   if(av)av.textContent=(p.prenom||'?')[0].toUpperCase();
   var pav=document.getElementById('pav');
   if(pav)pav.textContent=p.sexe==='M'?'👨':p.sexe==='F'?'👩':'🧑';
+  var adminBtn=document.getElementById('admin-btn');
+  if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
 }
 
 // ── TARGETS ──
