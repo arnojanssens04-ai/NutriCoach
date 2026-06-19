@@ -417,6 +417,24 @@ body {
 .btn-nav-row { display: flex; gap: 9px; margin-top: 8px; }
 .btn-back { flex: 1; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background: none; color: var(--text2); font-family: 'Inter', sans-serif; font-size: .88rem; cursor: pointer; transition: all .15s; }
 .btn-back:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── PLAN ALIMENTAIRE ── */
+.mp-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.mp-item:last-child { border-bottom:none; }
+.mp-item-info { flex:1; }
+.mp-item-name { font-size:.86rem; font-weight:500; color:var(--text); }
+.mp-item-qty { font-size:.74rem; color:var(--text2); margin-top:1px; }
+.mp-swap { width:32px; height:32px; border-radius:50%; background:var(--gold-l); border:1px solid var(--border2); color:var(--gold); font-size:1rem; cursor:pointer; transition:background .15s; flex-shrink:0; }
+.mp-swap:hover { background:rgba(201,169,110,0.2); }
+.mp-tot-row { display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:4px; }
+.mp-tot-row span:first-child { color:var(--text2); }
+.mp-tot-row span:last-child { font-weight:600; color:var(--text); }
+.mp-bar { height:5px; background:rgba(255,255,255,.06); border-radius:99px; margin-bottom:12px; overflow:hidden; }
+.mp-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
+.subst-opt { padding:11px 13px; background:var(--card); border:1px solid var(--border); border-radius:10px; cursor:pointer; margin-bottom:7px; transition:all .15s; }
+.subst-opt:hover { border-color:var(--gold); background:var(--card2); }
+.subst-name { font-size:.86rem; font-weight:500; color:var(--text); }
+.subst-meta { font-size:.72rem; color:var(--text2); margin-top:2px; }
 .btn-skip { width:100%; margin-top:10px; padding:9px; background:none; border:none; color:var(--text2); font-family:'Inter',sans-serif; font-size:.78rem; cursor:pointer; text-decoration:underline; text-decoration-color:transparent; transition:all .15s; }
 .btn-skip:hover { color:var(--gold); text-decoration-color:var(--gold); }
 .st4-total-row { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; margin-top:6px; font-size:.85rem; color:var(--text); }
@@ -504,8 +522,34 @@ body {
   <div class="stitle">Mes repas</div>
   <div class="meals-grid" id="meals-grid"></div>
 
+  <div class="meal-card" style="margin-bottom:14px;cursor:pointer" onclick="goPage('mealplan')">
+    <div class="meal-card-top">
+      <span class="meal-ico">📋</span>
+      <div class="meal-add">→</div>
+    </div>
+    <div class="meal-name">Mon plan alimentaire</div>
+    <div class="meal-kcal">Voir une journée type adaptée à mon profil</div>
+  </div>
+
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
+</div>
+
+<!-- MEAL PLAN -->
+<div class="page" id="pg-mealplan">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <button class="btn-back" style="flex:0 0 auto;padding:8px 12px" onclick="goPage('dashboard')">←</button>
+    <h2 class="section-title" style="font-size:1.3rem;margin:0">Mon plan alimentaire</h2>
+  </div>
+  <p style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6">
+    Journée type calculée selon votre profil et vos pathologies. Cliquez ⇄ pour remplacer un aliment par une alternative compatible.
+  </p>
+  <div class="card mb-12">
+    <div class="card-header"><span class="card-title">Bilan de la journée</span></div>
+    <div class="card-body" id="mp-totals"></div>
+  </div>
+  <div id="mealplan-content"></div>
+  <button class="btn btn-secondary btn-full" onclick="regenerateMealPlan()">🔄 Régénérer le plan</button>
 </div>
 
 <!-- JOURNAL -->
@@ -683,6 +727,17 @@ body {
     <button class="btn-skip" onclick="finSetup()">Passer cette étape pour l'instant</button>
   </div>
 </div>
+</div>
+
+<!-- SUBSTITUTION MODAL -->
+<div class="ov" id="subst-ov" style="z-index:300">
+  <div class="ov-inner" style="padding-top:60px;max-width:420px">
+    <div class="ov-badge">⇄ Remplacer</div>
+    <h2 class="ov-title" id="subst-current" style="font-size:1.2rem">Remplacer un aliment</h2>
+    <p class="ov-sub">Choisissez une alternative — la quantité s'ajuste automatiquement pour garder un apport calorique équivalent.</p>
+    <div id="subst-options" style="margin-bottom:16px"></div>
+    <button class="btn-back" style="width:100%" onclick="closeSubstitute()">Annuler</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1291,6 +1346,276 @@ async function renderWeekly(){
 function chgW(d){wkOffset+=d;if(wkOffset>0)wkOffset=0;renderWeekly();}
 
 // ── PROFILE PAGE ──
+
+// ══════════════════════════════════════════════════════════
+// PLAN ALIMENTAIRE — moteur de génération
+// ══════════════════════════════════════════════════════════
+// Base d'aliments curatée à la main (pas de recherche floue) :
+// chaque entrée vérifiée sur les vraies données Ciqual pour garantir
+// la fiabilité nutritionnelle du plan généré.
+var FOOD_BANK = {
+  proteines: [
+    {code:'28963', nom:'Blanc de poulet', kcal:105, prot:20.7, gluc:1.4, lip:1.8, ags:0.54, pot:380, unit:'g'},
+    {code:'36302', nom:'Dinde rôtie', kcal:151, prot:29.1, gluc:0, lip:3.8, ags:1.13, pot:483, unit:'g'},
+    {code:'25997', nom:'Cabillaud', kcal:100, prot:23.3, gluc:0, lip:0.8, ags:0.17, pot:327, unit:'g'},
+    {code:'26192', nom:'Colin (lieu jaune)', kcal:97.8, prot:24.4, gluc:0, lip:0.5, ags:0.01, pot:388, unit:'g'},
+    {code:'25996', nom:'Saumon', kcal:205, prot:23.2, gluc:0.6, lip:12.2, ags:2.48, pot:383, unit:'g'},
+    {code:'22010', nom:'Œuf dur', kcal:134, prot:13.5, gluc:0.5, lip:8.6, ags:3.22, pot:120, unit:'oeuf', gpu:50},
+    {code:'20507', nom:'Pois chiches', kcal:148, prot:8.3, gluc:17.7, lip:3.0, ags:0.46, pot:170, unit:'g'},
+    {code:'20360', nom:'Lentilles', kcal:125, prot:10.1, gluc:16.2, lip:0.6, ags:0.09, pot:215, unit:'g'}
+  ],
+  feculents: [
+    {code:'9104', nom:'Riz blanc', kcal:155, prot:3.2, gluc:33.2, lip:0.7, ags:0.17, pot:21.9, unit:'g'},
+    {code:'9811', nom:'Pâtes', kcal:167, prot:6.1, gluc:31.4, lip:1.1, ags:0.2, pot:52.1, unit:'g'},
+    {code:'7001', nom:'Pain blanc', kcal:287, prot:8.3, gluc:58.3, lip:1.4, ags:0.45, pot:180, unit:'g'},
+    {code:'4048', nom:'Pomme de terre', kcal:94.9, prot:2.1, gluc:17.2, lip:1.6, ags:0.44, pot:457, unit:'g'},
+    {code:'9341', nom:'Quinoa', kcal:149, prot:4.7, gluc:27.9, lip:1.1, ags:0.14, pot:220, unit:'g'}
+  ],
+  legumes: [
+    {code:'20057', nom:'Brocoli', kcal:31.9, prot:2.9, gluc:2.2, lip:0.4, ags:0.047, pot:321, unit:'g'},
+    {code:'20021', nom:'Courgette', kcal:15.5, prot:0.9, gluc:1.4, lip:0.4, ags:0.1, pot:238, unit:'g'},
+    {code:'20030', nom:'Haricots verts', kcal:29.4, prot:2.0, gluc:3.0, lip:0.2, ags:0.059, pot:174, unit:'g'},
+    {code:'20083', nom:'Épinards', kcal:28, prot:3.3, gluc:1.0, lip:0.5, ags:0.041, pot:346, unit:'g'},
+    {code:'25604', nom:'Salade verte', kcal:13.5, prot:1.0, gluc:1.5, lip:0.1, ags:0.028, pot:260, unit:'g'}
+  ],
+  fruits: [
+    {code:'13039', nom:'Pomme', kcal:54, prot:0.25, gluc:11.6, lip:0.3, ags:0.052, pot:119, unit:'fruit', gpu:150},
+    {code:'13005', nom:'Banane', kcal:87.6, prot:1.1, gluc:19.7, lip:0.5, ags:0.01, pot:320, unit:'fruit', gpu:120},
+    {code:'13034', nom:'Orange', kcal:42, prot:0.75, gluc:8.0, lip:0.5, ags:0.01, pot:180, unit:'fruit', gpu:150},
+    {code:'13014', nom:'Fraises', kcal:35.1, prot:0.63, gluc:6.0, lip:0.5, ags:0.01, pot:140, unit:'g'},
+    {code:'13037', nom:'Poire', kcal:56.6, prot:0.36, gluc:12.3, lip:0.3, ags:0.067, pot:132, unit:'fruit', gpu:150}
+  ],
+  matieres_grasses: [
+    {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0, lip:99.9, ags:15.2, pot:0, unit:'cuillère à soupe', gpu:10},
+    {code:'13004', nom:'Avocat', kcal:203, prot:1.6, gluc:0, lip:20.6, ags:4.51, pot:430, unit:'g'},
+    {code:'15000', nom:'Amandes', kcal:615, prot:18.8, gluc:9.5, lip:51.3, ags:4.11, pot:800, unit:'poignée', gpu:20},
+    {code:'16400', nom:'Beurre', kcal:753, prot:0.64, gluc:0.7, lip:83, ags:60, pot:36.1, unit:'noix', gpu:10}
+  ],
+  laitier: [
+    {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml'},
+    {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6, gluc:3.5, lip:3.0, ags:2.13, pot:110, unit:'pot', gpu:125},
+    {code:'19501', nom:'Fromage blanc', kcal:80, prot:7.0, gluc:6.3, lip:2.8, ags:1.83, pot:162, unit:'g'},
+    {code:'12099', nom:'Emmental', kcal:396, prot:29.7, gluc:0, lip:30.8, ags:21.4, pot:0, unit:'tranche', gpu:20}
+  ]
+};
+
+// Filtre la base selon les pathologies — retire les aliments à risque
+// par catégorie (jamais les protéines : leur quantité est déjà réduite
+// via calcTargets, pas besoin de les exclure en plus).
+function filterFoodBank(pathologies){
+  var bank = {};
+  Object.keys(FOOD_BANK).forEach(function(cat){ bank[cat] = FOOD_BANK[cat].slice(); });
+  if(pathologies.indexOf('renal') >= 0){
+    ['fruits','legumes','feculents','matieres_grasses'].forEach(function(cat){
+      var f = bank[cat].filter(function(x){ return x.pot < 350; });
+      if(f.length) bank[cat] = f;
+    });
+  }
+  if(pathologies.indexOf('cholesterol') >= 0 || pathologies.indexOf('cardiac') >= 0){
+    Object.keys(bank).forEach(function(cat){
+      var f = bank[cat].filter(function(x){ return x.ags < 8; });
+      if(f.length) bank[cat] = f;
+    });
+  }
+  return bank;
+}
+
+function findFood(code){
+  for(var cat in FOOD_BANK){
+    var f = FOOD_BANK[cat].find(function(x){ return x.code===code; });
+    if(f) return f;
+  }
+  return null;
+}
+function categoryOf(code){
+  for(var cat in FOOD_BANK){
+    if(FOOD_BANK[cat].some(function(x){ return x.code===code; })) return cat;
+  }
+  return null;
+}
+function roundTo(n, step){ return Math.round(n/step)*step; }
+
+// Génère une journée type déterministe (mêmes aliments à chaque génération
+// pour un même profil — la variété viendra plus tard avec un plan 7 jours).
+function generateMealPlan(){
+  var p = PROF || {};
+  var pathos = p.pathologies || [];
+  var tgt = calcTargets();
+  var bank = filterFoodBank(pathos);
+  var noButter = pathos.indexOf('cholesterol')>=0 || pathos.indexOf('cardiac')>=0;
+  var plan = {};
+
+  function pick(cat, preferCode){
+    var list = bank[cat];
+    var f = list.find(function(x){ return x.code===preferCode; });
+    return f || list[0];
+  }
+
+  // ── PETIT-DÉJEUNER (25% kcal) ──
+  var bKcal = tgt.kcal * 0.25;
+  var fruit1 = pick('fruits','13039');
+  var laitier1 = pick('laitier','19554');
+  var beurre = noButter ? null : pick('matieres_grasses','16400');
+  var fruitQty = fruit1.gpu || 150;
+  var laitierQty = laitier1.gpu || 125;
+  var beurreQty = beurre ? 10 : 0;
+  var fixedK = (fruit1.kcal*fruitQty/100) + (laitier1.kcal*laitierQty/100) + (beurre?beurre.kcal*beurreQty/100:0);
+  var pain = pick('feculents','7001');
+  var painQty = Math.max(20, roundTo((bKcal - fixedK) / pain.kcal * 100, 5));
+  plan.breakfast = [
+    {food:pain, qty:painQty},
+    {food:laitier1, qty:laitierQty},
+    {food:fruit1, qty:fruitQty}
+  ];
+  if(beurre) plan.breakfast.push({food:beurre, qty:beurreQty});
+
+  // ── DÉJEUNER & SOUPER (35% / 30% kcal) ──
+  var mealDefs = [
+    {key:'lunch', pct:0.35, prot:'25997', feculent:'9104', legume:'20057', legQty:150, starchFactor:1.0},
+    {key:'dinner', pct:0.30, prot:'25996', feculent:'9811', legume:'20030', legQty:200, starchFactor:0.7}
+  ];
+  mealDefs.forEach(function(md){
+    var mKcal = tgt.kcal * md.pct;
+    var protShare = tgt.prot * md.pct;
+    var proteine = pick('proteines', md.prot);
+    var feculent = pick('feculents', md.feculent);
+    var legume = pick('legumes', md.legume);
+    var huile = pick('matieres_grasses','17270');
+
+    var protQty = roundTo(Math.max(80, Math.min(220, protShare/proteine.prot*100)), 5);
+    var legQty = md.legQty;
+    var huileQty = 10;
+    var usedK = (proteine.kcal*protQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
+    var feculentQty = Math.max(0, roundTo((mKcal-usedK)/feculent.kcal*100*md.starchFactor, 5));
+
+    plan[md.key] = [
+      {food:proteine, qty:protQty},
+      {food:feculent, qty:feculentQty},
+      {food:legume, qty:legQty},
+      {food:huile, qty:huileQty}
+    ];
+  });
+
+  // ── COLLATION (10% kcal) ──
+  if(pathos.indexOf('renal') >= 0){
+    var snackFruit = pick('fruits','13014');
+    plan.snack = [{food:snackFruit, qty:150}];
+  } else {
+    var snackYaourt = pick('laitier','19554');
+    var snackFruit2 = pick('fruits','13005');
+    plan.snack = [
+      {food:snackYaourt, qty:snackYaourt.gpu||125},
+      {food:snackFruit2, qty:snackFruit2.gpu||120}
+    ];
+  }
+
+  return plan;
+}
+
+function planTotals(plan){
+  var T = {kcal:0,prot:0,gluc:0,lip:0};
+  Object.values(plan).forEach(function(items){
+    items.forEach(function(it){
+      var r = it.qty/100;
+      T.kcal += it.food.kcal*r; T.prot += it.food.prot*r;
+      T.gluc += it.food.gluc*r; T.lip += it.food.lip*r;
+    });
+  });
+  return T;
+}
+
+function fmtQty(it){
+  var f = it.food;
+  if(f.unit==='g' || f.unit==='ml') return Math.round(it.qty)+f.unit;
+  var n = it.gpu ? (it.qty/it.gpu) : 1;
+  var nUnits = f.gpu ? Math.round(it.qty/f.gpu*10)/10 : 1;
+  return nUnits+' '+f.unit+(nUnits>1?'s':'')+' ('+Math.round(it.qty)+'g)';
+}
+
+var CURRENT_PLAN = null;
+var SUBST_TARGET = null;
+
+function renderMealPlan(){
+  if(!CURRENT_PLAN) CURRENT_PLAN = generateMealPlan();
+  var tgt = calcTargets();
+  var T = planTotals(CURRENT_PLAN);
+
+  var html = '';
+  Object.keys(MEAL_META).forEach(function(mid){
+    var meta = MEAL_META[mid];
+    var items = CURRENT_PLAN[mid] || [];
+    html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.icon+' '+meta.label+'</span></div><div class="card-body">';
+    items.forEach(function(it, idx){
+      var kcal = Math.round(it.food.kcal*it.qty/100);
+      html += '<div class="mp-item">'
+        +'<div class="mp-item-info"><div class="mp-item-name">'+esc(it.food.nom)+'</div>'
+        +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div>'
+        +'<button class="mp-swap" onclick="openSubstitute(\''+mid+'\','+idx+')">⇄</button>'
+        +'</div>';
+    });
+    html += '</div></div>';
+  });
+
+  document.getElementById('mealplan-content').innerHTML = html;
+
+  var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
+  document.getElementById('mp-totals').innerHTML =
+    '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
+    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.kcal,tgt.kcal)+'%;background:var(--amber)"></div></div>'
+    +'<div class="mp-tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
+    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.prot,tgt.prot)+'%;background:var(--blue)"></div></div>'
+    +'<div class="mp-tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
+    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
+    +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
+    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+}
+
+function regenerateMealPlan(){
+  CURRENT_PLAN = generateMealPlan();
+  renderMealPlan();
+  toast('🔄 Plan régénéré');
+}
+
+function openSubstitute(mealKey, idx){
+  var item = CURRENT_PLAN[mealKey][idx];
+  var cat = categoryOf(item.food.code);
+  if(!cat) return;
+  SUBST_TARGET = {mealKey:mealKey, idx:idx, cat:cat};
+
+  var pathos = (PROF&&PROF.pathologies)||[];
+  var bank = filterFoodBank(pathos);
+  var alternatives = bank[cat].filter(function(f){ return f.code !== item.food.code; });
+
+  var html = alternatives.map(function(f, i){
+    return '<div class="subst-opt" onclick="confirmSubstitute('+i+')">'
+      +'<div class="subst-name">'+esc(f.nom)+'</div>'
+      +'<div class="subst-meta">'+f.kcal+' kcal/100g · '+f.prot+'g prot</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('subst-options').innerHTML = html || '<div style="color:var(--text2);font-size:.82rem">Aucune alternative disponible avec votre profil.</div>';
+  document.getElementById('subst-options').setAttribute('data-alts', JSON.stringify(alternatives.map(function(f){return f.code;})));
+  document.getElementById('subst-current').textContent = 'Remplacer : '+item.food.nom;
+  document.getElementById('subst-ov').classList.add('on');
+}
+
+function confirmSubstitute(i){
+  var codes = JSON.parse(document.getElementById('subst-options').getAttribute('data-alts'));
+  var newFood = findFood(codes[i]);
+  if(!newFood || !SUBST_TARGET) return;
+  var item = CURRENT_PLAN[SUBST_TARGET.mealKey][SUBST_TARGET.idx];
+  var oldKcalContrib = item.food.kcal * item.qty / 100;
+  var newQty = roundTo(Math.max(10, oldKcalContrib / newFood.kcal * 100), 5);
+  CURRENT_PLAN[SUBST_TARGET.mealKey][SUBST_TARGET.idx] = {food:newFood, qty:newQty};
+  closeSubstitute();
+  renderMealPlan();
+  toast('✅ Remplacé par '+newFood.nom);
+}
+
+function closeSubstitute(){
+  document.getElementById('subst-ov').classList.remove('on');
+  SUBST_TARGET = null;
+}
+
 function renderProfile(){
   var p=PROF||{};var tgt=calcTargets();
   var bmi=p.poids&&p.taille?p.poids/((p.taille/100)*(p.taille/100)):null;
@@ -1346,6 +1671,7 @@ function goPage(p){
   if(p==='dashboard')refreshDash();
   if(p==='weekly')renderWeekly();
   if(p==='profile')renderProfile();
+  if(p==='mealplan')renderMealPlan();
   if(p==='journal'){selMeal(activeMeal);}
 }
 
