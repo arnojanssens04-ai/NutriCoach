@@ -1618,44 +1618,29 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var curCarbKcal = bucketKcal(buckets.carb);
   var curFatKcal  = bucketKcal(buckets.fat);
 
-  var tgtProtKcal = tgt.prot*4;
-  var tgtCarbKcal = tgt.gluc*4;
-  var tgtFatKcal  = tgt.lip*9;
-
   function scaleFactor(cur, target){
     if(cur < 1) return null; // pas de base à l'échelle — sera signalé comme manque
     var f = target/cur;
     return Math.max(0.4, Math.min(2.5, f)); // bornes raisonnables, pas de portions absurdes
   }
-  // ── ÉTAPE A : ajuste chaque macro vers sa cible (répartition 50/15/35) ──
-  var fProt = scaleFactor(curProtKcal, tgtProtKcal);
-  var fCarb = scaleFactor(curCarbKcal, tgtCarbKcal);
-  var fFat  = scaleFactor(curFatKcal, tgtFatKcal);
 
-  // ── ÉTAPE B : priorité aux calories totales ──
-  // La répartition macro est secondaire au total calorique. Si l'étape A fait
-  // dépasser l'objectif kcal, on corrige en réduisant d'abord les lipides
-  // (poste le moins prioritaire), puis les glucides si besoin — jamais les
-  // protéines, qu'on cherche à préserver au maximum.
-  var kcalAfterA = curProtKcal*(fProt||1) + curCarbKcal*(fCarb||1) + curFatKcal*(fFat||1);
-  var excess = kcalAfterA - tgt.kcal;
-  var tolerance = tgt.kcal*0.04; // ~4% de marge avant de corriger
+  // ── Les calories totales sont la priorité n°1 ──
+  // Les protéines sont fixées sur leur propre objectif (poste le plus protégé).
+  // Glucides et lipides se partagent ensuite EXACTEMENT ce qu'il reste du
+  // budget calorique, dans le ratio cible (50/35) — ce qui garantit
+  // mathématiquement que le total se rapproche de l'objectif, plutôt que de
+  // corriger après coup de façon approximative.
+  var fProt = scaleFactor(curProtKcal, tgt.prot*4);
+  var protKcalFinal = curProtKcal*(fProt||1);
+  var remainingKcal = Math.max(0, tgt.kcal - protKcalFinal);
 
-  if(excess > tolerance && curFatKcal > 0){
-    var fatKcalNow = curFatKcal*(fFat||1);
-    var fatFloor = curFatKcal*0.4; // ne jamais descendre sous le plancher déjà fixé
-    var fatKcalCorrected = Math.max(fatFloor, fatKcalNow - excess);
-    fFat = fatKcalCorrected/curFatKcal;
-    excess = excess - (fatKcalNow - fatKcalCorrected);
-  }
-  if(excess > tolerance && curCarbKcal > 0){
-    var carbKcalNow = curCarbKcal*(fCarb||1);
-    var carbFloor = curCarbKcal*0.4;
-    var carbKcalCorrected = Math.max(carbFloor, carbKcalNow - excess);
-    fCarb = carbKcalCorrected/curCarbKcal;
-    excess = excess - (carbKcalNow - carbKcalCorrected);
-  }
-  // Les protéines ne sont jamais réduites pour corriger un excès calorique.
+  var carbTargetShare = tgt.gluc*4 / (tgt.gluc*4 + tgt.lip*9);
+  var fatTargetShare  = 1 - carbTargetShare;
+  var tgtCarbKcalFinal = remainingKcal*carbTargetShare;
+  var tgtFatKcalFinal  = remainingKcal*fatTargetShare;
+
+  var fCarb = scaleFactor(curCarbKcal, tgtCarbKcalFinal);
+  var fFat  = scaleFactor(curFatKcal, tgtFatKcalFinal);
 
   var adjusted = entries.map(function(e){
     var cat = classifyDominant(e);
@@ -1694,6 +1679,26 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       alerts.push({t:'warn',i:'🌿',ttl:'Glucides peu riches en fibres',
         txt:'Vos glucides viennent surtout d\'aliments raffinés. Remplacer une partie par des versions complètes (pain complet, riz complet) améliore le contrôle de la glycémie sans réduire les quantités.'});
     }
+
+    // Répartition des fibres par repas : l'objectif quotidien (27g) divisé par
+    // le nombre de repas réellement enregistrés (3, 4, bientôt 5) — pour
+    // repérer PRÉCISÉMENT quel repas manque de fibres, pas juste le total.
+    var mealsPresent = {};
+    adjusted.forEach(function(a){ mealsPresent[a.entry.repas] = true; });
+    var nMeals = Object.keys(mealsPresent).length || 1;
+    var fiberPerMealTarget = tgt.fibres / nMeals;
+    var fiberByMeal = {};
+    adjusted.forEach(function(a){
+      var r = a.newQty/100;
+      fiberByMeal[a.entry.repas] = (fiberByMeal[a.entry.repas]||0) + pN2(a.entry.food_fibres_100)*r;
+    });
+    var mealLabels = {breakfast:'petit-déjeuner', lunch:'déjeuner', snack:'collation', dinner:'souper'};
+    Object.keys(fiberByMeal).forEach(function(mid){
+      if(fiberByMeal[mid] < fiberPerMealTarget*0.5){
+        alerts.push({t:'warn',i:'🌿',ttl:'Peu de fibres au '+(mealLabels[mid]||mid),
+          txt:'Ce repas apporte '+fiberByMeal[mid].toFixed(1)+'g de fibres sur ~'+fiberPerMealTarget.toFixed(0)+'g visés pour ce repas ('+tgt.fibres+'g/jour ÷ '+nMeals+' repas). Ajoutez un légume, un fruit ou une céréale complète à ce repas.'});
+      }
+    });
   }
 
   if(pathologies.indexOf('cholesterol')>=0 || pathologies.indexOf('cardiac')>=0){
