@@ -531,6 +531,17 @@ body {
     <div class="meal-kcal">Voir une journée type adaptée à mon profil</div>
   </div>
 
+  <a href="bilan.html" style="text-decoration:none;color:inherit;display:block">
+    <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
+      <div class="meal-card-top">
+        <span class="meal-ico">📊</span>
+        <div class="meal-add">→</div>
+      </div>
+      <div class="meal-name">Bilan hebdomadaire</div>
+      <div class="meal-kcal" id="bilan-card-sub">Faire le point sur votre semaine</div>
+    </div>
+  </a>
+
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
 </div>
@@ -563,6 +574,7 @@ body {
     <div class="mtab" id="tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
     <div class="mtab" id="tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
     <div class="mtab" id="tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
+    <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti">🥨</span>Collation 2</div>
   </div>
   <div class="search-wrap">
     <span class="search-ico">
@@ -640,7 +652,7 @@ body {
 <!-- SETUP OVERLAY -->
 <div class="ov" id="ov">
 <div class="ov-inner">
-  <div class="ov-prog"><div class="ov-prog-f" id="ov-pf" style="width:20%"></div></div>
+  <div class="ov-prog"><div class="ov-prog-f" id="ov-pf" style="width:25%"></div></div>
 
   <div class="ov-step on" id="st-1">
     <div class="ov-badge">📏 Profil physique</div>
@@ -657,64 +669,73 @@ body {
       <div class="field"><label>Âge</label><input type="number" id="s-age" placeholder="30" min="10" max="110"></div>
       <div class="field"><label>Taille (cm)</label><input type="number" id="s-h" placeholder="170"></div>
     </div>
-    <div class="row2">
-      <div class="field"><label>Poids (kg)</label><input type="number" id="s-w" placeholder="70" step="0.1"></div>
-      <div class="field"><label>Objectif (kg)</label><input type="number" id="s-gw" placeholder="65" step="0.1"><div style="font-size:.7rem;color:var(--text3);margin-top:3px">Optionnel</div></div>
+    <div class="field"><label>Poids (kg)</label><input type="number" id="s-w" placeholder="70" step="0.1"></div>
+    <div class="field"><label>Votre objectif</label>
+      <div class="gender-row">
+        <div class="sel-btn" onclick="setObj('perte')" id="obj-perte"><span class="si">📉</span>Perte de poids</div>
+        <div class="sel-btn" onclick="setObj('maintien')" id="obj-maintien"><span class="si">⚖️</span>Maintien</div>
+        <div class="sel-btn" onclick="setObj('prise')" id="obj-prise"><span class="si">📈</span>Prise de poids</div>
+      </div>
+    </div>
+    <div class="field"><label>Jour de votre bilan hebdomadaire</label>
+      <select id="s-jourbilan">
+        <option value="lundi">Lundi</option><option value="mardi">Mardi</option><option value="mercredi">Mercredi</option>
+        <option value="jeudi">Jeudi</option><option value="vendredi">Vendredi</option><option value="samedi">Samedi</option>
+        <option value="dimanche" selected>Dimanche</option>
+      </select>
+      <div class="field-hint" style="font-size:.7rem;color:var(--text3);margin-top:3px">Modifiable plus tard dans votre profil</div>
     </div>
     <button class="btn-next" style="width:100%" onclick="goSt(2)">Continuer →</button>
   </div>
 
-  <!-- ST-2 : Conditions de santé (inclut Sportif et Sédentaire) -->
   <div class="ov-step" id="st-2">
-    <div class="ov-badge">🏥 Conditions de santé</div>
+    <div class="ov-badge">🏃 Activité</div>
+    <h2 class="ov-title">Niveau d'activité</h2>
+    <p class="ov-sub">Votre dépense énergétique varie selon votre activité physique quotidienne.</p>
+    <div class="act-list" style="margin-bottom:20px">
+      <div class="act-item" onclick="setAct('sedentary')" id="ac-sedentary"><span style="font-size:1.2rem">🪑</span><div><div class="act-name">Sédentaire</div><div class="act-desc">Bureau, peu de sport</div></div></div>
+      <div class="act-item" onclick="setAct('light')" id="ac-light"><span style="font-size:1.2rem">🚶</span><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><span style="font-size:1.2rem">🚴</span><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('active')" id="ac-active"><span style="font-size:1.2rem">🏋️</span><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif</div><div class="act-desc">Entraînement intensif quotidien ou athlète</div></div></div>
+    </div>
+    <div class="btn-nav-row">
+      <button class="btn-back" onclick="goSt(1)">← Retour</button>
+      <button class="btn-next" onclick="goSt2Next()">Continuer →</button>
+    </div>
+  </div>
+
+  <div class="ov-step" id="st-2b">
+    <div class="ov-badge">🏅 Activité</div>
+    <h2 class="ov-title">Quelle activité pratiquez-vous ?</h2>
+    <p class="ov-sub">Décrivez librement votre activité physique — cela nous aide à mieux personnaliser vos besoins nutritionnels.</p>
+    <div class="field">
+      <label>Votre activité physique</label>
+      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;line-height:1.6" placeholder="Ex : je cours 3 fois par semaine 45 min, vélo le week-end, yoga le mardi soir..."></textarea>
+    </div>
+    <div class="btn-nav-row">
+      <button class="btn-back" onclick="goSt(2)">← Retour</button>
+      <button class="btn-next" onclick="goSt(3)">Continuer →</button>
+    </div>
+  </div>
+
+  <div class="ov-step" id="st-3">
+    <div class="ov-badge">🏥 Santé</div>
     <h2 class="ov-title">Conditions de santé</h2>
-    <p class="ov-sub">Sélectionnez vos pathologies et votre condition physique pour des recommandations adaptées.</p>
+    <p class="ov-sub">Sélectionnez vos pathologies pour des recommandations adaptées.</p>
     <div class="patho-grid">
       <div class="pc" onclick="togP('diabetes')" id="pc-diabetes"><span class="pc-ico">🩸</span><span class="pc-name">Diabète</span><div class="pc-chk" id="pk-diabetes"></div></div>
       <div class="pc" onclick="togP('cholesterol')" id="pc-cholesterol"><span class="pc-ico">🫀</span><span class="pc-name">Cholestérol</span><div class="pc-chk" id="pk-cholesterol"></div></div>
       <div class="pc" onclick="togP('hypertension')" id="pc-hypertension"><span class="pc-ico">💉</span><span class="pc-name">Hypertension</span><div class="pc-chk" id="pk-hypertension"></div></div>
       <div class="pc" onclick="togP('cardiac')" id="pc-cardiac"><span class="pc-ico">❤️</span><span class="pc-name">Maladies cardiaques</span><div class="pc-chk" id="pk-cardiac"></div></div>
+      <div class="pc" onclick="togP('renal')" id="pc-renal"><span class="pc-ico">🫘</span><span class="pc-name">Problèmes rénaux</span><div class="pc-chk" id="pk-renal"></div></div>
       <div class="pc" onclick="togP('obesity')" id="pc-obesity"><span class="pc-ico">⚖️</span><span class="pc-name">Obésité / Poids</span><div class="pc-chk" id="pk-obesity"></div></div>
-      <div class="pc" onclick="togP('sedentary_cond')" id="pc-sedentary_cond"><span class="pc-ico">🪑</span><span class="pc-name">Sédentaire</span><div class="pc-chk" id="pk-sedentary_cond"></div></div>
-      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🌾</span><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">En développement</span></div>
-      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🫘</span><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">En développement</span></div>
-    </div>
-    <div class="btn-nav-row">
-      <button class="btn-back" onclick="goSt(1)">← Retour</button>
-      <button class="btn-next" onclick="goSt(3)">Continuer →</button>
-    </div>
-  </div>
-
-  <!-- ST-3 : Niveau d'activité physique -->
-  <div class="ov-step" id="st-3">
-    <div class="ov-badge">🏃 Activité physique</div>
-    <h2 class="ov-title">Niveau d'activité</h2>
-    <p class="ov-sub">Toute personne pratiquant une activité physique, même légère, voit ses besoins caloriques augmenter. Sélectionnez votre niveau habituel.</p>
-    <div class="act-list" style="margin-bottom:20px">
-      <div class="act-item" onclick="setAct('sedentary')" id="ac-sedentary"><span style="font-size:1.2rem">🪑</span><div><div class="act-name">Sédentaire</div><div class="act-desc">Peu ou pas d'activité physique</div></div></div>
-      <div class="act-item" onclick="setAct('light')" id="ac-light"><span style="font-size:1.2rem">🚶</span><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><span style="font-size:1.2rem">🚴</span><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('active')" id="ac-active"><span style="font-size:1.2rem">🏋️</span><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif / Athlète</div><div class="act-desc">Entraînement intensif quotidien</div></div></div>
+      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🌾</span><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
+      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🩻</span><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
-      <button class="btn-next" onclick="goSt3Next()">Continuer →</button>
-    </div>
-  </div>
-
-  <!-- ST-3b : Quelle activité physique ? (si activité != sédentaire) -->
-  <div class="ov-step" id="st-3b">
-    <div class="ov-badge">🏅 Activité</div>
-    <h2 class="ov-title">Quelle activité pratiquez-vous ?</h2>
-    <p class="ov-sub">Décrivez librement votre activité physique. Ces informations nous aident à mieux personnaliser vos besoins nutritionnels.</p>
-    <div class="field">
-      <label>Votre activité physique</label>
-      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s;line-height:1.6" placeholder="Ex : je cours 3 fois par semaine 45 min, je fais du vélo le week-end, yoga le mardi soir..."></textarea>
-    </div>
-    <div class="btn-nav-row">
-      <button class="btn-back" onclick="goSt(3)">← Retour</button>
-      <button class="btn-next" onclick="goSt3bToSt4()">Continuer →</button>
+      <button class="btn-next" onclick="goSt(4)">Continuer →</button>
     </div>
   </div>
 
@@ -728,6 +749,7 @@ body {
       <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
       <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
       <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
+      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti">🥨</span>Collation 2</div>
     </div>
 
     <div class="search-wrap">
@@ -776,9 +798,14 @@ var USER = null, PROF = null;
 var activeMeal = 'breakfast';
 var wkOffset = 0;
 var srchTimer = null, srchRes = [];
-var setup = { sex:'F', act:'sedentary', pathos:[] };
-var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:'☀️'}, lunch:{l:'Déjeuner',i:'🍽️'}, snack:{l:'Collation',i:'🍎'}, dinner:{l:'Souper',i:'🌙'} };
-var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Maladies cardiaques',i:'❤️'}, renal:{l:'Problèmes rénaux',i:'🫘'}, obesity:{l:'Obésité / Poids',i:'⚖️'}, coeliac:{l:'Cœliaque',i:'🌾'}, sportif_cond:{l:'Sportif',i:'🏆'}, sedentary_cond:{l:'Sédentaire',i:'🪑'} };
+var setup = { sex:'F', act:'sedentary', pathos:[], objectif:'maintien' };
+var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:'☀️'}, lunch:{l:'Déjeuner',i:'🍽️'}, snack:{l:'Collation',i:'🍎'}, dinner:{l:'Souper',i:'🌙'}, snack2:{l:'Collation 2',i:'🥨'} };
+// Au-delà de 3000kcal/jour, étaler sur 5 repas évite des portions trop
+// volumineuses dans les 4 repas habituels — la collation 2 n'apparaît
+// que lorsque c'est vraiment nécessaire.
+function needsSecondSnack(){ return calcTargets().kcal >= 3000; }
+function activeMealIds(){ var ids=['breakfast','lunch','snack','dinner']; if(needsSecondSnack())ids.push('snack2'); return ids; }
+var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Maladies cardiaques',i:'❤️'}, renal:{l:'Problèmes rénaux',i:'🫘'}, obesity:{l:'Obésité / Poids',i:'⚖️'} };
 
 // ── UTILS ──
 function pN(v){if(!v||v==='-')return 0;return parseFloat(String(v).replace(',','.'))||0;}
@@ -840,15 +867,20 @@ function calcTargets(){
   var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
   var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
   var tdee=bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
   var kcal=tdee;
-  if(pathos.indexOf('obesity')>=0||(p.poids_vise&&p.poids_vise<w))kcal=tdee-500;
-  kcal=Math.max(1200,Math.round(kcal));
+  if(objectif==='perte') kcal = tdee-500;
+  if(objectif==='prise') kcal = tdee+300;
+  // Ajustement adaptatif cumulatif : appliqué par le bilan hebdomadaire quand
+  // le poids stagne 2 semaines (-200 si perte, +200 si prise). Jamais en
+  // mode maintien. Bornes absolues : jamais sous 1200, jamais au-dessus 5000.
+  kcal += (p.kcal_adjustment||0);
+  kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
   // Répartition macro universelle : 50% glucides / 15% protéines / 35% lipides.
   // Les pathologies n'ajustent plus ces pourcentages — elles déclenchent plutôt
   // des contrôles de QUALITÉ (fibres pour diabète, graisses saturées pour
   // cardiovasculaire) gérés séparément dans genAlerts().
-  // Répartition : 15% protéines, 55% glucides, 30% lipides (lipides réduits pour coller aux recommandations)
-  var pp=0.15, gp=0.55, lp=0.30;
+  var pp=0.15, gp=0.50, lp=0.35;
   return{
     kcal:kcal,
     prot:Math.round(kcal*pp/4),
@@ -937,6 +969,20 @@ async function refreshDash(){
   var p=PROF||{};
   var pathos=p.pathologies||[];
   var tgt=calcTargets();
+
+  // Indique si c'est aujourd'hui le jour de bilan choisi par la personne
+  var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var todayName = joursFR[new Date().getDay()];
+  var bilanCard = document.getElementById('bilan-card');
+  if(bilanCard){
+    if(p.jour_bilan && p.jour_bilan===todayName){
+      bilanCard.style.borderColor='var(--gold)';
+      document.getElementById('bilan-card-sub').innerHTML='<strong style="color:var(--gold)">C\'est votre jour de bilan !</strong>';
+    } else {
+      document.getElementById('bilan-card-sub').textContent='Faire le point sur votre semaine';
+    }
+  }
+
   var entries=await getEntries();
   var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,o3a:0,o3e:0,o3d:0,fer:0,cal:0,pot:0};
   entries.forEach(function(e){
@@ -979,7 +1025,7 @@ async function refreshDash(){
   var byMeal={};
   entries.forEach(function(e){if(!byMeal[e.repas])byMeal[e.repas]=[];byMeal[e.repas].push(e);});
   var mg=document.getElementById('meals-grid');
-  mg.innerHTML=Object.keys(MEAL_META).map(function(mid){
+  mg.innerHTML=activeMealIds().map(function(mid){
     var meta=MEAL_META[mid];
     var foods=byMeal[mid]||[];
     var mk=foods.reduce(function(s,e){return s+(e.kcal||0);},0);
@@ -1524,16 +1570,9 @@ function generateMealPlan(){
 
     var protQty = roundTo(Math.max(80, Math.min(220, protShare/proteine.prot*100)), 5);
     var legQty = md.legQty;
-    // Huile réduite à 8g pour limiter l'apport lipidique (≈72 kcal au lieu de 90 kcal)
-    var huileQty = 8;
+    var huileQty = 10;
     var usedK = (proteine.kcal*protQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
     var feculentQty = Math.max(0, roundTo((mKcal-usedK)/feculent.kcal*100*md.starchFactor, 5));
-    // Cap de sécurité : si le repas dépasse son budget de 5%, réduire le féculent
-    var mealActualK = (proteine.kcal*protQty/100)+(feculent.kcal*feculentQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
-    if(mealActualK > mKcal*1.05){
-      var overflow = mealActualK - mKcal;
-      feculentQty = Math.max(0, roundTo(feculentQty - (overflow/feculent.kcal*100), 5));
-    }
 
     plan[md.key] = [
       {food:proteine, qty:protQty},
@@ -1624,10 +1663,10 @@ function guessFruitUnit(nom){
 }
 function roundToNaturalUnit(qty, nom){
   var cat = detectPortionCategory(nom);
-  if(!cat) return Math.max(5, roundTo(qty,5));
+  if(!cat) return Math.max(5, Math.min(300, roundTo(qty,5))); // plafond réaliste : pas de portion non-mesurée au-delà de 300g
   if(cat.id==='boisson') return Math.max(20, roundTo(qty,10));
   var unit = cat.id==='fruit_unite' ? guessFruitUnit(nom) : NATURAL_UNIT_SIZE[cat.id];
-  if(!unit) return Math.max(5, roundTo(qty,5));
+  if(!unit) return Math.max(5, Math.min(300, roundTo(qty,5)));
   var n = Math.max(1, Math.round(qty/unit));
   return n*unit;
 }
@@ -1662,6 +1701,15 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var remainingKcal = Math.max(0, tgt.kcal - protKcalFinal);
 
   var carbTargetShare = tgt.gluc*4 / (tgt.gluc*4 + tgt.lip*9);
+  // À partir de 3000kcal, un ratio strict 50/35 demanderait des volumes de
+  // féculents irréalistes (ex: 300g+ de riz cru dans une seule assiette).
+  // On glisse progressivement la part vers les lipides — plus denses en
+  // calories pour un même volume (sauces, huiles, oléagineux) — pour des
+  // portions qui restent mangeables.
+  if(tgt.kcal >= 3000){
+    var shift = Math.min(0.15, (tgt.kcal-3000)/8000); // jusqu'à -15 points à 4200kcal+
+    carbTargetShare -= shift;
+  }
   var fatTargetShare  = 1 - carbTargetShare;
   var tgtCarbKcalFinal = remainingKcal*carbTargetShare;
   var tgtFatKcalFinal  = remainingKcal*fatTargetShare;
@@ -1698,86 +1746,19 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   // cette fuite cumulée peut faire dépasser l'objectif lipides même si le
   // calcul par poste était correct. On vérifie le total RÉEL et on resserre
   // encore les lipides (puis les glucides) si besoin, jamais les protéines.
-  // Correction lipides : seuil 1.1→1.03 (déclenche dès +3% au lieu de +10%)
-  // floor 0.4→0.25 pour permettre une réduction plus franche si nécessaire
   if(pass1.Tot.lip > tgt.lip*1.03 && curFatKcal > 0){
     var excessLipKcal = (pass1.Tot.lip - tgt.lip)*9;
     var fatKcalNow = curFatKcal*(fFat||1);
-    var fatFloor = curFatKcal*0.25;
+    var fatFloor = curFatKcal*0.4;
     fFat = Math.max(fatFloor, fatKcalNow-excessLipKcal) / curFatKcal;
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-    // 2e passe si toujours au-dessus de l'objectif lipides
-    if(pass1.Tot.lip > tgt.lip*1.03 && curFatKcal > 0){
-      var excessLipKcal2 = (pass1.Tot.lip - tgt.lip)*9;
-      var fatKcalNow2 = curFatKcal*(fFat||1);
-      fFat = Math.max(fatFloor, fatKcalNow2-excessLipKcal2) / curFatKcal;
-      pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-    }
   }
-  if(pass1.Tot.gluc > tgt.gluc*1.1 && curCarbKcal > 0){
+  if(pass1.Tot.gluc > tgt.gluc*1.03 && curCarbKcal > 0){
     var excessCarbKcal = (pass1.Tot.gluc - tgt.gluc)*4;
     var carbKcalNow = curCarbKcal*(fCarb||1);
     var carbFloor = curCarbKcal*0.4;
     fCarb = Math.max(carbFloor, carbKcalNow-excessCarbKcal) / curCarbKcal;
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-  }
-
-  // ── Cap calorique final ──
-  // Dépassement (>+1%) : réduction glucides 60% / lipides 40%
-  // Déficit (<-1%)     : augmentation glucides en priorité, lipides si gap > 5%
-  var finalT = pass1.Tot;
-
-  if(finalT.kcal > tgt.kcal * 1.01){
-    var overKcal = finalT.kcal - tgt.kcal;
-    var carbKcalReduce = overKcal * 0.6;
-    var fatKcalReduce  = overKcal * 0.4;
-    if(curCarbKcal > 0) fCarb = Math.max(curCarbKcal*0.3, (curCarbKcal*(fCarb||1) - carbKcalReduce)) / curCarbKcal;
-    if(curFatKcal  > 0) fFat  = Math.max(curFatKcal *0.25,(curFatKcal *(fFat ||1) - fatKcalReduce))  / curFatKcal;
-    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-    finalT = pass1.Tot;
-  }
-
-  // Correction déficit : si on est en-dessous de l'objectif de plus de 1%
-  // → augmenter les glucides en priorité (énergie propre, IG neutre)
-  // → si déficit > 5%, compléter aussi par les lipides (40% du gap restant)
-  // → jamais au-delà de 2.5x la portion originale (borne déjà dans scaleFactor)
-  if(finalT.kcal < tgt.kcal * 0.99 && (curCarbKcal > 0 || curFatKcal > 0)){
-    var gapKcal = tgt.kcal - finalT.kcal;
-    var gapPct  = gapKcal / tgt.kcal;
-
-    // Part des glucides dans le gap : 100% si gap ≤ 5%, 60% sinon
-    var carbShare = (gapPct <= 0.05) ? 1.0 : 0.6;
-    var fatShare  = 1.0 - carbShare;
-
-    var carbKcalAdd = gapKcal * carbShare;
-    var fatKcalAdd  = gapKcal * fatShare;
-
-    // Lipides : plafonner à 35% des kcal cibles pour ne pas dépasser le seuil santé
-    var lipMax35pct = tgt.kcal * 0.35 / 9; // en grammes
-    var lipActuel   = finalT.lip;
-    var lipHeadroom = Math.max(0, (lipMax35pct - lipActuel) * 9); // kcal disponibles
-    fatKcalAdd = Math.min(fatKcalAdd, lipHeadroom);
-    // Le reste du gap lipides non utilisé va aux glucides
-    carbKcalAdd += (gapKcal * fatShare - fatKcalAdd);
-
-    if(curCarbKcal > 0 && carbKcalAdd > 0){
-      var newCarbKcal = curCarbKcal*(fCarb||1) + carbKcalAdd;
-      fCarb = Math.min(2.5, newCarbKcal / curCarbKcal);
-    }
-    if(curFatKcal > 0 && fatKcalAdd > 0){
-      var newFatKcal = curFatKcal*(fFat||1) + fatKcalAdd;
-      fFat = Math.min(2.5, newFatKcal / curFatKcal);
-    }
-    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-    finalT = pass1.Tot;
-
-    // Sécurité : si après correction on dépasse de plus de 1%, on coupe le surplus
-    if(finalT.kcal > tgt.kcal * 1.01){
-      var trimKcal = finalT.kcal - tgt.kcal;
-      if(curCarbKcal > 0) fCarb = Math.max(curCarbKcal*0.3, (curCarbKcal*(fCarb||1) - trimKcal*0.8)) / curCarbKcal;
-      if(curFatKcal  > 0) fFat  = Math.max(curFatKcal*0.25, (curFatKcal*(fFat||1)  - trimKcal*0.2)) / curFatKcal;
-      pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-    }
   }
 
   var adjusted = pass1.adj;
@@ -1864,7 +1845,7 @@ function renderMealPlan(){
         if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
         byMeal[a.entry.repas].push(a);
       });
-      Object.keys(MEAL_META).forEach(function(mid){
+      activeMealIds().forEach(function(mid){
         var meta = MEAL_META[mid];
         var items = byMeal[mid]||[];
         if(!items.length) return;
@@ -1883,7 +1864,7 @@ function renderMealPlan(){
     } else {
       // ── Mode générique : ancien générateur (corrigé), utilisé en secours ──
       if(!CURRENT_PLAN) CURRENT_PLAN = generateMealPlan();
-      Object.keys(MEAL_META).forEach(function(mid){
+      activeMealIds().forEach(function(mid){
         var meta = MEAL_META[mid];
         var items = CURRENT_PLAN[mid] || [];
         html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
@@ -1994,7 +1975,8 @@ function renderProfile(){
   var bmi=p.poids&&p.taille?p.poids/((p.taille/100)*(p.taille/100)):null;
   document.getElementById('p-name').textContent=(p.prenom||'')+(p.nom?' '+p.nom:'');
   document.getElementById('p-sub').textContent=[p.age?p.age+' ans':'',p.taille?p.taille+' cm':'',bmi?'IMC '+bmi.toFixed(1):''].filter(Boolean).join(' · ');
-  document.getElementById('p-stats').innerHTML='<div class="pstat"><div class="pstat-v">'+(p.poids||'—')+'</div><div class="pstat-l">kg actuel</div></div><div class="pstat"><div class="pstat-v">'+tgt.kcal+'</div><div class="pstat-l">kcal/jour</div></div><div class="pstat"><div class="pstat-v">'+(p.poids_vise||'—')+'</div><div class="pstat-l">kg objectif</div></div>';
+  var objLabels={perte:'Perte',maintien:'Maintien',prise:'Prise'};
+  document.getElementById('p-stats').innerHTML='<div class="pstat"><div class="pstat-v">'+(p.poids||'—')+'</div><div class="pstat-l">kg actuel</div></div><div class="pstat"><div class="pstat-v">'+tgt.kcal+'</div><div class="pstat-l">kcal/jour</div></div><div class="pstat"><div class="pstat-v">'+(objLabels[p.objectif]||'—')+'</div><div class="pstat-l">Objectif</div></div>';
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
   if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';return;}
@@ -2004,78 +1986,55 @@ function renderProfile(){
 // ── SETUP ──
 function openSetup(){
   var p=PROF||{};
-  setup.sex=p.sexe||'F'; setup.act=p.activite||'sedentary'; setup.pathos=p.pathologies||[];
+  setup.sex=p.sexe||'F'; setup.act=p.activite||'sedentary'; setup.pathos=p.pathologies||[]; setup.objectif=p.objectif||'maintien';
   if(p.age)document.getElementById('s-age').value=p.age;
   if(p.taille)document.getElementById('s-h').value=p.taille;
   if(p.poids)document.getElementById('s-w').value=p.poids;
-  if(p.poids_vise)document.getElementById('s-gw').value=p.poids_vise;
-  setSex(setup.sex); setAct(setup.act);
+  document.getElementById('s-jourbilan').value=p.jour_bilan||'dimanche';
+  document.getElementById('s-sport-activity').value=p.activite_detail||'';
+  setSex(setup.sex); setAct(setup.act); setObj(setup.objectif);
   setup.pathos.forEach(function(pp){var c=document.getElementById('pc-'+pp);var k=document.getElementById('pk-'+pp);if(c){c.classList.add('on');k.innerHTML='✓';}});
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
   document.getElementById('st-1').classList.add('on');
-  document.getElementById('ov-pf').style.width='20%';
-  setup._sportif3bDone = false;
+  document.getElementById('ov-pf').style.width='25%';
   document.getElementById('ov').classList.add('on');
 }
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
-function setAct(a){
-  setup.act=a;
-  ['sedentary','light','moderate','active','sportif'].forEach(function(x){
-    var el=document.getElementById('ac-'+x);
-    if(el) el.classList.toggle('on',x===a);
-  });
-}
+function setObj(o){setup.objectif=o;['perte','maintien','prise'].forEach(function(x){document.getElementById('obj-'+x).classList.toggle('on',x===o);});}
+function setAct(a){setup.act=a;['sedentary','light','moderate','active','sportif'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
 function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}}
 function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
-  document.getElementById('st-'+n).classList.add('on');
-  var pts={1:20,2:40,3:62,4:95};document.getElementById('ov-pf').style.width=(pts[n]||20)+'%';
-  if(n===4){ refreshSetupJournal(); }
+  var id = (n===2.5) ? 'st-2b' : 'st-'+n;
+  document.getElementById(id).classList.add('on');
+  var pts={1:15,2:32,2.5:48,3:66,4:95};document.getElementById('ov-pf').style.width=(pts[n]||50)+'%';
+  if(n===4){ updateMealTabsVisibility(); refreshSetupJournal(); }
 }
-// Appelé par le bouton Continuer de st-3
-// Si activité physique (pas sédentaire) → aller à st-3b, sinon directement st-4
-function goSt3Next(){
-  if(setup.act !== 'sedentary'){
-    document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
-    document.getElementById('st-3b').classList.add('on');
-    document.getElementById('ov-pf').style.width='78%';
-  } else {
-    goSt(4);
-  }
-}
-// Appelé par le bouton Continuer de st-3b
-function goSt3bToSt4(){
-  goSt(4);
-}
-function goSt3bToSt4(){
-  // Valider qu'une activité a été saisie
-  var activity = document.getElementById('s-sport-activity');
-  if(activity && !activity.value.trim()){toast('Indiquez votre activité sportive');return;}
-  setup._sportif3bDone = true;
-  goSt(4);
+// Saute l'étape "décrivez votre activité" si la personne est sédentaire —
+// rien à décrire dans ce cas, pas la peine de lui demander.
+function goSt2Next(){
+  if(setup.act === 'sedentary'){ goSt(3); } else { goSt(2.5); }
 }
 async function finSetup(){
-  var sportActivity = document.getElementById('s-sport-activity');
-  var sportFreq = document.getElementById('s-sport-freq');
-  var sportDur = document.getElementById('s-sport-duration');
-  var data={
-    sexe:setup.sex,
-    age:parseInt(document.getElementById('s-age').value)||30,
-    taille:parseInt(document.getElementById('s-h').value)||170,
-    poids:parseFloat(document.getElementById('s-w').value)||70,
-    poids_vise:parseFloat(document.getElementById('s-gw').value)||null,
-    activite:setup.act,
-    pathologies:setup.pathos,
-    sport_activite: sportActivity ? (sportActivity.value||null) : null,
-    sport_frequence: sportFreq ? (sportFreq.value||null) : null,
-    sport_duree: sportDur ? (parseInt(sportDur.value)||60) : 60
-  };
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,activite_detail:document.getElementById('s-sport-activity').value.trim()||null,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
   await saveProf(data);
   document.getElementById('ov').classList.remove('on');
   initGreeting(); refreshDash();
   toast('✅ Profil enregistré !');
+}
+
+// Affiche/masque la 5e tranche (Collation 2) selon le besoin calorique réel,
+// et ajuste la grille d'onglets en conséquence (4 ou 5 colonnes).
+function updateMealTabsVisibility(){
+  var show = needsSecondSnack();
+  ['tab-snack2','st4-tab-snack2'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display = show ? 'block' : 'none';
+  });
+  ['meal-tabs','st4-meal-tabs'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.gridTemplateColumns = show ? 'repeat(5,1fr)' : 'repeat(4,1fr)';
+  });
 }
 
 // ── NAVIGATION ──
@@ -2088,7 +2047,7 @@ function goPage(p){
   if(p==='weekly')renderWeekly();
   if(p==='profile')renderProfile();
   if(p==='mealplan')renderMealPlan();
-  if(p==='journal'){selMeal(activeMeal);}
+  if(p==='journal'){updateMealTabsVisibility();selMeal(activeMeal);}
 }
 
 async function logout(){
@@ -2201,7 +2160,7 @@ fetch('data/ciqual.json')
 // Override finSetup to show loading screen
 var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
-  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,poids_vise:parseFloat(document.getElementById('s-gw').value)||null,activite:setup.act,pathologies:setup.pathos};
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,activite_detail:document.getElementById('s-sport-activity').value.trim()||null,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
   await saveProf(data);
   document.getElementById('ov').classList.remove('on');
