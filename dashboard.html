@@ -828,7 +828,8 @@ function calcTargets(){
   // Les pathologies n'ajustent plus ces pourcentages — elles déclenchent plutôt
   // des contrôles de QUALITÉ (fibres pour diabète, graisses saturées pour
   // cardiovasculaire) gérés séparément dans genAlerts().
-  var pp=0.15, gp=0.50, lp=0.35;
+  // Répartition : 15% protéines, 55% glucides, 30% lipides (lipides réduits pour coller aux recommandations)
+  var pp=0.15, gp=0.55, lp=0.30;
   return{
     kcal:kcal,
     prot:Math.round(kcal*pp/4),
@@ -1504,9 +1505,16 @@ function generateMealPlan(){
 
     var protQty = roundTo(Math.max(80, Math.min(220, protShare/proteine.prot*100)), 5);
     var legQty = md.legQty;
-    var huileQty = 10;
+    // Huile réduite à 8g pour limiter l'apport lipidique (≈72 kcal au lieu de 90 kcal)
+    var huileQty = 8;
     var usedK = (proteine.kcal*protQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
     var feculentQty = Math.max(0, roundTo((mKcal-usedK)/feculent.kcal*100*md.starchFactor, 5));
+    // Cap de sécurité : si le repas dépasse son budget de 5%, réduire le féculent
+    var mealActualK = (proteine.kcal*protQty/100)+(feculent.kcal*feculentQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
+    if(mealActualK > mKcal*1.05){
+      var overflow = mealActualK - mKcal;
+      feculentQty = Math.max(0, roundTo(feculentQty - (overflow/feculent.kcal*100), 5));
+    }
 
     plan[md.key] = [
       {food:proteine, qty:protQty},
@@ -1671,18 +1679,40 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   // cette fuite cumulée peut faire dépasser l'objectif lipides même si le
   // calcul par poste était correct. On vérifie le total RÉEL et on resserre
   // encore les lipides (puis les glucides) si besoin, jamais les protéines.
-  if(pass1.Tot.lip > tgt.lip*1.1 && curFatKcal > 0){
+  // Correction lipides : seuil 1.1→1.03 (déclenche dès +3% au lieu de +10%)
+  // floor 0.4→0.25 pour permettre une réduction plus franche si nécessaire
+  if(pass1.Tot.lip > tgt.lip*1.03 && curFatKcal > 0){
     var excessLipKcal = (pass1.Tot.lip - tgt.lip)*9;
     var fatKcalNow = curFatKcal*(fFat||1);
-    var fatFloor = curFatKcal*0.4;
+    var fatFloor = curFatKcal*0.25;
     fFat = Math.max(fatFloor, fatKcalNow-excessLipKcal) / curFatKcal;
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+    // 2e passe si toujours au-dessus de l'objectif lipides
+    if(pass1.Tot.lip > tgt.lip*1.03 && curFatKcal > 0){
+      var excessLipKcal2 = (pass1.Tot.lip - tgt.lip)*9;
+      var fatKcalNow2 = curFatKcal*(fFat||1);
+      fFat = Math.max(fatFloor, fatKcalNow2-excessLipKcal2) / curFatKcal;
+      pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+    }
   }
   if(pass1.Tot.gluc > tgt.gluc*1.1 && curCarbKcal > 0){
     var excessCarbKcal = (pass1.Tot.gluc - tgt.gluc)*4;
     var carbKcalNow = curCarbKcal*(fCarb||1);
     var carbFloor = curCarbKcal*0.4;
     fCarb = Math.max(carbFloor, carbKcalNow-excessCarbKcal) / curCarbKcal;
+    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+  }
+
+  // Cap calorique final : si le total dépasse l'objectif de plus de 3%,
+  // on applique un facteur de réduction uniforme sur glucides et lipides
+  var finalT = pass1.Tot;
+  if(finalT.kcal > tgt.kcal * 1.03){
+    var overKcal = finalT.kcal - tgt.kcal;
+    // Réduction partagée 60% sur glucides, 40% sur lipides
+    var carbKcalReduce = overKcal * 0.6;
+    var fatKcalReduce  = overKcal * 0.4;
+    if(curCarbKcal > 0) fCarb = Math.max(curCarbKcal*0.3, (curCarbKcal*(fCarb||1) - carbKcalReduce)) / curCarbKcal;
+    if(curFatKcal  > 0) fFat  = Math.max(curFatKcal *0.25,(curFatKcal *(fFat ||1) - fatKcalReduce))  / curFatKcal;
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
   }
 
