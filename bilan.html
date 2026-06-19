@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Bilan hebdomadaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1); --gold-g:rgba(201,169,110,0.06);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
+  --amber:#d97706;
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:40px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:600px; margin:0 auto; padding:22px 18px; }
+
+.hero { text-align:center; margin-bottom:20px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.7rem; font-weight:700; margin-bottom:6px; }
+.hero p { font-size:.84rem; color:var(--text2); line-height:1.6; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); overflow:hidden; }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
+.card-hdr-ico { font-size:1.1rem; }
+.card-hdr span { font-family:'Cormorant Garamond',serif; font-size:1rem; }
+.card-body { padding:16px 18px; }
+
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
+.field input, .field textarea { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; font-family:'Inter',sans-serif; }
+.field input:focus, .field textarea:focus { border-color:rgba(201,169,110,0.45); }
+.field textarea { resize:vertical; min-height:70px; }
+.row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+
+.pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.pill { padding:11px 6px; border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--card2); transition:all .15s; }
+.pill:hover { border-color:var(--border2); }
+.pill.on-bien { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
+.pill.on-moyen { border-color:var(--amber); background:rgba(217,119,6,0.12); color:var(--amber); }
+.pill.on-difficile { border-color:var(--rose); background:var(--rose-l); color:var(--rose); }
+
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+.btn { width:100%; padding:13px; border-radius:11px; border:none; font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; box-shadow:0 4px 20px rgba(201,169,110,0.2); }
+.btn-gold:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(201,169,110,0.3); }
+.btn-gold:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+.weight-chart { display:flex; align-items:flex-end; gap:6px; height:70px; margin-bottom:8px; }
+.wc-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
+.wc-track { width:100%; background:rgba(255,255,255,.05); border-radius:5px; flex:1; position:relative; overflow:hidden; }
+.wc-fill { position:absolute; bottom:0; left:0; right:0; border-radius:5px; background:var(--gold); }
+.wc-val { font-size:.62rem; color:var(--text2); }
+.wc-date { font-size:.58rem; color:var(--text3); }
+
+.history-item { padding:11px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.history-item:last-child { border-bottom:none; }
+.hi-date { font-size:.78rem; color:var(--text2); }
+.hi-weight { font-size:.88rem; font-weight:600; color:var(--gold); }
+.hi-delta { font-size:.72rem; margin-left:6px; }
+.delta-down { color:var(--sage); }
+.delta-up { color:var(--rose); }
+.delta-flat { color:var(--text3); }
+
+.adj-banner { padding:13px 16px; border-radius:11px; margin-bottom:14px; font-size:.85rem; line-height:1.55; display:none; }
+.adj-banner.show { display:block; }
+.adj-down { background:rgba(201,122,110,0.1); border:1px solid rgba(201,122,110,0.28); color:#e09a8e; }
+.adj-up { background:var(--sage-l); border:1px solid rgba(122,155,124,0.28); color:#9aba9c; }
+
+.empty { text-align:center; padding:30px 16px; color:var(--text2); font-size:.84rem; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:380px){ .row3,.row2,.pill-row { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="dashboard.html" class="t-back">← Tableau de bord</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Bilan hebdomadaire</h1>
+    <p id="hero-sub">Faisons le point sur votre semaine.</p>
+  </div>
+
+  <div class="adj-banner" id="adj-banner"></div>
+
+  <div class="card" id="history-card" style="display:none">
+    <div class="card-hdr"><span class="card-hdr-ico">📈</span><span>Évolution du poids</span></div>
+    <div class="card-body">
+      <div class="weight-chart" id="weight-chart"></div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <form id="bilan-form">
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">📏</span><span>Mensurations</span></div>
+      <div class="card-body">
+        <div class="row3">
+          <div class="field"><label>Poids (kg)</label><input type="number" id="b-poids" step="0.1" required></div>
+          <div class="field"><label>Tour de taille (cm)</label><input type="number" id="b-taille" step="0.5"></div>
+          <div class="field"><label>Tour de hanche (cm)</label><input type="number" id="b-hanche" step="0.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🍽️</span><span>Alimentation</span></div>
+      <div class="card-body">
+        <div class="field"><label>Respect du plan alimentaire</label>
+          <div class="pill-row" data-field="respect_plan">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>Écarts alimentaires (optionnel)</label>
+          <textarea id="b-ecart" placeholder="Ex: un peu plus de sucreries cette semaine..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🏃</span><span>Activité physique</span></div>
+      <div class="card-body">
+        <div class="field"><label>Comment s'est passée votre activité physique cette semaine ?</label>
+          <div class="pill-row" data-field="activite_semaine">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🌀</span><span>Digestion & sommeil</span></div>
+      <div class="card-body">
+        <div class="field"><label>Qualité et/ou troubles digestifs</label>
+          <div class="pill-row" data-field="troubles_digestifs">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>Sommeil</label>
+          <div class="pill-row" data-field="sommeil">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">💭</span><span>Ressenti & bien-être général</span></div>
+      <div class="card-body">
+        <div class="field"><label>Difficulté ressentie pendant la semaine</label>
+          <div class="pill-row" data-field="difficulte_semaine">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>Êtes-vous satisfait(e) de votre travail cette semaine ?</label>
+          <div class="pill-row" data-field="satisfaction_semaine">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🎯</span><span>Objectifs pour la semaine prochaine</span></div>
+      <div class="card-body">
+        <div class="field"><textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une séance de sport..."></textarea></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-gold" id="submit-btn">Valider mon bilan</button>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, PROF=null;
+var pillValues = {};
+
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2800);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+// ── Pills interactifs ──
+document.querySelectorAll('.pill-row').forEach(function(row){
+  var field = row.getAttribute('data-field');
+  row.querySelectorAll('.pill').forEach(function(p){
+    p.addEventListener('click', function(){
+      row.querySelectorAll('.pill').forEach(function(x){ x.className='pill'; });
+      var val = p.getAttribute('data-val');
+      p.classList.add('on-'+val.toLowerCase());
+      pillValues[field] = val;
+    });
+  });
+});
+
+// ── AUTH ──
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  loadProfileAndHistory();
+});
+
+async function loadProfileAndHistory(){
+  var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
+  PROF = pr.data || {};
+  document.getElementById('hero-sub').textContent =
+    (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
+  if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
+
+  var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
+  var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
+  renderHistory(bilans);
+}
+
+function renderHistory(bilans){
+  if(!bilans.length) return;
+  document.getElementById('history-card').style.display='block';
+
+  var weights = bilans.filter(function(b){return b.poids;});
+  var maxW = Math.max.apply(null, weights.map(function(b){return b.poids;}));
+  var minW = Math.min.apply(null, weights.map(function(b){return b.poids;}));
+  var range = Math.max(1, maxW-minW);
+
+  document.getElementById('weight-chart').innerHTML = weights.map(function(b){
+    var h = 15 + ((b.poids-minW)/range)*85;
+    var d = new Date(b.date);
+    return '<div class="wc-col"><div class="wc-val">'+b.poids+'</div><div class="wc-track"><div class="wc-fill" style="height:'+h+'%"></div></div><div class="wc-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div></div>';
+  }).join('');
+
+  var listHtml = '';
+  for(var i=bilans.length-1;i>=0;i--){
+    var b = bilans[i];
+    var prev = i>0?bilans[i-1]:null;
+    var deltaHtml = '';
+    if(prev && prev.poids && b.poids){
+      var d = b.poids-prev.poids;
+      var cls = Math.abs(d)<0.3?'delta-flat':(d<0?'delta-down':'delta-up');
+      deltaHtml = '<span class="hi-delta '+cls+'">'+(d>0?'+':'')+d.toFixed(1)+'kg</span>';
+    }
+    var dt = new Date(b.date);
+    listHtml += '<div class="history-item"><span class="hi-date">'+dt.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+'</span><span><span class="hi-weight">'+(b.poids||'—')+'kg</span>'+deltaHtml+'</span></div>';
+  }
+  document.getElementById('history-list').innerHTML = listHtml;
+}
+
+// ── SOUMISSION ──
+document.getElementById('bilan-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var poids = parseFloat(document.getElementById('b-poids').value);
+  if(!poids){ toast('Indiquez votre poids actuel'); return; }
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  var data = {
+    user_id: USER.id, date: todayStr(),
+    poids: poids,
+    tour_taille: parseFloat(document.getElementById('b-taille').value)||null,
+    tour_hanche: parseFloat(document.getElementById('b-hanche').value)||null,
+    respect_plan: pillValues.respect_plan||null,
+    ecart_alimentaire: document.getElementById('b-ecart').value.trim()||null,
+    activite_semaine: pillValues.activite_semaine||null,
+    troubles_digestifs: pillValues.troubles_digestifs||null,
+    sommeil: pillValues.sommeil||null,
+    difficulte_semaine: pillValues.difficulte_semaine||null,
+    satisfaction_semaine: pillValues.satisfaction_semaine||null,
+    objectifs_notes: document.getElementById('b-objectifs').value.trim()||null
+  };
+
+  var r = await sb.from('bilans').insert(data);
+  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
+
+  // Met aussi à jour le poids courant du profil
+  await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
+
+  toast('✅ Bilan enregistré !');
+  await checkAndAdjustKcal(poids);
+
+  btn.textContent = 'Bilan enregistré ✓';
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 2200);
+});
+
+// ── ALGORITHME ADAPTATIF ──
+// Si le poids n'a pas bougé depuis ~2 semaines, on ajuste l'objectif calorique
+// de 200 kcal dans la direction de l'objectif (jamais en mode "maintien").
+// Planchers/plafonds absolus (1200-5000) appliqués dans calcTargets() côté dashboard.
+async function checkAndAdjustKcal(newWeight){
+  var objectif = PROF.objectif;
+  if(objectif !== 'perte' && objectif !== 'prise') return; // pas d'ajustement en mode maintien
+
+  var d1 = new Date(); d1.setDate(d1.getDate()-16);
+  var d2 = new Date(); d2.setDate(d2.getDate()-12);
+  var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
+    .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
+    .order('date',{ascending:true}).limit(1);
+
+  if(!res.data || !res.data.length || !res.data[0].poids) return; // pas assez d'historique encore
+
+  var oldWeight = res.data[0].poids;
+  var delta = newWeight - oldWeight;
+  var stalled = Math.abs(delta) < 0.3;
+  if(!stalled) return;
+
+  var currentAdj = PROF.kcal_adjustment || 0;
+  var newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+  // Les bornes absolues 1200/5000 sont déjà appliquées dans calcTargets(),
+  // mais on évite ici d'accumuler un ajustement déraisonnable au fil du temps.
+  newAdj = Math.max(-1200, Math.min(2500, newAdj));
+
+  await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
+
+  var banner = document.getElementById('adj-banner');
+  banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
+  banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
+    + (objectif==='perte'
+      ? 'On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
+      : 'On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.')
+    + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+}
+</script>
+</body>
+</html>
