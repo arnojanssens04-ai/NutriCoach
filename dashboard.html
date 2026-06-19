@@ -749,7 +749,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qemppaHpzeWNzZmtjc2pwdHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzE4NTYsImV4cCI6MjA5NzIwNzg1Nn0.jaOQp73rvuxdiJjHTWyFHc8EcAjqsu6G2M1ZJYYEk9Y';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
@@ -1642,26 +1642,52 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var fCarb = scaleFactor(curCarbKcal, tgtCarbKcalFinal);
   var fFat  = scaleFactor(curFatKcal, tgtFatKcalFinal);
 
-  var adjusted = entries.map(function(e){
-    var cat = classifyDominant(e);
-    var f = cat==='protein'?fProt : cat==='carb'?fCarb : cat==='fat'?fFat : 1;
-    if(f===null) f = 1;
-    var newQty = roundToNaturalUnit(e.quantite*f, e.aliment);
-    return {entry:e, cat:cat, oldQty:e.quantite, newQty:newQty, factor:f};
-  });
+  // Calcule les quantités ajustées + les totaux réels pour un jeu de facteurs donné
+  function computeAdjustedAndTotals(fP, fC, fF){
+    var adj = entries.map(function(e){
+      var cat = classifyDominant(e);
+      var f = cat==='protein'?fP : cat==='carb'?fC : cat==='fat'?fF : 1;
+      if(f===null) f = 1;
+      var newQty = roundToNaturalUnit(e.quantite*f, e.aliment);
+      return {entry:e, cat:cat, oldQty:e.quantite, newQty:newQty, factor:f};
+    });
+    var Tot = {kcal:0,prot:0,gluc:0,lip:0,ags:0,fibres:0,mg:0,na:0,zn:0,pot:0,cal:0,fer:0};
+    adj.forEach(function(a){
+      var r = a.newQty/100; var e = a.entry;
+      Tot.kcal += pN2(e.food_kcal_100)*r; Tot.prot += pN2(e.food_prot_100)*r;
+      Tot.gluc += pN2(e.food_gluc_100)*r; Tot.lip  += pN2(e.food_lip_100)*r;
+      Tot.ags  += pN2(e.food_ags_100)*r;  Tot.fibres += pN2(e.food_fibres_100)*r;
+      Tot.mg   += pN2(e.food_mg_100)*r;   Tot.na   += pN2(e.food_na_100)*r;
+      Tot.zn   += pN2(e.food_zn_100)*r;   Tot.pot  += pN2(e.food_pot_100)*r;
+      Tot.cal  += pN2(e.food_cal_100)*r;  Tot.fer  += pN2(e.food_fer_100)*r;
+    });
+    return {adj:adj, Tot:Tot};
+  }
 
-  // Totaux après ajustement
-  var T = {kcal:0,prot:0,gluc:0,lip:0,ags:0,fibres:0,mg:0,na:0,zn:0,pot:0,cal:0,fer:0};
-  adjusted.forEach(function(a){
-    var r = a.newQty/100;
-    var e = a.entry;
-    T.kcal += pN2(e.food_kcal_100)*r; T.prot += pN2(e.food_prot_100)*r;
-    T.gluc += pN2(e.food_gluc_100)*r; T.lip  += pN2(e.food_lip_100)*r;
-    T.ags  += pN2(e.food_ags_100)*r;  T.fibres += pN2(e.food_fibres_100)*r;
-    T.mg   += pN2(e.food_mg_100)*r;   T.na   += pN2(e.food_na_100)*r;
-    T.zn   += pN2(e.food_zn_100)*r;   T.pot  += pN2(e.food_pot_100)*r;
-    T.cal  += pN2(e.food_cal_100)*r;  T.fer  += pN2(e.food_fer_100)*r;
-  });
+  var pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+
+  // ── Correction finale sur les GRAMMES RÉELS ──
+  // Même aliment classé "protéines" ou "glucides" contient un peu de lipides —
+  // cette fuite cumulée peut faire dépasser l'objectif lipides même si le
+  // calcul par poste était correct. On vérifie le total RÉEL et on resserre
+  // encore les lipides (puis les glucides) si besoin, jamais les protéines.
+  if(pass1.Tot.lip > tgt.lip*1.1 && curFatKcal > 0){
+    var excessLipKcal = (pass1.Tot.lip - tgt.lip)*9;
+    var fatKcalNow = curFatKcal*(fFat||1);
+    var fatFloor = curFatKcal*0.4;
+    fFat = Math.max(fatFloor, fatKcalNow-excessLipKcal) / curFatKcal;
+    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+  }
+  if(pass1.Tot.gluc > tgt.gluc*1.1 && curCarbKcal > 0){
+    var excessCarbKcal = (pass1.Tot.gluc - tgt.gluc)*4;
+    var carbKcalNow = curCarbKcal*(fCarb||1);
+    var carbFloor = curCarbKcal*0.4;
+    fCarb = Math.max(carbFloor, carbKcalNow-excessCarbKcal) / curCarbKcal;
+    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+  }
+
+  var adjusted = pass1.adj;
+  var T = pass1.Tot;
 
   // ── Alertes qualitatives (pas de quantité, des conseils) ──
   var alerts = [];
