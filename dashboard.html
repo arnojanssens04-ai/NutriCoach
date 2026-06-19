@@ -1583,6 +1583,28 @@ function pN2(v){ return (v===null||v===undefined)?0:v; }
 // Analyse les entrées du jour, calcule les totaux actuels, et propose
 // une quantité ajustée pour chaque aliment afin de se rapprocher des
 // objectifs macro — sans changer les aliments eux-mêmes.
+// Taille de l'unité naturelle par catégorie détectée — pour arrondir à
+// "1 œuf" plutôt qu'à "47g", à "1 pot" plutôt qu'à "123g", etc.
+var NATURAL_UNIT_SIZE = {
+  oleagineux:10, oeuf:50, huile_sauce:5, sucre_confiture:5, beurre:10,
+  pain:30, fromage:20, charcuterie:15, chocolat:5, yaourt:125
+};
+var FRUIT_UNIT_GUESS = {banane:120, pomme:150, orange:150, poire:150, kiwi:90, peche:130, pêche:130};
+function guessFruitUnit(nom){
+  var n = normFoodName(nom);
+  for(var k in FRUIT_UNIT_GUESS){ if(n.indexOf(k)>=0) return FRUIT_UNIT_GUESS[k]; }
+  return 140;
+}
+function roundToNaturalUnit(qty, nom){
+  var cat = detectPortionCategory(nom);
+  if(!cat) return Math.max(5, roundTo(qty,5));
+  if(cat.id==='boisson') return Math.max(20, roundTo(qty,10));
+  var unit = cat.id==='fruit_unite' ? guessFruitUnit(nom) : NATURAL_UNIT_SIZE[cat.id];
+  if(!unit) return Math.max(5, roundTo(qty,5));
+  var n = Math.max(1, Math.round(qty/unit));
+  return n*unit;
+}
+
 function analyzeAndAdjust(entries, tgt, pathologies){
   if(!entries.length) return null;
 
@@ -1605,15 +1627,41 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     var f = target/cur;
     return Math.max(0.4, Math.min(2.5, f)); // bornes raisonnables, pas de portions absurdes
   }
+  // ── ÉTAPE A : ajuste chaque macro vers sa cible (répartition 50/15/35) ──
   var fProt = scaleFactor(curProtKcal, tgtProtKcal);
   var fCarb = scaleFactor(curCarbKcal, tgtCarbKcal);
   var fFat  = scaleFactor(curFatKcal, tgtFatKcal);
+
+  // ── ÉTAPE B : priorité aux calories totales ──
+  // La répartition macro est secondaire au total calorique. Si l'étape A fait
+  // dépasser l'objectif kcal, on corrige en réduisant d'abord les lipides
+  // (poste le moins prioritaire), puis les glucides si besoin — jamais les
+  // protéines, qu'on cherche à préserver au maximum.
+  var kcalAfterA = curProtKcal*(fProt||1) + curCarbKcal*(fCarb||1) + curFatKcal*(fFat||1);
+  var excess = kcalAfterA - tgt.kcal;
+  var tolerance = tgt.kcal*0.04; // ~4% de marge avant de corriger
+
+  if(excess > tolerance && curFatKcal > 0){
+    var fatKcalNow = curFatKcal*(fFat||1);
+    var fatFloor = curFatKcal*0.4; // ne jamais descendre sous le plancher déjà fixé
+    var fatKcalCorrected = Math.max(fatFloor, fatKcalNow - excess);
+    fFat = fatKcalCorrected/curFatKcal;
+    excess = excess - (fatKcalNow - fatKcalCorrected);
+  }
+  if(excess > tolerance && curCarbKcal > 0){
+    var carbKcalNow = curCarbKcal*(fCarb||1);
+    var carbFloor = curCarbKcal*0.4;
+    var carbKcalCorrected = Math.max(carbFloor, carbKcalNow - excess);
+    fCarb = carbKcalCorrected/curCarbKcal;
+    excess = excess - (carbKcalNow - carbKcalCorrected);
+  }
+  // Les protéines ne sont jamais réduites pour corriger un excès calorique.
 
   var adjusted = entries.map(function(e){
     var cat = classifyDominant(e);
     var f = cat==='protein'?fProt : cat==='carb'?fCarb : cat==='fat'?fFat : 1;
     if(f===null) f = 1;
-    var newQty = Math.max(5, roundTo(e.quantite*f, 5));
+    var newQty = roundToNaturalUnit(e.quantite*f, e.aliment);
     return {entry:e, cat:cat, oldQty:e.quantite, newQty:newQty, factor:f};
   });
 
