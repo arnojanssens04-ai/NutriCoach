@@ -674,10 +674,9 @@ body {
       <div class="pc" onclick="togP('cholesterol')" id="pc-cholesterol"><span class="pc-ico">🫀</span><span class="pc-name">Cholestérol</span><div class="pc-chk" id="pk-cholesterol"></div></div>
       <div class="pc" onclick="togP('hypertension')" id="pc-hypertension"><span class="pc-ico">💉</span><span class="pc-name">Hypertension</span><div class="pc-chk" id="pk-hypertension"></div></div>
       <div class="pc" onclick="togP('cardiac')" id="pc-cardiac"><span class="pc-ico">❤️</span><span class="pc-name">Maladies cardiaques</span><div class="pc-chk" id="pk-cardiac"></div></div>
-      <div class="pc" onclick="togP('coeliac')" id="pc-coeliac"><span class="pc-ico">🌾</span><span class="pc-name">Cœliaque</span><div class="pc-chk" id="pk-coeliac"></div></div>
       <div class="pc" onclick="togP('obesity')" id="pc-obesity"><span class="pc-ico">⚖️</span><span class="pc-name">Obésité / Poids</span><div class="pc-chk" id="pk-obesity"></div></div>
-      <div class="pc" onclick="togP('sportif_cond')" id="pc-sportif_cond"><span class="pc-ico">🏆</span><span class="pc-name">Sportif</span><div class="pc-chk" id="pk-sportif_cond"></div></div>
       <div class="pc" onclick="togP('sedentary_cond')" id="pc-sedentary_cond"><span class="pc-ico">🪑</span><span class="pc-name">Sédentaire</span><div class="pc-chk" id="pk-sedentary_cond"></div></div>
+      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🌾</span><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">En développement</span></div>
       <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🫘</span><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">En développement</span></div>
     </div>
     <div class="btn-nav-row">
@@ -690,49 +689,28 @@ body {
   <div class="ov-step" id="st-3">
     <div class="ov-badge">🏃 Activité physique</div>
     <h2 class="ov-title">Niveau d'activité</h2>
-    <p class="ov-sub">Toute personne pratiquant une activité physique améliore sa santé — indiquez votre niveau habituel pour personnaliser vos besoins.</p>
+    <p class="ov-sub">Toute personne pratiquant une activité physique, même légère, voit ses besoins caloriques augmenter. Sélectionnez votre niveau habituel.</p>
     <div class="act-list" style="margin-bottom:20px">
+      <div class="act-item" onclick="setAct('sedentary')" id="ac-sedentary"><span style="font-size:1.2rem">🪑</span><div><div class="act-name">Sédentaire</div><div class="act-desc">Peu ou pas d'activité physique</div></div></div>
       <div class="act-item" onclick="setAct('light')" id="ac-light"><span style="font-size:1.2rem">🚶</span><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
       <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><span style="font-size:1.2rem">🚴</span><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
       <div class="act-item" onclick="setAct('active')" id="ac-active"><span style="font-size:1.2rem">🏋️</span><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setActSportif()" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif</div><div class="act-desc">Entraînement intensif quotidien ou athlète</div></div></div>
+      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif / Athlète</div><div class="act-desc">Entraînement intensif quotidien</div></div></div>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
-      <button class="btn-next" onclick="goSt(4)">Continuer →</button>
+      <button class="btn-next" onclick="goSt3Next()">Continuer →</button>
     </div>
   </div>
 
-  <!-- ST-3b : Question activité sportive (si Sportif sélectionné) -->
+  <!-- ST-3b : Quelle activité physique ? (si activité != sédentaire) -->
   <div class="ov-step" id="st-3b">
-    <div class="ov-badge">🏅 Sport</div>
-    <h2 class="ov-title">Votre activité sportive</h2>
-    <p class="ov-sub">Quelle activité physique pratiquez-vous ? Cela nous permet de calculer votre dépense énergétique avec précision.</p>
+    <div class="ov-badge">🏅 Activité</div>
+    <h2 class="ov-title">Quelle activité pratiquez-vous ?</h2>
+    <p class="ov-sub">Décrivez librement votre activité physique. Ces informations nous aident à mieux personnaliser vos besoins nutritionnels.</p>
     <div class="field">
-      <label>Activité pratiquée</label>
-      <input type="text" id="s-sport-activity" placeholder="Ex : course à pied, natation, cyclisme...">
-    </div>
-    <div class="field">
-      <label>Fréquence hebdomadaire</label>
-      <select id="s-sport-freq">
-        <option value="5x">5 séances / semaine</option>
-        <option value="6x">6 séances / semaine</option>
-        <option value="7x">7 séances / semaine (quotidien)</option>
-        <option value="2x_day">2x par jour</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Durée moyenne par séance</label>
-      <select id="s-sport-duration">
-        <option value="30">30 min</option>
-        <option value="45">45 min</option>
-        <option value="60" selected>1 heure</option>
-        <option value="90">1h30</option>
-        <option value="120">2 heures ou plus</option>
-      </select>
-    </div>
-    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:.8rem;color:var(--text2);line-height:1.55">
-      💡 <strong style="color:var(--gold)">Votre dépense estimée</strong> sera calculée avec un coefficient PAL de 1.9 et votre objectif calorique sera ajusté en conséquence dans votre tableau de bord.
+      <label>Votre activité physique</label>
+      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s;line-height:1.6" placeholder="Ex : je cours 3 fois par semaine 45 min, je fais du vélo le week-end, yoga le mardi soir..."></textarea>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(3)">← Retour</button>
@@ -1997,7 +1975,7 @@ function openSetup(){
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
 function setAct(a){
   setup.act=a;
-  ['light','moderate','active','sportif'].forEach(function(x){
+  ['sedentary','light','moderate','active','sportif'].forEach(function(x){
     var el=document.getElementById('ac-'+x);
     if(el) el.classList.toggle('on',x===a);
   });
@@ -2006,20 +1984,24 @@ function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('
 function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
-  // Si on va à l'étape 4 depuis st-3 alors que sportif est sélectionné → passer par st-3b
-  if(n===4 && setup.act==='sportif' && !setup._sportif3bDone){
-    document.getElementById('st-3b').classList.add('on');
-    document.getElementById('ov-pf').style.width='78%';
-    return;
-  }
-  if(n===4) setup._sportif3bDone = false; // reset pour prochaine fois
-  var stepId = 'st-'+n;
-  document.getElementById(stepId).classList.add('on');
+  document.getElementById('st-'+n).classList.add('on');
   var pts={1:20,2:40,3:62,4:95};document.getElementById('ov-pf').style.width=(pts[n]||20)+'%';
   if(n===4){ refreshSetupJournal(); }
 }
-function setActSportif(){
-  setAct('sportif');
+// Appelé par le bouton Continuer de st-3
+// Si activité physique (pas sédentaire) → aller à st-3b, sinon directement st-4
+function goSt3Next(){
+  if(setup.act !== 'sedentary'){
+    document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
+    document.getElementById('st-3b').classList.add('on');
+    document.getElementById('ov-pf').style.width='78%';
+  } else {
+    goSt(4);
+  }
+}
+// Appelé par le bouton Continuer de st-3b
+function goSt3bToSt4(){
+  goSt(4);
 }
 function goSt3bToSt4(){
   // Valider qu'une activité a été saisie
