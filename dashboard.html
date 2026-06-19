@@ -541,15 +541,18 @@ body {
     <button class="btn-back" style="flex:0 0 auto;padding:8px 12px" onclick="goPage('dashboard')">←</button>
     <h2 class="section-title" style="font-size:1.3rem;margin:0">Mon plan alimentaire</h2>
   </div>
-  <p style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6">
-    Journée type calculée selon votre profil et vos pathologies. Cliquez ⇄ pour remplacer un aliment par une alternative compatible.
-  </p>
+  <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div class="card mb-12">
     <div class="card-header"><span class="card-title">Bilan de la journée</span></div>
     <div class="card-body" id="mp-totals"></div>
   </div>
+  <div class="card mb-12" id="mp-micro-card" style="display:none">
+    <div class="card-header"><span class="card-title">Micronutriments clés</span></div>
+    <div class="card-body" id="mp-micro-body"></div>
+  </div>
+  <div id="mp-alerts" class="mb-12"></div>
   <div id="mealplan-content"></div>
-  <button class="btn btn-secondary btn-full" onclick="regenerateMealPlan()">🔄 Régénérer le plan</button>
+  <button class="btn btn-secondary btn-full" id="mp-regen-btn" onclick="regenerateMealPlan()" style="display:none">🔄 Régénérer le plan générique</button>
 </div>
 
 <!-- JOURNAL -->
@@ -670,6 +673,7 @@ body {
       <div class="act-item" onclick="setAct('light')" id="ac-light"><span style="font-size:1.2rem">🚶</span><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
       <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><span style="font-size:1.2rem">🚴</span><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
       <div class="act-item" onclick="setAct('active')" id="ac-active"><span style="font-size:1.2rem">🏋️</span><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif</div><div class="act-desc">Entraînement intensif quotidien ou athlète</div></div></div>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(1)">← Retour</button>
@@ -745,7 +749,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
@@ -815,16 +819,31 @@ function calcTargets(){
   var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
   var act=p.activite||'sedentary',pathos=p.pathologies||[];
   var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
-  var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725};
+  var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
   var tdee=bmr*(af[act]||1.2);
   var kcal=tdee;
   if(pathos.indexOf('obesity')>=0||(p.poids_vise&&p.poids_vise<w))kcal=tdee-500;
   kcal=Math.max(1200,Math.round(kcal));
-  var pp=0.20,gp=0.50,lp=0.30;
-  if(pathos.indexOf('diabetes')>=0){gp=0.45;pp=0.25;}
-  if(pathos.indexOf('obesity')>=0){pp=0.30;gp=0.40;}
-  if(pathos.indexOf('renal')>=0){pp=0.10;gp=0.55;}
-  return{kcal:kcal,prot:Math.round(kcal*pp/4),gluc:Math.round(kcal*gp/4),lip:Math.round(kcal*lp/9),ags:Math.round(kcal*0.07/9),o3:2.0,fer:p.sexe==='F'&&p.age<50?16:9,cal:1000,pot:p.pathologies&&p.pathologies.indexOf('hypertension')>=0?3500:2000};
+  // Répartition macro universelle : 50% glucides / 15% protéines / 35% lipides.
+  // Les pathologies n'ajustent plus ces pourcentages — elles déclenchent plutôt
+  // des contrôles de QUALITÉ (fibres pour diabète, graisses saturées pour
+  // cardiovasculaire) gérés séparément dans genAlerts().
+  var pp=0.15, gp=0.50, lp=0.35;
+  return{
+    kcal:kcal,
+    prot:Math.round(kcal*pp/4),
+    gluc:Math.round(kcal*gp/4),
+    lip:Math.round(kcal*lp/9),
+    ags:Math.round(kcal*0.07/9),
+    o3:2.0,
+    fibres:27,
+    fer:(g==='F'&&a<50)?16:9,
+    cal:1000,
+    mg:g==='M'?380:300,
+    zn:g==='M'?12:10,
+    pot:pathos.indexOf('hypertension')>=0?3500:2000,
+    na:2300
+  };
 }
 
 function calcScore(T,tgt,pathos){
@@ -874,7 +893,9 @@ async function addEntry(food,qty){
     food_gluc_100:pN(food.gluc),food_lip_100:pN(food.lip),
     food_ags_100:pN(food.ags),food_o3a_100:pN(food.o3a),
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
-    food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot)
+    food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot),
+    food_fibres_100:pN(food.fibres),food_mg_100:pN(food.mg),
+    food_na_100:pN(food.na),food_zn_100:pN(food.zn)
   });
   if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
@@ -1077,7 +1098,7 @@ var CIQUAL_BLOCKLIST = [
 
 var offCache={};
 function nv(v){if(v===null||v===undefined||v==='')return '-';var n=parseFloat(v);return isNaN(n)?'-':String(n);}
-function parseOFF(prods,q){var r=[];(prods||[]).forEach(function(p){var nom=(p.product_name||'').trim();if(!nom||nom.length<2)return;if(p.brands){var b=p.brands.split(',')[0].trim();if(b&&nom.toLowerCase().indexOf(b.toLowerCase())<0)nom=nom+' ('+b+')';}var n=p.nutriments||{};var kcal=n['energy-kcal_100g'];if(!kcal&&n['energy_100g']&&n['energy_100g']>0)kcal=Math.round(n['energy_100g']/4.184);r.push({food:{code:'off_'+Math.random().toString(36).slice(2,8),nom:nom,kcal:kcal!=null?String(Math.round(kcal)):'-',prot:nv(n['proteins_100g']),gluc:nv(n['carbohydrates_100g']),lip:nv(n['fat_100g']),ags:nv(n['saturated-fat_100g']),mono:nv(n['monounsaturated-fat_100g']),o3a:nv(n['alpha-linolenic-acid_100g']),o3e:nv(n['eicosapentaenoic-acid_100g']),o3d:nv(n['docosahexaenoic-acid_100g']),fer:n['iron_100g']!=null?String((n['iron_100g']*1000).toFixed(2)):'-',cal:n['calcium_100g']!=null?String(Math.round(n['calcium_100g']*1000)):'-',pot:n['potassium_100g']!=null?String(Math.round(n['potassium_100g']*1000)):'-',_source:'off'},score:scoreFn(tok(q),tok(nom),nom),source:'off'});});r.sort(function(a,b){return b.score-a.score;});return r;}
+function parseOFF(prods,q){var r=[];(prods||[]).forEach(function(p){var nom=(p.product_name||'').trim();if(!nom||nom.length<2)return;if(p.brands){var b=p.brands.split(',')[0].trim();if(b&&nom.toLowerCase().indexOf(b.toLowerCase())<0)nom=nom+' ('+b+')';}var n=p.nutriments||{};var kcal=n['energy-kcal_100g'];if(!kcal&&n['energy_100g']&&n['energy_100g']>0)kcal=Math.round(n['energy_100g']/4.184);r.push({food:{code:'off_'+Math.random().toString(36).slice(2,8),nom:nom,kcal:kcal!=null?String(Math.round(kcal)):'-',prot:nv(n['proteins_100g']),gluc:nv(n['carbohydrates_100g']),lip:nv(n['fat_100g']),ags:nv(n['saturated-fat_100g']),mono:nv(n['monounsaturated-fat_100g']),o3a:nv(n['alpha-linolenic-acid_100g']),o3e:nv(n['eicosapentaenoic-acid_100g']),o3d:nv(n['docosahexaenoic-acid_100g']),fer:n['iron_100g']!=null?String((n['iron_100g']*1000).toFixed(2)):'-',cal:n['calcium_100g']!=null?String(Math.round(n['calcium_100g']*1000)):'-',pot:n['potassium_100g']!=null?String(Math.round(n['potassium_100g']*1000)):'-',fibres:nv(n['fiber_100g']),mg:n['magnesium_100g']!=null?String(Math.round(n['magnesium_100g']*1000)):'-',na:n['sodium_100g']!=null?String(Math.round(n['sodium_100g']*1000)):'-',zn:n['zinc_100g']!=null?String((n['zinc_100g']*1000).toFixed(2)):'-',_source:'off'},score:scoreFn(tok(q),tok(nom),nom),source:'off'});});r.sort(function(a,b){return b.score-a.score;});return r;}
 function searchOFF(q,cb){var key=normQ(q);if(offCache[key]){cb(offCache[key]);return;}var u1='https://world.openfoodfacts.org/api/v2/search?search_terms='+encodeURIComponent(q)+'&page_size=10&fields=product_name,nutriments,brands&sort_by=unique_scans_n&app_name=NutriCoach&app_version=1.0';var u2='https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments,brands&sort_by=unique_scans_n';function tryU(url,next){fetch(url).then(function(r){if(!r.ok)throw r.status;return r.json();}).then(function(d){var r=parseOFF(d.products||d.hits||[],q);offCache[key]=r;cb(r);}).catch(function(){if(next)next();else{offCache[key]=[];cb([]);}});}tryU(u1,function(){tryU(u2,null);});}
 
 function onSearch(val){
@@ -1405,15 +1426,14 @@ var FOOD_BANK = {
 function filterFoodBank(pathologies){
   var bank = {};
   Object.keys(FOOD_BANK).forEach(function(cat){ bank[cat] = FOOD_BANK[cat].slice(); });
-  if(pathologies.indexOf('renal') >= 0){
-    ['fruits','legumes','feculents','matieres_grasses'].forEach(function(cat){
-      var f = bank[cat].filter(function(x){ return x.pot < 350; });
-      if(f.length) bank[cat] = f;
-    });
-  }
+  // Cardiovasculaire/cholestérol : on regarde la PROPORTION de graisses
+  // saturées dans le total des lipides (pas la valeur brute) — sinon
+  // l'huile d'olive (15g d'AGS/100g mais 86% d'insaturés) serait à tort
+  // exclue au même titre que le beurre (72% d'AGS). On ne filtre que les
+  // catégories où la qualité du gras est pertinente.
   if(pathologies.indexOf('cholesterol') >= 0 || pathologies.indexOf('cardiac') >= 0){
-    Object.keys(bank).forEach(function(cat){
-      var f = bank[cat].filter(function(x){ return x.ags < 8; });
+    ['matieres_grasses','laitier'].forEach(function(cat){
+      var f = bank[cat].filter(function(x){ return x.lip<1 || (x.ags/x.lip) < 0.4; });
       if(f.length) bank[cat] = f;
     });
   }
@@ -1535,39 +1555,219 @@ function fmtQty(it){
 var CURRENT_PLAN = null;
 var SUBST_TARGET = null;
 
-function renderMealPlan(){
-  if(!CURRENT_PLAN) CURRENT_PLAN = generateMealPlan();
-  var tgt = calcTargets();
-  var T = planTotals(CURRENT_PLAN);
+// ══════════════════════════════════════════════════════════
+// MOTEUR D'ANALYSE & AJUSTEMENT — approche principale (v2)
+// ══════════════════════════════════════════════════════════
+// Plutôt que d'inventer un plan avec des aliments génériques, on part de
+// ce que la personne mange RÉELLEMENT (saisi à l'inscription ou dans le
+// journal du jour) et on ajuste les QUANTITÉS pour se rapprocher des
+// objectifs — en gardant les aliments qu'elle connaît et aime.
 
-  var html = '';
-  Object.keys(MEAL_META).forEach(function(mid){
-    var meta = MEAL_META[mid];
-    var items = CURRENT_PLAN[mid] || [];
-    html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.icon+' '+meta.label+'</span></div><div class="card-body">';
-    items.forEach(function(it, idx){
-      var kcal = Math.round(it.food.kcal*it.qty/100);
-      html += '<div class="mp-item">'
-        +'<div class="mp-item-info"><div class="mp-item-name">'+esc(it.food.nom)+'</div>'
-        +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div>'
-        +'<button class="mp-swap" onclick="openSubstitute(\''+mid+'\','+idx+')">⇄</button>'
-        +'</div>';
-    });
-    html += '</div></div>';
+// Classe un aliment selon le macronutriment qui domine ses calories.
+// Approche basée sur les données nutritionnelles réelles de l'aliment,
+// pas sur son nom — robuste pour n'importe quel aliment Ciqual ou OFF.
+function classifyDominant(entry){
+  var pk = (entry.proteines||0)*4;
+  var gk = (entry.glucides||0)*4;
+  var lk = (entry.lipides||0)*9;
+  var tot = pk+gk+lk;
+  if(tot < 1) return 'mixed';
+  if(pk/tot >= 0.40) return 'protein';
+  if(lk/tot >= 0.50) return 'fat';
+  if(gk/tot >= 0.50) return 'carb';
+  return 'mixed';
+}
+
+function pN2(v){ return (v===null||v===undefined)?0:v; }
+
+// Analyse les entrées du jour, calcule les totaux actuels, et propose
+// une quantité ajustée pour chaque aliment afin de se rapprocher des
+// objectifs macro — sans changer les aliments eux-mêmes.
+function analyzeAndAdjust(entries, tgt, pathologies){
+  if(!entries.length) return null;
+
+  var buckets = {protein:[], carb:[], fat:[], mixed:[]};
+  entries.forEach(function(e){ buckets[classifyDominant(e)].push(e); });
+
+  function bucketKcal(list){ return list.reduce(function(s,e){return s+(e.kcal||0);},0); }
+  function bucketGramsOfMacro(list, macroField){ return list.reduce(function(s,e){return s+(e[macroField]||0);},0); }
+
+  var curProtKcal = bucketKcal(buckets.protein);
+  var curCarbKcal = bucketKcal(buckets.carb);
+  var curFatKcal  = bucketKcal(buckets.fat);
+
+  var tgtProtKcal = tgt.prot*4;
+  var tgtCarbKcal = tgt.gluc*4;
+  var tgtFatKcal  = tgt.lip*9;
+
+  function scaleFactor(cur, target){
+    if(cur < 1) return null; // pas de base à l'échelle — sera signalé comme manque
+    var f = target/cur;
+    return Math.max(0.4, Math.min(2.5, f)); // bornes raisonnables, pas de portions absurdes
+  }
+  var fProt = scaleFactor(curProtKcal, tgtProtKcal);
+  var fCarb = scaleFactor(curCarbKcal, tgtCarbKcal);
+  var fFat  = scaleFactor(curFatKcal, tgtFatKcal);
+
+  var adjusted = entries.map(function(e){
+    var cat = classifyDominant(e);
+    var f = cat==='protein'?fProt : cat==='carb'?fCarb : cat==='fat'?fFat : 1;
+    if(f===null) f = 1;
+    var newQty = Math.max(5, roundTo(e.quantite*f, 5));
+    return {entry:e, cat:cat, oldQty:e.quantite, newQty:newQty, factor:f};
   });
 
-  document.getElementById('mealplan-content').innerHTML = html;
+  // Totaux après ajustement
+  var T = {kcal:0,prot:0,gluc:0,lip:0,ags:0,fibres:0,mg:0,na:0,zn:0,pot:0,cal:0,fer:0};
+  adjusted.forEach(function(a){
+    var r = a.newQty/100;
+    var e = a.entry;
+    T.kcal += pN2(e.food_kcal_100)*r; T.prot += pN2(e.food_prot_100)*r;
+    T.gluc += pN2(e.food_gluc_100)*r; T.lip  += pN2(e.food_lip_100)*r;
+    T.ags  += pN2(e.food_ags_100)*r;  T.fibres += pN2(e.food_fibres_100)*r;
+    T.mg   += pN2(e.food_mg_100)*r;   T.na   += pN2(e.food_na_100)*r;
+    T.zn   += pN2(e.food_zn_100)*r;   T.pot  += pN2(e.food_pot_100)*r;
+    T.cal  += pN2(e.food_cal_100)*r;  T.fer  += pN2(e.food_fer_100)*r;
+  });
 
-  var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
-  document.getElementById('mp-totals').innerHTML =
-    '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
-    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.kcal,tgt.kcal)+'%;background:var(--amber)"></div></div>'
-    +'<div class="mp-tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
-    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.prot,tgt.prot)+'%;background:var(--blue)"></div></div>'
-    +'<div class="mp-tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
-    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
-    +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
-    +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+  // ── Alertes qualitatives (pas de quantité, des conseils) ──
+  var alerts = [];
+  if(fProt===null) alerts.push({t:'warn',i:'🥩',ttl:'Aucune source de protéines identifiée',txt:'Ajoutez une source de protéines (viande, poisson, œuf, légumineuse) à un de vos repas.'});
+  if(fCarb===null) alerts.push({t:'warn',i:'🌾',ttl:'Aucune source de glucides identifiée',txt:'Ajoutez un féculent (riz, pâtes, pain, pomme de terre) pour atteindre votre objectif énergétique.'});
+  if(fFat===null) alerts.push({t:'warn',i:'🥑',ttl:'Aucune source de lipides identifiée',txt:'Ajoutez un peu de matière grasse de qualité (huile d\'olive, avocat, oléagineux).'});
+
+  if(pathologies.indexOf('diabetes') >= 0){
+    var carbGramsTotal = bucketGramsOfMacro(buckets.carb, 'glucides') + bucketGramsOfMacro(buckets.mixed,'glucides');
+    var fiberPerCarb = carbGramsTotal>0 ? T.fibres/carbGramsTotal : 0;
+    if(T.fibres < tgt.fibres*0.7){
+      alerts.push({t:'warn',i:'🌿',ttl:'Apport en fibres insuffisant (Diabète)',
+        txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont basses pour un bon contrôle glycémique. Privilégiez les céréales complètes et augmentez les légumes plutôt que les féculents raffinés.'});
+    } else if(fiberPerCarb < 0.05 && carbGramsTotal > 50){
+      alerts.push({t:'warn',i:'🌿',ttl:'Glucides peu riches en fibres',
+        txt:'Vos glucides viennent surtout d\'aliments raffinés. Remplacer une partie par des versions complètes (pain complet, riz complet) améliore le contrôle de la glycémie sans réduire les quantités.'});
+    }
+  }
+
+  if(pathologies.indexOf('cholesterol')>=0 || pathologies.indexOf('cardiac')>=0){
+    if(T.ags > tgt.ags){
+      var worstFat = buckets.fat.concat(buckets.mixed).sort(function(a,b){return (b.food_ags_100||0)-(a.food_ags_100||0);})[0];
+      alerts.push({t:'bad',i:'🫀',ttl:'Graisses saturées élevées',
+        txt:'Vos apports en graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) dépassent l\'objectif.'+(worstFat?' "'+worstFat.aliment+'" y contribue le plus — réduisez-le ou remplacez-le par une graisse végétale (huile d\'olive, avocat).':'')});
+    }
+  }
+
+  if(pathologies.indexOf('hypertension')>=0 && T.na > tgt.na){
+    alerts.push({t:'warn',i:'🧂',ttl:'Sodium élevé (Hypertension)',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) est au-dessus de l\'objectif. Limitez charcuterie, plats préparés et fromages salés.'});
+  }
+
+  return {adjusted:adjusted, totals:T, alerts:alerts};
+}
+
+function renderMicronutrientRow(label, val, target, unit, dec){
+  var d = dec||0;
+  var pct = target>0 ? Math.min(100,val/target*100) : 0;
+  var ok = val >= target*0.85;
+  return '<div class="nut-row'+(!ok?' nut-over':'')+'">'
+    +'<div><div class="nut-l">'+label+'</div><div class="nut-bar"><div class="nut-bar-f" style="width:'+pct.toFixed(0)+'%;background:'+(ok?'var(--sage)':'var(--rose)')+'"></div></div></div>'
+    +'<div class="nut-v">'+val.toFixed(d)+'<span class="nut-u">/'+target+unit+'</span></div></div>';
+}
+
+function renderMealPlan(){
+  var tgt = calcTargets();
+  var pathos = (PROF&&PROF.pathologies)||[];
+
+  getEntries().then(function(entries){
+    var analysis = entries.length ? analyzeAndAdjust(entries, tgt, pathos) : null;
+
+    document.getElementById('mealplan-mode-note').textContent = analysis
+      ? "Basé sur les aliments que vous avez déjà enregistrés aujourd'hui — quantités ajustées pour se rapprocher de vos objectifs."
+      : "Aucun aliment enregistré aujourd'hui : voici une journée type générique en attendant. Ajoutez vos repas dans le Journal pour obtenir un plan basé sur vos propres habitudes.";
+
+    var html = '';
+    if(analysis){
+      // ── Mode analyse : aliments réels avec quantité ajustée ──
+      var byMeal = {};
+      analysis.adjusted.forEach(function(a){
+        if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
+        byMeal[a.entry.repas].push(a);
+      });
+      Object.keys(MEAL_META).forEach(function(mid){
+        var meta = MEAL_META[mid];
+        var items = byMeal[mid]||[];
+        if(!items.length) return;
+        html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
+        items.forEach(function(a){
+          var changed = a.newQty !== a.oldQty;
+          var newKcal = Math.round(pN2(a.entry.food_kcal_100)*a.newQty/100);
+          html += '<div class="mp-item"><div class="mp-item-info">'
+            +'<div class="mp-item-name">'+esc(a.entry.aliment)+'</div>'
+            +'<div class="mp-item-qty">'
+            +(changed ? '<span style="text-decoration:line-through;color:var(--text3)">'+a.oldQty+'g</span> → <strong style="color:var(--gold)">'+a.newQty+'g</strong>' : a.newQty+'g')
+            +' · '+newKcal+' kcal</div></div></div>';
+        });
+        html += '</div></div>';
+      });
+    } else {
+      // ── Mode générique : ancien générateur (corrigé), utilisé en secours ──
+      if(!CURRENT_PLAN) CURRENT_PLAN = generateMealPlan();
+      Object.keys(MEAL_META).forEach(function(mid){
+        var meta = MEAL_META[mid];
+        var items = CURRENT_PLAN[mid] || [];
+        html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
+        items.forEach(function(it, idx){
+          var kcal = Math.round(it.food.kcal*it.qty/100);
+          html += '<div class="mp-item">'
+            +'<div class="mp-item-info"><div class="mp-item-name">'+esc(it.food.nom)+'</div>'
+            +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div>'
+            +'<button class="mp-swap" onclick="openSubstitute(\''+mid+'\','+idx+')">⇄</button>'
+            +'</div>';
+        });
+        html += '</div></div>';
+      });
+    }
+    document.getElementById('mealplan-content').innerHTML = html;
+
+    var T = analysis ? analysis.totals : planTotals(CURRENT_PLAN);
+    var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
+    document.getElementById('mp-totals').innerHTML =
+      '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
+      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.kcal,tgt.kcal)+'%;background:var(--amber)"></div></div>'
+      +'<div class="mp-tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
+      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.prot,tgt.prot)+'%;background:var(--blue)"></div></div>'
+      +'<div class="mp-tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
+      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
+      +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
+      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+
+    // Micronutriments — uniquement affichés en mode analyse (données réelles disponibles)
+    var microEl = document.getElementById('mp-micro-card');
+    if(analysis){
+      microEl.style.display='block';
+      document.getElementById('mp-micro-body').innerHTML =
+        '<div class="nut-grid">'
+        +renderMicronutrientRow('Fibres', T.fibres, tgt.fibres, 'g', 0)
+        +renderMicronutrientRow('Potassium', T.pot, tgt.pot, 'mg', 0)
+        +renderMicronutrientRow('Calcium', T.cal, tgt.cal, 'mg', 0)
+        +renderMicronutrientRow('Fer', T.fer, tgt.fer, 'mg', 1)
+        +renderMicronutrientRow('Magnésium', T.mg, tgt.mg, 'mg', 0)
+        +renderMicronutrientRow('Zinc', T.zn, tgt.zn, 'mg', 1)
+        +'</div>';
+    } else {
+      microEl.style.display='none';
+    }
+
+    // Alertes qualitatives
+    var alertsEl = document.getElementById('mp-alerts');
+    if(analysis && analysis.alerts.length){
+      alertsEl.innerHTML = '<div class="stitle">Recommandations</div><div class="alerts-list">'+analysis.alerts.map(function(a){
+        return '<div class="alert-item alert-'+a.t+'"><span class="alert-icon">'+a.i+'</span><div><div class="alert-title">'+a.ttl+'</div>'+a.txt+'</div></div>';
+      }).join('')+'</div>';
+    } else {
+      alertsEl.innerHTML = '';
+    }
+
+    document.getElementById('mp-regen-btn').style.display = analysis ? 'none' : 'block';
+  });
 }
 
 function regenerateMealPlan(){
@@ -1644,7 +1844,7 @@ function openSetup(){
   document.getElementById('ov').classList.add('on');
 }
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
-function setAct(a){setup.act=a;['sedentary','light','moderate','active'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
+function setAct(a){setup.act=a;['sedentary','light','moderate','active','sportif'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
 function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}}
 function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
@@ -1728,7 +1928,8 @@ fetch('data/ciqual.json')
   .then(function(raw){
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
-        ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13]};
+        ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
+        fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
     });
     console.log('Ciqual chargé : '+DB.length+' aliments');
   })
