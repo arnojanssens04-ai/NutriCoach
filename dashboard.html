@@ -1722,17 +1722,62 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
   }
 
-  // Cap calorique final : si le total dépasse l'objectif de plus de 3%,
-  // on applique un facteur de réduction uniforme sur glucides et lipides
+  // ── Cap calorique final ──
+  // Dépassement (>+1%) : réduction glucides 60% / lipides 40%
+  // Déficit (<-1%)     : augmentation glucides en priorité, lipides si gap > 5%
   var finalT = pass1.Tot;
-  if(finalT.kcal > tgt.kcal * 1.03){
+
+  if(finalT.kcal > tgt.kcal * 1.01){
     var overKcal = finalT.kcal - tgt.kcal;
-    // Réduction partagée 60% sur glucides, 40% sur lipides
     var carbKcalReduce = overKcal * 0.6;
     var fatKcalReduce  = overKcal * 0.4;
     if(curCarbKcal > 0) fCarb = Math.max(curCarbKcal*0.3, (curCarbKcal*(fCarb||1) - carbKcalReduce)) / curCarbKcal;
     if(curFatKcal  > 0) fFat  = Math.max(curFatKcal *0.25,(curFatKcal *(fFat ||1) - fatKcalReduce))  / curFatKcal;
     pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+    finalT = pass1.Tot;
+  }
+
+  // Correction déficit : si on est en-dessous de l'objectif de plus de 1%
+  // → augmenter les glucides en priorité (énergie propre, IG neutre)
+  // → si déficit > 5%, compléter aussi par les lipides (40% du gap restant)
+  // → jamais au-delà de 2.5x la portion originale (borne déjà dans scaleFactor)
+  if(finalT.kcal < tgt.kcal * 0.99 && (curCarbKcal > 0 || curFatKcal > 0)){
+    var gapKcal = tgt.kcal - finalT.kcal;
+    var gapPct  = gapKcal / tgt.kcal;
+
+    // Part des glucides dans le gap : 100% si gap ≤ 5%, 60% sinon
+    var carbShare = (gapPct <= 0.05) ? 1.0 : 0.6;
+    var fatShare  = 1.0 - carbShare;
+
+    var carbKcalAdd = gapKcal * carbShare;
+    var fatKcalAdd  = gapKcal * fatShare;
+
+    // Lipides : plafonner à 35% des kcal cibles pour ne pas dépasser le seuil santé
+    var lipMax35pct = tgt.kcal * 0.35 / 9; // en grammes
+    var lipActuel   = finalT.lip;
+    var lipHeadroom = Math.max(0, (lipMax35pct - lipActuel) * 9); // kcal disponibles
+    fatKcalAdd = Math.min(fatKcalAdd, lipHeadroom);
+    // Le reste du gap lipides non utilisé va aux glucides
+    carbKcalAdd += (gapKcal * fatShare - fatKcalAdd);
+
+    if(curCarbKcal > 0 && carbKcalAdd > 0){
+      var newCarbKcal = curCarbKcal*(fCarb||1) + carbKcalAdd;
+      fCarb = Math.min(2.5, newCarbKcal / curCarbKcal);
+    }
+    if(curFatKcal > 0 && fatKcalAdd > 0){
+      var newFatKcal = curFatKcal*(fFat||1) + fatKcalAdd;
+      fFat = Math.min(2.5, newFatKcal / curFatKcal);
+    }
+    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+    finalT = pass1.Tot;
+
+    // Sécurité : si après correction on dépasse de plus de 1%, on coupe le surplus
+    if(finalT.kcal > tgt.kcal * 1.01){
+      var trimKcal = finalT.kcal - tgt.kcal;
+      if(curCarbKcal > 0) fCarb = Math.max(curCarbKcal*0.3, (curCarbKcal*(fCarb||1) - trimKcal*0.8)) / curCarbKcal;
+      if(curFatKcal  > 0) fFat  = Math.max(curFatKcal*0.25, (curFatKcal*(fFat||1)  - trimKcal*0.2)) / curFatKcal;
+      pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
+    }
   }
 
   var adjusted = pass1.adj;
