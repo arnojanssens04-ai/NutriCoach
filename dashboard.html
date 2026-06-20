@@ -797,7 +797,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
@@ -1468,25 +1468,25 @@ function chgW(d){wkOffset+=d;if(wkOffset>0)wkOffset=0;renderWeekly();}
 // la fiabilité nutritionnelle du plan généré.
 var FOOD_BANK = {
   proteines: [
-    {code:'28963', nom:'Blanc de poulet', kcal:105, prot:20.7, gluc:1.4, lip:1.8, ags:0.54, pot:380, unit:'g'},
-    {code:'36302', nom:'Dinde rôtie', kcal:151, prot:29.1, gluc:0, lip:3.8, ags:1.13, pot:483, unit:'g'},
-    {code:'25997', nom:'Cabillaud', kcal:100, prot:23.3, gluc:0, lip:0.8, ags:0.17, pot:327, unit:'g'},
-    {code:'26192', nom:'Colin (lieu jaune)', kcal:97.8, prot:24.4, gluc:0, lip:0.5, ags:0.01, pot:388, unit:'g'},
-    {code:'25996', nom:'Saumon', kcal:205, prot:23.2, gluc:0.6, lip:12.2, ags:2.48, pot:383, unit:'g'},
-    {code:'22010', nom:'Œuf dur', kcal:134, prot:13.5, gluc:0.5, lip:8.6, ags:3.22, pot:120, unit:'oeuf', gpu:50},
-    {code:'20507', nom:'Pois chiches', kcal:148, prot:8.3, gluc:17.7, lip:3.0, ags:0.46, pot:170, unit:'g'},
-    {code:'20360', nom:'Lentilles', kcal:125, prot:10.1, gluc:16.2, lip:0.6, ags:0.09, pot:215, unit:'g'},
-    {code:'6200', nom:'Steak de bœuf grillé', kcal:128, prot:27.6, gluc:0, lip:2.0, ags:0.98, pot:371, unit:'g'},
-    {code:'20904', nom:'Tofu nature', kcal:147, prot:13.4, gluc:2.9, lip:8.5, ags:1.35, pot:140, unit:'g'}
+    {code:'28963', nom:'Blanc de poulet', kcal:105, prot:20.7, gluc:1.4, lip:1.8, ags:0.54, pot:380, unit:'g', fits:['lunch','dinner']},
+    {code:'36302', nom:'Dinde rôtie', kcal:151, prot:29.1, gluc:0, lip:3.8, ags:1.13, pot:483, unit:'g', fits:['lunch','dinner']},
+    {code:'25997', nom:'Cabillaud', kcal:100, prot:23.3, gluc:0, lip:0.8, ags:0.17, pot:327, unit:'g', fits:['lunch','dinner']},
+    {code:'26192', nom:'Colin (lieu jaune)', kcal:97.8, prot:24.4, gluc:0, lip:0.5, ags:0.01, pot:388, unit:'g', fits:['lunch','dinner']},
+    {code:'25996', nom:'Saumon', kcal:205, prot:23.2, gluc:0.6, lip:12.2, ags:2.48, pot:383, unit:'g', fits:['lunch','dinner']},
+    {code:'22010', nom:'Œuf dur', kcal:134, prot:13.5, gluc:0.5, lip:8.6, ags:3.22, pot:120, unit:'oeuf', gpu:50, fits:['breakfast','lunch','dinner','snack']},
+    {code:'20507', nom:'Pois chiches', kcal:148, prot:8.3, gluc:17.7, lip:3.0, ags:0.46, pot:170, unit:'g', fits:['lunch','dinner']},
+    {code:'20360', nom:'Lentilles', kcal:125, prot:10.1, gluc:16.2, lip:0.6, ags:0.09, pot:215, unit:'g', fits:['lunch','dinner']},
+    {code:'6200', nom:'Steak de bœuf grillé', kcal:128, prot:27.6, gluc:0, lip:2.0, ags:0.98, pot:371, unit:'g', fits:['lunch','dinner']},
+    {code:'20904', nom:'Tofu nature', kcal:147, prot:13.4, gluc:2.9, lip:8.5, ags:1.35, pot:140, unit:'g', fits:['lunch','dinner']}
   ],
   feculents: [
-    {code:'9104', nom:'Riz blanc', kcal:155, prot:3.2, gluc:33.2, lip:0.7, ags:0.17, pot:21.9, unit:'g'},
-    {code:'9811', nom:'Pâtes', kcal:167, prot:6.1, gluc:31.4, lip:1.1, ags:0.2, pot:52.1, unit:'g'},
-    {code:'7001', nom:'Pain blanc', kcal:287, prot:8.3, gluc:58.3, lip:1.4, ags:0.45, pot:180, unit:'g'},
-    {code:'4048', nom:'Pomme de terre', kcal:94.9, prot:2.1, gluc:17.2, lip:1.6, ags:0.44, pot:457, unit:'g'},
-    {code:'9341', nom:'Quinoa', kcal:149, prot:4.7, gluc:27.9, lip:1.1, ags:0.14, pot:220, unit:'g'},
-    {code:'9691', nom:'Boulgour', kcal:131, prot:4.3, gluc:24.1, lip:1.0, ags:0.16, pot:67.1, unit:'g'},
-    {code:'4102', nom:'Patate douce', kcal:79.1, prot:1.7, gluc:16.3, lip:0.15, ags:0.042, pot:353, unit:'g'}
+    {code:'9104', nom:'Riz blanc', kcal:155, prot:3.2, gluc:33.2, lip:0.7, ags:0.17, pot:21.9, unit:'g', fits:['lunch','dinner']},
+    {code:'9811', nom:'Pâtes', kcal:167, prot:6.1, gluc:31.4, lip:1.1, ags:0.2, pot:52.1, unit:'g', fits:['lunch','dinner']},
+    {code:'7001', nom:'Pain blanc', kcal:287, prot:8.3, gluc:58.3, lip:1.4, ags:0.45, pot:180, unit:'g', fits:['breakfast']},
+    {code:'4048', nom:'Pomme de terre', kcal:94.9, prot:2.1, gluc:17.2, lip:1.6, ags:0.44, pot:457, unit:'g', fits:['lunch','dinner']},
+    {code:'9341', nom:'Quinoa', kcal:149, prot:4.7, gluc:27.9, lip:1.1, ags:0.14, pot:220, unit:'g', fits:['lunch','dinner']},
+    {code:'9691', nom:'Boulgour', kcal:131, prot:4.3, gluc:24.1, lip:1.0, ags:0.16, pot:67.1, unit:'g', fits:['lunch','dinner']},
+    {code:'4102', nom:'Patate douce', kcal:79.1, prot:1.7, gluc:16.3, lip:0.15, ags:0.042, pot:353, unit:'g', fits:['lunch','dinner']}
   ],
   legumes: [
     {code:'20057', nom:'Brocoli', kcal:31.9, prot:2.9, gluc:2.2, lip:0.4, ags:0.047, pot:321, unit:'g'},
@@ -1516,10 +1516,10 @@ var FOOD_BANK = {
     {code:'17130', nom:'Huile de colza', kcal:900, prot:0, gluc:0, lip:100, ags:7.26, pot:0, unit:'cuillère à soupe', gpu:10}
   ],
   laitier: [
-    {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml'},
-    {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6, gluc:3.5, lip:3.0, ags:2.13, pot:110, unit:'pot', gpu:125},
-    {code:'19501', nom:'Fromage blanc', kcal:80, prot:7.0, gluc:6.3, lip:2.8, ags:1.83, pot:162, unit:'g'},
-    {code:'12099', nom:'Emmental', kcal:396, prot:29.7, gluc:0, lip:30.8, ags:21.4, pot:0, unit:'tranche', gpu:20}
+    {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml', fits:['breakfast']},
+    {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6, gluc:3.5, lip:3.0, ags:2.13, pot:110, unit:'pot', gpu:125, fits:['breakfast','snack']},
+    {code:'19501', nom:'Fromage blanc', kcal:80, prot:7.0, gluc:6.3, lip:2.8, ags:1.83, pot:162, unit:'g', fits:['breakfast','snack']},
+    {code:'12099', nom:'Emmental', kcal:396, prot:29.7, gluc:0, lip:30.8, ags:21.4, pot:0, unit:'tranche', gpu:20, fits:[]}
   ]
 };
 
@@ -1569,11 +1569,13 @@ function generateMealPlan(){
   var plan = {};
   var usedCodes = {}; // évite de répéter le même aliment entre déjeuner et souper
 
-  // Pioche aléatoirement dans la catégorie (filtrée par pathologie), en
-  // évitant si possible les aliments déjà utilisés ailleurs dans la journée
-  // — pour une vraie variété plutôt que toujours les 2-3 mêmes aliments.
-  function pickRandom(cat){
-    var list = bank[cat];
+  // Pioche aléatoirement dans la catégorie, filtrée par pathologie ET par
+  // pertinence pour le repas (ex: pas de pomme de terre ou d'emmental au
+  // petit-déjeuner) — les aliments sans étiquette "fits" (légumes, fruits,
+  // matières grasses) sont considérés adaptés à tous les repas.
+  function pickRandom(cat, meal){
+    var list = bank[cat].filter(function(x){ return !x.fits || x.fits.indexOf(meal)>=0; });
+    if(!list.length) list = bank[cat]; // sécurité si le filtre est trop strict
     var fresh = list.filter(function(x){ return !usedCodes[x.code]; });
     var pool = fresh.length ? fresh : list;
     var choice = pool[Math.floor(Math.random()*pool.length)];
@@ -1583,15 +1585,21 @@ function generateMealPlan(){
 
   // ── PETIT-DÉJEUNER (25% kcal) ──
   var bKcal = tgt.kcal * 0.25;
-  var fruit1 = pickRandom('fruits');
-  var laitier1 = pickRandom('laitier');
-  var beurre = noButter ? null : pickRandom('matieres_grasses');
+  var fruit1 = pickRandom('fruits','breakfast');
+  var laitier1 = pickRandom('laitier','breakfast');
+  var beurre = noButter ? null : pickRandom('matieres_grasses','breakfast');
   var fruitQty = fruit1.gpu || 150;
   var laitierQty = laitier1.gpu || 125;
   var beurreQty = beurre ? 10 : 0;
   var fixedK = (fruit1.kcal*fruitQty/100) + (laitier1.kcal*laitierQty/100) + (beurre?beurre.kcal*beurreQty/100:0);
-  var pain = pickRandom('feculents');
-  var painQty = Math.max(20, roundTo((bKcal - fixedK) / pain.kcal * 100, 5));
+  var pain = pickRandom('feculents','breakfast');
+  var PAIN_MAX_QTY = 150;
+  var painQtyRaw = (bKcal - fixedK) / pain.kcal * 100;
+  var painQty = Math.max(20, roundTo(Math.min(PAIN_MAX_QTY, painQtyRaw), 5));
+  if(beurre && painQtyRaw > PAIN_MAX_QTY){
+    var painExcessKcal = (painQtyRaw - PAIN_MAX_QTY) * pain.kcal/100;
+    beurreQty = roundTo(beurreQty + painExcessKcal/beurre.kcal*100, 5);
+  }
   plan.breakfast = [
     {food:pain, qty:painQty},
     {food:laitier1, qty:laitierQty},
@@ -1607,19 +1615,25 @@ function generateMealPlan(){
   var mealDefs = need2ndSnack
     ? [{key:'lunch', pct:0.30, legQty:150, starchFactor:1.0}, {key:'dinner', pct:0.25, legQty:200, starchFactor:0.7}]
     : [{key:'lunch', pct:0.35, legQty:150, starchFactor:1.0}, {key:'dinner', pct:0.30, legQty:200, starchFactor:0.7}];
+  var FECULENT_MAX_QTY = 300; // portion réaliste max — l'excédent va dans l'huile
   mealDefs.forEach(function(md){
     var mKcal = tgt.kcal * md.pct;
     var protShare = tgt.prot * md.pct;
-    var proteine = pickRandom('proteines');
-    var feculent = pickRandom('feculents');
-    var legume = pickRandom('legumes');
-    var huile = pickRandom('matieres_grasses');
+    var proteine = pickRandom('proteines', md.key);
+    var feculent = pickRandom('feculents', md.key);
+    var legume = pickRandom('legumes', md.key);
+    var huile = pickRandom('matieres_grasses', md.key);
 
     var protQty = roundTo(Math.max(80, Math.min(220, protShare/proteine.prot*100)), 5);
     var legQty = md.legQty;
     var huileQty = 10;
     var usedK = (proteine.kcal*protQty/100)+(legume.kcal*legQty/100)+(huile.kcal*huileQty/100);
-    var feculentQty = Math.max(0, roundTo((mKcal-usedK)/feculent.kcal*100*md.starchFactor, 5));
+    var feculentQtyRaw = (mKcal-usedK)/feculent.kcal*100*md.starchFactor;
+    var feculentQty = Math.max(0, roundTo(Math.min(FECULENT_MAX_QTY, feculentQtyRaw), 5));
+    if(feculentQtyRaw > FECULENT_MAX_QTY){
+      var excessKcal = (feculentQtyRaw - FECULENT_MAX_QTY) * feculent.kcal/100;
+      huileQty = roundTo(huileQty + excessKcal/huile.kcal*100, 5);
+    }
 
     plan[md.key] = [
       {food:proteine, qty:protQty},
@@ -1635,8 +1649,8 @@ function generateMealPlan(){
   // féculents irréalistes" déjà appliquée ailleurs pour les hauts besoins.
   if(need2ndSnack){
     var snack2Kcal = tgt.kcal * 0.10;
-    var snack2Prot = pickRandom('proteines');
-    var snack2Fat = pickRandom('matieres_grasses');
+    var snack2Prot = pickRandom('proteines','snack2');
+    var snack2Fat = pickRandom('matieres_grasses','snack2');
     var snack2ProtQty = roundTo(Math.max(40, Math.min(120, snack2Kcal*0.5/snack2Prot.kcal*100)), 5);
     var snack2FatKcal = snack2Kcal - (snack2Prot.kcal*snack2ProtQty/100);
     var snack2FatQty = Math.max(5, roundTo(snack2FatKcal/snack2Fat.kcal*100, 5));
@@ -1648,11 +1662,11 @@ function generateMealPlan(){
 
   // ── COLLATION (10% kcal) ──
   if(pathos.indexOf('renal') >= 0){
-    var snackFruit = pickRandom('fruits');
+    var snackFruit = pickRandom('fruits','snack');
     plan.snack = [{food:snackFruit, qty:snackFruit.gpu||150}];
   } else {
-    var snackYaourt = pickRandom('laitier');
-    var snackFruit2 = pickRandom('fruits');
+    var snackYaourt = pickRandom('laitier','snack');
+    var snackFruit2 = pickRandom('fruits','snack');
     plan.snack = [
       {food:snackYaourt, qty:snackYaourt.gpu||125},
       {food:snackFruit2, qty:snackFruit2.gpu||120}
@@ -1978,12 +1992,15 @@ function renderMealPlan(){
       });
     } else {
       // ── Mode générique : ancien générateur (corrigé), utilisé en secours ──
-      // Régénéré automatiquement si l'objectif calorique a changé depuis la
-      // dernière génération (ex: après avoir renseigné met.html) — sinon on
-      // garde le plan tel quel pour préserver les substitutions manuelles.
+      // On tente d'abord de RECHARGER le plan déjà sauvegardé (persistant
+      // entre les connexions) avant d'en générer un nouveau — régénéré
+      // seulement si l'objectif calorique a changé de façon significative
+      // ou si la personne clique explicitement sur "Régénérer".
+      if(!CURRENT_PLAN) loadGenericPlanFromProfile();
       if(!CURRENT_PLAN || !CURRENT_PLAN_KCAL_BASIS || Math.abs(tgt.kcal-CURRENT_PLAN_KCAL_BASIS) > tgt.kcal*0.02){
         CURRENT_PLAN = generateMealPlan();
         CURRENT_PLAN_KCAL_BASIS = tgt.kcal;
+        saveGenericPlan();
       }
       activeMealIds().forEach(function(mid){
         var meta = MEAL_META[mid];
@@ -2048,8 +2065,30 @@ function renderMealPlan(){
 function regenerateMealPlan(){
   CURRENT_PLAN = generateMealPlan();
   CURRENT_PLAN_KCAL_BASIS = calcTargets().kcal;
+  saveGenericPlan();
   renderMealPlan();
   toast('🔄 Plan régénéré');
+}
+
+// ── Persistance du plan générique ──
+// Sans ça, le plan était recalculé à chaque rechargement de page (donc à
+// chaque reconnexion) avec de nouveaux aliments aléatoires — perturbant pour
+// l'utilisateur qui s'attend à retrouver le même plan jusqu'à ce qu'il
+// clique explicitement sur "Régénérer".
+function saveGenericPlan(){
+  if(!CURRENT_PLAN || !USER) return;
+  var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS});
+  sb.from('profiles').update({generic_meal_plan:payload}).eq('id',USER.id).then(function(){
+    if(PROF) PROF.generic_meal_plan = payload;
+  });
+}
+function loadGenericPlanFromProfile(){
+  if(!PROF || !PROF.generic_meal_plan) return false;
+  try{
+    var data = JSON.parse(PROF.generic_meal_plan);
+    if(data && data.plan){ CURRENT_PLAN = data.plan; CURRENT_PLAN_KCAL_BASIS = data.basis; return true; }
+  } catch(e){}
+  return false;
 }
 
 function openSubstitute(mealKey, idx){
@@ -2116,6 +2155,7 @@ function confirmSubstitute(i){
   var oldKcalContrib = item.food.kcal * item.qty / 100;
   var newQty = roundTo(Math.max(10, oldKcalContrib / newFood.kcal * 100), 5);
   CURRENT_PLAN[SUBST_TARGET.mealKey][SUBST_TARGET.idx] = {food:newFood, qty:newQty};
+  saveGenericPlan();
   closeSubstitute();
   renderMealPlan();
   toast('✅ Remplacé par '+newFood.nom);
