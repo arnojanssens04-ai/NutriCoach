@@ -531,7 +531,7 @@ body {
     <div class="meal-kcal">Voir une journée type adaptée à mon profil</div>
   </div>
 
-  <a href="bilan.html" style="text-decoration:none;color:inherit;display:block">
+  <a href="bilan.html" id="bilan-link" style="text-decoration:none;color:inherit;display:block">
     <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
       <div class="meal-card-top">
         <span class="meal-ico">📊</span>
@@ -970,16 +970,28 @@ async function refreshDash(){
   var pathos=p.pathologies||[];
   var tgt=calcTargets();
 
-  // Indique si c'est aujourd'hui le jour de bilan choisi par la personne
+  // Le bilan n'est accessible que le jour choisi par la personne — les
+  // autres jours, la carte est grisée et non-cliquable (modifiable dans
+  // Profil si le jour ne convient plus).
   var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   var todayName = joursFR[new Date().getDay()];
   var bilanCard = document.getElementById('bilan-card');
+  var bilanLink = document.getElementById('bilan-link');
   if(bilanCard){
-    if(p.jour_bilan && p.jour_bilan===todayName){
+    var isBilanDay = p.jour_bilan && p.jour_bilan===todayName;
+    if(isBilanDay){
       bilanCard.style.borderColor='var(--gold)';
+      bilanCard.style.opacity='1';
+      bilanLink.removeAttribute('data-disabled');
+      bilanLink.href='bilan.html';
       document.getElementById('bilan-card-sub').innerHTML='<strong style="color:var(--gold)">C\'est votre jour de bilan !</strong>';
     } else {
-      document.getElementById('bilan-card-sub').textContent='Faire le point sur votre semaine';
+      bilanCard.style.borderColor='var(--border)';
+      bilanCard.style.opacity='.5';
+      bilanLink.removeAttribute('href');
+      bilanLink.style.cursor='not-allowed';
+      var jourLbl = p.jour_bilan ? p.jour_bilan.charAt(0).toUpperCase()+p.jour_bilan.slice(1) : 'dimanche';
+      document.getElementById('bilan-card-sub').textContent='Disponible le '+jourLbl;
     }
   }
 
