@@ -243,6 +243,14 @@ sb.auth.getSession().then(function(r){
 async function loadProfileAndHistory(){
   var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
   PROF = pr.data || {};
+
+  var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var todayName = joursFR[new Date().getDay()];
+  if(PROF.jour_bilan && PROF.jour_bilan !== todayName){
+    showWrongDayScreen();
+    return;
+  }
+
   document.getElementById('hero-sub').textContent =
     (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
   if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
@@ -250,6 +258,23 @@ async function loadProfileAndHistory(){
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
   var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
   renderHistory(bilans);
+}
+
+function showWrongDayScreen(){
+  var jourLbl = PROF.jour_bilan.charAt(0).toUpperCase()+PROF.jour_bilan.slice(1);
+  document.getElementById('hero-sub').textContent = 'Votre bilan est prévu un autre jour.';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">📅</div>'
+    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est prévu le '+jourLbl+'. Revenez ce jour-là pour faire le point sur votre semaine.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'<a href="dashboard.html" style="display:block;margin-top:12px;font-size:.76rem;color:var(--text3);text-decoration:underline">Ce jour ne vous convient plus ? Modifiez-le dans votre profil</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
 }
 
 function renderHistory(bilans){
