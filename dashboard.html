@@ -542,6 +542,17 @@ body {
     </div>
   </a>
 
+  <a href="recette.html" style="text-decoration:none;color:inherit;display:block">
+    <div class="meal-card" style="margin-bottom:14px;cursor:pointer">
+      <div class="meal-card-top">
+        <span class="meal-ico">📖</span>
+        <div class="meal-add">→</div>
+      </div>
+      <div class="meal-name">Recettes</div>
+      <div class="meal-kcal">Découvrir des plats et les ajouter à votre journée</div>
+    </div>
+  </a>
+
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
 </div>
@@ -695,50 +706,36 @@ body {
   </div>
 
   <div class="ov-step" id="st-2">
-    <div class="ov-badge">🏃 Activité</div>
+    <div class="ov-badge">Activité</div>
     <h2 class="ov-title">Niveau d'activité</h2>
     <p class="ov-sub">Votre dépense énergétique varie selon votre activité physique quotidienne.</p>
-    <div class="act-list" style="margin-bottom:20px">
-      <div class="act-item" onclick="setAct('sedentary')" id="ac-sedentary"><span style="font-size:1.2rem">🪑</span><div><div class="act-name">Sédentaire</div><div class="act-desc">Bureau, peu de sport</div></div></div>
-      <div class="act-item" onclick="setAct('light')" id="ac-light"><span style="font-size:1.2rem">🚶</span><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><span style="font-size:1.2rem">🚴</span><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('active')" id="ac-active"><span style="font-size:1.2rem">🏋️</span><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
-      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><span style="font-size:1.2rem">🏆</span><div><div class="act-name">Sportif</div><div class="act-desc">Entraînement intensif quotidien ou athlète</div></div></div>
+    <div class="act-list" style="margin-bottom:14px">
+      <div class="act-item" onclick="setAct('sedentary')" id="ac-sedentary"><div><div class="act-name">Sédentaire</div><div class="act-desc">Bureau, peu de sport</div></div></div>
+      <div class="act-item" onclick="setAct('light')" id="ac-light"><div><div class="act-name">Légèrement actif</div><div class="act-desc">1-3 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('moderate')" id="ac-moderate"><div><div class="act-name">Modérément actif</div><div class="act-desc">3-5 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('active')" id="ac-active"><div><div class="act-name">Très actif</div><div class="act-desc">6-7 séances/semaine</div></div></div>
+      <div class="act-item" onclick="setAct('sportif')" id="ac-sportif"><div><div class="act-name">Sportif</div><div class="act-desc">Entraînement intensif quotidien ou athlète</div></div></div>
     </div>
+    <div class="field-hint" style="font-size:.75rem;color:var(--text3);margin-bottom:6px;line-height:1.5">Pour un calcul calorique exact basé sur vos activités précises, vous pourrez aussi utiliser notre outil dédié depuis votre profil après l'inscription.</div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(1)">← Retour</button>
-      <button class="btn-next" onclick="goSt2Next()">Continuer →</button>
-    </div>
-  </div>
-
-  <div class="ov-step" id="st-2b">
-    <div class="ov-badge">🏅 Activité</div>
-    <h2 class="ov-title">Quelle activité pratiquez-vous ?</h2>
-    <p class="ov-sub">Décrivez librement votre activité physique — cela nous aide à mieux personnaliser vos besoins nutritionnels.</p>
-    <div class="field">
-      <label>Votre activité physique</label>
-      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;line-height:1.6" placeholder="Soyez précis si possible, ex : 2h de vélo/semaine, 2h de course à pied/semaine, ~7500 pas/jour..."></textarea>
-      <div class="field-hint" style="font-size:.75rem;color:var(--text3);margin-top:6px;line-height:1.5">💡 Pour un calcul calorique exact basé sur vos activités précises, vous pourrez aussi utiliser notre outil dédié depuis votre profil après l'inscription.</div>
-    </div>
-    <div class="btn-nav-row">
-      <button class="btn-back" onclick="goSt(2)">← Retour</button>
       <button class="btn-next" onclick="goSt(3)">Continuer →</button>
     </div>
   </div>
 
   <div class="ov-step" id="st-3">
-    <div class="ov-badge">🏥 Santé</div>
+    <div class="ov-badge">Santé</div>
     <h2 class="ov-title">Conditions de santé</h2>
     <p class="ov-sub">Sélectionnez vos pathologies pour des recommandations adaptées.</p>
     <div class="patho-grid">
-      <div class="pc" onclick="togP('diabetes')" id="pc-diabetes"><span class="pc-ico">🩸</span><span class="pc-name">Diabète</span><div class="pc-chk" id="pk-diabetes"></div></div>
-      <div class="pc" onclick="togP('cholesterol')" id="pc-cholesterol"><span class="pc-ico">🫀</span><span class="pc-name">Cholestérol</span><div class="pc-chk" id="pk-cholesterol"></div></div>
-      <div class="pc" onclick="togP('hypertension')" id="pc-hypertension"><span class="pc-ico">💉</span><span class="pc-name">Hypertension</span><div class="pc-chk" id="pk-hypertension"></div></div>
-      <div class="pc" onclick="togP('cardiac')" id="pc-cardiac"><span class="pc-ico">❤️</span><span class="pc-name">Maladies cardiaques</span><div class="pc-chk" id="pk-cardiac"></div></div>
-      <div class="pc" onclick="togP('renal')" id="pc-renal"><span class="pc-ico">🫘</span><span class="pc-name">Problèmes rénaux</span><div class="pc-chk" id="pk-renal"></div></div>
-      <div class="pc" onclick="togP('obesity')" id="pc-obesity"><span class="pc-ico">⚖️</span><span class="pc-name">Obésité / Poids</span><div class="pc-chk" id="pk-obesity"></div></div>
-      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🌾</span><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
-      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-ico">🩻</span><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
+      <div class="pc" onclick="togP('none')" id="pc-none"><span class="pc-name">Aucune pathologie</span><div class="pc-chk" id="pk-none"></div></div>
+      <div class="pc" onclick="togP('diabetes')" id="pc-diabetes"><span class="pc-name">Diabète de type II</span><div class="pc-chk" id="pk-diabetes"></div></div>
+      <div class="pc" onclick="togP('cholesterol')" id="pc-cholesterol"><span class="pc-name">Cholestérol</span><div class="pc-chk" id="pk-cholesterol"></div></div>
+      <div class="pc" onclick="togP('hypertension')" id="pc-hypertension"><span class="pc-name">Hypertension</span><div class="pc-chk" id="pk-hypertension"></div></div>
+      <div class="pc" onclick="togP('cardiac')" id="pc-cardiac"><span class="pc-name">Maladies cardiaques</span><div class="pc-chk" id="pk-cardiac"></div></div>
+      <div class="pc" onclick="togP('obesity')" id="pc-obesity"><span class="pc-name">Obésité / Poids</span><div class="pc-chk" id="pk-obesity"></div></div>
+      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
+      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
@@ -2268,7 +2265,6 @@ function openSetup(){
   if(p.taille)document.getElementById('s-h').value=p.taille;
   if(p.poids)document.getElementById('s-w').value=p.poids;
   document.getElementById('s-jourbilan').value=p.jour_bilan||'dimanche';
-  document.getElementById('s-sport-activity').value=p.activite_detail||'';
   setSex(setup.sex); setAct(setup.act); setObj(setup.objectif);
   setup.pathos.forEach(function(pp){var c=document.getElementById('pc-'+pp);var k=document.getElementById('pk-'+pp);if(c){c.classList.add('on');k.innerHTML='✓';}});
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
@@ -2283,18 +2279,12 @@ function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('
 function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
-  var id = (n===2.5) ? 'st-2b' : 'st-'+n;
-  document.getElementById(id).classList.add('on');
-  var pts={1:15,2:32,2.5:48,3:66,4:95};document.getElementById('ov-pf').style.width=(pts[n]||50)+'%';
+  document.getElementById('st-'+n).classList.add('on');
+  var pts={1:20,2:50,3:75,4:95};document.getElementById('ov-pf').style.width=(pts[n]||50)+'%';
   if(n===4){ updateMealTabsVisibility(); refreshSetupJournal(); }
 }
-// Saute l'étape "décrivez votre activité" si la personne est sédentaire —
-// rien à décrire dans ce cas, pas la peine de lui demander.
-function goSt2Next(){
-  if(setup.act === 'sedentary'){ goSt(3); } else { goSt(2.5); }
-}
 async function finSetup(){
-  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,activite_detail:document.getElementById('s-sport-activity').value.trim()||null,pathologies:setup.pathos};
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
   await saveProf(data);
   document.getElementById('ov').classList.remove('on');
@@ -2437,7 +2427,7 @@ fetch('data/ciqual.json')
 // Override finSetup to show loading screen
 var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
-  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,activite_detail:document.getElementById('s-sport-activity').value.trim()||null,pathologies:setup.pathos};
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
   await saveProf(data);
   document.getElementById('ov').classList.remove('on');
