@@ -620,6 +620,12 @@ body {
     </div>
     <div class="prof-card-body" id="p-pathos"></div>
   </div>
+  <a href="met.html" style="text-decoration:none;color:inherit;display:block">
+    <div class="prof-card" style="cursor:pointer">
+      <div class="prof-card-hdr"><span>🎯 Précision calorique</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
+      <div class="prof-card-body" id="p-met-status" style="font-size:.82rem;color:var(--text2)">Renseignez vos activités sportives précises (vélo, course, pas/jour...) pour un objectif calorique exact.</div>
+    </div>
+  </a>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>⚙️ Compte</span></div>
     <div class="prof-card-body">
@@ -711,7 +717,8 @@ body {
     <p class="ov-sub">Décrivez librement votre activité physique — cela nous aide à mieux personnaliser vos besoins nutritionnels.</p>
     <div class="field">
       <label>Votre activité physique</label>
-      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;line-height:1.6" placeholder="Ex : je cours 3 fois par semaine 45 min, vélo le week-end, yoga le mardi soir..."></textarea>
+      <textarea id="s-sport-activity" rows="4" style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-family:Inter,sans-serif;font-size:.9rem;color:var(--text);outline:none;resize:vertical;line-height:1.6" placeholder="Soyez précis si possible, ex : 2h de vélo/semaine, 2h de course à pied/semaine, ~7500 pas/jour..."></textarea>
+      <div class="field-hint" style="font-size:.75rem;color:var(--text3);margin-top:6px;line-height:1.5">💡 Pour un calcul calorique exact basé sur vos activités précises, vous pourrez aussi utiliser notre outil dédié depuis votre profil après l'inscription.</div>
     </div>
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
@@ -866,7 +873,14 @@ function calcTargets(){
   var act=p.activite||'sedentary',pathos=p.pathologies||[];
   var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
   var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
-  var tdee=bmr*(af[act]||1.2);
+  // Si l'activité précise (page met.html) a été renseignée, on bascule sur
+  // un multiplicateur "vie quotidienne" minimal (équivalent sédentaire) et on
+  // ajoute le calcul MET exact par-dessus — pour éviter de compter le sport
+  // deux fois (une fois dans le multiplicateur, une fois dans le MET précis).
+  var hasMetData = p.activite_met_kcal && p.activite_met_kcal > 0;
+  var tdee = hasMetData
+    ? bmr*1.2 + p.activite_met_kcal
+    : bmr*(af[act]||1.2);
   var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
   var kcal=tdee;
   if(objectif==='perte') kcal = tdee-500;
@@ -1989,6 +2003,14 @@ function renderProfile(){
   document.getElementById('p-sub').textContent=[p.age?p.age+' ans':'',p.taille?p.taille+' cm':'',bmi?'IMC '+bmi.toFixed(1):''].filter(Boolean).join(' · ');
   var objLabels={perte:'Perte',maintien:'Maintien',prise:'Prise'};
   document.getElementById('p-stats').innerHTML='<div class="pstat"><div class="pstat-v">'+(p.poids||'—')+'</div><div class="pstat-l">kg actuel</div></div><div class="pstat"><div class="pstat-v">'+tgt.kcal+'</div><div class="pstat-l">kcal/jour</div></div><div class="pstat"><div class="pstat-v">'+(objLabels[p.objectif]||'—')+'</div><div class="pstat-l">Objectif</div></div>';
+
+  var metEl = document.getElementById('p-met-status');
+  if(metEl){
+    metEl.innerHTML = (p.activite_met_kcal && p.activite_met_kcal>0)
+      ? '<strong style="color:var(--gold)">+'+Math.round(p.activite_met_kcal)+' kcal/jour</strong> calculés depuis vos activités précises. Modifier →'
+      : 'Renseignez vos activités sportives précises (vélo, course, pas/jour...) pour un objectif calorique exact.';
+  }
+
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
   if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';return;}
