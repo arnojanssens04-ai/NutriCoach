@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Activité physique précise</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:40px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:600px; margin:0 auto; padding:22px 18px; }
+.hero { text-align:center; margin-bottom:18px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:700; margin-bottom:6px; }
+.hero p { font-size:.84rem; color:var(--text2); line-height:1.6; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); overflow:hidden; }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
+.card-hdr span { font-family:'Cormorant Garamond',serif; font-size:1rem; }
+.card-body { padding:16px 18px; }
+
+.toggle-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.toggle-opt { padding:14px; border:1.5px solid var(--border); border-radius:11px; text-align:center; cursor:pointer; transition:all .15s; background:var(--card2); }
+.toggle-opt .ti { font-size:1.6rem; display:block; margin-bottom:6px; }
+.toggle-opt .tl { font-size:.88rem; font-weight:600; color:var(--text2); }
+.toggle-opt.on { border-color:var(--gold); background:var(--gold-l); }
+.toggle-opt.on .tl { color:var(--gold); }
+
+#activity-section { display:none; }
+#activity-section.show { display:block; }
+
+.act-row { display:grid; grid-template-columns:1fr 90px 36px; gap:8px; margin-bottom:9px; align-items:center; }
+.act-row select, .act-row input { padding:10px 11px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.85rem; outline:none; font-family:'Inter',sans-serif; }
+.act-row select:focus, .act-row input:focus { border-color:rgba(201,169,110,0.45); }
+.act-row input { text-align:center; }
+.act-del { width:36px; height:36px; border-radius:9px; background:var(--rose-l); border:1px solid rgba(201,122,110,0.25); color:var(--rose); cursor:pointer; font-size:.9rem; }
+.act-del:hover { background:rgba(201,122,110,0.2); }
+
+.btn-add { width:100%; padding:11px; border:1.5px dashed var(--border2); border-radius:10px; background:none; color:var(--gold); font-size:.84rem; font-weight:600; cursor:pointer; margin-top:4px; transition:all .15s; }
+.btn-add:hover { background:var(--gold-l); }
+
+.field { margin-bottom:0; }
+.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
+.field input { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; }
+.field-hint { font-size:.74rem; color:var(--text3); margin-top:6px; line-height:1.5; }
+
+.result-card { background:linear-gradient(135deg,#15301f,#0e1f18); border:1px solid rgba(122,155,124,0.3); border-radius:var(--r); padding:18px; margin-bottom:14px; text-align:center; display:none; }
+.result-card.show { display:block; }
+.result-val { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; color:var(--sage); }
+.result-lbl { font-size:.78rem; color:var(--text2); margin-top:4px; }
+
+.btn { width:100%; padding:13px; border-radius:11px; border:none; font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; box-shadow:0 4px 20px rgba(201,169,110,0.2); }
+.btn-gold:hover { transform:translateY(-1px); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="dashboard.html" class="t-back">← Profil</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Précision de l'activité physique</h1>
+    <p>Plus vous êtes précis, plus votre objectif calorique le sera. Cette page calcule exactement les calories brûlées par votre activité réelle, à partir des valeurs scientifiques MET.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="toggle-row" id="toggle-row">
+        <div class="toggle-opt" id="opt-non" onclick="setHasActivity(false)">
+          <span class="ti">🛋️</span><span class="tl">Non, pas vraiment</span>
+        </div>
+        <div class="toggle-opt" id="opt-oui" onclick="setHasActivity(true)">
+          <span class="ti">🏃</span><span class="tl">Oui, je suis actif(ve)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="activity-section">
+    <div class="card">
+      <div class="card-hdr"><span>🏋️ Vos activités sportives</span></div>
+      <div class="card-body">
+        <div id="activity-rows"></div>
+        <button class="btn-add" onclick="addActivityRow()">+ Ajouter une activité</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span>🚶 Marche quotidienne</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Nombre de pas par jour (approximatif)</label>
+          <input type="number" id="steps-input" placeholder="Ex: 7500" min="0" step="500">
+          <div class="field-hint">Comptez uniquement la marche quotidienne générale (trajets, courses...), pas les activités déjà listées ci-dessus.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-val" id="result-val">+0 kcal</div>
+    <div class="result-lbl">en moyenne par jour grâce à votre activité physique</div>
+  </div>
+
+  <button class="btn btn-gold" id="save-btn" onclick="saveActivity()">Enregistrer mon activité</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, PROF=null;
+var hasActivity = null;
+var rowCount = 0;
+
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+
+// ══════════════════════════════════════════════════════════
+// BASE MET — source de référence scientifique par activité
+// ══════════════════════════════════════════════════════════
+var MET_DATA = [
+  {cat:'🚴 Cyclisme', items:[
+    {n:'Cyclisme loisir, 19–22 km/h', met:8.0},
+    {n:'Cyclisme VTT, général', met:8.5},
+  ]},
+  {cat:'🏃 Course à pied', items:[
+    {n:'Jogging, général', met:10.0},
+  ]},
+  {cat:'🏊 Natation', items:[
+    {n:'Brasse (entraînement/compétition)', met:10.3},
+    {n:'Aquagym / aquabiking', met:7.3},
+  ]},
+  {cat:'🚶 Marche', items:[
+    {n:'Marche modérée (4,5–5 km/h)', met:3.5},
+  ]},
+  {cat:'🎾 Sports de raquette', items:[
+    {n:'Tennis', met:7.0},
+    {n:'Badminton, général', met:5.5},
+    {n:'Squash', met:12.0},
+    {n:'Racquetball', met:10.0},
+    {n:'Tennis de table', met:4.0},
+    {n:'Padel', met:7.5},
+  ]},
+  {cat:'⚽ Sports collectifs', items:[
+    {n:'Football', met:7.0},
+    {n:'Basket-ball', met:8.0},
+    {n:'Handball, général', met:12.0},
+    {n:'Volleyball', met:6.0},
+    {n:'Beach-volley', met:8.0},
+    {n:'Hockey sur glace (compétition)', met:10.0},
+    {n:'Rugby', met:8.3},
+    {n:'Pétanque / boulingrin', met:3.3},
+  ]},
+  {cat:'💪 Musculation & fitness', items:[
+    {n:'Musculation, effort modéré (8-15 reps)', met:3.5},
+    {n:'HIIT', met:8.0},
+    {n:'Elliptique', met:5.0},
+    {n:'Rameur (100 watts)', met:7.0},
+    {n:'Corde à sauter, général', met:12.3},
+    {n:'Tapis de course, général', met:9.0},
+  ]},
+  {cat:'⛷️ Sports d\'hiver', items:[
+    {n:'Ski alpin', met:5.3},
+    {n:'Ski de fond (6,5–8 km/h)', met:9.0},
+    {n:'Patinage sur glace, général', met:7.0},
+  ]},
+  {cat:'🥊 Arts martiaux & combat', items:[
+    {n:'Arts martiaux (judo, karaté, kickboxing...)', met:8.3},
+    {n:'Boxe', met:8.3},
+  ]},
+  {cat:'🧘 Activités douces', items:[
+    {n:'Yoga', met:3.5},
+    {n:'Pilates, général', met:3.0},
+    {n:'Tai chi / Qi gong', met:3.0},
+    {n:'Stretching doux', met:2.3},
+    {n:'Danse', met:5.5},
+    {n:'Vélo électrique (VAE)', met:4.5},
+  ]},
+  {cat:'🏆 Autres', items:[
+    {n:'Triathlon (combiné)', met:10.0},
+    {n:'Escalade / bloc en salle', met:7.0},
+  ]},
+];
+
+function buildSelectOptions(){
+  return MET_DATA.map(function(g){
+    var opts = g.items.map(function(it){ return '<option value="'+it.met+'">'+it.n+'</option>'; }).join('');
+    return '<optgroup label="'+g.cat+'">'+opts+'</optgroup>';
+  }).join('');
+}
+
+function addActivityRow(prefillMet, prefillHours){
+  rowCount++;
+  var id = 'row-'+rowCount;
+  var div = document.createElement('div');
+  div.className = 'act-row';
+  div.id = id;
+  div.innerHTML = '<select onchange="computeResult()">'+buildSelectOptions()+'</select>'
+    + '<input type="number" placeholder="h/sem" min="0" step="0.5" value="'+(prefillHours||1)+'" onchange="computeResult()" oninput="computeResult()">'
+    + '<button class="act-del" onclick="document.getElementById(\''+id+'\').remove();computeResult()">✕</button>';
+  document.getElementById('activity-rows').appendChild(div);
+  if(prefillMet){ div.querySelector('select').value = prefillMet; }
+  computeResult();
+}
+
+function setHasActivity(val){
+  hasActivity = val;
+  document.getElementById('opt-non').classList.toggle('on', val===false);
+  document.getElementById('opt-oui').classList.toggle('on', val===true);
+  document.getElementById('activity-section').classList.toggle('show', val===true);
+  if(val===true && document.getElementById('activity-rows').children.length===0){
+    addActivityRow();
+  }
+  computeResult();
+}
+
+function computeResult(){
+  if(!hasActivity){
+    document.getElementById('result-card').classList.remove('show');
+    return;
+  }
+  var poids = (PROF && PROF.poids) || 70;
+  var rows = document.querySelectorAll('.act-row');
+  var weeklyExerciseKcal = 0;
+  rows.forEach(function(row){
+    var met = parseFloat(row.querySelector('select').value);
+    var hours = parseFloat(row.querySelector('input').value) || 0;
+    weeklyExerciseKcal += met * poids * hours;
+  });
+  var dailyExerciseKcal = weeklyExerciseKcal / 7;
+
+  // Formule MET standard : kcal = MET × poids(kg) × durée(heures).
+  // Les pas sont convertis en équivalent-temps de marche (≈100 pas/min
+  // à allure modérée, soit 6000 pas/heure), puis on applique le MET
+  // de la marche modérée (3,5).
+  var steps = parseFloat(document.getElementById('steps-input').value) || 0;
+  var stepsHoursPerDay = steps / 6000;
+  var dailyStepsKcal = 3.5 * poids * stepsHoursPerDay;
+
+  var totalDaily = dailyExerciseKcal + dailyStepsKcal;
+
+  document.getElementById('result-val').textContent = '+'+Math.round(totalDaily)+' kcal';
+  document.getElementById('result-card').classList.add('show');
+  return totalDaily;
+}
+
+async function saveActivity(){
+  var btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  var data = { activite_met_kcal: 0, activite_met_detail: null };
+
+  if(hasActivity){
+    var total = computeResult() || 0;
+    var rows = document.querySelectorAll('.act-row');
+    var detail = { activities: [], steps: parseFloat(document.getElementById('steps-input').value)||0 };
+    rows.forEach(function(row){
+      var sel = row.querySelector('select');
+      detail.activities.push({ nom: sel.options[sel.selectedIndex].text, met: parseFloat(sel.value), heures_semaine: parseFloat(row.querySelector('input').value)||0 });
+    });
+    data.activite_met_kcal = Math.round(total);
+    data.activite_met_detail = JSON.stringify(detail);
+  }
+
+  var r = await sb.from('profiles').update(data).eq('id', USER.id);
+  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Enregistrer mon activité'; return; }
+
+  toast('✅ Activité enregistrée — votre objectif calorique est mis à jour');
+  btn.textContent = 'Enregistré ✓';
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
+}
+
+// ── AUTH + chargement profil (pré-remplissage si déjà renseigné) ──
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  loadProfile();
+});
+
+async function loadProfile(){
+  var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
+  PROF = pr.data || {};
+
+  if(PROF.activite_met_detail){
+    try{
+      var detail = JSON.parse(PROF.activite_met_detail);
+      if(detail.activities && detail.activities.length){
+        setHasActivity(true);
+        detail.activities.forEach(function(a){ addActivityRow(a.met, a.heures_semaine); });
+        if(detail.steps) document.getElementById('steps-input').value = detail.steps;
+      } else {
+        setHasActivity(false);
+      }
+    } catch(e){ setHasActivity(false); }
+  }
+  computeResult();
+}
+</script>
+</body>
+</html>
