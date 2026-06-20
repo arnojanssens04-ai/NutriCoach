@@ -191,7 +191,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, PROF=null, DB=[];
@@ -279,11 +279,15 @@ async function init(){
   if(PROF.role==='admin') document.getElementById('fab-add').style.display='flex';
 
   fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
-    DB = raw.map(function(r){ return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],ags:r[6],pot:r[13]}; });
+    // Ciqual stocke certaines valeurs avec une virgule française ("15,2")
+    // en texte brut — pN() les convertit en vrais nombres JS, sinon les
+    // calculs (NaN) et l'enregistrement Supabase (erreur Postgres) échouent.
+    DB = raw.map(function(r){ return {code:r[0],nom:r[1],kcal:pN(r[2]),prot:pN(r[3]),gluc:pN(r[4]),lip:pN(r[5]),ags:pN(r[6]),pot:pN(r[13])}; });
   }).catch(function(){ console.warn('Ciqual non chargé'); });
 
   loadRecipes();
 }
+function pN(v){ if(v===null||v===undefined||v==='-'||v==='')return 0; return parseFloat(String(v).replace(',','.'))||0; }
 
 async function loadRecipes(){
   var res = await sb.from('recettes').select('*').order('created_at',{ascending:false});
@@ -305,7 +309,7 @@ function renderList(){
     return;
   }
   el.innerHTML = list.map(function(r){
-    var kcal = (r.ingredients||[]).reduce(function(s,i){ return s+i.kcal*i.qty/100; },0);
+    var kcal = (r.ingredients||[]).reduce(function(s,i){ return s+pN(i.kcal)*pN(i.qty)/100; },0);
     var tags = (r.repas_types||[]).map(function(m){ return '<span class="recipe-tag">'+(MEAL_LABELS[m]||m)+'</span>'; }).join('');
     return '<div class="recipe-card" onclick="openDetail(\''+r.id+'\')">'
       +'<div class="recipe-name">'+esc(r.nom)+'</div>'
@@ -335,10 +339,16 @@ async function confirmAddToMeal(meal){
   if(!SELECTED_RECIPE) return;
   var tgt = calcTargets();
   var mealKcalTarget = tgt.kcal * mealPct(meal, tgt.kcal);
-  var baseKcal = (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+i.kcal*i.qty/100; },0);
+  // pN() en filet de sécurité : nettoie d'éventuelles valeurs mal
+  // enregistrées (virgule française) sur des recettes créées avant le
+  // correctif, sans devoir les recréer.
+  var cleanIngs = (SELECTED_RECIPE.ingredients||[]).map(function(i){
+    return {code:i.code, nom:i.nom, qty:pN(i.qty)||100, kcal:pN(i.kcal), prot:pN(i.prot), gluc:pN(i.gluc), lip:pN(i.lip), ags:pN(i.ags), pot:pN(i.pot)};
+  });
+  var baseKcal = cleanIngs.reduce(function(s,i){ return s+i.kcal*i.qty/100; },0);
   var factor = Math.max(0.5, Math.min(2.2, mealKcalTarget/(baseKcal||1)));
 
-  var inserts = (SELECTED_RECIPE.ingredients||[]).map(function(ing){
+  var inserts = cleanIngs.map(function(ing){
     var newQty = roundNatural(ing.qty*factor, ing.nom);
     return {
       user_id:USER.id, date:todayStr(), repas:meal, aliment:ing.nom,
