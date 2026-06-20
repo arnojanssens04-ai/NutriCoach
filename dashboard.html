@@ -554,7 +554,7 @@ body {
   </div>
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div class="card mb-12">
-    <div class="card-header"><span class="card-title">Bilan de la journée</span></div>
+    <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journée</span></div>
     <div class="card-body" id="mp-totals"></div>
   </div>
   <div class="card mb-12" id="mp-micro-card" style="display:none">
@@ -1572,106 +1572,106 @@ function roundTo(n, step){ return Math.round(n/step)*step; }
 var RECIPES = [
   // ── PETIT-DÉJEUNER ──
   {id:'b1', meal:'breakfast', nom:'Tartines, beurre & yaourt', excludeFor:['cholesterol','cardiac'], ing:[
-    {code:'7001',nom:'Pain blanc',qty:80,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180},
-    {code:'16400',nom:'Beurre',qty:10,kcal:753,prot:0.64,gluc:0.7,lip:83,ags:60,pot:36.1},
-    {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110},
-    {code:'13005',nom:'Banane',qty:120,kcal:87.6,prot:1.1,gluc:19.7,lip:0.5,ags:0.01,pot:320}
+    {code:'7001',nom:'Pain blanc',qty:80,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180,unit:'g'},
+    {code:'16400',nom:'Beurre',qty:10,kcal:753,prot:0.64,gluc:0.7,lip:83,ags:60,pot:36.1,unit:'noix',gpu:10},
+    {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110,unit:'pot',gpu:125},
+    {code:'13005',nom:'Banane',qty:120,kcal:87.6,prot:1.1,gluc:19.7,lip:0.5,ags:0.01,pot:320,unit:'fruit',gpu:120}
   ]},
   {id:'b2', meal:'breakfast', nom:'Œufs, pain & avocat', excludeFor:[], ing:[
-    {code:'7001',nom:'Pain blanc',qty:60,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180},
-    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120},
-    {code:'13004',nom:'Avocat',qty:50,kcal:203,prot:1.6,gluc:0,lip:20.6,ags:4.51,pot:430},
-    {code:'13034',nom:'Orange',qty:150,kcal:42,prot:0.75,gluc:8.0,lip:0.5,ags:0.01,pot:180}
+    {code:'7001',nom:'Pain blanc',qty:60,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180,unit:'g'},
+    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120,unit:'oeuf',gpu:50},
+    {code:'13004',nom:'Avocat',qty:50,kcal:203,prot:1.6,gluc:0,lip:20.6,ags:4.51,pot:430,unit:'g'},
+    {code:'13034',nom:'Orange',qty:150,kcal:42,prot:0.75,gluc:8.0,lip:0.5,ags:0.01,pot:180,unit:'fruit',gpu:150}
   ]},
   {id:'b3', meal:'breakfast', nom:"Flocons d'avoine & fruits", excludeFor:[], ing:[
-    {code:'32140',nom:"Flocons d'avoine",qty:50,kcal:369,prot:10.6,gluc:57.7,lip:7.82,ags:1.4,pot:320},
-    {code:'19033',nom:'Lait demi-écrémé',qty:200,kcal:47.5,prot:3.5,gluc:5.0,lip:1.6,ags:0.98,pot:158},
-    {code:'13039',nom:'Pomme',qty:150,kcal:54,prot:0.25,gluc:11.6,lip:0.3,ags:0.052,pot:119},
-    {code:'15000',nom:'Amandes',qty:10,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800}
+    {code:'32140',nom:"Flocons d'avoine",qty:50,kcal:369,prot:10.6,gluc:57.7,lip:7.82,ags:1.4,pot:320,unit:'g'},
+    {code:'19033',nom:'Lait demi-écrémé',qty:200,kcal:47.5,prot:3.5,gluc:5.0,lip:1.6,ags:0.98,pot:158,unit:'ml'},
+    {code:'13039',nom:'Pomme',qty:150,kcal:54,prot:0.25,gluc:11.6,lip:0.3,ags:0.052,pot:119,unit:'fruit',gpu:150},
+    {code:'15000',nom:'Amandes',qty:10,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800,unit:'poignée',gpu:10}
   ]},
   {id:'b4', meal:'breakfast', nom:'Fromage blanc, pain & kiwi', excludeFor:[], ing:[
-    {code:'19501',nom:'Fromage blanc',qty:200,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162},
-    {code:'7001',nom:'Pain blanc',qty:60,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180},
-    {code:'13021',nom:'Kiwi',qty:90,kcal:60.9,prot:0.88,gluc:11.0,lip:0.6,ags:0.13,pot:290},
-    {code:'15000',nom:'Amandes',qty:10,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800}
+    {code:'19501',nom:'Fromage blanc',qty:200,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162,unit:'g'},
+    {code:'7001',nom:'Pain blanc',qty:60,kcal:287,prot:8.3,gluc:58.3,lip:1.4,ags:0.45,pot:180,unit:'g'},
+    {code:'13021',nom:'Kiwi',qty:90,kcal:60.9,prot:0.88,gluc:11.0,lip:0.6,ags:0.13,pot:290,unit:'fruit',gpu:90},
+    {code:'15000',nom:'Amandes',qty:10,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800,unit:'poignée',gpu:10}
   ]},
   // ── DÉJEUNER ──
   {id:'l1', meal:'lunch', nom:'Poulet, riz & brocoli', excludeFor:[], ing:[
-    {code:'28963',nom:'Blanc de poulet',qty:150,kcal:105,prot:20.7,gluc:1.4,lip:1.8,ags:0.54,pot:380},
-    {code:'9104',nom:'Riz blanc',qty:150,kcal:155,prot:3.2,gluc:33.2,lip:0.7,ags:0.17,pot:21.9},
-    {code:'20057',nom:'Brocoli',qty:150,kcal:31.9,prot:2.9,gluc:2.2,lip:0.4,ags:0.047,pot:321},
-    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'28963',nom:'Blanc de poulet',qty:150,kcal:105,prot:20.7,gluc:1.4,lip:1.8,ags:0.54,pot:380,unit:'g'},
+    {code:'9104',nom:'Riz blanc cuit',qty:150,kcal:155,prot:3.2,gluc:33.2,lip:0.7,ags:0.17,pot:21.9,unit:'g'},
+    {code:'20057',nom:'Brocoli',qty:150,kcal:31.9,prot:2.9,gluc:2.2,lip:0.4,ags:0.047,pot:321,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'l2', meal:'lunch', nom:'Cabillaud, patate douce & courgette', excludeFor:[], ing:[
-    {code:'25997',nom:'Cabillaud',qty:150,kcal:100,prot:23.3,gluc:0,lip:0.8,ags:0.17,pot:327},
-    {code:'4102',nom:'Patate douce',qty:200,kcal:79.1,prot:1.7,gluc:16.3,lip:0.15,ags:0.042,pot:353},
-    {code:'20021',nom:'Courgette',qty:150,kcal:15.5,prot:0.9,gluc:1.4,lip:0.4,ags:0.1,pot:238},
-    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'25997',nom:'Cabillaud',qty:150,kcal:100,prot:23.3,gluc:0,lip:0.8,ags:0.17,pot:327,unit:'g'},
+    {code:'4102',nom:'Patate douce cuite',qty:200,kcal:79.1,prot:1.7,gluc:16.3,lip:0.15,ags:0.042,pot:353,unit:'g'},
+    {code:'20021',nom:'Courgette',qty:150,kcal:15.5,prot:0.9,gluc:1.4,lip:0.4,ags:0.1,pot:238,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'l3', meal:'lunch', nom:'Saumon, quinoa & épinards', excludeFor:[], ing:[
-    {code:'25996',nom:'Saumon',qty:130,kcal:205,prot:23.2,gluc:0.6,lip:12.2,ags:2.48,pot:383},
-    {code:'9341',nom:'Quinoa',qty:120,kcal:149,prot:4.7,gluc:27.9,lip:1.1,ags:0.14,pot:220},
-    {code:'20083',nom:'Épinards',qty:150,kcal:28,prot:3.3,gluc:1.0,lip:0.5,ags:0.041,pot:346},
-    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'25996',nom:'Saumon',qty:130,kcal:205,prot:23.2,gluc:0.6,lip:12.2,ags:2.48,pot:383,unit:'g'},
+    {code:'9341',nom:'Quinoa cuit',qty:120,kcal:149,prot:4.7,gluc:27.9,lip:1.1,ags:0.14,pot:220,unit:'g'},
+    {code:'20083',nom:'Épinards',qty:150,kcal:28,prot:3.3,gluc:1.0,lip:0.5,ags:0.041,pot:346,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'l4', meal:'lunch', nom:'Bœuf, pâtes & carotte', excludeFor:[], ing:[
-    {code:'6200',nom:'Steak de bœuf grillé',qty:130,kcal:128,prot:27.6,gluc:0,lip:2.0,ags:0.98,pot:371},
-    {code:'9811',nom:'Pâtes',qty:150,kcal:167,prot:6.1,gluc:31.4,lip:1.1,ags:0.2,pot:52.1},
-    {code:'20009',nom:'Carotte',qty:100,kcal:30.2,prot:0.78,gluc:5.2,lip:0.3,ags:0.15,pot:274},
-    {code:'17130',nom:'Huile de colza',qty:10,kcal:900,prot:0,gluc:0,lip:100,ags:7.26,pot:0}
+    {code:'6200',nom:'Steak de bœuf grillé',qty:130,kcal:128,prot:27.6,gluc:0,lip:2.0,ags:0.98,pot:371,unit:'g'},
+    {code:'9811',nom:'Pâtes cuites',qty:150,kcal:167,prot:6.1,gluc:31.4,lip:1.1,ags:0.2,pot:52.1,unit:'g'},
+    {code:'20009',nom:'Carotte',qty:100,kcal:30.2,prot:0.78,gluc:5.2,lip:0.3,ags:0.15,pot:274,unit:'g'},
+    {code:'17130',nom:'Huile de colza',qty:10,kcal:900,prot:0,gluc:0,lip:100,ags:7.26,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'l5', meal:'lunch', nom:'Tofu, boulgour & poivron', excludeFor:[], ing:[
-    {code:'20904',nom:'Tofu nature',qty:150,kcal:147,prot:13.4,gluc:2.9,lip:8.5,ags:1.35,pot:140},
-    {code:'9691',nom:'Boulgour',qty:150,kcal:131,prot:4.3,gluc:24.1,lip:1.0,ags:0.16,pot:67.1},
-    {code:'20087',nom:'Poivron rouge',qty:100,kcal:33.6,prot:1.1,gluc:6.0,lip:0.3,ags:0.01,pot:180},
-    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'20904',nom:'Tofu nature',qty:150,kcal:147,prot:13.4,gluc:2.9,lip:8.5,ags:1.35,pot:140,unit:'g'},
+    {code:'9691',nom:'Boulgour cuit',qty:150,kcal:131,prot:4.3,gluc:24.1,lip:1.0,ags:0.16,pot:67.1,unit:'g'},
+    {code:'20087',nom:'Poivron rouge',qty:100,kcal:33.6,prot:1.1,gluc:6.0,lip:0.3,ags:0.01,pot:180,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:10,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   // ── SOUPER ──
   {id:'d1', meal:'dinner', nom:'Colin, pomme de terre & haricots verts', excludeFor:[], ing:[
-    {code:'26192',nom:'Colin (lieu jaune)',qty:140,kcal:97.8,prot:24.4,gluc:0,lip:0.5,ags:0.01,pot:388},
-    {code:'4048',nom:'Pomme de terre',qty:180,kcal:94.9,prot:2.1,gluc:17.2,lip:1.6,ags:0.44,pot:457},
-    {code:'20030',nom:'Haricots verts',qty:150,kcal:29.4,prot:2.0,gluc:3.0,lip:0.2,ags:0.059,pot:174},
-    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'26192',nom:'Colin (lieu jaune)',qty:140,kcal:97.8,prot:24.4,gluc:0,lip:0.5,ags:0.01,pot:388,unit:'g'},
+    {code:'4048',nom:'Pomme de terre cuite',qty:180,kcal:94.9,prot:2.1,gluc:17.2,lip:1.6,ags:0.44,pot:457,unit:'g'},
+    {code:'20030',nom:'Haricots verts',qty:150,kcal:29.4,prot:2.0,gluc:3.0,lip:0.2,ags:0.059,pot:174,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'d2', meal:'dinner', nom:'Dinde, riz & chou-fleur', excludeFor:[], ing:[
-    {code:'36302',nom:'Dinde rôtie',qty:130,kcal:151,prot:29.1,gluc:0,lip:3.8,ags:1.13,pot:483},
-    {code:'9104',nom:'Riz blanc',qty:120,kcal:155,prot:3.2,gluc:33.2,lip:0.7,ags:0.17,pot:21.9},
-    {code:'20016',nom:'Chou-fleur',qty:150,kcal:24.9,prot:1.8,gluc:2.1,lip:0.7,ags:0.24,pot:270},
-    {code:'17130',nom:'Huile de colza',qty:8,kcal:900,prot:0,gluc:0,lip:100,ags:7.26,pot:0}
+    {code:'36302',nom:'Dinde rôtie',qty:130,kcal:151,prot:29.1,gluc:0,lip:3.8,ags:1.13,pot:483,unit:'g'},
+    {code:'9104',nom:'Riz blanc cuit',qty:120,kcal:155,prot:3.2,gluc:33.2,lip:0.7,ags:0.17,pot:21.9,unit:'g'},
+    {code:'20016',nom:'Chou-fleur',qty:150,kcal:24.9,prot:1.8,gluc:2.1,lip:0.7,ags:0.24,pot:270,unit:'g'},
+    {code:'17130',nom:'Huile de colza',qty:8,kcal:900,prot:0,gluc:0,lip:100,ags:7.26,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'d3', meal:'dinner', nom:'Saumon, patate douce & salade', excludeFor:[], ing:[
-    {code:'25996',nom:'Saumon',qty:120,kcal:205,prot:23.2,gluc:0.6,lip:12.2,ags:2.48,pot:383},
-    {code:'4102',nom:'Patate douce',qty:150,kcal:79.1,prot:1.7,gluc:16.3,lip:0.15,ags:0.042,pot:353},
-    {code:'25604',nom:'Salade verte',qty:100,kcal:13.5,prot:1.0,gluc:1.5,lip:0.1,ags:0.028,pot:260},
-    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'25996',nom:'Saumon',qty:120,kcal:205,prot:23.2,gluc:0.6,lip:12.2,ags:2.48,pot:383,unit:'g'},
+    {code:'4102',nom:'Patate douce cuite',qty:150,kcal:79.1,prot:1.7,gluc:16.3,lip:0.15,ags:0.042,pot:353,unit:'g'},
+    {code:'25604',nom:'Salade verte',qty:100,kcal:13.5,prot:1.0,gluc:1.5,lip:0.1,ags:0.028,pot:260,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   {id:'d4', meal:'dinner', nom:'Œufs, pâtes & courgette', excludeFor:[], ing:[
-    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120},
-    {code:'9811',nom:'Pâtes',qty:100,kcal:167,prot:6.1,gluc:31.4,lip:1.1,ags:0.2,pot:52.1},
-    {code:'20021',nom:'Courgette',qty:150,kcal:15.5,prot:0.9,gluc:1.4,lip:0.4,ags:0.1,pot:238},
-    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0}
+    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120,unit:'oeuf',gpu:50},
+    {code:'9811',nom:'Pâtes cuites',qty:100,kcal:167,prot:6.1,gluc:31.4,lip:1.1,ags:0.2,pot:52.1,unit:'g'},
+    {code:'20021',nom:'Courgette',qty:150,kcal:15.5,prot:0.9,gluc:1.4,lip:0.4,ags:0.1,pot:238,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:8,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:10}
   ]},
   // ── COLLATION ──
   {id:'s1', meal:'snack', nom:'Yaourt & banane', excludeFor:[], ing:[
-    {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110},
-    {code:'13005',nom:'Banane',qty:120,kcal:87.6,prot:1.1,gluc:19.7,lip:0.5,ags:0.01,pot:320}
+    {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110,unit:'pot',gpu:125},
+    {code:'13005',nom:'Banane',qty:120,kcal:87.6,prot:1.1,gluc:19.7,lip:0.5,ags:0.01,pot:320,unit:'fruit',gpu:120}
   ]},
   {id:'s2', meal:'snack', nom:'Fromage blanc & pêche', excludeFor:[], ing:[
-    {code:'19501',nom:'Fromage blanc',qty:125,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162},
-    {code:'13043',nom:'Pêche',qty:130,kcal:37.9,prot:0.91,gluc:7.6,lip:0.25,ags:0.019,pot:215}
+    {code:'19501',nom:'Fromage blanc',qty:125,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162,unit:'g'},
+    {code:'13043',nom:'Pêche',qty:130,kcal:37.9,prot:0.91,gluc:7.6,lip:0.25,ags:0.019,pot:215,unit:'fruit',gpu:130}
   ]},
   {id:'s3', meal:'snack', nom:'Pomme & amandes', excludeFor:[], ing:[
-    {code:'13039',nom:'Pomme',qty:150,kcal:54,prot:0.25,gluc:11.6,lip:0.3,ags:0.052,pot:119},
-    {code:'15000',nom:'Amandes',qty:15,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800}
+    {code:'13039',nom:'Pomme',qty:150,kcal:54,prot:0.25,gluc:11.6,lip:0.3,ags:0.052,pot:119,unit:'fruit',gpu:150},
+    {code:'15000',nom:'Amandes',qty:15,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800,unit:'poignée',gpu:10}
   ]},
   // ── COLLATION 2 (haut besoin calorique, ≥3000kcal) ──
   {id:'s2_1', meal:'snack2', nom:'Œuf & amandes', excludeFor:[], ing:[
-    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120},
-    {code:'15000',nom:'Amandes',qty:20,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800}
+    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120,unit:'oeuf',gpu:50},
+    {code:'15000',nom:'Amandes',qty:20,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800,unit:'poignée',gpu:10}
   ]},
   {id:'s2_2', meal:'snack2', nom:'Fromage blanc & noix', excludeFor:[], ing:[
-    {code:'19501',nom:'Fromage blanc',qty:150,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162},
-    {code:'15005',nom:'Noix',qty:15,kcal:709,prot:13.3,gluc:6.9,lip:67.3,ags:6.45,pot:430}
+    {code:'19501',nom:'Fromage blanc',qty:150,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162,unit:'g'},
+    {code:'15005',nom:'Noix',qty:15,kcal:709,prot:13.3,gluc:6.9,lip:67.3,ags:6.45,pot:430,unit:'poignée',gpu:10}
   ]}
 ];
 
@@ -2101,15 +2101,31 @@ function renderMealPlan(){
 
     var T = analysis ? analysis.totals : planTotals(CURRENT_PLAN);
     var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
-    document.getElementById('mp-totals').innerHTML =
-      '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
-      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.kcal,tgt.kcal)+'%;background:var(--amber)"></div></div>'
-      +'<div class="mp-tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
-      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.prot,tgt.prot)+'%;background:var(--blue)"></div></div>'
-      +'<div class="mp-tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
-      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
-      +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
-      +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+
+    if(analysis){
+      // Mode analyse : il y a une vraie consommation à comparer à l'objectif.
+      document.getElementById('mp-totals-title').textContent = 'Bilan de la journée';
+      document.getElementById('mp-totals').innerHTML =
+        '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
+        +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.kcal,tgt.kcal)+'%;background:var(--amber)"></div></div>'
+        +'<div class="mp-tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
+        +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.prot,tgt.prot)+'%;background:var(--blue)"></div></div>'
+        +'<div class="mp-tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
+        +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
+        +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
+        +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+    } else {
+      // Mode générique : c'est un plan PROPOSÉ, pas encore mangé — afficher
+      // "X / Y kcal" donnerait l'impression trompeuse d'un suivi réel alors
+      // qu'il s'agit juste de l'objectif que ce plan vise. On affiche donc
+      // uniquement la cible, clairement.
+      document.getElementById('mp-totals-title').textContent = 'Objectifs de ce plan';
+      document.getElementById('mp-totals').innerHTML =
+        '<div class="mp-tot-row"><span>Calories</span><span>'+tgt.kcal+' kcal</span></div>'
+        +'<div class="mp-tot-row"><span>Protéines</span><span>'+tgt.prot+' g</span></div>'
+        +'<div class="mp-tot-row"><span>Glucides</span><span>'+tgt.gluc+' g</span></div>'
+        +'<div class="mp-tot-row"><span>Lipides</span><span>'+tgt.lip+' g</span></div>';
+    }
 
     // Micronutriments — uniquement affichés en mode analyse (données réelles disponibles)
     var microEl = document.getElementById('mp-micro-card');
