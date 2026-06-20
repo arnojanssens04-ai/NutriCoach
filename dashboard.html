@@ -822,7 +822,19 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){window.location.href='index.html';return;}
   USER=r.data.session.user;
-  loadProf().then(function(){
+  loadProf().then(function(ok){
+    if(!ok){
+      // Le chargement a échoué malgré la nouvelle tentative — on ne sait
+      // pas si le profil existe ou non, donc on NE déclenche PAS
+      // l'inscription (qui écraserait un vrai profil existant). On propose
+      // plutôt de réessayer.
+      document.getElementById('app-shell').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;padding:20px;text-align:center">'
+        +'<div style="font-size:.9rem;color:var(--text2)">Impossible de charger votre profil pour le moment.</div>'
+        +'<button onclick="window.location.reload()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--gold);color:#0e100d;font-weight:600;cursor:pointer">Réessayer</button></div>';
+      document.getElementById('app-shell').style.display='flex';
+      document.getElementById('auth-page').style.display='none';
+      return;
+    }
     initGreeting();
     if(needsSetup())openSetup();
     else refreshDash();
@@ -833,16 +845,22 @@ sb.auth.onAuthStateChange(function(ev,sess){
 });
 
 // ── PROFILE ──
-async function loadProf(){
+// Réessaye une fois avant d'abandonner — un échec réseau ponctuel ne doit
+// jamais être confondu avec "ce profil n'existe pas encore", sinon on
+// redéclenche l'inscription alors que les vraies données sont intactes.
+async function loadProf(retried){
   var r=await sb.from('profiles').select('*').eq('id',USER.id).single();
   if(r.error){
     console.error('loadProf error:', r.error);
+    if(!retried){
+      await new Promise(function(res){setTimeout(res,800);});
+      return loadProf(true);
+    }
     toast('❌ Erreur de chargement du profil : '+r.error.message);
-    PROF = PROF || {}; // keep any previously loaded profile rather than wiping it
-    return PROF;
+    return false; // échec confirmé après nouvelle tentative
   }
   PROF=r.data||{};
-  return PROF;
+  return true;
 }
 async function saveProf(data){
   await sb.from('profiles').upsert(Object.assign({id:USER.id},data));
