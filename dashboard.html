@@ -1831,58 +1831,24 @@ function roundToNaturalUnit(qty, nom){
 function analyzeAndAdjust(entries, tgt, pathologies){
   if(!entries.length) return null;
 
-  var buckets = {protein:[], carb:[], fat:[], mixed:[]};
-  entries.forEach(function(e){ buckets[classifyDominant(e)].push(e); });
-
-  function bucketKcal(list){ return list.reduce(function(s,e){return s+(e.kcal||0);},0); }
-  function bucketGramsOfMacro(list, macroField){ return list.reduce(function(s,e){return s+(e[macroField]||0);},0); }
-
-  var curProtKcal = bucketKcal(buckets.protein);
-  var curCarbKcal = bucketKcal(buckets.carb);
-  var curFatKcal  = bucketKcal(buckets.fat);
-
   function scaleFactor(cur, target){
-    if(cur < 1) return null; // pas de base à l'échelle — sera signalé comme manque
-    var f = target/cur;
-    return Math.max(0.4, Math.min(2.5, f)); // bornes raisonnables, pas de portions absurdes
+    if(cur < 1) return null;
+    return Math.max(0.4, Math.min(2.5, target/cur));
   }
 
-  // ── Les calories totales sont la priorité n°1 ──
-  // Les protéines sont fixées sur leur propre objectif (poste le plus protégé).
-  // Glucides et lipides se partagent ensuite EXACTEMENT ce qu'il reste du
-  // budget calorique, dans le ratio cible (50/35) — ce qui garantit
-  // mathématiquement que le total se rapproche de l'objectif, plutôt que de
-  // corriger après coup de façon approximative.
-  var fProt = scaleFactor(curProtKcal, tgt.prot*4);
-  var protKcalFinal = curProtKcal*(fProt||1);
-  var remainingKcal = Math.max(0, tgt.kcal - protKcalFinal);
+  // Regroupe par repas — chaque repas est ajusté vers SON PROPRE budget,
+  // pas vers l'objectif de la journée entière. Sans ça, un repas ajouté
+  // seul (ex: via une recette) se voit gonflé pour tenter de couvrir TOUTE
+  // la journée à lui seul (5 œufs, 5 tranches de pain...).
+  var mealsPresent = {};
+  entries.forEach(function(e){ if(!mealsPresent[e.repas]) mealsPresent[e.repas]=[]; mealsPresent[e.repas].push(e); });
+  var mealKeys = Object.keys(mealsPresent);
+  var nMeals = mealKeys.length;
 
-  var carbTargetShare = tgt.gluc*4 / (tgt.gluc*4 + tgt.lip*9);
-  // À partir de 3000kcal, un ratio strict 50/35 demanderait des volumes de
-  // féculents irréalistes (ex: 300g+ de riz cru dans une seule assiette).
-  // On glisse progressivement la part vers les lipides — plus denses en
-  // calories pour un même volume (sauces, huiles, oléagineux) — pour des
-  // portions qui restent mangeables.
-  if(tgt.kcal >= 3000){
-    var shift = Math.min(0.15, (tgt.kcal-3000)/8000); // jusqu'à -15 points à 4200kcal+
-    carbTargetShare -= shift;
-  }
-  var fatTargetShare  = 1 - carbTargetShare;
-  var tgtCarbKcalFinal = remainingKcal*carbTargetShare;
-  var tgtFatKcalFinal  = remainingKcal*fatTargetShare;
-
-  var fCarb = scaleFactor(curCarbKcal, tgtCarbKcalFinal);
-  var fFat  = scaleFactor(curFatKcal, tgtFatKcalFinal);
-
-  // ── Aliments suggérés automatiquement quand une catégorie est VIDE ──
-  // Un simple message ("ajoutez un féculent") ne suffit pas : sans rien à
-  // mettre à l'échelle, l'objectif calorique reste structurellement
-  // inatteignable. On injecte donc un aliment fiable de la base curatée
-  // (FOOD_BANK) pour combler précisément le manque, clairement marqué
-  // "suggéré" et remplaçable via ⇄ comme les autres aliments du plan générique.
-  var mealsPresentForSuggest = {};
-  entries.forEach(function(e){ mealsPresentForSuggest[e.repas]=true; });
-  var suggestMeal = mealsPresentForSuggest['lunch'] ? 'lunch' : Object.keys(mealsPresentForSuggest)[0];
+  var need2 = needsSecondSnack();
+  var MEAL_PCTS = need2
+    ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
+    : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
 
   var SUGGEST_DEFAULTS = {
     carb:    {code:'9104',  nom:'Riz blanc',     kcal:155, prot:3.2,  gluc:33.2, lip:0.7,  ags:0.17, pot:21.9, maxQty:400},
@@ -1890,89 +1856,95 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     fat:     {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0,    lip:99.9, ags:15.2, pot:0,    maxQty:40}
   };
 
-  var suggestedEntries = [];
+  var adjusted = [];
   var suggestionAlerts = [];
-  function maybeSuggest(bucketKey, factor, targetKcal){
-    if(factor !== null || !suggestMeal) return;
-    var override = SUGGESTED_OVERRIDES[bucketKey];
-    var def = override || SUGGEST_DEFAULTS[bucketKey];
-    var qty = Math.min(def.maxQty, Math.max(10, roundTo(targetKcal/def.kcal*100, 5)));
-    suggestedEntries.push({
-      aliment: def.nom, repas: suggestMeal, quantite: qty, id: 'sugg-'+bucketKey,
-      food_kcal_100:def.kcal, food_prot_100:def.prot, food_gluc_100:def.gluc, food_lip_100:def.lip,
-      food_ags_100:def.ags, food_pot_100:def.pot, food_fibres_100:0, food_mg_100:0, food_na_100:0, food_zn_100:0,
-      _suggested:true, _bucketKey:bucketKey
+  var emptyBucketFlags = {protein:false, carb:false, fat:false}; // pour les alertes globales
+
+  mealKeys.forEach(function(mealKey){
+    var mealEntries = mealsPresent[mealKey];
+    var pct = MEAL_PCTS[mealKey] || (1/nMeals);
+    var mKcal = tgt.kcal*pct, mProt = tgt.prot*pct, mGluc = tgt.gluc*pct, mLip = tgt.lip*pct;
+
+    var buckets = {protein:0, carb:0, fat:0};
+    mealEntries.forEach(function(e){ var cat=classifyDominant(e); if(buckets[cat]!==undefined) buckets[cat]+=(e.kcal||0); });
+
+    var fProt = scaleFactor(buckets.protein, mProt*4);
+    var protFinal = buckets.protein*(fProt||1);
+    var remaining = Math.max(0, mKcal-protFinal);
+    var carbShare = (mGluc*4)/((mGluc*4)+(mLip*9));
+    if(tgt.kcal >= 3000){ carbShare -= Math.min(0.15, (tgt.kcal-3000)/8000); }
+    var tgtCarbKcal = remaining*carbShare, tgtFatKcal = remaining*(1-carbShare);
+    var fCarb = scaleFactor(buckets.carb, tgtCarbKcal);
+    var fFat  = scaleFactor(buckets.fat, tgtFatKcal);
+
+    function computeMeal(fP,fC,fF){
+      var adj = mealEntries.map(function(e){
+        var cat = classifyDominant(e);
+        var f = cat==='protein'?fP:cat==='carb'?fC:cat==='fat'?fF:1;
+        if(f===null) f=1;
+        return {entry:e, cat:cat, oldQty:e.quantite, newQty:roundToNaturalUnit(e.quantite*f, e.aliment), factor:f};
+      });
+      var lip=0, gluc=0;
+      adj.forEach(function(a){ var r=a.newQty/100; lip+=pN2(a.entry.food_lip_100)*r; gluc+=pN2(a.entry.food_gluc_100)*r; });
+      return {adj:adj, lip:lip, gluc:gluc};
+    }
+
+    var res = computeMeal(fProt,fCarb,fFat);
+    // Correction sur grammes réels, à l'échelle DE CE REPAS seulement.
+    if(res.lip > mLip*1.05 && buckets.fat>0){
+      var exLip=(res.lip-mLip)*9, fatNow=buckets.fat*(fFat||1), floor=buckets.fat*0.4;
+      fFat = Math.max(floor, fatNow-exLip)/buckets.fat;
+      res = computeMeal(fProt,fCarb,fFat);
+    }
+    if(res.gluc > mGluc*1.05 && buckets.carb>0){
+      var exC=(res.gluc-mGluc)*4, carbNow=buckets.carb*(fCarb||1), cfloor=buckets.carb*0.4;
+      fCarb = Math.max(cfloor, carbNow-exC)/buckets.carb;
+      res = computeMeal(fProt,fCarb,fFat);
+    }
+
+    adjusted = adjusted.concat(res.adj);
+
+    // Suggestion d'aliment si une catégorie est VIDE — injectée DANS ce repas
+    // spécifiquement, pas ailleurs dans la journée.
+    [['protein',fProt,mProt*4],['carb',fCarb,tgtCarbKcal],['fat',fFat,tgtFatKcal]].forEach(function(t){
+      var key=t[0], factor=t[1], targetKcal=t[2];
+      if(factor !== null) return;
+      emptyBucketFlags[key] = true;
+      var override = SUGGESTED_OVERRIDES[key];
+      var def = override || SUGGEST_DEFAULTS[key];
+      var qty = Math.min(def.maxQty, Math.max(10, roundTo(targetKcal/def.kcal*100, 5)));
+      var se = {aliment:def.nom, repas:mealKey, quantite:qty, id:'sugg-'+key+'-'+mealKey,
+        food_kcal_100:def.kcal, food_prot_100:def.prot, food_gluc_100:def.gluc, food_lip_100:def.lip,
+        food_ags_100:def.ags, food_pot_100:def.pot, food_fibres_100:0, food_mg_100:0, food_na_100:0, food_zn_100:0,
+        _suggested:true, _bucketKey:key};
+      adjusted.push({entry:se, cat:key, oldQty:qty, newQty:qty, factor:1, suggested:true});
+      var labelMacro = key==='carb'?'glucides':key==='protein'?'protéines':'lipides';
+      var gapRemaining = targetKcal - (qty*def.kcal/100);
+      var gapNote = gapRemaining > targetKcal*0.25 ? ' À ce niveau de besoin, une seule portion ne suffit pas pour ce repas.' : '';
+      suggestionAlerts.push({t:'good',i:'➕',ttl:'Aliment suggéré ajouté',
+        txt:'Aucune source de '+labelMacro+' à votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' — nous avons ajouté '+qty+'g de "'+def.nom+'". Cliquez ⇄ pour le remplacer.'+gapNote});
     });
-    var labelMacro = bucketKey==='carb'?'glucides':bucketKey==='protein'?'protéines':'lipides';
-    var gapRemaining = targetKcal - (qty*def.kcal/100);
-    var gapNote = gapRemaining > targetKcal*0.25 ? ' À ce niveau de besoin, une seule portion ne suffit pas : pensez à ajouter une seconde source.' : '';
-    suggestionAlerts.push({t:'good',i:'➕',ttl:'Aliment suggéré ajouté',
-      txt:'Aucune source de '+labelMacro+' dans votre journal — nous avons ajouté '+qty+'g de "'+def.nom+'" à votre '+(MEAL_META[suggestMeal]?MEAL_META[suggestMeal].l.toLowerCase():suggestMeal)+'. Cliquez ⇄ pour le remplacer par autre chose.'+gapNote});
-  }
-  maybeSuggest('protein', fProt, tgt.prot*4);
-  maybeSuggest('carb', fCarb, tgtCarbKcalFinal);
-  maybeSuggest('fat', fFat, tgtFatKcalFinal);
+  });
 
-  // Calcule les quantités ajustées + les totaux réels pour un jeu de facteurs donné
-  function computeAdjustedAndTotals(fP, fC, fF){
-    var adj = entries.map(function(e){
-      var cat = classifyDominant(e);
-      var f = cat==='protein'?fP : cat==='carb'?fC : cat==='fat'?fF : 1;
-      if(f===null) f = 1;
-      var newQty = roundToNaturalUnit(e.quantite*f, e.aliment);
-      return {entry:e, cat:cat, oldQty:e.quantite, newQty:newQty, factor:f};
-    });
-    // Les aliments suggérés sont déjà calibrés exactement sur le manque —
-    // pas de mise à l'échelle supplémentaire (facteur 1, oldQty=newQty).
-    suggestedEntries.forEach(function(se){
-      adj.push({entry:se, cat:se._bucketKey, oldQty:se.quantite, newQty:se.quantite, factor:1, suggested:true});
-    });
-    var Tot = {kcal:0,prot:0,gluc:0,lip:0,ags:0,fibres:0,mg:0,na:0,zn:0,pot:0,cal:0,fer:0};
-    adj.forEach(function(a){
-      var r = a.newQty/100; var e = a.entry;
-      Tot.kcal += pN2(e.food_kcal_100)*r; Tot.prot += pN2(e.food_prot_100)*r;
-      Tot.gluc += pN2(e.food_gluc_100)*r; Tot.lip  += pN2(e.food_lip_100)*r;
-      Tot.ags  += pN2(e.food_ags_100)*r;  Tot.fibres += pN2(e.food_fibres_100)*r;
-      Tot.mg   += pN2(e.food_mg_100)*r;   Tot.na   += pN2(e.food_na_100)*r;
-      Tot.zn   += pN2(e.food_zn_100)*r;   Tot.pot  += pN2(e.food_pot_100)*r;
-      Tot.cal  += pN2(e.food_cal_100)*r;  Tot.fer  += pN2(e.food_fer_100)*r;
-    });
-    return {adj:adj, Tot:Tot};
-  }
+  // Totaux réels de la journée = somme de tous les repas déjà ajustés
+  var T = {kcal:0,prot:0,gluc:0,lip:0,ags:0,fibres:0,mg:0,na:0,zn:0,pot:0,cal:0,fer:0};
+  adjusted.forEach(function(a){
+    var r=a.newQty/100, e=a.entry;
+    T.kcal+=pN2(e.food_kcal_100)*r; T.prot+=pN2(e.food_prot_100)*r;
+    T.gluc+=pN2(e.food_gluc_100)*r; T.lip+=pN2(e.food_lip_100)*r;
+    T.ags+=pN2(e.food_ags_100)*r; T.fibres+=pN2(e.food_fibres_100)*r;
+    T.mg+=pN2(e.food_mg_100)*r; T.na+=pN2(e.food_na_100)*r;
+    T.zn+=pN2(e.food_zn_100)*r; T.pot+=pN2(e.food_pot_100)*r;
+    T.cal+=pN2(e.food_cal_100)*r; T.fer+=pN2(e.food_fer_100)*r;
+  });
 
-  var pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-
-  // ── Correction finale sur les GRAMMES RÉELS ──
-  // Même aliment classé "protéines" ou "glucides" contient un peu de lipides —
-  // cette fuite cumulée peut faire dépasser l'objectif lipides même si le
-  // calcul par poste était correct. On vérifie le total RÉEL et on resserre
-  // encore les lipides (puis les glucides) si besoin, jamais les protéines.
-  if(pass1.Tot.lip > tgt.lip*1.03 && curFatKcal > 0){
-    var excessLipKcal = (pass1.Tot.lip - tgt.lip)*9;
-    var fatKcalNow = curFatKcal*(fFat||1);
-    var fatFloor = curFatKcal*0.4;
-    fFat = Math.max(fatFloor, fatKcalNow-excessLipKcal) / curFatKcal;
-    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-  }
-  if(pass1.Tot.gluc > tgt.gluc*1.03 && curCarbKcal > 0){
-    var excessCarbKcal = (pass1.Tot.gluc - tgt.gluc)*4;
-    var carbKcalNow = curCarbKcal*(fCarb||1);
-    var carbFloor = curCarbKcal*0.4;
-    fCarb = Math.max(carbFloor, carbKcalNow-excessCarbKcal) / curCarbKcal;
-    pass1 = computeAdjustedAndTotals(fProt, fCarb, fFat);
-  }
-
-  var adjusted = pass1.adj;
-  var T = pass1.Tot;
-
-  // ── Alertes qualitatives (pas de quantité, des conseils) ──
+  // ── Alertes qualitatives (vision globale de la journée) ──
   var alerts = [];
-  if(fProt===null) alerts.push({t:'warn',i:'🥩',ttl:'Aucune source de protéines identifiée',txt:'Ajoutez une source de protéines (viande, poisson, œuf, légumineuse) à un de vos repas.'});
-  if(fCarb===null) alerts.push({t:'warn',i:'🌾',ttl:'Aucune source de glucides identifiée',txt:'Ajoutez un féculent (riz, pâtes, pain, pomme de terre) pour atteindre votre objectif énergétique.'});
-  if(fFat===null) alerts.push({t:'warn',i:'🥑',ttl:'Aucune source de lipides identifiée',txt:'Ajoutez un peu de matière grasse de qualité (huile d\'olive, avocat, oléagineux).'});
+  if(emptyBucketFlags.protein && nMeals===1) alerts.push({t:'warn',i:'🥩',ttl:'Pensez aux autres repas',txt:'Une fois ce repas équilibré, n\'oubliez pas d\'ajouter vos autres repas de la journée pour une vue complète.'});
 
   if(pathologies.indexOf('diabetes') >= 0){
-    var carbGramsTotal = bucketGramsOfMacro(buckets.carb, 'glucides') + bucketGramsOfMacro(buckets.mixed,'glucides');
+    var carbGramsTotal = 0;
+    adjusted.forEach(function(a){ if(a.cat==='carb'||a.cat==='mixed') carbGramsTotal += pN2(a.entry.food_gluc_100)*a.newQty/100; });
     var fiberPerCarb = carbGramsTotal>0 ? T.fibres/carbGramsTotal : 0;
     if(T.fibres < tgt.fibres*0.7){
       alerts.push({t:'warn',i:'🌿',ttl:'Apport en fibres insuffisant (Diabète)',
@@ -1982,19 +1954,10 @@ function analyzeAndAdjust(entries, tgt, pathologies){
         txt:'Vos glucides viennent surtout d\'aliments raffinés. Remplacer une partie par des versions complètes (pain complet, riz complet) améliore le contrôle de la glycémie sans réduire les quantités.'});
     }
 
-    // Répartition des fibres par repas : l'objectif quotidien (27g) divisé par
-    // le nombre de repas réellement enregistrés (3, 4, bientôt 5) — pour
-    // repérer PRÉCISÉMENT quel repas manque de fibres, pas juste le total.
-    var mealsPresent = {};
-    adjusted.forEach(function(a){ mealsPresent[a.entry.repas] = true; });
-    var nMeals = Object.keys(mealsPresent).length || 1;
-    var fiberPerMealTarget = tgt.fibres / nMeals;
+    var fiberPerMealTarget = tgt.fibres / (nMeals||1);
     var fiberByMeal = {};
-    adjusted.forEach(function(a){
-      var r = a.newQty/100;
-      fiberByMeal[a.entry.repas] = (fiberByMeal[a.entry.repas]||0) + pN2(a.entry.food_fibres_100)*r;
-    });
-    var mealLabels = {breakfast:'petit-déjeuner', lunch:'déjeuner', snack:'collation', dinner:'souper'};
+    adjusted.forEach(function(a){ var r=a.newQty/100; fiberByMeal[a.entry.repas]=(fiberByMeal[a.entry.repas]||0)+pN2(a.entry.food_fibres_100)*r; });
+    var mealLabels = {breakfast:'petit-déjeuner', lunch:'déjeuner', snack:'collation', dinner:'souper', snack2:'2e collation'};
     Object.keys(fiberByMeal).forEach(function(mid){
       if(fiberByMeal[mid] < fiberPerMealTarget*0.5){
         alerts.push({t:'warn',i:'🌿',ttl:'Peu de fibres au '+(mealLabels[mid]||mid),
@@ -2005,9 +1968,9 @@ function analyzeAndAdjust(entries, tgt, pathologies){
 
   if(pathologies.indexOf('cholesterol')>=0 || pathologies.indexOf('cardiac')>=0){
     if(T.ags > tgt.ags){
-      var worstFat = buckets.fat.concat(buckets.mixed).sort(function(a,b){return (b.food_ags_100||0)-(a.food_ags_100||0);})[0];
+      var worstFat = adjusted.filter(function(a){return a.cat==='fat'||a.cat==='mixed';}).sort(function(a,b){return pN2(b.entry.food_ags_100)-pN2(a.entry.food_ags_100);})[0];
       alerts.push({t:'bad',i:'🫀',ttl:'Graisses saturées élevées',
-        txt:'Vos apports en graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) dépassent l\'objectif.'+(worstFat?' "'+worstFat.aliment+'" y contribue le plus — réduisez-le ou remplacez-le par une graisse végétale (huile d\'olive, avocat).':'')});
+        txt:'Vos apports en graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) dépassent l\'objectif.'+(worstFat?' "'+worstFat.entry.aliment+'" y contribue le plus — réduisez-le ou remplacez-le par une graisse végétale (huile d\'olive, avocat).':'')});
     }
   }
 
@@ -2017,7 +1980,6 @@ function analyzeAndAdjust(entries, tgt, pathologies){
 
   return {adjusted:adjusted, totals:T, alerts:suggestionAlerts.concat(alerts)};
 }
-
 function renderMicronutrientRow(label, val, target, unit, dec){
   var d = dec||0;
   var pct = target>0 ? Math.min(100,val/target*100) : 0;
