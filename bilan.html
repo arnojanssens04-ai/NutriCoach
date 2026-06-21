@@ -251,6 +251,14 @@ async function loadProfileAndHistory(){
     return;
   }
 
+  // Empêche de remplir plusieurs fois le même jour — un bilan hebdomadaire
+  // n'a de sens qu'une fois par semaine, pas répété à volonté.
+  var already = await sb.from('bilans').select('id').eq('user_id',USER.id).eq('date',todayStr()).limit(1);
+  if(already.data && already.data.length){
+    showAlreadyDoneScreen();
+    return;
+  }
+
   document.getElementById('hero-sub').textContent =
     (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
   if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
@@ -258,6 +266,29 @@ async function loadProfileAndHistory(){
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
   var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
   renderHistory(bilans);
+}
+
+function nextBilanDate(jourBilan){
+  var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var targetIdx = joursFR.indexOf(jourBilan||'dimanche');
+  var d = new Date();
+  do { d.setDate(d.getDate()+1); } while(d.getDay()!==targetIdx);
+  return d.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'});
+}
+
+function showAlreadyDoneScreen(){
+  document.getElementById('hero-sub').textContent = 'Bilan déjà complété cette semaine.';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">✅</div>'
+    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez déjà complété votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
 }
 
 function showWrongDayScreen(){
@@ -339,12 +370,25 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
   // Met aussi à jour le poids courant du profil
   await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
 
-  toast('✅ Bilan enregistré !');
   await checkAndAdjustKcal(poids);
-
-  btn.textContent = 'Bilan enregistré ✓';
-  setTimeout(function(){ window.location.href='dashboard.html'; }, 2200);
+  showThankYouScreen();
 });
+
+function showThankYouScreen(){
+  document.getElementById('hero-sub').textContent = '';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">🙏</div>'
+    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">À bientôt '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+}
 
 // ── ALGORITHME ADAPTATIF ──
 // Si le poids n'a pas bougé depuis ~2 semaines, on ajuste l'objectif calorique
