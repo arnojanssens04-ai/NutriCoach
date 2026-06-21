@@ -146,6 +146,12 @@ body {
 .pill-bad  { background: var(--rose-l); color: var(--rose); border: 1px solid rgba(201,122,110,0.25); }
 
 /* ── KCAL BAR ── */
+.motiv-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+.motiv-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:0 2px 16px rgba(0,0,0,0.3); }
+.motiv-ico { font-size:1.3rem; margin-bottom:4px; }
+.motiv-val { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; color:var(--gold); line-height:1; }
+.motiv-lbl { font-size:.66rem; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
+
 .kcal-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -487,6 +493,19 @@ body {
       <div class="score-ttl" id="score-ttl">Score Santé</div>
       <div class="score-desc" id="score-desc">Ajoutez vos repas pour calculer votre score personnalisé.</div>
       <div id="score-pill"></div>
+    </div>
+  </div>
+
+  <div class="motiv-row" id="motiv-row" style="display:none">
+    <div class="motiv-card">
+      <div class="motiv-ico">🔥</div>
+      <div class="motiv-val" id="streak-val">0</div>
+      <div class="motiv-lbl" id="streak-lbl">jours de suite</div>
+    </div>
+    <div class="motiv-card">
+      <div class="motiv-ico" id="path-ico">📉</div>
+      <div class="motiv-val" id="path-val">—</div>
+      <div class="motiv-lbl">depuis le début</div>
     </div>
   </div>
 
@@ -998,11 +1017,104 @@ async function updQty(id,qty,e){
   afterJournalChange();
 }
 
+// ── MOTIVATION : série de constance, chemin parcouru, paliers ──
+function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+async function computeStreak(){
+  var since = new Date(); since.setDate(since.getDate()-60);
+  var r = await sb.from('journal').select('date').eq('user_id',USER.id).gte('date',dateStr(since));
+  if(!r.data) return 0;
+  var datesSet = {};
+  r.data.forEach(function(row){ datesSet[row.date]=true; });
+  var streak = 0;
+  var cursor = new Date();
+  // Si aujourd'hui est encore vide, on ne casse pas la série tout de suite —
+  // la journée n'est pas finie, on compte depuis hier.
+  if(!datesSet[today()]) cursor.setDate(cursor.getDate()-1);
+  while(datesSet[dateStr(cursor)]){ streak++; cursor.setDate(cursor.getDate()-1); }
+  return streak;
+}
+
+var MILESTONE_DEFS = [
+  {id:'usage_1week', check:function(p,ctx){ return ctx.daysSinceSignup>=7; }, icon:'🎉', title:'1 semaine avec NutriCoach !', txt:'Une semaine de suivi, c\'est un excellent début. Continuez ainsi !'},
+  {id:'usage_1month', check:function(p,ctx){ return ctx.daysSinceSignup>=30; }, icon:'🏅', title:'1 mois avec NutriCoach !', txt:'Un mois de constance — c\'est exactement ce qui fait la différence sur la durée.'},
+  {id:'usage_3months', check:function(p,ctx){ return ctx.daysSinceSignup>=90; }, icon:'🏆', title:'3 mois avec NutriCoach !', txt:'Un vrai cap : la plupart des bonnes habitudes se construisent sur cette durée.'},
+  {id:'weight_1kg', check:function(p,ctx){ return ctx.weightDiff>=1; }, icon:'📉', title:'1er kilo !', txt:'Le premier pas est souvent le plus difficile à percevoir — vous venez de le franchir.'},
+  {id:'weight_5kg', check:function(p,ctx){ return ctx.weightDiff>=5; }, icon:'⭐', title:'5 kg parcourus !', txt:'Une étape majeure sur votre trajectoire. Le travail accompli est réel.'},
+  {id:'weight_10kg', check:function(p,ctx){ return ctx.weightDiff>=10; }, icon:'🌟', title:'10 kg parcourus !', txt:'Une transformation profonde, construite jour après jour.'},
+  {id:'bilan_1', check:function(p,ctx){ return ctx.bilanCount>=1; }, icon:'📊', title:'Premier bilan complété !', txt:'Faire le point régulièrement, c\'est la clé d\'un suivi qui s\'ajuste vraiment à vous.'},
+  {id:'bilan_4', check:function(p,ctx){ return ctx.bilanCount>=4; }, icon:'📈', title:'1 mois de bilans !', txt:'4 semaines de suivi régulier — votre plan est maintenant vraiment affiné à votre rythme.'}
+];
+
+async function checkMilestones(){
+  var p = PROF||{};
+  if(!p.created_at) return;
+  var shown = p.milestones_shown||[];
+  var daysSinceSignup = (Date.now()-new Date(p.created_at).getTime())/86400000;
+  var weightDiff = (p.poids_initial && p.poids) ? Math.abs(p.poids-p.poids_initial) : 0;
+  var bilanRes = await sb.from('bilans').select('id',{count:'exact',head:true}).eq('user_id',USER.id);
+  var bilanCount = bilanRes.count || 0;
+  var ctx = {daysSinceSignup:daysSinceSignup, weightDiff:weightDiff, bilanCount:bilanCount};
+
+  for(var i=0;i<MILESTONE_DEFS.length;i++){
+    var m = MILESTONE_DEFS[i];
+    if(shown.indexOf(m.id)>=0) continue;
+    if(m.check(p,ctx)){
+      showMilestoneCelebration(m);
+      var newShown = shown.concat([m.id]);
+      await sb.from('profiles').update({milestones_shown:newShown}).eq('id',USER.id);
+      if(PROF) PROF.milestones_shown = newShown;
+      break; // un seul palier à la fois, pour ne pas surcharger l'écran
+    }
+  }
+}
+
+function showMilestoneCelebration(m){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s';
+  ov.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:36px 28px;max-width:340px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)">'
+    +'<div style="font-size:3rem;margin-bottom:14px">'+m.icon+'</div>'
+    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.4rem;font-weight:700;margin-bottom:10px">'+esc(m.title)+'</div>'
+    +'<p style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:20px">'+esc(m.txt)+'</p>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:11px 24px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--gold),#a8833a);color:#0e100d;font-family:\'Cormorant Garamond\',serif;font-size:1rem;font-weight:600;cursor:pointer">Continuer</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+
+async function renderMotivationCards(){
+  var p = PROF||{};
+  var row = document.getElementById('motiv-row');
+  if(!row) return;
+  row.style.display = 'grid';
+
+  var streak = await computeStreak();
+  document.getElementById('streak-val').textContent = streak;
+  document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
+
+  if(p.poids_initial && p.poids){
+    var diff = p.poids - p.poids_initial;
+    var pathEl = document.getElementById('path-val');
+    var iconEl = document.getElementById('path-ico');
+    if(Math.abs(diff) < 0.1){
+      pathEl.textContent = '0 kg'; iconEl.textContent = '⚖️';
+    } else if(diff < 0){
+      pathEl.textContent = diff.toFixed(1)+' kg'; iconEl.textContent = '📉';
+    } else {
+      pathEl.textContent = '+'+diff.toFixed(1)+' kg'; iconEl.textContent = '📈';
+    }
+  } else {
+    document.getElementById('path-val').textContent = '—';
+  }
+
+  checkMilestones();
+}
+
 // ── DASHBOARD RENDER ──
 async function refreshDash(){
   var p=PROF||{};
   var pathos=p.pathologies||[];
   var tgt=calcTargets();
+  renderMotivationCards();
 
   // Le bilan n'est accessible que le jour choisi par la personne — les
   // autres jours, la carte est grisée et non-cliquable (modifiable dans
@@ -1866,6 +1978,7 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var mealsPresent = {};
   entries.forEach(function(e){ if(!mealsPresent[e.repas]) mealsPresent[e.repas]=[]; mealsPresent[e.repas].push(e); });
   var mealKeys = Object.keys(mealsPresent);
+  var allMealsCoveredForAlerts = activeMealIds().every(function(m){ return mealKeys.indexOf(m)>=0; });
   var nMeals = mealKeys.length;
 
   var need2 = needsSecondSnack();
@@ -1975,6 +2088,9 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     } else if(fiberPerCarb < 0.05 && carbGramsTotal > 50){
       alerts.push({t:'warn',i:'🌿',ttl:'Glucides peu riches en fibres',
         txt:'Vos glucides viennent surtout d\'aliments raffinés. Remplacer une partie par des versions complètes (pain complet, riz complet) améliore le contrôle de la glycémie sans réduire les quantités.'});
+    } else if(T.fibres >= tgt.fibres*0.9){
+      alerts.push({t:'good',i:'🌿',ttl:'Excellent apport en fibres',
+        txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont parfaitement dans la cible — un vrai atout pour la régulation de votre glycémie. Continuez ainsi !'});
     }
 
     var fiberPerMealTarget = tgt.fibres / (nMeals||1);
@@ -1994,11 +2110,29 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       var worstFat = adjusted.filter(function(a){return a.cat==='fat'||a.cat==='mixed';}).sort(function(a,b){return pN2(b.entry.food_ags_100)-pN2(a.entry.food_ags_100);})[0];
       alerts.push({t:'bad',i:'🫀',ttl:'Graisses saturées élevées',
         txt:'Vos apports en graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) dépassent l\'objectif.'+(worstFat?' "'+worstFat.entry.aliment+'" y contribue le plus — réduisez-le ou remplacez-le par une graisse végétale (huile d\'olive, avocat).':'')});
+    } else if(T.ags <= tgt.ags*0.8){
+      alerts.push({t:'good',i:'🫀',ttl:'Graisses saturées bien maîtrisées',
+        txt:'Vos graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) restent sous contrôle aujourd\'hui — exactement ce qu\'il faut pour votre santé cardiovasculaire.'});
     }
   }
 
-  if(pathologies.indexOf('hypertension')>=0 && T.na > tgt.na){
-    alerts.push({t:'warn',i:'🧂',ttl:'Sodium élevé (Hypertension)',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) est au-dessus de l\'objectif. Limitez charcuterie, plats préparés et fromages salés.'});
+  if(pathologies.indexOf('hypertension')>=0){
+    if(T.na > tgt.na){
+      alerts.push({t:'warn',i:'🧂',ttl:'Sodium élevé (Hypertension)',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) est au-dessus de l\'objectif. Limitez charcuterie, plats préparés et fromages salés.'});
+    } else if(T.na <= tgt.na*0.8){
+      alerts.push({t:'good',i:'🧂',ttl:'Sodium bien maîtrisé',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) reste bien sous l\'objectif aujourd\'hui — un vrai plus pour votre tension.'});
+    }
+  }
+
+  // Encouragement général, indépendant des pathologies : si les trois
+  // macros sont proches de l'objectif (±10%), le mérite d'un équilibre
+  // global réussi vaut d'être signalé, pas seulement les écarts.
+  var protOk = Math.abs(T.prot-tgt.prot) <= tgt.prot*0.1;
+  var glucOk = Math.abs(T.gluc-tgt.gluc) <= tgt.gluc*0.1;
+  var lipOk = Math.abs(T.lip-tgt.lip) <= tgt.lip*0.1;
+  if(allMealsCoveredForAlerts && protOk && glucOk && lipOk){
+    alerts.push({t:'good',i:'✨',ttl:'Journée parfaitement équilibrée',
+      txt:'Protéines, glucides et lipides sont tous proches de vos objectifs aujourd\'hui. C\'est exactement ce type de régularité qui fait la différence sur la durée.'});
   }
 
   return {adjusted:adjusted, totals:T, alerts:suggestionAlerts.concat(alerts)};
@@ -2286,6 +2420,9 @@ function goSt(n){
 async function finSetup(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
+  // Capture le poids de départ UNE SEULE FOIS (jamais réécrasé par la suite)
+  // — c'est la référence pour "chemin parcouru depuis le début".
+  if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
   if(!result.ok){
     toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
@@ -2433,6 +2570,7 @@ var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
+  if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
   if(!result.ok){
     toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
