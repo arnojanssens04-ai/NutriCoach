@@ -2162,9 +2162,14 @@ function regenerateMealPlan(){
 // chaque reconnexion) avec de nouveaux aliments aléatoires — perturbant pour
 // l'utilisateur qui s'attend à retrouver le même plan jusqu'à ce qu'il
 // clique explicitement sur "Régénérer".
+// GENERIC_PLAN_VERSION : à incrémenter chaque fois que la structure des
+// recettes change (champs ajoutés/modifiés) — sinon un plan sauvegardé
+// avant la modification continue d'être rechargé tel quel indéfiniment,
+// perpétuant un bug déjà corrigé dans le code.
+var GENERIC_PLAN_VERSION = 2;
 function saveGenericPlan(){
   if(!CURRENT_PLAN || !USER) return;
-  var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS});
+  var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS, version:GENERIC_PLAN_VERSION});
   sb.from('profiles').update({generic_meal_plan:payload}).eq('id',USER.id).then(function(){
     if(PROF) PROF.generic_meal_plan = payload;
   });
@@ -2173,9 +2178,9 @@ function loadGenericPlanFromProfile(){
   if(!PROF || !PROF.generic_meal_plan) return false;
   try{
     var data = JSON.parse(PROF.generic_meal_plan);
-    if(data && data.plan){ CURRENT_PLAN = data.plan; CURRENT_PLAN_KCAL_BASIS = data.basis; return true; }
+    if(data && data.plan && data.version===GENERIC_PLAN_VERSION){ CURRENT_PLAN = data.plan; CURRENT_PLAN_KCAL_BASIS = data.basis; return true; }
   } catch(e){}
-  return false;
+  return false; // version absente/différente → on régénère avec la structure actuelle
 }
 
 // Pour les aliments suggérés automatiquement (catégorie vide dans le journal) —
