@@ -110,7 +110,10 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 <header class="topbar">
   <div class="t-logo">Nutri<span>Coach</span> <span class="t-badge">Admin</span></div>
-  <a href="dashboard.html" class="t-back">← Retour à l'app</a>
+  <div style="display:flex;gap:8px">
+    <a href="bilan_recap.html" class="t-back">📊 Bilans</a>
+    <a href="dashboard.html" class="t-back">← Retour à l'app</a>
+  </div>
 </header>
 
 <div class="wrap">
@@ -202,7 +205,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qemppaHpzeWNzZmtjc2pwdHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzE4NTYsImV4cCI6MjA5NzIwNzg1Nn0.jaOQp73rvuxdiJjHTWyFHc8EcAjqsu6G2M1ZJYYEk9Y';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb = supabase.createClient(SURL, SKEY);
 
 var ALL_USERS = [];
