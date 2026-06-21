@@ -246,7 +246,7 @@ async function loadProfileAndHistory(){
 
   var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   var todayName = joursFR[new Date().getDay()];
-  if(PROF.jour_bilan && PROF.jour_bilan !== todayName){
+  if((PROF.jour_bilan||'dimanche') !== todayName){
     showWrongDayScreen();
     return;
   }
@@ -261,7 +261,8 @@ async function loadProfileAndHistory(){
 }
 
 function showWrongDayScreen(){
-  var jourLbl = PROF.jour_bilan.charAt(0).toUpperCase()+PROF.jour_bilan.slice(1);
+  var jb = PROF.jour_bilan||'dimanche';
+  var jourLbl = jb.charAt(0).toUpperCase()+jb.slice(1);
   document.getElementById('hero-sub').textContent = 'Votre bilan est prévu un autre jour.';
   document.getElementById('bilan-form').style.display = 'none';
   document.getElementById('history-card').style.display = 'none';
