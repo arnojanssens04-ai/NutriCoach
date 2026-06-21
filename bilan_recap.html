@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Récapitulatif des bilans (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --amber:#d97706;
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:50px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:760px; margin:0 auto; padding:22px 16px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); margin-bottom:18px; }
+
+.user-select { width:100%; padding:11px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.88rem; margin-bottom:18px; outline:none; }
+
+.bilan-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:12px; box-shadow:var(--sh); }
+.bc-hdr { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.bc-date { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:600; }
+.bc-weight { font-size:.85rem; color:var(--gold); font-weight:600; }
+.bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; font-size:.8rem; }
+.bc-row { display:flex; justify-content:space-between; padding:4px 0; }
+.bc-row span:first-child { color:var(--text2); }
+.bc-pill { font-size:.7rem; padding:1px 8px; border-radius:999px; }
+.pill-Bien { background:var(--sage-l); color:var(--sage); }
+.pill-Moyen { background:rgba(217,119,6,0.12); color:var(--amber); }
+.pill-Difficile { background:rgba(201,122,110,0.1); color:var(--rose); }
+.bc-notes { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:.8rem; color:var(--text2); line-height:1.5; }
+.bc-notes b { color:var(--text); }
+
+.empty { text-align:center; padding:40px 16px; color:var(--text2); font-size:.86rem; }
+.denied { text-align:center; padding:60px 20px; color:var(--text2); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="admin.html" class="t-back">← Admin</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Récapitulatif des bilans</h1>
+    <p>Vue d'ensemble des bilans hebdomadaires de tous les utilisateurs.</p>
+  </div>
+  <div id="content"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, ALL_USERS=[], ALL_BILANS=[];
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  checkAdminAndLoad();
+});
+
+async function checkAdminAndLoad(){
+  var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
+  if(!pr.data || pr.data.role!=='admin'){
+    document.getElementById('content').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    return;
+  }
+
+  var usersRes = await sb.from('profiles').select('id,prenom,nom,email').order('prenom');
+  ALL_USERS = usersRes.data || [];
+
+  var bilansRes = await sb.from('bilans').select('*').order('date',{ascending:false});
+  ALL_BILANS = bilansRes.data || [];
+
+  renderUserSelect();
+  renderBilans('all');
+}
+
+function userLabel(u){ return (u.prenom||'')+' '+(u.nom||'')+(u.email?' ('+u.email+')':''); }
+
+function renderUserSelect(){
+  var html = '<select class="user-select" id="user-filter" onchange="renderBilans(this.value)">'
+    +'<option value="all">Tous les utilisateurs</option>'
+    +ALL_USERS.map(function(u){ return '<option value="'+u.id+'">'+esc(userLabel(u))+'</option>'; }).join('')
+    +'</select>';
+  document.getElementById('content').insertAdjacentHTML('beforebegin','');
+  var sel = document.createElement('div');
+  sel.innerHTML = html;
+  document.querySelector('.wrap').insertBefore(sel, document.getElementById('content'));
+}
+
+function renderBilans(filterId){
+  var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
+  var el = document.getElementById('content');
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucun bilan enregistré pour le moment.</div>'; return; }
+
+  el.innerHTML = list.map(function(b){
+    var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
+    var dt = new Date(b.date);
+    var pillFields = [
+      ['Alimentation', b.respect_plan], ['Activité', b.activite_semaine],
+      ['Digestion', b.troubles_digestifs], ['Sommeil', b.sommeil],
+      ['Difficulté', b.difficulte_semaine], ['Satisfaction', b.satisfaction_semaine]
+    ];
+    var pillsHtml = pillFields.filter(function(p){return p[1];}).map(function(p){
+      return '<div class="bc-row"><span>'+p[0]+'</span><span class="bc-pill pill-'+p[1]+'">'+p[1]+'</span></div>';
+    }).join('');
+    var notes = [];
+    if(b.ecart_alimentaire) notes.push('<b>Écarts :</b> '+esc(b.ecart_alimentaire));
+    if(b.objectifs_notes) notes.push('<b>Objectifs :</b> '+esc(b.objectifs_notes));
+    if(b.tour_taille || b.tour_hanche) notes.push('<b>Mensurations :</b> '+(b.tour_taille?'taille '+b.tour_taille+'cm ':'')+(b.tour_hanche?'hanche '+b.tour_hanche+'cm':''));
+
+    return '<div class="bilan-card">'
+      +'<div class="bc-hdr"><div>'
+        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')+'</div>'
+        +'<div style="font-size:.74rem;color:var(--text3)">'+dt.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'
+      +'</div><div class="bc-weight">'+(b.poids||'—')+' kg</div></div>'
+      +'<div class="bc-grid">'+pillsHtml+'</div>'
+      +(notes.length?'<div class="bc-notes">'+notes.join('<br>')+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+</script>
+</body>
+</html>
