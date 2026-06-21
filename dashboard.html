@@ -2092,9 +2092,9 @@ function renderMealPlan(){
     var T = combinedT;
     var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
 
-    if(hasAnyReal){
-      // Au moins un repas a de vraies données : on compare le total
-      // COMBINÉ (réel + suggestions pour le reste) à l'objectif du jour.
+    if(hasAnyReal && allMealsCovered){
+      // TOUS les repas ont de vraies données : la comparaison reflète une
+      // vraie consommation complète de la journée, donc elle a du sens.
       document.getElementById('mp-totals-title').textContent = 'Bilan de la journée';
       document.getElementById('mp-totals').innerHTML =
         '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
@@ -2106,10 +2106,11 @@ function renderMealPlan(){
         +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
         +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
     } else {
-      // Mode générique : c'est un plan PROPOSÉ, pas encore mangé — afficher
-      // "X / Y kcal" donnerait l'impression trompeuse d'un suivi réel alors
-      // qu'il s'agit juste de l'objectif que ce plan vise. On affiche donc
-      // uniquement la cible, clairement.
+      // Pas encore TOUS les repas réels (générique pur ou hybride partiel) :
+      // afficher "X / Y kcal" donnerait l'impression trompeuse d'un suivi
+      // réel qui "bouge" à chaque recette ajoutée, alors qu'il s'agit en
+      // partie de suggestions pas encore mangées. On affiche donc
+      // uniquement la cible, stable, tant que la journée n'est pas complète.
       document.getElementById('mp-totals-title').textContent = 'Objectifs de ce plan';
       document.getElementById('mp-totals').innerHTML =
         '<div class="mp-tot-row"><span>Calories</span><span>'+tgt.kcal+' kcal</span></div>'
