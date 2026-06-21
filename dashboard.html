@@ -863,8 +863,13 @@ async function loadProf(retried){
   return true;
 }
 async function saveProf(data){
-  await sb.from('profiles').upsert(Object.assign({id:USER.id},data));
+  var r = await sb.from('profiles').upsert(Object.assign({id:USER.id},data));
+  if(r.error){
+    console.error('saveProf error:', r.error);
+    return {ok:false, error:r.error.message};
+  }
   PROF=Object.assign(PROF||{},data);
+  return {ok:true};
 }
 function needsSetup(){return !PROF||!PROF.age||!PROF.poids||!PROF.taille;}
 
@@ -1007,7 +1012,7 @@ async function refreshDash(){
   var bilanCard = document.getElementById('bilan-card');
   var bilanLink = document.getElementById('bilan-link');
   if(bilanCard){
-    var isBilanDay = p.jour_bilan && p.jour_bilan===todayName;
+    var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
     if(isBilanDay){
       bilanCard.style.borderColor='var(--gold)';
       bilanCard.style.opacity='1';
@@ -2013,23 +2018,44 @@ function renderMealPlan(){
 
   getEntries().then(function(entries){
     var analysis = entries.length ? analyzeAndAdjust(entries, tgt, pathos) : null;
+    var mealsWithRealData = {};
+    entries.forEach(function(e){ mealsWithRealData[e.repas] = true; });
+    var hasAnyReal = entries.length > 0;
+    var allMealsCovered = activeMealIds().every(function(m){ return mealsWithRealData[m]; });
 
-    document.getElementById('mealplan-mode-note').textContent = analysis
-      ? "Basé sur les aliments que vous avez déjà enregistrés aujourd'hui — quantités ajustées pour se rapprocher de vos objectifs."
-      : "Aucun aliment enregistré aujourd'hui : voici une journée type générique en attendant. Ajoutez vos repas dans le Journal pour obtenir un plan basé sur vos propres habitudes.";
+    // Le plan générique reste TOUJOURS disponible, même si certains repas
+    // ont déjà des aliments réels — il comble les repas pas encore décidés
+    // plutôt que de disparaître entièrement dès qu'UN repas a des données.
+    if(!CURRENT_PLAN) loadGenericPlanFromProfile();
+    if(!CURRENT_PLAN || !CURRENT_PLAN_KCAL_BASIS || Math.abs(tgt.kcal-CURRENT_PLAN_KCAL_BASIS) > tgt.kcal*0.02){
+      CURRENT_PLAN = generateMealPlan();
+      CURRENT_PLAN_KCAL_BASIS = tgt.kcal;
+      saveGenericPlan();
+    }
+
+    document.getElementById('mealplan-mode-note').textContent = !hasAnyReal
+      ? "Aucun aliment enregistré aujourd'hui : voici une journée type générique en attendant. Ajoutez vos repas dans le Journal ou via une recette pour obtenir un plan basé sur vos propres habitudes."
+      : (allMealsCovered
+        ? "Basé sur les aliments que vous avez déjà enregistrés aujourd'hui — quantités ajustées pour se rapprocher de vos objectifs."
+        : "Les repas déjà enregistrés sont ajustés à vos besoins ; les autres restent des suggestions génériques en attendant que vous les complétiez.");
+
+    var byMeal = {};
+    if(analysis) analysis.adjusted.forEach(function(a){
+      if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
+      byMeal[a.entry.repas].push(a);
+    });
 
     var html = '';
-    if(analysis){
-      // ── Mode analyse : aliments réels avec quantité ajustée ──
-      var byMeal = {};
-      analysis.adjusted.forEach(function(a){
-        if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
-        byMeal[a.entry.repas].push(a);
-      });
-      activeMealIds().forEach(function(mid){
-        var meta = MEAL_META[mid];
+    var combinedT = {kcal:0,prot:0,gluc:0,lip:0};
+
+    activeMealIds().forEach(function(mid){
+      var meta = MEAL_META[mid];
+      var isReal = !!mealsWithRealData[mid];
+
+      if(isReal){
         var items = byMeal[mid]||[];
         if(!items.length) return;
+        items.forEach(function(a){ var r=a.newQty/100; combinedT.kcal+=pN2(a.entry.food_kcal_100)*r; combinedT.prot+=pN2(a.entry.food_prot_100)*r; combinedT.gluc+=pN2(a.entry.food_gluc_100)*r; combinedT.lip+=pN2(a.entry.food_lip_100)*r; });
         html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
         items.forEach(function(a){
           var changed = a.newQty !== a.oldQty;
@@ -2043,44 +2069,32 @@ function renderMealPlan(){
             +'</div>';
         });
         html += '</div></div>';
-      });
-    } else {
-      // ── Mode générique : ancien générateur (corrigé), utilisé en secours ──
-      // On tente d'abord de RECHARGER le plan déjà sauvegardé (persistant
-      // entre les connexions) avant d'en générer un nouveau — régénéré
-      // seulement si l'objectif calorique a changé de façon significative
-      // ou si la personne clique explicitement sur "Régénérer".
-      if(!CURRENT_PLAN) loadGenericPlanFromProfile();
-      if(!CURRENT_PLAN || !CURRENT_PLAN_KCAL_BASIS || Math.abs(tgt.kcal-CURRENT_PLAN_KCAL_BASIS) > tgt.kcal*0.02){
-        CURRENT_PLAN = generateMealPlan();
-        CURRENT_PLAN_KCAL_BASIS = tgt.kcal;
-        saveGenericPlan();
-      }
-      activeMealIds().forEach(function(mid){
-        var meta = MEAL_META[mid];
+      } else {
         var mealData = CURRENT_PLAN[mid] || {recipeName:'',items:[]};
-        var items = mealData.items || [];
-        if(!items.length) return;
+        var gItems = mealData.items || [];
+        if(!gItems.length) return;
+        gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
         html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
-          +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span>':'')+'</span>'
+          +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
           +'<button class="mp-swap" onclick="changeMealRecipe(\''+mid+'\')" title="Changer de recette">⇄</button>'
           +'</div><div class="card-body">';
-        items.forEach(function(it){
+        gItems.forEach(function(it){
           var kcal = Math.round(it.food.kcal*it.qty/100);
           html += '<div class="mp-item"><div class="mp-item-info">'
             +'<div class="mp-item-name">'+esc(it.food.nom)+'</div>'
             +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div></div>';
         });
         html += '</div></div>';
-      });
-    }
+      }
+    });
     document.getElementById('mealplan-content').innerHTML = html;
 
-    var T = analysis ? analysis.totals : planTotals(CURRENT_PLAN);
+    var T = combinedT;
     var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
 
-    if(analysis){
-      // Mode analyse : il y a une vraie consommation à comparer à l'objectif.
+    if(hasAnyReal){
+      // Au moins un repas a de vraies données : on compare le total
+      // COMBINÉ (réel + suggestions pour le reste) à l'objectif du jour.
       document.getElementById('mp-totals-title').textContent = 'Bilan de la journée';
       document.getElementById('mp-totals').innerHTML =
         '<div class="mp-tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
@@ -2266,7 +2280,11 @@ function goSt(n){
 async function finSetup(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
-  await saveProf(data);
+  var result = await saveProf(data);
+  if(!result.ok){
+    toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
+    return; // la fenêtre reste ouverte, rien n'est perdu, on peut réessayer
+  }
   document.getElementById('ov').classList.remove('on');
   initGreeting(); refreshDash();
   toast('✅ Profil enregistré !');
@@ -2409,7 +2427,11 @@ var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
-  await saveProf(data);
+  var result = await saveProf(data);
+  if(!result.ok){
+    toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
+    return; // ne ferme PAS la fenêtre et ne lance PAS l'écran de chargement si ça a échoué
+  }
   document.getElementById('ov').classList.remove('on');
   showLoadingScreen();
 };
