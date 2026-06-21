@@ -173,6 +173,18 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
           <option value="light">Légèrement actif</option>
           <option value="moderate">Modérément actif</option>
           <option value="active">Très actif</option>
+          <option value="sportif">Sportif</option>
+        </select>
+      </div>
+      <div class="field"><label>Jour du bilan hebdomadaire</label>
+        <select id="e-jourbilan">
+          <option value="dimanche">Dimanche</option>
+          <option value="lundi">Lundi</option>
+          <option value="mardi">Mardi</option>
+          <option value="mercredi">Mercredi</option>
+          <option value="jeudi">Jeudi</option>
+          <option value="vendredi">Vendredi</option>
+          <option value="samedi">Samedi</option>
         </select>
       </div>
       <div class="field"><label>Rôle</label>
@@ -295,6 +307,7 @@ function openEdit(id){
   document.getElementById('e-poids-vise').value = u.poids_vise||'';
   document.getElementById('e-kcal').value = u.kcal_target||'';
   document.getElementById('e-activite').value = u.activite||'sedentary';
+  document.getElementById('e-jourbilan').value = u.jour_bilan||'dimanche';
   document.getElementById('e-role').value = u.role||'user';
 
   var pathos = u.pathologies||[];
@@ -344,6 +357,7 @@ async function saveUser(){
     poids_vise: parseFloat(document.getElementById('e-poids-vise').value)||null,
     kcal_target: parseInt(document.getElementById('e-kcal').value)||null,
     activite: document.getElementById('e-activite').value,
+    jour_bilan: document.getElementById('e-jourbilan').value,
     role: document.getElementById('e-role').value,
     pathologies: pathos
   };
