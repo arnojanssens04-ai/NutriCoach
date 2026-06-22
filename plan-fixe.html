@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Mon plan fixe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:600px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:16px; }
+
+.status-banner { padding:11px 15px; border-radius:11px; margin-bottom:16px; font-size:.82rem; line-height:1.5; }
+.status-on { background:var(--sage-l); border:1px solid rgba(122,155,124,0.28); color:#9aba9c; }
+.status-off { background:var(--card2); border:1px solid var(--border); color:var(--text2); }
+
+.totals-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; margin-bottom:16px; }
+.tot-row { display:flex; justify-content:space-between; font-size:.82rem; padding:3px 0; }
+.tot-row span:first-child { color:var(--text2); }
+
+.meal-section { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
+.meal-hdr { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.meal-hdr span { font-family:'Cormorant Garamond',serif; font-size:1.05rem; }
+.meal-body { padding:14px 16px; }
+
+.food-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
+.food-row:last-child { border-bottom:none; }
+.food-del { width:26px; height:26px; border-radius:7px; background:var(--rose-l); border:1px solid rgba(201,122,110,0.25); color:var(--rose); cursor:pointer; font-size:.8rem; flex-shrink:0; margin-left:8px; }
+
+.add-row { display:grid; grid-template-columns:1fr 70px 34px; gap:7px; margin-top:8px; }
+.add-row input { padding:9px 11px; background:var(--card2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:.84rem; outline:none; }
+.add-btn { width:34px; height:34px; border-radius:8px; background:var(--gold-l); border:1px solid rgba(201,169,110,0.3); color:var(--gold); cursor:pointer; font-size:1.1rem; }
+.search-results { background:var(--card2); border:1px solid var(--border); border-radius:9px; margin-top:5px; max-height:160px; overflow-y:auto; display:none; }
+.search-results.show { display:block; }
+.search-item { padding:9px 12px; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); }
+.search-item:hover { background:var(--card); }
+
+.btn { padding:13px; border-radius:11px; border:none; font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; cursor:pointer; width:100%; }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; margin-bottom:10px; }
+.btn-outline2 { background:none; border:1px solid var(--border); color:var(--text2); font-family:'Inter',sans-serif; font-size:.85rem; }
+.btn-outline2:hover { border-color:var(--rose); color:var(--rose); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="dashboard.html" class="t-back">← Profil</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Mon plan fixe</h1>
+    <p>Construisez votre propre journée type, une fois pour toutes. Tant qu'il est actif, ce plan remplace les suggestions automatiques — il ne change jamais tout seul.</p>
+  </div>
+
+  <div class="status-banner" id="status-banner"></div>
+  <div class="totals-card" id="totals-card"></div>
+  <div id="meals-container"></div>
+
+  <button class="btn btn-gold" onclick="savePlanFixe()">Enregistrer mon plan fixe</button>
+  <button class="btn btn-outline2" onclick="disablePlanFixe()">Désactiver mon plan fixe</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, PROF=null, DB=[];
+var MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
+var MEAL_LABELS = {breakfast:'☀️ Petit-déjeuner', lunch:'🍽️ Déjeuner', snack:'🍎 Collation', dinner:'🌙 Souper', snack2:'🥨 Collation 2'};
+var SEARCH_PICKED = {}; // mealKey -> food choisi en attente d'ajout
+
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function pN(v){ if(v===null||v===undefined||v==='-'||v==='')return 0; return parseFloat(String(v).replace(',','.'))||0; }
+function tok(s){if(!s)return[];return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
+function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
+var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,nature:1,sel:1,ajoute:1,ajoutee:1,precision:1,moyen:1,moyenne:1,aliment:1,general:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
+function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;var meaningfulLen=ft.filter(function(t){return !CIQUAL_STOPWORDS[t];}).length||ft.length;s*=(0.4+0.6*Math.min(qt.length/Math.max(meaningfulLen,1),1));return s;}
+function ciqSearch(q,n){n=n||6;var qt=tok(q);if(!qt.length)return[];var r=[];for(var i=0;i<DB.length;i++){var s=scoreFn(qt,tok(DB[i].nom),DB[i].nom);if(s>=5)r.push({food:DB[i],score:s});}r.sort(function(a,b){return b.score-a.score;});return r.slice(0,n);}
+
+function calcTargets(){
+  var p=PROF||{};
+  var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
+  var act=p.activite||'sedentary',pathos=p.pathologies||[];
+  var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
+  var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
+  var hasMet=p.activite_met_kcal&&p.activite_met_kcal>0;
+  var tdee=hasMet?bmr*1.2+p.activite_met_kcal:bmr*(af[act]||1.2);
+  var objectif=p.objectif||(pathos.indexOf('obesity')>=0?'perte':'maintien');
+  var kcal=tdee;
+  if(objectif==='perte')kcal=tdee-500;
+  if(objectif==='prise')kcal=tdee+300;
+  kcal+=(p.kcal_adjustment||0);
+  kcal=Math.max(1200,Math.min(5000,Math.round(kcal)));
+  return {kcal:kcal, prot:Math.round(kcal*0.15/4), gluc:Math.round(kcal*0.50/4), lip:Math.round(kcal*0.35/9)};
+}
+function needsSecondSnack(tgt){ return tgt.kcal>=3000; }
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  init();
+});
+
+async function init(){
+  var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
+  PROF = pr.data || {};
+
+  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
+    DB = raw.map(function(r){ return {code:r[0],nom:r[1],kcal:pN(r[2]),prot:pN(r[3]),gluc:pN(r[4]),lip:pN(r[5]),ags:pN(r[6]),pot:pN(r[13])}; });
+    loadCustomFoods();
+  }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });
+
+  if(PROF.plan_fixe){
+    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (PROF.plan_fixe[k]||[]).slice(); });
+  }
+
+  renderStatus();
+  renderMeals();
+  renderTotals();
+}
+
+// Aliments ajoutés manuellement par les admins (aliments.html) — fusionnés
+// dans DB, donc cherchables exactement comme un aliment Ciqual classique.
+function loadCustomFoods(){
+  sb.from('aliments_custom').select('*').then(function(r){
+    if(!r.data) return;
+    var custom = r.data.map(function(c){
+      return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip, ags:c.ags||0, pot:c.pot||0};
+    });
+    DB = DB.concat(custom);
+  }).catch(function(){ console.warn('Aliments personnalisés non chargés'); });
+}
+
+function renderStatus(){
+  var el = document.getElementById('status-banner');
+  var active = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
+  el.className = 'status-banner '+(active?'status-on':'status-off');
+  el.textContent = active
+    ? '✅ Votre plan fixe est actif — il remplace les suggestions automatiques sur "Mon plan alimentaire".'
+    : 'Aucun plan fixe actif pour le moment. Construisez-le ci-dessous puis enregistrez.';
+}
+
+function activeMealKeys(){
+  var tgt = calcTargets();
+  var keys = ['breakfast','lunch','snack','dinner'];
+  if(needsSecondSnack(tgt)) keys.push('snack2');
+  return keys;
+}
+
+function renderMeals(){
+  var container = document.getElementById('meals-container');
+  container.innerHTML = activeMealKeys().map(function(mk){
+    var items = MEALS[mk]||[];
+    var rows = items.map(function(it,idx){
+      var kcal = Math.round(it.kcal*it.qty/100);
+      return '<div class="food-row"><span>'+esc(it.nom)+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
+        +'<button class="food-del" onclick="removeFood(\''+mk+'\','+idx+')">✕</button></div>';
+    }).join('');
+    return '<div class="meal-section"><div class="meal-hdr"><span>'+MEAL_LABELS[mk]+'</span></div><div class="meal-body">'
+      +(rows||'<div style="font-size:.8rem;color:var(--text3)">Aucun aliment ajouté.</div>')
+      +'<div class="add-row">'
+      +'<input type="text" placeholder="Rechercher un aliment..." oninput="searchFood(\''+mk+'\',this.value)" id="search-'+mk+'">'
+      +'<input type="number" placeholder="g" value="100" id="qty-'+mk+'">'
+      +'<button class="add-btn" onclick="confirmAddFood(\''+mk+'\')">+</button>'
+      +'</div><div class="search-results" id="results-'+mk+'"></div>'
+      +'</div></div>';
+  }).join('');
+}
+
+var searchTimer=null;
+function searchFood(mealKey, val){
+  clearTimeout(searchTimer);
+  var resEl = document.getElementById('results-'+mealKey);
+  if(!val || val.trim().length<2){ resEl.classList.remove('show'); return; }
+  searchTimer = setTimeout(function(){
+    var results = ciqSearch(val,6);
+    if(!results.length){ resEl.innerHTML='<div class="search-item" style="color:var(--text3)">Aucun résultat</div>'; resEl.classList.add('show'); return; }
+    resEl.innerHTML = results.map(function(r,i){
+      return '<div class="search-item" onclick="pickFood(\''+mealKey+'\','+i+')">'+esc(r.food.nom)+' <span style="color:var(--text3);font-size:.74rem">('+Math.round(r.food.kcal)+'kcal/100g)</span></div>';
+    }).join('');
+    resEl.setAttribute('data-codes', JSON.stringify(results.map(function(r){return r.food.code;})));
+    resEl.classList.add('show');
+  }, 300);
+}
+function pickFood(mealKey, idx){
+  var resEl = document.getElementById('results-'+mealKey);
+  var codes = JSON.parse(resEl.getAttribute('data-codes'));
+  var food = DB.find(function(f){ return f.code===codes[idx]; });
+  if(!food) return;
+  SEARCH_PICKED[mealKey] = food;
+  document.getElementById('search-'+mealKey).value = food.nom;
+  resEl.classList.remove('show');
+}
+function confirmAddFood(mealKey){
+  var food = SEARCH_PICKED[mealKey];
+  if(!food){ toast('Cherchez puis cliquez un aliment dans la liste'); return; }
+  var qty = parseFloat(document.getElementById('qty-'+mealKey).value)||100;
+  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0});
+  delete SEARCH_PICKED[mealKey];
+  document.getElementById('search-'+mealKey).value='';
+  document.getElementById('qty-'+mealKey).value='100';
+  renderMeals(); renderTotals();
+}
+function removeFood(mealKey, idx){
+  MEALS[mealKey].splice(idx,1);
+  renderMeals(); renderTotals();
+}
+
+function renderTotals(){
+  var tgt = calcTargets();
+  var T = {kcal:0,prot:0,gluc:0,lip:0};
+  Object.values(MEALS).forEach(function(items){
+    (items||[]).forEach(function(it){ var r=it.qty/100; T.kcal+=it.kcal*r; T.prot+=it.prot*r; T.gluc+=it.gluc*r; T.lip+=it.lip*r; });
+  });
+  document.getElementById('totals-card').innerHTML =
+    '<div class="tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
+    +'<div class="tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
+    +'<div class="tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
+    +'<div class="tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>';
+}
+
+async function savePlanFixe(){
+  var hasAny = Object.values(MEALS).some(function(arr){return arr.length;});
+  if(!hasAny){ toast('Ajoutez au moins un aliment avant d\'enregistrer'); return; }
+  var r = await sb.from('profiles').update({plan_fixe:MEALS}).eq('id',USER.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  PROF.plan_fixe = MEALS;
+  renderStatus();
+  toast('✅ Plan fixe enregistré — il remplace désormais les suggestions automatiques');
+}
+
+async function disablePlanFixe(){
+  var r = await sb.from('profiles').update({plan_fixe:null}).eq('id',USER.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  PROF.plan_fixe = null;
+  MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
+  renderStatus(); renderMeals(); renderTotals();
+  toast('Plan fixe désactivé — les suggestions automatiques reprennent le relais');
+}
+</script>
+</body>
+</html>
