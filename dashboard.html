@@ -572,6 +572,17 @@ body {
     </div>
   </a>
 
+  <a href="chat.html" style="text-decoration:none;color:inherit;display:block">
+    <div class="meal-card" style="margin-bottom:14px;cursor:pointer">
+      <div class="meal-card-top">
+        <span class="meal-ico">💬</span>
+        <div class="meal-add" id="chat-badge">→</div>
+      </div>
+      <div class="meal-name">Assistance</div>
+      <div class="meal-kcal">Une question ? Discutez directement avec l'équipe</div>
+    </div>
+  </a>
+
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
 </div>
@@ -898,15 +909,38 @@ async function saveProf(data){
 }
 function needsSetup(){return !PROF||!PROF.age||!PROF.poids||!PROF.taille;}
 
+// Couleur déterministe (basée sur le nom) parmi la palette de l'app — chaque
+// personne garde toujours la même couleur, sans bibliothèque d'avatars.
+var AVATAR_PALETTE = [
+  {bg:'rgba(201,169,110,0.1)', border:'rgba(201,169,110,0.32)', text:'#c9a96e'},
+  {bg:'rgba(122,155,124,0.12)', border:'rgba(122,155,124,0.32)', text:'#7a9b7c'},
+  {bg:'rgba(201,122,110,0.1)', border:'rgba(201,122,110,0.32)', text:'#c97a6e'},
+  {bg:'rgba(110,168,201,0.1)', border:'rgba(110,168,201,0.32)', text:'#6ea8c9'}
+];
+function avatarColor(seed){
+  seed = seed||'?';
+  var hash = 0;
+  for(var i=0;i<seed.length;i++){ hash = (hash*31 + seed.charCodeAt(i)) % 100000; }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+function applyAvatar(el, initial, seed){
+  if(!el) return;
+  var c = avatarColor(seed);
+  el.textContent = initial;
+  el.style.background = c.bg;
+  el.style.borderColor = c.border;
+  el.style.color = c.text;
+}
+
 function initGreeting(){
   var p=PROF||{};
   var h=new Date().getHours();
   var g=h<12?'Bonjour':h<18?'Bon après-midi':'Bonsoir';
   document.getElementById('t-greet').textContent=g+' '+(p.prenom||'');
-  var av=document.getElementById('t-av');
-  if(av)av.textContent=(p.prenom||'?')[0].toUpperCase();
-  var pav=document.getElementById('pav');
-  if(pav)pav.textContent=p.sexe==='M'?'👨':p.sexe==='F'?'👩':'🧑';
+  var seed = (p.prenom||p.email||'?');
+  var initial = (p.prenom||'?')[0].toUpperCase();
+  applyAvatar(document.getElementById('t-av'), initial, seed);
+  applyAvatar(document.getElementById('pav'), initial, seed);
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
 }
@@ -1087,6 +1121,18 @@ function showMilestoneCelebration(m){
   document.body.appendChild(ov);
 }
 
+async function checkUnreadMessages(){
+  var badge = document.getElementById('chat-badge');
+  if(!badge) return;
+  var r = await sb.from('messages').select('id',{count:'exact',head:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
+  var n = r.count || 0;
+  badge.textContent = n>0 ? n : '→';
+  badge.style.background = n>0 ? 'var(--rose)' : '';
+  badge.style.color = n>0 ? '#fff' : '';
+  badge.style.fontSize = n>0 ? '.72rem' : '';
+  badge.style.fontWeight = n>0 ? '700' : '';
+}
+
 async function renderMotivationCards(){
   var p = PROF||{};
   var row = document.getElementById('motiv-row');
@@ -1121,6 +1167,7 @@ async function refreshDash(){
   var pathos=p.pathologies||[];
   var tgt=calcTargets();
   renderMotivationCards();
+  checkUnreadMessages();
 
   // Le bilan n'est accessible que le jour choisi par la personne — les
   // autres jours, la carte est grisée et non-cliquable (modifiable dans
