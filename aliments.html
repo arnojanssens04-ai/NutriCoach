@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Aliments personnalisés (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1);
+  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
+  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:600px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); }
+.card-hdr span { font-family:'Cormorant Garamond',serif; font-size:1.05rem; }
+.card-body { padding:16px 18px; }
+
+.field { margin-bottom:13px; }
+.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
+.field input { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; }
+.field input:focus { border-color:rgba(201,169,110,0.45); }
+.field-hint { font-size:.72rem; color:var(--text3); margin-top:4px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.section-lbl { font-size:.7rem; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; margin:14px 0 8px; }
+
+.btn { padding:12px 20px; border-radius:10px; border:none; font-family:'Cormorant Garamond',serif; font-size:.95rem; font-weight:600; cursor:pointer; width:100%; }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; }
+
+.food-item { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); }
+.food-item:last-child { border-bottom:none; }
+.food-name { font-size:.88rem; font-weight:500; }
+.food-meta { font-size:.74rem; color:var(--text2); margin-top:2px; }
+.food-del { background:var(--rose-l); border:1px solid rgba(201,122,110,0.25); color:var(--rose); border-radius:8px; width:30px; height:30px; cursor:pointer; flex-shrink:0; }
+
+.empty { text-align:center; padding:30px 16px; color:var(--text2); font-size:.84rem; }
+.denied { text-align:center; padding:60px 20px; color:var(--text2); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="admin.html" class="t-back">← Admin</a>
+</header>
+
+<div class="wrap" id="wrap">
+  <div class="hero">
+    <h1>Aliments personnalisés</h1>
+    <p>Ajoutez un aliment absent de Ciqual ou Open Food Facts — il devient immédiatement cherchable partout dans l'app (Journal, Recettes, Plan fixe), exactement comme un aliment Ciqual classique.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span>Nouvel aliment</span></div>
+    <div class="card-body">
+      <div class="field"><label>Nom</label><input type="text" id="f-nom" placeholder="Ex: Galette de pois chiches maison"></div>
+
+      <div class="section-lbl">Pour 100g</div>
+      <div class="grid3">
+        <div class="field"><label>Calories (kcal)</label><input type="number" id="f-kcal" step="0.1"></div>
+        <div class="field"><label>Protéines (g)</label><input type="number" id="f-prot" step="0.1"></div>
+        <div class="field"><label>Glucides (g)</label><input type="number" id="f-gluc" step="0.1"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Lipides (g)</label><input type="number" id="f-lip" step="0.1"></div>
+        <div class="field"><label>dont saturées (g)</label><input type="number" id="f-ags" step="0.1"></div>
+        <div class="field"><label>Fibres (g)</label><input type="number" id="f-fibres" step="0.1"></div>
+      </div>
+
+      <div class="section-lbl">Micronutriments (optionnel)</div>
+      <div class="grid3">
+        <div class="field"><label>Fer (mg)</label><input type="number" id="f-fer" step="0.01"></div>
+        <div class="field"><label>Calcium (mg)</label><input type="number" id="f-cal" step="0.1"></div>
+        <div class="field"><label>Potassium (mg)</label><input type="number" id="f-pot" step="0.1"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Magnésium (mg)</label><input type="number" id="f-mg" step="0.1"></div>
+        <div class="field"><label>Sodium (mg)</label><input type="number" id="f-na" step="0.1"></div>
+        <div class="field"><label>Zinc (mg)</label><input type="number" id="f-zn" step="0.01"></div>
+      </div>
+
+      <button class="btn btn-gold" onclick="saveFood()" style="margin-top:8px">Ajouter cet aliment</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span>Aliments déjà ajoutés</span></div>
+    <div class="card-body" id="food-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null;
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  checkAdminAndLoad();
+});
+
+async function checkAdminAndLoad(){
+  var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
+  if(!pr.data || pr.data.role!=='admin'){
+    document.getElementById('wrap').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    return;
+  }
+  loadFoods();
+}
+
+async function loadFoods(){
+  var r = await sb.from('aliments_custom').select('*').order('created_at',{ascending:false});
+  var list = r.data || [];
+  var el = document.getElementById('food-list');
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucun aliment personnalisé pour le moment.</div>'; return; }
+  el.innerHTML = list.map(function(f){
+    return '<div class="food-item"><div>'
+      +'<div class="food-name">'+esc(f.nom)+'</div>'
+      +'<div class="food-meta">'+Math.round(f.kcal)+' kcal · P:'+f.prot+'g · G:'+f.gluc+'g · L:'+f.lip+'g /100g</div>'
+      +'</div><button class="food-del" onclick="deleteFood(\''+f.id+'\')">✕</button></div>';
+  }).join('');
+}
+
+function numVal(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+
+async function saveFood(){
+  var nom = document.getElementById('f-nom').value.trim();
+  if(!nom){ toast('Indiquez un nom pour cet aliment'); return; }
+  var data = {
+    nom: nom, kcal: numVal('f-kcal'), prot: numVal('f-prot'), gluc: numVal('f-gluc'),
+    lip: numVal('f-lip'), ags: numVal('f-ags'), fibres: numVal('f-fibres'),
+    fer: numVal('f-fer'), cal: numVal('f-cal'), pot: numVal('f-pot'),
+    mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn'),
+    created_by: USER.id
+  };
+  var r = await sb.from('aliments_custom').insert(data);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ "'+nom+'" ajouté — déjà cherchable dans toute l\'app');
+  ['f-nom','f-kcal','f-prot','f-gluc','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  loadFoods();
+}
+
+async function deleteFood(id){
+  var r = await sb.from('aliments_custom').delete().eq('id',id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('Aliment supprimé');
+  loadFoods();
+}
+</script>
+</body>
+</html>
