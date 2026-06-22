@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Messages (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
+  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
+  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1);
+  --sage:#7a9b7c; --rose:#c97a6e; --rose-l:rgba(201,122,110,0.12);
+  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { background:var(--bg); height:100%; }
+body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+.topbar { flex-shrink:0; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 18px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.main { flex:1; display:flex; overflow:hidden; }
+.conv-list { width:280px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg2); }
+.conv-item { padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.conv-item:hover, .conv-item.active { background:var(--card); }
+.conv-name { font-size:.88rem; font-weight:600; }
+.conv-preview { font-size:.76rem; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-badge { display:inline-block; background:var(--rose); color:#fff; font-size:.65rem; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:6px; }
+.empty-list { padding:30px 16px; color:var(--text2); font-size:.82rem; text-align:center; }
+
+.thread-panel { flex:1; display:flex; flex-direction:column; }
+.thread-hdr { padding:14px 18px; border-bottom:1px solid var(--border); font-family:'Cormorant Garamond',serif; font-size:1.1rem; flex-shrink:0; }
+.thread { flex:1; overflow-y:auto; padding:18px; }
+.no-conv { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text2); font-size:.86rem; }
+
+.bubble-row { display:flex; margin-bottom:12px; }
+.bubble-row.from-admin { justify-content:flex-end; }
+.bubble-row.from-user { justify-content:flex-start; }
+.bubble { max-width:65%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; }
+.bubble-row.from-user .bubble { background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
+.bubble-row.from-admin .bubble { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; border-bottom-right-radius:4px; }
+.bubble-time { font-size:.65rem; color:var(--text3); margin-top:4px; }
+
+.input-bar { flex-shrink:0; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:10px; }
+.input-bar textarea { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:14px; color:var(--text); padding:11px 14px; font-family:'Inter',sans-serif; font-size:.88rem; resize:none; outline:none; max-height:90px; }
+.send-btn { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--gold),#a8833a); border:none; color:#0e100d; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+.denied { display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text2); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span> · Messages</div>
+  <a href="admin.html" class="t-back">← Admin</a>
+</header>
+
+<div class="main" id="main" style="display:none">
+  <div class="conv-list" id="conv-list"></div>
+  <div class="thread-panel">
+    <div class="thread-hdr" id="thread-hdr">Sélectionnez une conversation</div>
+    <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation à gauche</div></div>
+    <div class="input-bar" id="input-bar" style="display:none">
+      <textarea id="msg-input" placeholder="Répondre..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" onclick="sendReply()">➤</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, ALL_USERS={}, CURRENT_CONV=null, ALL_MSGS=[];
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtTime(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+' à '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}); }
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  checkAdminAndLoad();
+});
+
+async function checkAdminAndLoad(){
+  var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
+  if(!pr.data || pr.data.role!=='admin'){
+    document.body.innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    return;
+  }
+  document.getElementById('main').style.display='flex';
+
+  var usersRes = await sb.from('profiles').select('id,prenom,nom,email');
+  (usersRes.data||[]).forEach(function(u){ ALL_USERS[u.id] = u; });
+
+  loadAllMessages();
+  subscribeRealtime();
+}
+
+async function loadAllMessages(){
+  var r = await sb.from('messages').select('*').order('created_at',{ascending:true});
+  ALL_MSGS = r.data || [];
+  renderConvList();
+  if(CURRENT_CONV) renderThread(CURRENT_CONV);
+}
+
+function userLabel(uid){
+  var u = ALL_USERS[uid];
+  if(!u) return 'Utilisateur inconnu';
+  return (u.prenom||'')+' '+(u.nom||'')||u.email||'—';
+}
+
+function renderConvList(){
+  var byUser = {};
+  ALL_MSGS.forEach(function(m){
+    if(!byUser[m.user_id]) byUser[m.user_id] = [];
+    byUser[m.user_id].push(m);
+  });
+  var convs = Object.keys(byUser).map(function(uid){
+    var msgs = byUser[uid];
+    var last = msgs[msgs.length-1];
+    var unread = msgs.filter(function(m){ return !m.is_admin_sender && !m.read_by_admin; }).length;
+    return {uid:uid, last:last, unread:unread};
+  }).sort(function(a,b){ return new Date(b.last.created_at) - new Date(a.last.created_at); });
+
+  var el = document.getElementById('conv-list');
+  if(!convs.length){ el.innerHTML = '<div class="empty-list">Aucun message pour le moment.</div>'; return; }
+  el.innerHTML = convs.map(function(c){
+    return '<div class="conv-item'+(CURRENT_CONV===c.uid?' active':'')+'" onclick="openConv(\''+c.uid+'\')">'
+      +'<div class="conv-name">'+esc(userLabel(c.uid))+(c.unread?'<span class="conv-badge">'+c.unread+'</span>':'')+'</div>'
+      +'<div class="conv-preview">'+(c.last.is_admin_sender?'Vous : ':'')+esc(c.last.content)+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function openConv(uid){
+  CURRENT_CONV = uid;
+  document.getElementById('thread-hdr').textContent = userLabel(uid);
+  document.getElementById('input-bar').style.display = 'flex';
+  renderThread(uid);
+  renderConvList();
+  await sb.from('messages').update({read_by_admin:true}).eq('user_id',uid).eq('is_admin_sender',false).eq('read_by_admin',false);
+  loadAllMessages();
+}
+
+function renderThread(uid){
+  var msgs = ALL_MSGS.filter(function(m){ return m.user_id===uid; });
+  var el = document.getElementById('thread');
+  el.innerHTML = msgs.map(function(m){
+    var side = m.is_admin_sender ? 'from-admin' : 'from-user';
+    return '<div class="bubble-row '+side+'"><div>'
+      +'<div class="bubble">'+esc(m.content)+'</div>'
+      +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
+      +'</div></div>';
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function handleKey(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendReply(); }
+}
+
+async function sendReply(){
+  if(!CURRENT_CONV) return;
+  var input = document.getElementById('msg-input');
+  var content = input.value.trim();
+  if(!content) return;
+  var r = await sb.from('messages').insert({user_id:CURRENT_CONV, sender_id:USER.id, is_admin_sender:true, content:content, read_by_admin:true});
+  if(r.error){ alert('Erreur : '+r.error.message); return; }
+  input.value = '';
+  loadAllMessages();
+}
+
+function subscribeRealtime(){
+  sb.channel('chat-admin-inbox')
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages'}, function(){ loadAllMessages(); })
+    .subscribe();
+}
+</script>
+</body>
+</html>
