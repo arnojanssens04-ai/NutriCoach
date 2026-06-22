@@ -73,7 +73,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   </div>
 
   <div class="card">
-    <div class="card-hdr"><span>Nouvel aliment</span></div>
+    <div class="card-hdr"><span id="form-card-title">Nouvel aliment</span></div>
     <div class="card-body">
       <div class="field"><label>Nom</label><input type="text" id="f-nom" placeholder="Ex: Galette de pois chiches maison"></div>
 
@@ -101,7 +101,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         <div class="field"><label>Zinc (mg)</label><input type="number" id="f-zn" step="0.01"></div>
       </div>
 
-      <button class="btn btn-gold" onclick="saveFood()" style="margin-top:8px">Ajouter cet aliment</button>
+      <button class="btn btn-gold" id="save-btn" onclick="saveFood()" style="margin-top:8px">Ajouter cet aliment</button>
+      <button class="btn" id="cancel-btn" onclick="cancelEdit()" style="margin-top:8px;display:none;background:none;border:1px solid var(--border);color:var(--text2)">Annuler la modification</button>
     </div>
   </div>
 
@@ -139,17 +140,56 @@ async function checkAdminAndLoad(){
   loadFoods();
 }
 
+var EDITING_ID = null;
+var CURRENT_FOODS = [];
+
 async function loadFoods(){
   var r = await sb.from('aliments_custom').select('*').order('created_at',{ascending:false});
-  var list = r.data || [];
+  CURRENT_FOODS = r.data || [];
   var el = document.getElementById('food-list');
-  if(!list.length){ el.innerHTML = '<div class="empty">Aucun aliment personnalisé pour le moment.</div>'; return; }
-  el.innerHTML = list.map(function(f){
+  if(!CURRENT_FOODS.length){ el.innerHTML = '<div class="empty">Aucun aliment personnalisé pour le moment.</div>'; return; }
+  el.innerHTML = CURRENT_FOODS.map(function(f){
     return '<div class="food-item"><div>'
       +'<div class="food-name">'+esc(f.nom)+'</div>'
       +'<div class="food-meta">'+Math.round(f.kcal)+' kcal · P:'+f.prot+'g · G:'+f.gluc+'g · L:'+f.lip+'g /100g</div>'
-      +'</div><button class="food-del" onclick="deleteFood(\''+f.id+'\')">✕</button></div>';
+      +'</div><div style="display:flex;gap:6px">'
+      +'<button class="food-del" onclick="editFood(\''+f.id+'\')" style="background:var(--gold-l);border-color:rgba(201,169,110,0.3);color:var(--gold)">✏️</button>'
+      +'<button class="food-del" onclick="deleteFood(\''+f.id+'\')">✕</button>'
+      +'</div></div>';
   }).join('');
+}
+
+var FORM_FIELDS = ['f-nom','f-kcal','f-prot','f-gluc','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'];
+
+function editFood(id){
+  var f = CURRENT_FOODS.find(function(x){ return x.id===id; });
+  if(!f) return;
+  EDITING_ID = id;
+  document.getElementById('f-nom').value = f.nom||'';
+  document.getElementById('f-kcal').value = f.kcal||0;
+  document.getElementById('f-prot').value = f.prot||0;
+  document.getElementById('f-gluc').value = f.gluc||0;
+  document.getElementById('f-lip').value = f.lip||0;
+  document.getElementById('f-ags').value = f.ags||0;
+  document.getElementById('f-fibres').value = f.fibres||0;
+  document.getElementById('f-fer').value = f.fer||0;
+  document.getElementById('f-cal').value = f.cal||0;
+  document.getElementById('f-pot').value = f.pot||0;
+  document.getElementById('f-mg').value = f.mg||0;
+  document.getElementById('f-na').value = f.na||0;
+  document.getElementById('f-zn').value = f.zn||0;
+  document.getElementById('form-card-title').textContent = 'Modifier : '+f.nom;
+  document.getElementById('save-btn').textContent = 'Enregistrer les modifications';
+  document.getElementById('cancel-btn').style.display = 'block';
+  document.getElementById('f-nom').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function cancelEdit(){
+  EDITING_ID = null;
+  FORM_FIELDS.forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('form-card-title').textContent = 'Nouvel aliment';
+  document.getElementById('save-btn').textContent = 'Ajouter cet aliment';
+  document.getElementById('cancel-btn').style.display = 'none';
 }
 
 function numVal(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
@@ -161,21 +201,26 @@ async function saveFood(){
     nom: nom, kcal: numVal('f-kcal'), prot: numVal('f-prot'), gluc: numVal('f-gluc'),
     lip: numVal('f-lip'), ags: numVal('f-ags'), fibres: numVal('f-fibres'),
     fer: numVal('f-fer'), cal: numVal('f-cal'), pot: numVal('f-pot'),
-    mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn'),
-    created_by: USER.id
+    mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn')
   };
-  var r = await sb.from('aliments_custom').insert(data);
+
+  var r;
+  if(EDITING_ID){
+    r = await sb.from('aliments_custom').update(data).eq('id',EDITING_ID);
+  } else {
+    data.created_by = USER.id;
+    r = await sb.from('aliments_custom').insert(data);
+  }
   if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ "'+nom+'" ajouté — déjà cherchable dans toute l\'app');
-  ['f-nom','f-kcal','f-prot','f-gluc','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'].forEach(function(id){
-    document.getElementById(id).value = '';
-  });
+  toast(EDITING_ID ? '✅ "'+nom+'" modifié' : '✅ "'+nom+'" ajouté — déjà cherchable dans toute l\'app');
+  cancelEdit();
   loadFoods();
 }
 
 async function deleteFood(id){
   var r = await sb.from('aliments_custom').delete().eq('id',id);
   if(r.error){ toast('❌ '+r.error.message); return; }
+  if(EDITING_ID===id) cancelEdit();
   toast('Aliment supprimé');
   loadFoods();
 }
