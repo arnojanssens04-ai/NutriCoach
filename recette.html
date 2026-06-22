@@ -210,7 +210,10 @@ var MEAL_LABELS = {breakfast:'Petit-déjeuner',lunch:'Déjeuner',snack:'Collatio
 // ── RECHERCHE CIQUAL (réutilise la même logique que le reste de l'app) ──
 function tok(s){if(!s)return[];return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
 function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
-function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;s*=(0.4+0.6*Math.min(qt.length/Math.max(ft.length,1),1));return s;}
+var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,fraîche:1,nature:1,sel:1,ajoute:1,ajoutee:1,ajoutée:1,ajouté:1,precision:1,précision:1,moyen:1,moyenne:1,aliment:1,general:1,général:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
+function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;
+  var meaningfulLen = ft.filter(function(t){return !CIQUAL_STOPWORDS[t];}).length || ft.length;
+  s*=(0.4+0.6*Math.min(qt.length/Math.max(meaningfulLen,1),1));return s;}
 function ciqSearch(q,n){n=n||6;var qt=tok(q);if(!qt.length)return[];var r=[];for(var i=0;i<DB.length;i++){var s=scoreFn(qt,tok(DB[i].nom),DB[i].nom);if(s>=5)r.push({food:DB[i],score:s});}r.sort(function(a,b){return b.score-a.score;});return r.slice(0,n);}
 
 // ── UNITÉS NATURELLES (même logique que dashboard.html) ──
@@ -283,9 +286,22 @@ async function init(){
     // en texte brut — pN() les convertit en vrais nombres JS, sinon les
     // calculs (NaN) et l'enregistrement Supabase (erreur Postgres) échouent.
     DB = raw.map(function(r){ return {code:r[0],nom:r[1],kcal:pN(r[2]),prot:pN(r[3]),gluc:pN(r[4]),lip:pN(r[5]),ags:pN(r[6]),pot:pN(r[13])}; });
-  }).catch(function(){ console.warn('Ciqual non chargé'); });
+    loadCustomFoods();
+  }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });
 
   loadRecipes();
+}
+
+// Aliments ajoutés manuellement par les admins (aliments.html) — fusionnés
+// dans DB, donc cherchables exactement comme un aliment Ciqual classique.
+function loadCustomFoods(){
+  sb.from('aliments_custom').select('*').then(function(r){
+    if(!r.data) return;
+    var custom = r.data.map(function(c){
+      return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip, ags:c.ags||0, pot:c.pot||0};
+    });
+    DB = DB.concat(custom);
+  }).catch(function(){ console.warn('Aliments personnalisés non chargés'); });
 }
 function pN(v){ if(v===null||v===undefined||v==='-'||v==='')return 0; return parseFloat(String(v).replace(',','.'))||0; }
 
