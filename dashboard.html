@@ -656,6 +656,12 @@ body {
       <div class="prof-card-body" id="p-met-status" style="font-size:.82rem;color:var(--text2)">Renseignez vos activités sportives précises (vélo, course, pas/jour...) pour un objectif calorique exact.</div>
     </div>
   </a>
+  <a href="plan-fixe.html" style="text-decoration:none;color:inherit;display:block">
+    <div class="prof-card" style="cursor:pointer">
+      <div class="prof-card-hdr"><span>📌 Mon plan fixe</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
+      <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.</div>
+    </div>
+  </a>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>⚙️ Compte</span></div>
     <div class="prof-card-body">
@@ -1302,7 +1308,14 @@ function getDB(){if(DB_IDX)return DB_IDX;DB_IDX=typeof DB!=='undefined'?DB:[];re
 function tok(s){if(!s)return[];return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
 function normQ(q){return q.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
 function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
-function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;s*=(0.4+0.6*Math.min(qt.length/Math.max(ft.length,1),1));return s;}
+var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,fraîche:1,nature:1,sel:1,ajoute:1,ajoutee:1,ajoutée:1,ajouté:1,precision:1,précision:1,moyen:1,moyenne:1,aliment:1,general:1,général:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
+function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;
+  // Les qualificatifs Ciqual quasi-universels (chair, crue, sans...) ne
+  // doivent pas "diluer" artificiellement le score d'un nom par ailleurs
+  // simple — seuls les mots qui changent vraiment l'identité de l'aliment
+  // (ex: "plantain") doivent compter dans la pénalité de longueur.
+  var meaningfulLen = ft.filter(function(t){return !CIQUAL_STOPWORDS[t];}).length || ft.length;
+  s*=(0.4+0.6*Math.min(qt.length/Math.max(meaningfulLen,1),1));return s;}
 
 // ── ALIAS & BLOCKLIST — corrections ciblées pour cas connus testés ──
 // Découverts en testant 5 journées types (29 aliments) contre Ciqual+OFF.
@@ -2204,21 +2217,39 @@ function renderMealPlan(){
         });
         html += '</div></div>';
       } else {
-        var mealData = CURRENT_PLAN[mid] || {recipeName:'',items:[]};
-        var gItems = mealData.items || [];
-        if(!gItems.length) return;
-        gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
-        html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
-          +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
-          +'<button class="mp-swap" onclick="changeMealRecipe(\''+mid+'\')" title="Changer de recette">⇄</button>'
-          +'</div><div class="card-body">';
-        gItems.forEach(function(it){
-          var kcal = Math.round(it.food.kcal*it.qty/100);
-          html += '<div class="mp-item"><div class="mp-item-info">'
-            +'<div class="mp-item-name">'+esc(it.food.nom)+'</div>'
-            +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div></div>';
-        });
-        html += '</div></div>';
+        var pf = (PROF && PROF.plan_fixe && PROF.plan_fixe[mid] && PROF.plan_fixe[mid].length) ? PROF.plan_fixe[mid] : null;
+
+        if(pf){
+          // Plan fixe défini par la personne — prioritaire sur les
+          // suggestions automatiques, affiché tel quel, sans bouton ⇄
+          // (la modification se fait depuis "Mon plan fixe", pas ici).
+          pf.forEach(function(it){ var r=it.qty/100; combinedT.kcal+=pN2(it.kcal)*r; combinedT.prot+=pN2(it.prot)*r; combinedT.gluc+=pN2(it.gluc)*r; combinedT.lip+=pN2(it.lip)*r; });
+          html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l
+            +' <span style="font-size:.6rem;background:var(--sage-l);color:var(--sage);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Mon plan</span></span></div><div class="card-body">';
+          pf.forEach(function(it){
+            var kcal = Math.round(pN2(it.kcal)*it.qty/100);
+            html += '<div class="mp-item"><div class="mp-item-info">'
+              +'<div class="mp-item-name">'+esc(it.nom)+'</div>'
+              +'<div class="mp-item-qty">'+Math.round(it.qty)+'g · '+kcal+' kcal</div></div></div>';
+          });
+          html += '</div></div>';
+        } else {
+          var mealData = CURRENT_PLAN[mid] || {recipeName:'',items:[]};
+          var gItems = mealData.items || [];
+          if(!gItems.length) return;
+          gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
+          html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
+            +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
+            +'<button class="mp-swap" onclick="changeMealRecipe(\''+mid+'\')" title="Changer de recette">⇄</button>'
+            +'</div><div class="card-body">';
+          gItems.forEach(function(it){
+            var kcal = Math.round(it.food.kcal*it.qty/100);
+            html += '<div class="mp-item"><div class="mp-item-info">'
+              +'<div class="mp-item-name">'+esc(it.food.nom)+'</div>'
+              +'<div class="mp-item-qty">'+fmtQty(it)+' · '+kcal+' kcal</div></div></div>';
+          });
+          html += '</div></div>';
+        }
       }
     });
     document.getElementById('mealplan-content').innerHTML = html;
@@ -2385,6 +2416,14 @@ function renderProfile(){
       : 'Renseignez vos activités sportives précises (vélo, course, pas/jour...) pour un objectif calorique exact.';
   }
 
+  var pfEl = document.getElementById('p-planfixe-status');
+  if(pfEl){
+    var pfActive = p.plan_fixe && Object.values(p.plan_fixe).some(function(arr){return arr&&arr.length;});
+    pfEl.innerHTML = pfActive
+      ? '<strong style="color:var(--sage)">✅ Actif</strong> — remplace les suggestions automatiques. Modifier →'
+      : 'Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.';
+  }
+
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
   if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';return;}
@@ -2515,8 +2554,25 @@ fetch('data/ciqual.json')
         fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
     });
     console.log('Ciqual chargé : '+DB.length+' aliments');
+    loadCustomFoods();
   })
-  .catch(function(){console.warn('Ciqual non disponible — OFF seul actif');});
+  .catch(function(){console.warn('Ciqual non disponible — OFF seul actif'); loadCustomFoods();});
+
+// Aliments ajoutés manuellement par les admins (aliments.html) — fusionnés
+// dans la même liste DB, donc cherchables exactement comme un aliment
+// Ciqual classique, sans rien à changer côté recherche.
+function loadCustomFoods(){
+  sb.from('aliments_custom').select('*').then(function(r){
+    if(!r.data) return;
+    var custom = r.data.map(function(c){
+      return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
+        ags:c.ags||0, mono:0, o3a:0, o3e:0, o3d:0, fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
+        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0};
+    });
+    DB = DB.concat(custom);
+    console.log('Aliments personnalisés ajoutés : '+custom.length);
+  }).catch(function(){console.warn('Aliments personnalisés non chargés');});
+}
 </script>
 </body>
 </html>
