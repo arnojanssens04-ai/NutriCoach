@@ -84,6 +84,17 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <button class="btn btn-outline2" onclick="disablePlanFixe()">Désactiver mon plan fixe</button>
 </div>
 
+<!-- Avertissement écart objectif -->
+<div id="warn-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px 24px;max-width:380px;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+    <div style="font-size:1.8rem;margin-bottom:10px">⚠️</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;margin-bottom:10px">Ce plan ne correspond pas à votre objectif</div>
+    <p id="warn-text" style="font-size:.85rem;color:var(--text2);line-height:1.55;margin-bottom:20px"></p>
+    <button class="btn btn-gold" onclick="confirmSaveAnyway()" style="margin-bottom:8px">Enregistrer malgré tout</button>
+    <button class="btn btn-outline2" onclick="closeWarn()">Modifier mon plan</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -107,6 +118,38 @@ function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=
 var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,nature:1,sel:1,ajoute:1,ajoutee:1,precision:1,moyen:1,moyenne:1,aliment:1,general:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
 function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;var meaningfulLen=ft.filter(function(t){return !CIQUAL_STOPWORDS[t];}).length||ft.length;s*=(0.4+0.6*Math.min(qt.length/Math.max(meaningfulLen,1),1));return s;}
 function ciqSearch(q,n){n=n||6;var qt=tok(q);if(!qt.length)return[];var r=[];for(var i=0;i<DB.length;i++){var s=scoreFn(qt,tok(DB[i].nom),DB[i].nom);if(s>=5)r.push({food:DB[i],score:s});}r.sort(function(a,b){return b.score-a.score;});return r.slice(0,n);}
+
+// ── UNITÉS NATURELLES ── évite de devoir connaître/saisir un grammage :
+// on propose "1 œuf", "1 pot", "1 fruit"... quand l'aliment s'y prête.
+var PORTION_KEYWORDS = {
+  yaourt:['yaourt','yogourt','skyr','fromage blanc','fromage frais'], oeuf:['oeuf','œuf'],
+  huile_sauce:['huile'], beurre:['beurre'], pain:['pain','baguette'],
+  oleagineux:['amande','noix','noisette','cacahuete','pistache']
+};
+var NATURAL_UNIT_SIZE = {yaourt:125, oeuf:50, huile_sauce:10, beurre:10, pain:30, oleagineux:10};
+var UNIT_LABELS = {yaourt:'pot', oeuf:'œuf', huile_sauce:'cuillère à café', beurre:'noix', pain:'tranche', oleagineux:'poignée'};
+var FRUIT_KEYWORDS = ['pomme','banane','orange','poire','peche','pêche','kiwi','fraise'];
+var FRUIT_UNIT_GUESS = {banane:120,pomme:150,orange:150,poire:150,kiwi:90,peche:130,pêche:130};
+function detectCategory(nom){
+  var n=tok(nom).join(' ');
+  for(var cat in PORTION_KEYWORDS){
+    for(var i=0;i<PORTION_KEYWORDS[cat].length;i++){ if(n.indexOf(PORTION_KEYWORDS[cat][i])>=0) return cat; }
+  }
+  for(var i=0;i<FRUIT_KEYWORDS.length;i++){ if(n.indexOf(FRUIT_KEYWORDS[i])>=0) return 'fruit'; }
+  return null;
+}
+function getUnitInfo(nom){
+  var cat = detectCategory(nom);
+  if(!cat) return null;
+  if(cat==='fruit'){
+    var n2 = tok(nom).join(' '); var unit=140;
+    for(var k in FRUIT_UNIT_GUESS){ if(n2.indexOf(k)>=0){ unit=FRUIT_UNIT_GUESS[k]; break; } }
+    return {label:'fruit', unitGrams:unit};
+  }
+  var unit = NATURAL_UNIT_SIZE[cat];
+  if(!unit) return null;
+  return {label:UNIT_LABELS[cat]||cat, unitGrams:unit};
+}
 
 function calcTargets(){
   var p=PROF||{};
@@ -191,9 +234,10 @@ function renderMeals(){
       +(rows||'<div style="font-size:.8rem;color:var(--text3)">Aucun aliment ajouté.</div>')
       +'<div class="add-row">'
       +'<input type="text" placeholder="Rechercher un aliment..." oninput="searchFood(\''+mk+'\',this.value)" id="search-'+mk+'">'
-      +'<input type="number" placeholder="g" value="100" id="qty-'+mk+'">'
+      +'<input type="number" placeholder="g" value="100" id="qty-'+mk+'" onchange="updateUnitHint(\''+mk+'\')">'
       +'<button class="add-btn" onclick="confirmAddFood(\''+mk+'\')">+</button>'
-      +'</div><div class="search-results" id="results-'+mk+'"></div>'
+      +'</div><div id="unit-hint-'+mk+'" style="font-size:.72rem;color:var(--text3);margin-top:5px"></div>'
+      +'<div class="search-results" id="results-'+mk+'"></div>'
       +'</div></div>';
   }).join('');
 }
@@ -221,15 +265,52 @@ function pickFood(mealKey, idx){
   SEARCH_PICKED[mealKey] = food;
   document.getElementById('search-'+mealKey).value = food.nom;
   resEl.classList.remove('show');
+
+  // Bascule en mode "portions" si l'aliment s'y prête (œuf, fruit, pot...)
+  // — personne ne devrait avoir à connaître le grammage exact d'un œuf.
+  var qtyInput = document.getElementById('qty-'+mealKey);
+  var unitInfo = getUnitInfo(food.nom);
+  if(unitInfo){
+    qtyInput.value = 1;
+    qtyInput.setAttribute('data-unit-grams', unitInfo.unitGrams);
+    qtyInput.setAttribute('placeholder', 'qté');
+  } else {
+    qtyInput.value = 100;
+    qtyInput.removeAttribute('data-unit-grams');
+    qtyInput.setAttribute('placeholder', 'g');
+  }
+  updateUnitHint(mealKey);
 }
+
+function updateUnitHint(mealKey){
+  var qtyInput = document.getElementById('qty-'+mealKey);
+  var hintEl = document.getElementById('unit-hint-'+mealKey);
+  var unitGrams = qtyInput.getAttribute('data-unit-grams');
+  var food = SEARCH_PICKED[mealKey];
+  if(!hintEl) return;
+  if(unitGrams && food){
+    var n = parseFloat(qtyInput.value)||1;
+    var info = getUnitInfo(food.nom);
+    var lbl = info.label + (n>1?'s':'');
+    hintEl.textContent = '≈ '+Math.round(n*unitGrams)+'g ('+n+' '+lbl+')';
+  } else {
+    hintEl.textContent = '';
+  }
+}
+
 function confirmAddFood(mealKey){
   var food = SEARCH_PICKED[mealKey];
   if(!food){ toast('Cherchez puis cliquez un aliment dans la liste'); return; }
-  var qty = parseFloat(document.getElementById('qty-'+mealKey).value)||100;
+  var qtyInput = document.getElementById('qty-'+mealKey);
+  var raw = parseFloat(qtyInput.value)||1;
+  var unitGrams = qtyInput.getAttribute('data-unit-grams');
+  var qty = unitGrams ? raw*parseFloat(unitGrams) : raw;
   MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0});
   delete SEARCH_PICKED[mealKey];
   document.getElementById('search-'+mealKey).value='';
-  document.getElementById('qty-'+mealKey).value='100';
+  qtyInput.value='100';
+  qtyInput.removeAttribute('data-unit-grams');
+  qtyInput.setAttribute('placeholder','g');
   renderMeals(); renderTotals();
 }
 function removeFood(mealKey, idx){
@@ -238,21 +319,52 @@ function removeFood(mealKey, idx){
 }
 
 function renderTotals(){
-  var tgt = calcTargets();
   var T = {kcal:0,prot:0,gluc:0,lip:0};
   Object.values(MEALS).forEach(function(items){
     (items||[]).forEach(function(it){ var r=it.qty/100; T.kcal+=it.kcal*r; T.prot+=it.prot*r; T.gluc+=it.gluc*r; T.lip+=it.lip*r; });
   });
+  // Pas d'objectif affiché ici — juste ce qui a été additionné. L'objectif
+  // est vérifié uniquement à l'enregistrement (voir savePlanFixe).
   document.getElementById('totals-card').innerHTML =
-    '<div class="tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' / '+tgt.kcal+' kcal</span></div>'
-    +'<div class="tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' / '+tgt.prot+' g</span></div>'
-    +'<div class="tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' / '+tgt.gluc+' g</span></div>'
-    +'<div class="tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>';
+    '<div class="tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' kcal</span></div>'
+    +'<div class="tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' g</span></div>'
+    +'<div class="tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' g</span></div>'
+    +'<div class="tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' g</span></div>';
+}
+
+function currentTotals(){
+  var T = {kcal:0,prot:0,gluc:0,lip:0};
+  Object.values(MEALS).forEach(function(items){
+    (items||[]).forEach(function(it){ var r=it.qty/100; T.kcal+=it.kcal*r; T.prot+=it.prot*r; T.gluc+=it.gluc*r; T.lip+=it.lip*r; });
+  });
+  return T;
 }
 
 async function savePlanFixe(){
   var hasAny = Object.values(MEALS).some(function(arr){return arr.length;});
   if(!hasAny){ toast('Ajoutez au moins un aliment avant d\'enregistrer'); return; }
+
+  // L'objectif n'est pas affiché pendant la construction, mais il est
+  // vérifié maintenant — un écart de plus de 200kcal dans un sens ou
+  // l'autre déclenche un avertissement (pas un blocage, juste un avis).
+  var T = currentTotals();
+  var tgt = calcTargets();
+  var diff = T.kcal - tgt.kcal;
+  if(Math.abs(diff) > 200){
+    var txt = diff > 0
+      ? 'Votre plan totalise '+Math.round(T.kcal)+' kcal, soit '+Math.round(diff)+' kcal au-dessus de votre objectif ('+tgt.kcal+' kcal).'
+      : 'Votre plan totalise '+Math.round(T.kcal)+' kcal, soit '+Math.round(-diff)+' kcal en dessous de votre objectif ('+tgt.kcal+' kcal).';
+    document.getElementById('warn-text').textContent = txt;
+    document.getElementById('warn-ov').style.display = 'flex';
+    return;
+  }
+  await doSavePlanFixe();
+}
+
+function closeWarn(){ document.getElementById('warn-ov').style.display = 'none'; }
+async function confirmSaveAnyway(){ closeWarn(); await doSavePlanFixe(); }
+
+async function doSavePlanFixe(){
   var r = await sb.from('profiles').update({plan_fixe:MEALS}).eq('id',USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
   PROF.plan_fixe = MEALS;
