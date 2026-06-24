@@ -80,12 +80,13 @@ body {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; gap: 3px; padding: 10px 0;
   border: none; background: none; cursor: pointer;
-  font-size: .6rem; font-weight: 500;
+  font-size: .58rem; font-weight: 500;
   color: var(--text3); transition: color .15s;
   font-family: 'Inter', sans-serif;
-  text-transform: uppercase; letter-spacing: .5px;
+  text-transform: uppercase; letter-spacing: .4px;
+  text-decoration: none;
 }
-.bnav-btn svg { width: 20px; height: 20px; }
+.bnav-btn svg { width: 19px; height: 19px; }
 .bnav-btn.on { color: var(--gold); }
 
 /* ── PAGES ── */
@@ -137,35 +138,42 @@ body {
 .pill-warn { background: rgba(45,79,28,0.08); color: var(--gold); border: 1px solid rgba(45,79,28,0.2); }
 .pill-bad  { background: var(--rose-l); color: var(--rose); border: 1px solid rgba(201,122,110,0.25); }
 
-/* ── KCAL BAR ── */
-.motiv-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-.motiv-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:0 2px 16px rgba(0,0,0,0.3); }
+/* ── MOTIV ROW ── */
+.motiv-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.motiv-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:var(--sh); }
 .motiv-ico { font-size:1.3rem; margin-bottom:4px; }
 .motiv-val { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; color:var(--gold); line-height:1; }
 .motiv-lbl { font-size:.66rem; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
 
+/* ── KCAL RING CARD ── */
 .kcal-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 16px 18px;
+  padding: 18px 20px;
   margin-bottom: 14px;
   box-shadow: var(--sh);
+  display: flex; align-items: center; gap: 20px;
 }
-.kcal-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-.kcal-val { font-family: 'Lora', serif; font-size: 2rem; font-weight: 700; color: var(--gold); line-height: 1; }
-.kcal-unit { font-size: .75rem; color: var(--text2); margin-left: 4px; }
-.kcal-target { font-size: .8rem; color: var(--text2); }
-.kcal-target span { color: var(--text); font-weight: 500; }
-.prog-track {
-  height: 6px; background: rgba(255,255,255,.06);
-  border-radius: 99px; overflow: hidden;
+.kcal-ring-wrap { flex-shrink:0; position:relative; width:110px; height:110px; }
+.kcal-ring-wrap svg { width:110px; height:110px; transform:rotate(-90deg); }
+.kr-bg  { fill:none; stroke:rgba(0,0,0,.07); stroke-width:9; }
+.kr-fill { fill:none; stroke:var(--gold); stroke-width:9; stroke-linecap:round;
+  transition: stroke-dashoffset .8s cubic-bezier(.4,0,.2,1); }
+.kr-center {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:1px;
 }
-.prog-fill {
-  height: 100%; border-radius: 99px;
-  background: var(--gold);
-  transition: width .7s cubic-bezier(.4,0,.2,1);
-}
+.kr-num { font-family:'Lora',serif; font-size:1.55rem; font-weight:700; color:var(--gold); line-height:1; }
+.kr-unit { font-size:.6rem; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+.kcal-info { flex:1; }
+.kcal-obj  { font-size:.76rem; color:var(--text2); margin-bottom:6px; }
+.kcal-obj span { color:var(--text); font-weight:600; }
+.kcal-rest { font-family:'Lora',serif; font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:10px; }
+.kcal-rest-lbl { font-size:.7rem; color:var(--text2); }
+.prog-track { height:5px; background:rgba(0,0,0,.07); border-radius:99px; overflow:hidden; }
+.prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1); }
 
 /* ── MACROS ── */
 .macros-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
@@ -494,11 +502,21 @@ body {
   </div>
 
   <div class="kcal-card">
-    <div class="kcal-row">
-      <div><span class="kcal-val" id="d-kcal">0</span><span class="kcal-unit">kcal</span></div>
-      <div class="kcal-target">Objectif : <span id="d-target">—</span> kcal</div>
+    <div class="kcal-ring-wrap">
+      <svg viewBox="0 0 110 110">
+        <circle class="kr-bg" cx="55" cy="55" r="46"/>
+        <circle class="kr-fill" id="ring-kcal" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+      </svg>
+      <div class="kr-center">
+        <span class="kr-num" id="d-kcal">0</span>
+        <span class="kr-unit">kcal</span>
+      </div>
     </div>
-    <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
+    <div class="kcal-info">
+      <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
+      <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
+    </div>
   </div>
 
   <div class="macros-row">
@@ -525,15 +543,6 @@ body {
   <div class="stitle">Mes repas</div>
   <div class="meals-grid" id="meals-grid"></div>
 
-  <div class="meal-card" style="margin-bottom:14px;cursor:pointer" onclick="goPage('mealplan')">
-    <div class="meal-card-top">
-      <span class="meal-ico">📋</span>
-      <div class="meal-add">→</div>
-    </div>
-    <div class="meal-name">Mon plan alimentaire</div>
-    <div class="meal-kcal">Voir une journée type adaptée à mon profil</div>
-  </div>
-
   <a href="bilan.html" id="bilan-link" style="text-decoration:none;color:inherit;display:block">
     <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
       <div class="meal-card-top">
@@ -542,28 +551,6 @@ body {
       </div>
       <div class="meal-name">Bilan hebdomadaire</div>
       <div class="meal-kcal" id="bilan-card-sub">Faire le point sur votre semaine</div>
-    </div>
-  </a>
-
-  <a href="recette.html" style="text-decoration:none;color:inherit;display:block">
-    <div class="meal-card" style="margin-bottom:14px;cursor:pointer">
-      <div class="meal-card-top">
-        <span class="meal-ico">📖</span>
-        <div class="meal-add">→</div>
-      </div>
-      <div class="meal-name">Recettes</div>
-      <div class="meal-kcal">Découvrir des plats et les ajouter à votre journée</div>
-    </div>
-  </a>
-
-  <a href="chat.html" style="text-decoration:none;color:inherit;display:block">
-    <div class="meal-card" style="margin-bottom:14px;cursor:pointer">
-      <div class="meal-card-top">
-        <span class="meal-ico">💬</span>
-        <div class="meal-add" id="chat-badge">→</div>
-      </div>
-      <div class="meal-name">Assistance</div>
-      <div class="meal-kcal">Une question ? Discutez directement avec l'équipe</div>
     </div>
   </a>
 
@@ -676,14 +663,18 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg>
     Journal
   </button>
-  <button class="bnav-btn" id="nav-weekly" onclick="goPage('weekly')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Bilan
+  <button class="bnav-btn" id="nav-plan" onclick="goPage('mealplan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+    Plan
   </button>
-  <button class="bnav-btn" id="nav-profile" onclick="goPage('profile')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-    Profil
-  </button>
+  <a class="bnav-btn" href="recette.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2a7 7 0 0 1 7 7c0 3.5-2.5 6.4-6 7.4V20h-2v-3.6C7.5 15.4 5 12.5 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+    Recettes
+  </a>
+  <a class="bnav-btn" href="chat.html" id="nav-coach">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Coach
+  </a>
 </nav>
 
 <!-- SETUP OVERLAY -->
@@ -1106,15 +1097,21 @@ function showMilestoneCelebration(m){
 }
 
 async function checkUnreadMessages(){
-  var badge = document.getElementById('chat-badge');
-  if(!badge) return;
   var r = await sb.from('messages').select('id',{count:'exact',head:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
   var n = r.count || 0;
-  badge.textContent = n>0 ? n : '→';
-  badge.style.background = n>0 ? 'var(--rose)' : '';
-  badge.style.color = n>0 ? '#fff' : '';
-  badge.style.fontSize = n>0 ? '.72rem' : '';
-  badge.style.fontWeight = n>0 ? '700' : '';
+  var navCoach = document.getElementById('nav-coach');
+  if(navCoach){
+    var dot = navCoach.querySelector('.coach-dot');
+    if(n>0 && !dot){
+      dot = document.createElement('span');
+      dot.className='coach-dot';
+      dot.style.cssText='position:absolute;top:8px;right:calc(50% - 12px);width:7px;height:7px;border-radius:50%;background:var(--rose);border:1.5px solid var(--bg)';
+      navCoach.style.position='relative';
+      navCoach.appendChild(dot);
+    } else if(n===0 && dot){
+      dot.remove();
+    }
+  }
 }
 
 async function renderMotivationCards(){
@@ -1188,9 +1185,14 @@ async function refreshDash(){
     T.pot+=(e.food_pot_100||0)*e.quantite/100;
   });
   // Kcal
-  document.getElementById('d-kcal').textContent=Math.round(T.kcal);
+  var kcalRound=Math.round(T.kcal);
+  document.getElementById('d-kcal').textContent=kcalRound;
   document.getElementById('d-target').textContent=tgt.kcal;
-  document.getElementById('prog-kcal').style.width=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0)+'%';
+  document.getElementById('d-reste').textContent=Math.max(0,tgt.kcal-kcalRound);
+  var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
+  document.getElementById('prog-kcal').style.width=pct+'%';
+  var ringKcal=document.getElementById('ring-kcal');
+  if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
   document.getElementById('d-prot').textContent=T.prot.toFixed(1)+'g';
   document.getElementById('d-gluc').textContent=T.gluc.toFixed(1)+'g';
@@ -2521,6 +2523,7 @@ function goPage(p){
   document.querySelectorAll('.bnav-btn').forEach(function(el){el.classList.remove('on');});
   document.getElementById('pg-'+p).classList.add('on');
   var nb=document.getElementById('nav-'+p);if(nb)nb.classList.add('on');
+  if(p==='mealplan'){var np=document.getElementById('nav-plan');if(np)np.classList.add('on');}
   if(p==='dashboard')refreshDash();
   if(p==='weekly')renderWeekly();
   if(p==='profile')renderProfile();
