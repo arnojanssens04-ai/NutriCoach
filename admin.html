@@ -247,7 +247,7 @@ sb.auth.getSession().then(function(r){
 // ── LOAD USERS ──
 async function loadUsers(){
   var res = await sb.from('profiles').select('*').order('created_at',{ascending:false});
-  if(res.error){ toast('❌ '+res.error.message); return; }
+  if(res.error){ toast(res.error.message); return; }
   ALL_USERS = res.data || [];
   renderStats();
   renderUsers(ALL_USERS);
@@ -365,8 +365,8 @@ async function saveUser(){
   };
 
   var r = await sb.from('profiles').update(data).eq('id',EDITING_ID);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Profil mis à jour');
+  if(r.error){ toast(r.error.message); return; }
+  toast('Profil mis à jour');
   closeEdit();
   loadUsers();
 }
@@ -378,8 +378,8 @@ async function deleteUserData(){
   await sb.from('journal').delete().eq('user_id',EDITING_ID);
   await sb.from('poids_history').delete().eq('user_id',EDITING_ID);
   var r = await sb.from('profiles').delete().eq('id',EDITING_ID);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Données supprimées');
+  if(r.error){ toast(r.error.message); return; }
+  toast('Données supprimées');
   closeEdit();
   loadUsers();
 }

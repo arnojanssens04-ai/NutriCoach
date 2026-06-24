@@ -99,7 +99,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div class="wrap">
   <div class="hero">
     <h1>Bilan hebdomadaire</h1>
-    <p id="hero-sub">Faisons le point sur votre semaine.</p>
+    <p id="hero-sub">Renseignez vos mesures et observations de la semaine.</p>
   </div>
 
   <div class="adj-banner" id="adj-banner"></div>
@@ -260,7 +260,7 @@ async function loadProfileAndHistory(){
   }
 
   document.getElementById('hero-sub').textContent =
-    (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
+    (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "bilan de la semaine.";
   if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
 
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
@@ -283,7 +283,7 @@ function showAlreadyDoneScreen(){
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">✅</div>'
+    
     +'<div style="font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez déjà complété votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
@@ -300,7 +300,7 @@ function showWrongDayScreen(){
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">📅</div>'
+    
     +'<div style="font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est prévu le '+jourLbl+'. Revenez ce jour-là pour faire le point sur votre semaine.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
@@ -365,7 +365,7 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
   };
 
   var r = await sb.from('bilans').insert(data);
-  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
+  if(r.error){ toast(r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
 
   // Met aussi à jour le poids courant du profil
   await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
@@ -381,7 +381,7 @@ function showThankYouScreen(){
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">🙏</div>'
+    
     +'<div style="font-family:'Lora',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">À bientôt '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
@@ -421,7 +421,7 @@ async function checkAndAdjustKcal(newWeight){
 
   var banner = document.getElementById('adj-banner');
   banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
-  banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
+  banner.innerHTML = '<strong>Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
     + (objectif==='perte'
       ? 'On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
       : 'On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.')

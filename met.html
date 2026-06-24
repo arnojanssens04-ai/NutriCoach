@@ -148,65 +148,64 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 // ══════════════════════════════════════════════════════════
 var MET_DATA = [
   {cat:'🚴 Cyclisme', items:[
-    {n:'Cyclisme loisir, 19–22 km/h', met:8.0},
-    {n:'Cyclisme VTT, général', met:8.5},
+    {n:'Cyclisme', met:8.0},
+    {n:'VTT', met:8.5},
   ]},
   {cat:'🏃 Course à pied', items:[
-    {n:'Jogging, général', met:10.0},
+    {n:'Course à pied', met:10.0},
   ]},
   {cat:'🏊 Natation', items:[
-    {n:'Brasse (entraînement/compétition)', met:10.3},
-    {n:'Aquagym / aquabiking', met:7.3},
+    {n:'Natation', met:10.3},
+    {n:'Aquagym', met:7.3},
   ]},
   {cat:'🚶 Marche', items:[
-    {n:'Marche modérée (4,5–5 km/h)', met:3.5},
+    {n:'Marche', met:3.5},
   ]},
   {cat:'🎾 Sports de raquette', items:[
     {n:'Tennis', met:7.0},
-    {n:'Badminton, général', met:5.5},
+    {n:'Badminton', met:5.5},
     {n:'Squash', met:12.0},
-    {n:'Racquetball', met:10.0},
     {n:'Tennis de table', met:4.0},
     {n:'Padel', met:7.5},
   ]},
   {cat:'⚽ Sports collectifs', items:[
     {n:'Football', met:7.0},
     {n:'Basket-ball', met:8.0},
-    {n:'Handball, général', met:12.0},
+    {n:'Handball', met:12.0},
     {n:'Volleyball', met:6.0},
     {n:'Beach-volley', met:8.0},
-    {n:'Hockey sur glace (compétition)', met:10.0},
+    {n:'Hockey sur glace', met:10.0},
     {n:'Rugby', met:8.3},
-    {n:'Pétanque / boulingrin', met:3.3},
+    {n:'Pétanque', met:3.3},
   ]},
   {cat:'💪 Musculation & fitness', items:[
-    {n:'Musculation, effort modéré (8-15 reps)', met:3.5},
+    {n:'Musculation', met:3.5},
     {n:'HIIT', met:8.0},
     {n:'Elliptique', met:5.0},
-    {n:'Rameur (100 watts)', met:7.0},
-    {n:'Corde à sauter, général', met:12.3},
-    {n:'Tapis de course, général', met:9.0},
+    {n:'Rameur', met:7.0},
+    {n:'Corde à sauter', met:12.3},
+    {n:'Tapis de course', met:9.0},
   ]},
   {cat:'⛷️ Sports d\'hiver', items:[
     {n:'Ski alpin', met:5.3},
-    {n:'Ski de fond (6,5–8 km/h)', met:9.0},
-    {n:'Patinage sur glace, général', met:7.0},
+    {n:'Ski de fond', met:9.0},
+    {n:'Patinage sur glace', met:7.0},
   ]},
   {cat:'🥊 Arts martiaux & combat', items:[
-    {n:'Arts martiaux (judo, karaté, kickboxing...)', met:8.3},
+    {n:'Arts martiaux', met:8.3},
     {n:'Boxe', met:8.3},
   ]},
   {cat:'🧘 Activités douces', items:[
     {n:'Yoga', met:3.5},
-    {n:'Pilates, général', met:3.0},
-    {n:'Tai chi / Qi gong', met:3.0},
-    {n:'Stretching doux', met:2.3},
+    {n:'Pilates', met:3.0},
+    {n:'Tai chi', met:3.0},
+    {n:'Stretching', met:2.3},
     {n:'Danse', met:5.5},
-    {n:'Vélo électrique (VAE)', met:4.5},
+    {n:'Vélo électrique', met:4.5},
   ]},
   {cat:'🏆 Autres', items:[
-    {n:'Triathlon (combiné)', met:10.0},
-    {n:'Escalade / bloc en salle', met:7.0},
+    {n:'Triathlon', met:10.0},
+    {n:'Escalade / bloc', met:7.0},
   ]},
 ];
 
@@ -217,7 +216,7 @@ function buildSelectOptions(){
   }).join('');
 }
 
-function addActivityRow(prefillMet, prefillHours){
+function addActivityRow(prefillMet, prefillHours, prefillNom){
   rowCount++;
   var id = 'row-'+rowCount;
   var div = document.createElement('div');
@@ -227,7 +226,15 @@ function addActivityRow(prefillMet, prefillHours){
     + '<input type="number" placeholder="h/sem" min="0" step="0.5" value="'+(prefillHours||1)+'" onchange="computeResult()" oninput="computeResult()">'
     + '<button class="act-del" onclick="document.getElementById(\''+id+'\').remove();computeResult()">✕</button>';
   document.getElementById('activity-rows').appendChild(div);
-  if(prefillMet){ div.querySelector('select').value = prefillMet; }
+  var sel = div.querySelector('select');
+  if(prefillNom){
+    var opts = sel.options;
+    for(var i=0;i<opts.length;i++){
+      if(opts[i].text === prefillNom){ sel.selectedIndex = i; break; }
+    }
+  } else if(prefillMet){
+    sel.value = prefillMet;
+  }
   computeResult();
 }
 
@@ -291,9 +298,9 @@ async function saveActivity(){
   }
 
   var r = await sb.from('profiles').update(data).eq('id', USER.id);
-  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Enregistrer mon activité'; return; }
+  if(r.error){ toast(r.error.message); btn.disabled=false; btn.textContent='Enregistrer mon activité'; return; }
 
-  toast('✅ Activité enregistrée — votre objectif calorique est mis à jour');
+  toast('Activité enregistrée — objectif calorique mis à jour');
   btn.textContent = 'Enregistré ✓';
   setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
 }
@@ -320,7 +327,7 @@ async function loadProfile(){
         document.getElementById('opt-oui').classList.add('on');
         document.getElementById('opt-non').classList.remove('on');
         document.getElementById('activity-section').classList.add('show');
-        detail.activities.forEach(function(a){ addActivityRow(a.met, a.heures_semaine); });
+        detail.activities.forEach(function(a){ addActivityRow(a.met, a.heures_semaine, a.nom); });
         if(detail.steps) document.getElementById('steps-input').value = detail.steps;
       } else {
         setHasActivity(false);
