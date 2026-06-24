@@ -187,7 +187,8 @@ async function init(){
   }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });
 
   if(PROF.plan_fixe){
-    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (PROF.plan_fixe[k]||[]).slice(); });
+    var pf = PROF.plan_fixe;
+    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (pf[k]||[]).slice(); });
   }
 
   renderStatus();
@@ -207,13 +208,20 @@ function loadCustomFoods(){
   }).catch(function(){ console.warn('Aliments personnalisés non chargés'); });
 }
 
+function isPlanActive(){
+  if(!PROF.plan_fixe) return false;
+  if(PROF.plan_fixe._active === false) return false;
+  return Object.keys(PROF.plan_fixe).some(function(k){ return k!=='_active' && Array.isArray(PROF.plan_fixe[k]) && PROF.plan_fixe[k].length; });
+}
 function renderStatus(){
   var el = document.getElementById('status-banner');
-  var active = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
+  var active = isPlanActive();
   el.className = 'status-banner '+(active?'status-on':'status-off');
   el.textContent = active
     ? '✅ Votre plan fixe est actif — il remplace les suggestions automatiques sur "Mon plan alimentaire".'
-    : 'Aucun plan fixe actif pour le moment. Construisez-le ci-dessous puis enregistrez.';
+    : (PROF.plan_fixe && Object.keys(PROF.plan_fixe).some(function(k){ return k!=='_active' && Array.isArray(PROF.plan_fixe[k]) && PROF.plan_fixe[k].length; })
+      ? '⏸️ Votre plan fixe est désactivé. Enregistrez-le à nouveau pour le réactiver.'
+      : 'Aucun plan fixe actif. Construisez-le ci-dessous puis enregistrez.');
 }
 
 function activeMealKeys(){
@@ -367,20 +375,24 @@ function closeWarn(){ document.getElementById('warn-ov').style.display = 'none';
 async function confirmSaveAnyway(){ closeWarn(); await doSavePlanFixe(); }
 
 async function doSavePlanFixe(){
-  var r = await sb.from('profiles').update({plan_fixe:MEALS}).eq('id',USER.id);
+  var T = currentTotals();
+  var planKcal = Math.round(T.kcal);
+  var toSave = Object.assign({}, MEALS, {_active: true});
+  var r = await sb.from('profiles').update({plan_fixe: toSave, kcal_target: planKcal}).eq('id', USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = MEALS;
+  PROF.plan_fixe = toSave;
+  PROF.kcal_target = planKcal;
   renderStatus();
-  toast('✅ Plan fixe enregistré — il remplace désormais les suggestions automatiques');
+  toast('✅ Plan fixe enregistré ('+planKcal+' kcal) — il remplace désormais les suggestions automatiques');
 }
 
 async function disablePlanFixe(){
-  var r = await sb.from('profiles').update({plan_fixe:null}).eq('id',USER.id);
+  var toSave = Object.assign({}, MEALS, {_active: false});
+  var r = await sb.from('profiles').update({plan_fixe: toSave}).eq('id', USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = null;
-  MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
-  renderStatus(); renderMeals(); renderTotals();
-  toast('Plan fixe désactivé — les suggestions automatiques reprennent le relais');
+  PROF.plan_fixe = toSave;
+  renderStatus();
+  toast('Plan fixe désactivé — vos données sont conservées, cliquez "Enregistrer" pour le réactiver');
 }
 </script>
 </body>
