@@ -83,7 +83,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div class="wrap">
   <div class="hero">
     <h1>Précision de l'activité physique</h1>
-    <p>Plus vous renseignez vos données avec précision, plus votre objectif calorique sera fiable. Cette page estime les calories brûlées lors de votre activité, en s'appuyant sur les valeurs "MET" issues de la littérature scientifique.</p>
+    <p>Plus vous êtes précis, plus votre objectif calorique le sera. Cette page calcule exactement les calories brûlées par votre activité réelle, à partir des valeurs scientifiques MET.</p>
   </div>
 
   <div class="card">
@@ -148,22 +148,22 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 // ══════════════════════════════════════════════════════════
 var MET_DATA = [
   {cat:'🚴 Cyclisme', items:[
-    {n:'Cyclisme ', met:8.0},
-    {n:'Cyclisme VTT ', met:8.5},
+    {n:'Cyclisme loisir, 19–22 km/h', met:8.0},
+    {n:'Cyclisme VTT, général', met:8.5},
   ]},
   {cat:'🏃 Course à pied', items:[
-    {n:'Course, général', met:10.0},
+    {n:'Jogging, général', met:10.0},
   ]},
   {cat:'🏊 Natation', items:[
-    {n:'Natation classique', met:10.3},
+    {n:'Brasse (entraînement/compétition)', met:10.3},
     {n:'Aquagym / aquabiking', met:7.3},
   ]},
   {cat:'🚶 Marche', items:[
-    {n:'Marche modérée ', met:3.5},
+    {n:'Marche modérée (4,5–5 km/h)', met:3.5},
   ]},
   {cat:'🎾 Sports de raquette', items:[
     {n:'Tennis', met:7.0},
-    {n:'Badminton', met:5.5},
+    {n:'Badminton, général', met:5.5},
     {n:'Squash', met:12.0},
     {n:'Racquetball', met:10.0},
     {n:'Tennis de table', met:4.0},
@@ -172,25 +172,25 @@ var MET_DATA = [
   {cat:'⚽ Sports collectifs', items:[
     {n:'Football', met:7.0},
     {n:'Basket-ball', met:8.0},
-    {n:'Handball', met:12.0},
+    {n:'Handball, général', met:12.0},
     {n:'Volleyball', met:6.0},
     {n:'Beach-volley', met:8.0},
-    {n:'Hockey sur glace', met:10.0},
+    {n:'Hockey sur glace (compétition)', met:10.0},
     {n:'Rugby', met:8.3},
-    {n:'Pétanque', met:3.3},
+    {n:'Pétanque / boulingrin', met:3.3},
   ]},
   {cat:'💪 Musculation & fitness', items:[
-    {n:'Musculation', met:3.5},
+    {n:'Musculation, effort modéré (8-15 reps)', met:3.5},
     {n:'HIIT', met:8.0},
-    {n:'Elliptique ', met:5.0},
-    {n:'Rameur', met:7.0},
-    {n:'Corde à sauter ', met:12.3},
-    {n:'Tapis de course', met:9.0},
+    {n:'Elliptique', met:5.0},
+    {n:'Rameur (100 watts)', met:7.0},
+    {n:'Corde à sauter, général', met:12.3},
+    {n:'Tapis de course, général', met:9.0},
   ]},
   {cat:'⛷️ Sports d\'hiver', items:[
     {n:'Ski alpin', met:5.3},
-    {n:'Ski de fond', met:9.0},
-    {n:'Patinage sur glace', met:7.0},
+    {n:'Ski de fond (6,5–8 km/h)', met:9.0},
+    {n:'Patinage sur glace, général', met:7.0},
   ]},
   {cat:'🥊 Arts martiaux & combat', items:[
     {n:'Arts martiaux (judo, karaté, kickboxing...)', met:8.3},
@@ -198,9 +198,9 @@ var MET_DATA = [
   ]},
   {cat:'🧘 Activités douces', items:[
     {n:'Yoga', met:3.5},
-    {n:'Pilates', met:3.0},
+    {n:'Pilates, général', met:3.0},
     {n:'Tai chi / Qi gong', met:3.0},
-    {n:'Stretching', met:2.3},
+    {n:'Stretching doux', met:2.3},
     {n:'Danse', met:5.5},
     {n:'Vélo électrique (VAE)', met:4.5},
   ]},
@@ -293,7 +293,7 @@ async function saveActivity(){
   var r = await sb.from('profiles').update(data).eq('id', USER.id);
   if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Enregistrer mon activité'; return; }
 
-  toast('✅ Informations validées ');
+  toast('✅ Activité enregistrée — votre objectif calorique est mis à jour');
   btn.textContent = 'Enregistré ✓';
   setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
 }
@@ -313,7 +313,13 @@ async function loadProfile(){
     try{
       var detail = JSON.parse(PROF.activite_met_detail);
       if(detail.activities && detail.activities.length){
-        setHasActivity(true);
+        // Activer l'UI sans passer par setHasActivity pour éviter
+        // l'ajout automatique d'une ligne vide (= Cyclisme par défaut)
+        // qui se cumulerait avec les activités sauvegardées.
+        hasActivity = true;
+        document.getElementById('opt-oui').classList.add('on');
+        document.getElementById('opt-non').classList.remove('on');
+        document.getElementById('activity-section').classList.add('show');
         detail.activities.forEach(function(a){ addActivityRow(a.met, a.heures_semaine); });
         if(detail.steps) document.getElementById('steps-input').value = detail.steps;
       } else {
