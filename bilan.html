@@ -4,65 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — Bilan hebdomadaire</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0e100d; --bg2:#131610; --card:#181c15; --card2:#1e2318;
-  --border:rgba(201,169,110,0.12); --border2:rgba(201,169,110,0.22);
-  --gold:#c9a96e; --gold-l:rgba(201,169,110,0.1); --gold-g:rgba(201,169,110,0.06);
-  --sage:#7a9b7c; --sage-l:rgba(122,155,124,0.12);
-  --text:#e8ead4; --text2:#9aa08a; --text3:#5a6050;
-  --rose:#c97a6e; --rose-l:rgba(201,122,110,0.1);
-  --amber:#d97706;
-  --r:14px; --sh:0 2px 20px rgba(0,0,0,0.4);
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08); --gold-g:rgba(45,79,28,0.04);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --amber:#7a5c1e;
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { background:var(--bg); }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:40px; }
 
-.topbar { position:sticky; top:0; z-index:100; background:rgba(14,16,13,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
-.t-logo { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; }
+.topbar { position:sticky; top:0; z-index:100; background:#f5f3ee; border-bottom:1px solid var(--border); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.2rem; font-weight:700; color:var(--text); }
 .t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:7px; transition:all .15s; }
 .t-back:hover { border-color:var(--gold); color:var(--gold); }
 
 .wrap { max-width:600px; margin:0 auto; padding:22px 18px; }
 
-.hero { text-align:center; margin-bottom:20px; }
-.hero h1 { font-family:'Cormorant Garamond',serif; font-size:1.7rem; font-weight:700; margin-bottom:6px; }
-.hero p { font-size:.84rem; color:var(--text2); line-height:1.6; }
+.hero { text-align:center; margin-bottom:24px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.6rem; font-weight:700; margin-bottom:6px; letter-spacing:-.02em; }
+.hero p { font-size:.85rem; color:var(--text2); line-height:1.6; }
 
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); overflow:hidden; }
-.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
-.card-hdr-ico { font-size:1.1rem; }
-.card-hdr span { font-family:'Cormorant Garamond',serif; font-size:1rem; }
+.card-hdr { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
+.card-hdr-ico { font-size:1rem; }
+.card-hdr span { font-family:'Lora',serif; font-size:.95rem; font-weight:600; }
 .card-body { padding:16px 18px; }
 
 .field { margin-bottom:14px; }
-.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
-.field input, .field textarea { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; font-family:'Inter',sans-serif; }
-.field input:focus, .field textarea:focus { border-color:rgba(201,169,110,0.45); }
+.field label { display:block; font-size:.7rem; font-weight:600; color:var(--text3); margin-bottom:6px; text-transform:uppercase; letter-spacing:.06em; }
+.field input, .field textarea { width:100%; padding:10px 13px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:.9rem; outline:none; font-family:'Inter',sans-serif; transition:border-color .15s; }
+.field input:focus, .field textarea:focus { border-color:var(--gold); }
 .field textarea { resize:vertical; min-height:70px; }
 .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 
 .pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-.pill { padding:11px 6px; border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--card2); transition:all .15s; }
+.pill { padding:10px 6px; border:1px solid var(--border); border-radius:7px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--bg); transition:all .15s; }
 .pill:hover { border-color:var(--border2); }
 .pill.on-bien { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
-.pill.on-moyen { border-color:var(--amber); background:rgba(217,119,6,0.12); color:var(--amber); }
+.pill.on-moyen { border-color:var(--amber); background:rgba(122,92,30,0.08); color:var(--amber); }
 .pill.on-difficile { border-color:var(--rose); background:var(--rose-l); color:var(--rose); }
 
 .divider { height:1px; background:var(--border); margin:16px 0; }
 
-.btn { width:100%; padding:13px; border-radius:11px; border:none; font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; }
-.btn-gold { background:linear-gradient(135deg,var(--gold),#a8833a); color:#0e100d; box-shadow:0 4px 20px rgba(201,169,110,0.2); }
-.btn-gold:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(201,169,110,0.3); }
-.btn-gold:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn { width:100%; padding:13px; border-radius:8px; border:none; font-family:'Inter',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-gold { background:var(--gold); color:#fff; }
+.btn-gold:hover { background:#3d6128; }
+.btn-gold:disabled { opacity:.5; cursor:not-allowed; }
 
 .weight-chart { display:flex; align-items:flex-end; gap:6px; height:70px; margin-bottom:8px; }
 .wc-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
-.wc-track { width:100%; background:rgba(255,255,255,.05); border-radius:5px; flex:1; position:relative; overflow:hidden; }
+.wc-track { width:100%; background:rgba(0,0,0,.07); border-radius:5px; flex:1; position:relative; overflow:hidden; }
 .wc-fill { position:absolute; bottom:0; left:0; right:0; border-radius:5px; background:var(--gold); }
 .wc-val { font-size:.62rem; color:var(--text2); }
 .wc-date { font-size:.58rem; color:var(--text3); }
@@ -76,14 +76,14 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .delta-up { color:var(--rose); }
 .delta-flat { color:var(--text3); }
 
-.adj-banner { padding:13px 16px; border-radius:11px; margin-bottom:14px; font-size:.85rem; line-height:1.55; display:none; }
+.adj-banner { padding:13px 16px; border-radius:8px; margin-bottom:14px; font-size:.84rem; line-height:1.55; display:none; }
 .adj-banner.show { display:block; }
-.adj-down { background:rgba(201,122,110,0.1); border:1px solid rgba(201,122,110,0.28); color:#e09a8e; }
-.adj-up { background:var(--sage-l); border:1px solid rgba(122,155,124,0.28); color:#9aba9c; }
+.adj-down { background:var(--rose-l); border:1px solid rgba(139,42,42,0.2); color:var(--rose); }
+.adj-up { background:var(--sage-l); border:1px solid rgba(74,122,58,0.2); color:var(--sage); }
 
 .empty { text-align:center; padding:30px 16px; color:var(--text2); font-size:.84rem; }
 
-.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#1a1916; border:none; color:#f5f3ee; padding:10px 18px; border-radius:7px; font-size:.82rem; font-weight:500; box-shadow:0 4px 16px rgba(0,0,0,.2); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
 .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
 
 @media(max-width:380px){ .row3,.row2,.pill-row { grid-template-columns:1fr 1fr; } }
@@ -284,7 +284,7 @@ function showAlreadyDoneScreen(){
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
     +'<div style="font-size:2.2rem;margin-bottom:10px">✅</div>'
-    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<div style="font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez déjà complété votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
     +'</div>';
@@ -301,7 +301,7 @@ function showWrongDayScreen(){
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
     +'<div style="font-size:2.2rem;margin-bottom:10px">📅</div>'
-    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
+    +'<div style="font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est prévu le '+jourLbl+'. Revenez ce jour-là pour faire le point sur votre semaine.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
     +'<a href="dashboard.html" style="display:block;margin-top:12px;font-size:.76rem;color:var(--text3);text-decoration:underline">Ce jour ne vous convient plus ? Modifiez-le dans votre profil</a>'
@@ -382,7 +382,7 @@ function showThankYouScreen(){
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
     +'<div style="font-size:2.2rem;margin-bottom:10px">🙏</div>'
-    +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<div style="font-family:'Lora',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
     +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">À bientôt '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
     +'</div>';
