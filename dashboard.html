@@ -923,6 +923,11 @@ function initGreeting(){
 // ── TARGETS ──
 function calcTargets(){
   var p=PROF||{};
+  // Si un plan fixe est actif, on utilise directement ses kcal comme objectif.
+  if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target){
+    var kk=p.kcal_target;
+    return{kcal:kk,prot:Math.round(kk*0.15/4),gluc:Math.round(kk*0.50/4),lip:Math.round(kk*0.35/9),ags:Math.round(kk*0.07/9),o3:2.0,fer:14,cal:900,pot:3500,na:2300,mg:300,zn:10};
+  }
   var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
   var act=p.activite||'sedentary',pathos=p.pathologies||[];
   var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
@@ -2250,7 +2255,8 @@ function renderMealPlan(){
         });
         html += '</div></div>';
       } else {
-        var pf = (PROF && PROF.plan_fixe && PROF.plan_fixe[mid] && PROF.plan_fixe[mid].length) ? PROF.plan_fixe[mid] : null;
+        var pfOk = PROF && PROF.plan_fixe && PROF.plan_fixe._active !== false;
+        var pf = (pfOk && PROF.plan_fixe[mid] && PROF.plan_fixe[mid].length) ? PROF.plan_fixe[mid] : null;
 
         if(pf){
           // Plan fixe défini par la personne — prioritaire sur les
@@ -2451,7 +2457,7 @@ function renderProfile(){
 
   var pfEl = document.getElementById('p-planfixe-status');
   if(pfEl){
-    var pfActive = p.plan_fixe && Object.values(p.plan_fixe).some(function(arr){return arr&&arr.length;});
+    var pfActive = p.plan_fixe && p.plan_fixe._active !== false && Object.keys(p.plan_fixe).some(function(k){return k!=='_active'&&Array.isArray(p.plan_fixe[k])&&p.plan_fixe[k].length;});
     pfEl.innerHTML = pfActive
       ? '<strong style="color:var(--sage)">✅ Actif</strong> — remplace les suggestions automatiques. Modifier →'
       : 'Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.';
