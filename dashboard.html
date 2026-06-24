@@ -757,14 +757,14 @@ body {
   <div class="ov-step" id="st-4">
     <div class="ov-badge">🍽️ Journée type</div>
     <h2 class="ov-title" style="font-size:1.5rem">Votre journée alimentaire</h2>
-    <p class="ov-sub">Ajoutez ce que vous mangez habituellement un jour normal — ça nous permet de personnaliser vos recommandations dès le premier jour. Vous pouvez aussi passer cette étape.</p>
+    <p class="ov-sub">Renseignez ce que vous mangez lors d'une journée habituelle — cela nous aide à personnaliser vos recommandations dès le départ. Vous pouvez aussi passer cette étape pour l'instant..</p>
 
     <div class="meal-tabs" id="st4-meal-tabs">
       <div class="mtab on" id="st4-tab-breakfast" onclick="selMeal('breakfast')"><span class="ti">☀️</span>Petit-déj.</div>
-      <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
-      <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
-      <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
-      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti">🥨</span>Collation 2</div>
+      <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti"></span>Déjeuner</div>
+      <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti"></span>Collation</div>
+      <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti"></span>Souper</div>
+      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"></span>Collation 2</div>
     </div>
 
     <div class="search-wrap">
@@ -814,13 +814,13 @@ var activeMeal = 'breakfast';
 var wkOffset = 0;
 var srchTimer = null, srchRes = [];
 var setup = { sex:'F', act:'sedentary', pathos:[], objectif:'maintien' };
-var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:'☀️'}, lunch:{l:'Déjeuner',i:'🍽️'}, snack:{l:'Collation',i:'🍎'}, dinner:{l:'Souper',i:'🌙'}, snack2:{l:'Collation 2',i:'🥨'} };
+var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:''}, lunch:{l:'Déjeuner',i:''}, snack:{l:'Collation',i:''}, dinner:{l:'Souper',i:''}, snack2:{l:'Collation 2',i:''} };
 // Au-delà de 3000kcal/jour, étaler sur 5 repas évite des portions trop
 // volumineuses dans les 4 repas habituels — la collation 2 n'apparaît
 // que lorsque c'est vraiment nécessaire.
 function needsSecondSnack(){ return calcTargets().kcal >= 3000; }
 function activeMealIds(){ var ids=['breakfast','lunch','snack','dinner']; if(needsSecondSnack())ids.push('snack2'); return ids; }
-var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Maladies cardiaques',i:'❤️'}, renal:{l:'Problèmes rénaux',i:'🫘'}, obesity:{l:'Obésité / Poids',i:'⚖️'} };
+var PATHO_META = { diabetes:{l:'Diabète',i:''}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:''}, cardiac:{l:'Maladies cardiaques',i:''}, renal:{l:'Problèmes rénaux',i:''}, obesity:{l:'Obésité / Poids',i:''} };
 
 // ── UTILS ──
 function pN(v){if(!v||v==='-')return 0;return parseFloat(String(v).replace(',','.'))||0;}
