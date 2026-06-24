@@ -444,10 +444,6 @@ body {
 .toast { position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1916; border: 1px solid rgba(255,255,255,.08); color: #f5f3ee; padding: 9px 16px; border-radius: 7px; font-size: .8rem; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 500; opacity: 0; transition: all .25s ease; pointer-events: none; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── BILAN BADGE ── */
-.bilan-pulse { width:10px; height:10px; border-radius:50%; background:var(--gold); animation:bpulse 1.4s ease infinite; }
-@keyframes bpulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
-
 .empty { text-align: center; padding: 28px 16px; color: var(--text2); }
 .empty-i { font-size: 2rem; margin-bottom: 8px; }
 .empty p { font-size: .84rem; line-height: 1.6; }
@@ -486,7 +482,7 @@ body {
       </div>
     </div>
     <div class="score-info">
-      <div class="score-ttl" id="score-ttl">Score nutritionnel</div>
+      <div class="score-ttl" id="score-ttl">Score Santé</div>
       <div class="score-desc" id="score-desc">Ajoutez vos repas pour calculer votre score personnalisé.</div>
       <div id="score-pill"></div>
     </div>
@@ -494,7 +490,7 @@ body {
 
   <div class="motiv-row" id="motiv-row" style="display:none">
     <div class="motiv-card">
-      <div class="motiv-ico"></div>
+      <div class="motiv-ico">🔥</div>
       <div class="motiv-val" id="streak-val">0</div>
       <div class="motiv-lbl" id="streak-lbl">jours de suite</div>
     </div>
@@ -525,19 +521,19 @@ body {
 
   <div class="macros-row">
     <div class="macro-card">
-      <div class="macro-ico">🥩</div>
+      <div class="macro-ico"> </div>
       <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
       <div class="macro-lbl">Protéines</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-ico">🌾</div>
+      <div class="macro-ico"> </div>
       <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
       <div class="macro-lbl">Glucides</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-ico">🥑</div>
+      <div class="macro-ico"> </div>
       <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
       <div class="macro-lbl">Lipides</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
@@ -551,7 +547,7 @@ body {
     <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
       <div class="meal-card-top">
         <span class="meal-ico">📊</span>
-        <div class="meal-add" id="bilan-arrow">→</div>
+        <div class="meal-add">→</div>
       </div>
       <div class="meal-name">Bilan hebdomadaire</div>
       <div class="meal-kcal" id="bilan-card-sub">Faire le point sur votre semaine</div>
@@ -579,18 +575,18 @@ body {
   </div>
   <div id="mp-alerts" class="mb-12"></div>
   <div id="mealplan-content"></div>
-  <button class="btn btn-secondary btn-full" id="mp-regen-btn" onclick="regenerateMealPlan()" style="display:none">Régénérer le plan générique</button>
+  <button class="btn btn-secondary btn-full" id="mp-regen-btn" onclick="regenerateMealPlan()" style="display:none">🔄 Régénérer le plan générique</button>
 </div>
 
 <!-- JOURNAL -->
 <div class="page" id="pg-journal">
   <div class="stitle" style="font-size:1.3rem;margin-bottom:14px">Journal alimentaire</div>
   <div class="meal-tabs" id="meal-tabs">
-    <div class="mtab on" id="tab-breakfast" onclick="selMeal('breakfast')"><span class="ti">☀️</span>Petit-déj.</div>
-    <div class="mtab" id="tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
-    <div class="mtab" id="tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
-    <div class="mtab" id="tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
-    <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti">🥨</span>Collation 2</div>
+    <div class="mtab on" id="tab-breakfast" onclick="selMeal('breakfast')"><span class="ti"> </span>Petit-déj.</div>
+    <div class="mtab" id="tab-lunch" onclick="selMeal('lunch')"><span class="ti"> </span>Déjeuner</div>
+    <div class="mtab" id="tab-snack" onclick="selMeal('snack')"><span class="ti"> </span>Collation</div>
+    <div class="mtab" id="tab-dinner" onclick="selMeal('dinner')"><span class="ti"> </span>Souper</div>
+    <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"> </span>Collation 2</div>
   </div>
   <div class="search-wrap">
     <span class="search-ico">
@@ -631,25 +627,25 @@ body {
   </div>
   <div class="prof-card">
     <div class="prof-card-hdr">
-      <span>Pathologies suivies</span>
+      <span>🏥 Pathologies suivies</span>
       <button class="btn-outline" onclick="openSetup()">Modifier</button>
     </div>
     <div class="prof-card-body" id="p-pathos"></div>
   </div>
   <a href="met.html" style="text-decoration:none;color:inherit;display:block">
     <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>Précision calorique</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
+      <div class="prof-card-hdr"><span>🎯 Précision calorique</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
       <div class="prof-card-body" id="p-met-status" style="font-size:.82rem;color:var(--text2)">Renseignez vos activités sportives précises (vélo, course, pas/jour...) pour un objectif calorique exact.</div>
     </div>
   </a>
   <a href="plan-fixe.html" style="text-decoration:none;color:inherit;display:block">
     <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>Mon plan fixe</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
+      <div class="prof-card-hdr"><span>📌 Mon plan fixe</span><span style="font-size:.75rem;color:var(--gold)">→</span></div>
       <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.</div>
     </div>
   </a>
   <div class="prof-card">
-    <div class="prof-card-hdr"><span>Compte</span></div>
+    <div class="prof-card-hdr"><span>⚙️ Compte</span></div>
     <div class="prof-card-body">
       <button class="btn-full-g" onclick="openSetup()">Modifier mon profil</button>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
@@ -687,14 +683,14 @@ body {
   <div class="ov-prog"><div class="ov-prog-f" id="ov-pf" style="width:25%"></div></div>
 
   <div class="ov-step on" id="st-1">
-    <div class="ov-badge">Profil physique</div>
+    <div class="ov-badge">📏 Profil physique</div>
     <h2 class="ov-title">Votre profil</h2>
     <p class="ov-sub">Ces données permettent de calculer vos besoins caloriques personnalisés.</p>
     <div class="field"><label>Vous êtes</label>
       <div class="gender-row">
-        <div class="sel-btn" onclick="setSex('F')" id="sx-F"><span class="si">👩</span>Femme</div>
-        <div class="sel-btn" onclick="setSex('M')" id="sx-M"><span class="si">👨</span>Homme</div>
-        <div class="sel-btn" onclick="setSex('A')" id="sx-A"><span class="si">🧑</span>Autre</div>
+        <div class="sel-btn" onclick="setSex('F')" id="sx-F"><span class="si"> </span>Femme</div>
+        <div class="sel-btn" onclick="setSex('M')" id="sx-M"><span class="si"> </span>Homme</div>
+        <div class="sel-btn" onclick="setSex('A')" id="sx-A"><span class="si"> </span>Autre</div>
       </div>
     </div>
     <div class="row2">
@@ -759,16 +755,16 @@ body {
   </div>
 
   <div class="ov-step" id="st-4">
-    <div class="ov-badge">Journée type</div>
+    <div class="ov-badge">🍽️ Journée type</div>
     <h2 class="ov-title" style="font-size:1.5rem">Votre journée alimentaire</h2>
-    <p class="ov-sub">Ajoutez ce que vous mangez habituellement un jour normal — ça nous permet de personnaliser vos recommandations dès le premier jour. Vous pouvez aussi passer cette étape.</p>
+    <p class="ov-sub">Renseignez ce que vous mangez lors d'une journée habituelle — cela nous aide à personnaliser vos recommandations dès le départ. Vous pouvez aussi passer cette étape pour l'instant..</p>
 
     <div class="meal-tabs" id="st4-meal-tabs">
-      <div class="mtab on" id="st4-tab-breakfast" onclick="selMeal('breakfast')"><span class="ti">☀️</span>Petit-déj.</div>
-      <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti">🍽️</span>Déjeuner</div>
-      <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti">🍎</span>Collation</div>
-      <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti">🌙</span>Souper</div>
-      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti">🥨</span>Collation 2</div>
+      <div class="mtab on" id="st4-tab-breakfast" onclick="selMeal('breakfast')"><span class="ti"></span>Petit-déj.</div>
+      <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti"></span>Déjeuner</div>
+      <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti"></span>Collation</div>
+      <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti"></span>Souper</div>
+      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"></span>Collation 2</div>
     </div>
 
     <div class="search-wrap">
@@ -818,13 +814,13 @@ var activeMeal = 'breakfast';
 var wkOffset = 0;
 var srchTimer = null, srchRes = [];
 var setup = { sex:'F', act:'sedentary', pathos:[], objectif:'maintien' };
-var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:'☀️'}, lunch:{l:'Déjeuner',i:'🍽️'}, snack:{l:'Collation',i:'🍎'}, dinner:{l:'Souper',i:'🌙'}, snack2:{l:'Collation 2',i:'🥨'} };
+var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:''}, lunch:{l:'Déjeuner',i:''}, snack:{l:'Collation',i:''}, dinner:{l:'Souper',i:''}, snack2:{l:'Collation 2',i:''} };
 // Au-delà de 3000kcal/jour, étaler sur 5 repas évite des portions trop
 // volumineuses dans les 4 repas habituels — la collation 2 n'apparaît
 // que lorsque c'est vraiment nécessaire.
 function needsSecondSnack(){ return calcTargets().kcal >= 3000; }
 function activeMealIds(){ var ids=['breakfast','lunch','snack','dinner']; if(needsSecondSnack())ids.push('snack2'); return ids; }
-var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Maladies cardiaques',i:'❤️'}, renal:{l:'Problèmes rénaux',i:'🫘'}, obesity:{l:'Obésité / Poids',i:'⚖️'} };
+var PATHO_META = { diabetes:{l:'Diabète',i:''}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:''}, cardiac:{l:'Maladies cardiaques',i:''}, renal:{l:'Problèmes rénaux',i:''}, obesity:{l:'Obésité / Poids',i:''} };
 
 // ── UTILS ──
 function pN(v){if(!v||v==='-')return 0;return parseFloat(String(v).replace(',','.'))||0;}
@@ -860,7 +856,9 @@ sb.auth.onAuthStateChange(function(ev,sess){
 });
 
 // ── PROFILE ──
-// Réessaie une fois : un échec réseau ne doit pas déclencher l'inscription si le profil existe déjà.
+// Réessaye une fois avant d'abandonner — un échec réseau ponctuel ne doit
+// jamais être confondu avec "ce profil n'existe pas encore", sinon on
+// redéclenche l'inscription alors que les vraies données sont intactes.
 async function loadProf(retried){
   var r=await sb.from('profiles').select('*').eq('id',USER.id).single();
   if(r.error){
@@ -869,7 +867,7 @@ async function loadProf(retried){
       await new Promise(function(res){setTimeout(res,800);});
       return loadProf(true);
     }
-    toast('Erreur de chargement du profil : '+r.error.message);
+    toast('❌ Erreur de chargement du profil : '+r.error.message);
     return false; // échec confirmé après nouvelle tentative
   }
   PROF=r.data||{};
@@ -886,7 +884,8 @@ async function saveProf(data){
 }
 function needsSetup(){return !PROF||!PROF.age||!PROF.poids||!PROF.taille;}
 
-// Couleur d'avatar déterministe basée sur le nom (stable entre les sessions).
+// Couleur déterministe (basée sur le nom) parmi la palette de l'app — chaque
+// personne garde toujours la même couleur, sans bibliothèque d'avatars.
 var AVATAR_PALETTE = [
   {bg:'rgba(45,79,28,0.08)', border:'rgba(45,79,28,0.25)', text:'#2d4f1c'},
   {bg:'rgba(122,155,124,0.12)', border:'rgba(122,155,124,0.32)', text:'#7a9b7c'},
@@ -1023,18 +1022,18 @@ async function addEntry(food,qty){
     food_fibres_100:pN(food.fibres),food_mg_100:pN(food.mg),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn)
   });
-  if(r.error){ toast('Erreur : '+r.error.message); console.error(r.error); return; }
-  toast(food.nom.slice(0,28)+' ajouté');
+  if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
+  toast('✅ '+food.nom.slice(0,28)+' ajouté');
   afterJournalChange();
 }
 async function delEntry(id){
   var r = await sb.from('journal').delete().eq('id',id);
-  if(r.error){ toast('Erreur suppression'); console.error(r.error); return; }
+  if(r.error){ toast('❌ Erreur suppression'); console.error(r.error); return; }
   afterJournalChange();
 }
 async function updQty(id,qty,e){
   var r = await sb.from('journal').update({quantite:qty,kcal:(e.food_kcal_100||0)*qty/100,proteines:(e.food_prot_100||0)*qty/100,glucides:(e.food_gluc_100||0)*qty/100,lipides:(e.food_lip_100||0)*qty/100}).eq('id',id);
-  if(r.error){ toast('Erreur mise à jour'); console.error(r.error); return; }
+  if(r.error){ toast('❌ Erreur mise à jour'); console.error(r.error); return; }
   afterJournalChange();
 }
 
@@ -1049,21 +1048,22 @@ async function computeStreak(){
   r.data.forEach(function(row){ datesSet[row.date]=true; });
   var streak = 0;
   var cursor = new Date();
-  // Journée en cours encore vide : on compte depuis hier pour ne pas casser la série.
+  // Si aujourd'hui est encore vide, on ne casse pas la série tout de suite —
+  // la journée n'est pas finie, on compte depuis hier.
   if(!datesSet[today()]) cursor.setDate(cursor.getDate()-1);
   while(datesSet[dateStr(cursor)]){ streak++; cursor.setDate(cursor.getDate()-1); }
   return streak;
 }
 
 var MILESTONE_DEFS = [
-  {id:'usage_1week', check:function(p,ctx){ return ctx.daysSinceSignup>=7; }, icon:'', title:'1 semaine de suivi', txt:'7 jours de suivi enregistrés.'},
-  {id:'usage_1month', check:function(p,ctx){ return ctx.daysSinceSignup>=30; }, icon:'', title:'1 mois de suivi', txt:'30 jours de suivi enregistrés.'},
-  {id:'usage_3months', check:function(p,ctx){ return ctx.daysSinceSignup>=90; }, icon:'', title:'3 mois de suivi', txt:'90 jours de suivi enregistrés.'},
-  {id:'weight_1kg', check:function(p,ctx){ return ctx.weightDiff>=1; }, icon:'', title:'1 kg d\'écart', txt:'Variation de 1 kg depuis le début du suivi.'},
-  {id:'weight_5kg', check:function(p,ctx){ return ctx.weightDiff>=5; }, icon:'', title:'5 kg d\'écart', txt:'Variation de 5 kg depuis le début du suivi.'},
-  {id:'weight_10kg', check:function(p,ctx){ return ctx.weightDiff>=10; }, icon:'', title:'10 kg d\'écart', txt:'Variation de 10 kg depuis le début du suivi.'},
-  {id:'bilan_1', check:function(p,ctx){ return ctx.bilanCount>=1; }, icon:'', title:'Premier bilan complété', txt:'Premier bilan hebdomadaire enregistré.'},
-  {id:'bilan_4', check:function(p,ctx){ return ctx.bilanCount>=4; }, icon:'', title:'4 bilans complétés', txt:'4 semaines de bilans hebdomadaires enregistrés.'}
+  {id:'usage_1week', check:function(p,ctx){ return ctx.daysSinceSignup>=7; }, icon:'🎉', title:'1 semaine avec NutriCoach !', txt:'Une semaine de suivi, c\'est un excellent début. Continuez ainsi !'},
+  {id:'usage_1month', check:function(p,ctx){ return ctx.daysSinceSignup>=30; }, icon:'🏅', title:'1 mois avec NutriCoach !', txt:'Un mois de constance — c\'est exactement ce qui fait la différence sur la durée.'},
+  {id:'usage_3months', check:function(p,ctx){ return ctx.daysSinceSignup>=90; }, icon:'🏆', title:'3 mois avec NutriCoach !', txt:'Un vrai cap : la plupart des bonnes habitudes se construisent sur cette durée.'},
+  {id:'weight_1kg', check:function(p,ctx){ return ctx.weightDiff>=1; }, icon:'📉', title:'1er kilo !', txt:'Le premier pas est souvent le plus difficile à percevoir — vous venez de le franchir.'},
+  {id:'weight_5kg', check:function(p,ctx){ return ctx.weightDiff>=5; }, icon:'⭐', title:'5 kg parcourus !', txt:'Une étape majeure sur votre trajectoire. Le travail accompli est réel.'},
+  {id:'weight_10kg', check:function(p,ctx){ return ctx.weightDiff>=10; }, icon:'🌟', title:'10 kg parcourus !', txt:'Une transformation profonde, construite jour après jour.'},
+  {id:'bilan_1', check:function(p,ctx){ return ctx.bilanCount>=1; }, icon:'📊', title:'Premier bilan complété !', txt:'Faire le point régulièrement, c\'est la clé d\'un suivi qui s\'ajuste vraiment à vous.'},
+  {id:'bilan_4', check:function(p,ctx){ return ctx.bilanCount>=4; }, icon:'📈', title:'1 mois de bilans !', txt:'4 semaines de suivi régulier — votre plan est maintenant vraiment affiné à votre rythme.'}
 ];
 
 async function checkMilestones(){
@@ -1126,16 +1126,8 @@ async function renderMotivationCards(){
   row.style.display = 'grid';
 
   var streak = await computeStreak();
-  var streakIco = document.querySelector('#motiv-row .motiv-card:first-child .motiv-ico');
-  if(streak === 0){
-    document.getElementById('streak-val').textContent = 'J1';
-    document.getElementById('streak-lbl').textContent = 'Premier jour';
-    if(streakIco) streakIco.textContent = '';
-  } else {
-    document.getElementById('streak-val').textContent = streak;
-    document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
-    if(streakIco) streakIco.textContent = '';
-  }
+  document.getElementById('streak-val').textContent = streak;
+  document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
 
   if(p.poids_initial && p.poids){
     var diff = p.poids - p.poids_initial;
@@ -1163,31 +1155,28 @@ async function refreshDash(){
   renderMotivationCards();
   checkUnreadMessages();
 
-  // Bilan uniquement accessible le jour configuré dans le profil.
+  // Le bilan n'est accessible que le jour choisi par la personne — les
+  // autres jours, la carte est grisée et non-cliquable (modifiable dans
+  // Profil si le jour ne convient plus).
   var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   var todayName = joursFR[new Date().getDay()];
   var bilanCard = document.getElementById('bilan-card');
   var bilanLink = document.getElementById('bilan-link');
   if(bilanCard){
     var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
-    var bilanArrow = document.getElementById('bilan-arrow');
     if(isBilanDay){
       bilanCard.style.borderColor='var(--gold)';
-      bilanCard.style.background='var(--gold-l)';
       bilanCard.style.opacity='1';
       bilanLink.removeAttribute('data-disabled');
       bilanLink.href='bilan.html';
-      document.getElementById('bilan-card-sub').innerHTML='<strong style="color:var(--gold)">Bilan disponible</strong>';
-      if(bilanArrow) bilanArrow.innerHTML='<div class="bilan-pulse"></div>';
+      document.getElementById('bilan-card-sub').innerHTML='<strong style="color:var(--gold)">C\'est votre jour de bilan !</strong>';
     } else {
       bilanCard.style.borderColor='var(--border)';
-      bilanCard.style.background='';
       bilanCard.style.opacity='.5';
       bilanLink.removeAttribute('href');
       bilanLink.style.cursor='not-allowed';
       var jourLbl = p.jour_bilan ? p.jour_bilan.charAt(0).toUpperCase()+p.jour_bilan.slice(1) : 'dimanche';
       document.getElementById('bilan-card-sub').textContent='Disponible le '+jourLbl;
-      if(bilanArrow) bilanArrow.textContent='→';
     }
   }
 
@@ -1224,10 +1213,10 @@ async function refreshDash(){
   if(score!==null){
     rf.style.strokeDashoffset=251.3-(251.3*score/100);
     rf.style.stroke=score>=75?'#7a9b7c':score>=50?'#c9a96e':'#c97a6e';
-    document.getElementById('score-ttl').textContent='Score nutritionnel du jour';
+    document.getElementById('score-ttl').textContent='Score Santé du jour';
     document.getElementById('score-desc').textContent=score>=75?'Vos apports sont bien équilibrés pour votre profil.':score>=50?'Quelques ajustements peuvent améliorer votre bilan.':'Des nutriments importants manquent à votre bilan.';
     var cls=score>=75?'pill-good':score>=50?'pill-warn':'pill-bad';
-    var lbl=score>=75?'Équilibré':score>=50?'À améliorer':'Insuffisant';
+    var lbl=score>=75?'Excellent':score>=50?'À améliorer':'Attention';
     document.getElementById('score-pill').innerHTML='<div class="score-pill '+cls+'">'+lbl+' · '+score+'/100</div>';
   } else {
     rf.style.strokeDashoffset='251.3';
@@ -1248,7 +1237,7 @@ async function refreshDash(){
   // Alerts
   var alerts=genAlerts(T,tgt,pathos);
   var az=document.getElementById('alerts-zone');
-  if(!alerts.length){az.innerHTML='<div class="empty"><p>Ajoutez vos repas pour voir vos alertes santé.</p></div>';return;}
+  if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';return;}
   az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
     return '<div class="alert-item alert-'+a.t+'"><span class="alert-ico">'+a.i+'</span><div><div class="alert-ttl">'+a.ttl+'</div>'+a.txt+'</div></div>';
   }).join('')+'</div>';
@@ -1647,7 +1636,7 @@ async function renderWeekly(){
   var wa=genAlerts(avgT,tgt,pathos);
   var wel=document.getElementById('wk-alerts');
   if(!act.length){wel.innerHTML='<div class="empty"><p>Aucune donnée cette semaine.</p></div>';return;}
-  if(!wa.length){wel.innerHTML='<div class="empty"><p>Aucun point d'attention cette semaine.</p></div>';return;}
+  if(!wa.length){wel.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Bilan satisfaisant cette semaine !</p></div>';return;}
   wel.innerHTML='<div class="alerts-list">'+wa.map(function(a){return '<div class="alert-item alert-'+a.t+'"><span class="alert-ico">'+a.i+'</span><div><div class="alert-ttl">'+a.ttl+'</div>'+a.txt+'</div></div>';}).join('')+'</div>';
 }
 function chgW(d){wkOffset+=d;if(wkOffset>0)wkOffset=0;renderWeekly();}
@@ -1945,7 +1934,7 @@ function changeMealRecipe(mealKey){
   CURRENT_PLAN[mealKey] = { recipeName:recipe.nom, recipeId:recipe.id, items:scaleRecipe(recipe, mealKcalTarget) };
   saveGenericPlan();
   renderMealPlan();
-  toast('Nouvelle recette : '+recipe.nom);
+  toast('✅ Nouvelle recette : '+recipe.nom);
 }
 
 function planTotals(plan){
@@ -2151,8 +2140,8 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       alerts.push({t:'warn',i:'🌿',ttl:'Glucides peu riches en fibres',
         txt:'Vos glucides viennent surtout d\'aliments raffinés. Remplacer une partie par des versions complètes (pain complet, riz complet) améliore le contrôle de la glycémie sans réduire les quantités.'});
     } else if(T.fibres >= tgt.fibres*0.9){
-      alerts.push({t:'good',i:'🌿',ttl:'Apport en fibres dans les objectifs',
-        txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont dans la cible pour la régulation de votre glycémie.'});
+      alerts.push({t:'good',i:'🌿',ttl:'Excellent apport en fibres',
+        txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont parfaitement dans la cible — un vrai atout pour la régulation de votre glycémie. Continuez ainsi !'});
     }
 
     var fiberPerMealTarget = tgt.fibres / (nMeals||1);
@@ -2173,8 +2162,8 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       alerts.push({t:'bad',i:'🫀',ttl:'Graisses saturées élevées',
         txt:'Vos apports en graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) dépassent l\'objectif.'+(worstFat?' "'+worstFat.entry.aliment+'" y contribue le plus — réduisez-le ou remplacez-le par une graisse végétale (huile d\'olive, avocat).':'')});
     } else if(T.ags <= tgt.ags*0.8){
-      alerts.push({t:'good',i:'🫀',ttl:'Graisses saturées dans les objectifs',
-        txt:'Vos graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) restent sous contrôle.'});
+      alerts.push({t:'good',i:'🫀',ttl:'Graisses saturées bien maîtrisées',
+        txt:'Vos graisses saturées ('+T.ags.toFixed(0)+'g/'+tgt.ags+'g) restent sous contrôle aujourd\'hui — exactement ce qu\'il faut pour votre santé cardiovasculaire.'});
     }
   }
 
@@ -2182,7 +2171,7 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     if(T.na > tgt.na){
       alerts.push({t:'warn',i:'🧂',ttl:'Sodium élevé (Hypertension)',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) est au-dessus de l\'objectif. Limitez charcuterie, plats préparés et fromages salés.'});
     } else if(T.na <= tgt.na*0.8){
-      alerts.push({t:'good',i:'🧂',ttl:'Sodium dans les objectifs',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) reste sous l\'objectif.'});
+      alerts.push({t:'good',i:'🧂',ttl:'Sodium bien maîtrisé',txt:'Votre apport en sel ('+Math.round(T.na)+'mg/'+tgt.na+'mg) reste bien sous l\'objectif aujourd\'hui — un vrai plus pour votre tension.'});
     }
   }
 
@@ -2193,8 +2182,8 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var glucOk = Math.abs(T.gluc-tgt.gluc) <= tgt.gluc*0.1;
   var lipOk = Math.abs(T.lip-tgt.lip) <= tgt.lip*0.1;
   if(allMealsCoveredForAlerts && protOk && glucOk && lipOk){
-    alerts.push({t:'good',i:'',ttl:'Macronutriments équilibrés',
-      txt:'Protéines, glucides et lipides sont tous proches de vos objectifs.'});
+    alerts.push({t:'good',i:'✨',ttl:'Journée parfaitement équilibrée',
+      txt:'Protéines, glucides et lipides sont tous proches de vos objectifs aujourd\'hui. C\'est exactement ce type de régularité qui fait la différence sur la durée.'});
   }
 
   return {adjusted:adjusted, totals:T, alerts:suggestionAlerts.concat(alerts)};
@@ -2370,7 +2359,7 @@ function regenerateMealPlan(){
   CURRENT_PLAN_KCAL_BASIS = calcTargets().kcal;
   saveGenericPlan();
   renderMealPlan();
-  toast('Plan régénéré');
+  toast('🔄 Plan régénéré');
 }
 
 // ── Persistance du plan générique ──
@@ -2443,7 +2432,7 @@ function confirmSubstitute(i){
   };
   closeSubstitute();
   renderMealPlan();
-  toast('Suggestion remplacée par '+newFood.nom);
+  toast('✅ Suggestion remplacée par '+newFood.nom);
 }
 
 function closeSubstitute(){
@@ -2470,7 +2459,7 @@ function renderProfile(){
   if(pfEl){
     var pfActive = p.plan_fixe && p.plan_fixe._active !== false && Object.keys(p.plan_fixe).some(function(k){return k!=='_active'&&Array.isArray(p.plan_fixe[k])&&p.plan_fixe[k].length;});
     pfEl.innerHTML = pfActive
-      ? '<strong style="color:var(--sage)">Actif</strong> — remplace les suggestions automatiques. Modifier →'
+      ? '<strong style="color:var(--sage)">✅ Actif</strong> — remplace les suggestions automatiques. Modifier →'
       : 'Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.';
   }
 
@@ -2514,12 +2503,12 @@ async function finSetup(){
   if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
   if(!result.ok){
-    toast('Échec de l\'enregistrement : '+result.error+' — réessayez');
+    toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
     return; // la fenêtre reste ouverte, rien n'est perdu, on peut réessayer
   }
   document.getElementById('ov').classList.remove('on');
   initGreeting(); refreshDash();
-  toast('Profil enregistré');
+  toast('✅ Profil enregistré !');
 }
 
 // Affiche/masque la 5e tranche (Collation 2) selon le besoin calorique réel,
@@ -2672,44 +2661,29 @@ function loadCustomFoods(){
 }
 </style>
 <script>
-
+// Override finSetup to show loading screen
 var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
-  var isFirstSetup = !PROF || !PROF.poids_initial;
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
   data.kcal_target=calcTargets().kcal;
-  if(isFirstSetup) data.poids_initial = data.poids;
+  if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
   if(!result.ok){
-    toast('Échec de l\'enregistrement : '+result.error+' — réessayez');
-    return;
+    toast('❌ Échec de l\'enregistrement : '+result.error+' — réessayez');
+    return; // ne ferme PAS la fenêtre et ne lance PAS l'écran de chargement si ça a échoué
   }
-  if(isFirstSetup) sendWelcomeMessage();
   document.getElementById('ov').classList.remove('on');
   showLoadingScreen();
 };
 
-async function sendWelcomeMessage(){
-  var prenom = (PROF&&PROF.prenom) ? ' '+PROF.prenom : '';
-  var msg = 'Bienvenue sur NutriCoach'+prenom+'.\n\nCe fil est votre espace direct avec l\'équipe. Vous pouvez nous poser vos questions ou signaler tout problème lié à votre plan nutritionnel.\n\nNous vous répondrons directement ici.';
-  await sb.from('messages').insert({
-    user_id: USER.id,
-    sender_id: USER.id,
-    is_admin_sender: true,
-    content: msg,
-    read_by_user: false,
-    read_by_admin: true
-  });
-}
-
 function showLoadingScreen(){
   var prenom=(PROF&&PROF.prenom)||'vous';
   var msgs=[
-    'Vérification du profil…',
+    'Analyse de votre profil…',
     'Calcul de vos besoins caloriques…',
-    'Application des paramètres…',
-    'Chargement des données…',
-    'Chargement terminé.'
+    'Personnalisation selon vos pathologies…',
+    'Préparation de vos recommandations…',
+    'Votre tableau de bord est prêt !'
   ];
   var el=document.getElementById('loading-screen');
   if(!el){
@@ -2721,7 +2695,7 @@ function showLoadingScreen(){
       +'<circle cx="50" cy="50" r="42" fill="none" stroke="#2d4f1c" stroke-width="6" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" style="animation:spin-dash 2s ease-in-out infinite"/>'
       +''
       +'</svg><div class="ls-logo">N</div></div>'
-      +'<div class="ls-title">NutriCoach</div>'
+      +'<div class="ls-title">Bonjour '+prenom+' !</div>'
       +'<div class="ls-msg" id="ls-msg">'+msgs[0]+'</div>'
       +'<div class="ls-bar"><div class="ls-bar-fill" id="ls-bar"></div></div>'
       +'</div>';

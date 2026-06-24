@@ -221,8 +221,7 @@ body {
 </header>
 
 <section class="hero">
-  <div class="hero-label">Nutrition personnalisée</div>
-  <h1>Manger mieux,<br><em>selon vous</em></h1>
+  <h1>Manger mieux,<br><em>à votre façon </em></h1>
   <p>NutriCoach adapte votre plan alimentaire à vos objectifs, votre activité réelle et vos éventuelles pathologies. Recettes savoureuses, recalcul automatique chaque semaine.</p>
   <div class="hero-cta">
     <button class="cta-main" onclick="goAuth('signup')">Créer mon compte</button>
@@ -392,7 +391,7 @@ async function signup() {
       return;
     }
   }
-  showMsg('so', 'Compte créé. Connectez-vous maintenant.', 'ok');
+  showMsg('so', '✅ Compte créé ! Connectez-vous maintenant.', 'ok');
 }
 
 async function reset(e) {
@@ -400,7 +399,7 @@ async function reset(e) {
   var email = document.getElementById('le-email').value.trim();
   if (!email) { showMsg('le', 'Entrez votre email d\'abord.'); return; }
   await sb.auth.resetPasswordForEmail(email);
-  showMsg('le', 'Email de réinitialisation envoyé.', 'ok');
+  showMsg('le', '📧 Email de réinitialisation envoyé !', 'ok');
 }
 
 sb.auth.getSession().then(function(r) {

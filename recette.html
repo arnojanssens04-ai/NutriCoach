@@ -453,9 +453,9 @@ async function confirmAddToMeal(meal){
   });
 
   var r = await sb.from('journal').insert(inserts);
-  if(r.error){ toast(r.error.message); return; }
+  if(r.error){ toast('❌ '+r.error.message); return; }
   closeMealPicker(); closeDetail();
-  toast('"'+SELECTED_RECIPE.nom+'" ajouté à votre '+MEAL_LABELS[meal].toLowerCase());
+  toast('✅ "'+SELECTED_RECIPE.nom+'" ajouté à votre '+MEAL_LABELS[meal].toLowerCase());
 }
 
 // ── CRÉATION / ÉDITION (admin) ──
@@ -512,7 +512,7 @@ async function deleteRecipe(){
   if(!SELECTED_RECIPE) return;
   if(!confirm('Supprimer "'+SELECTED_RECIPE.nom+'" ? Cette action est irréversible.')) return;
   var r = await sb.from('recettes').delete().eq('id', SELECTED_RECIPE.id);
-  if(r.error){ toast(r.error.message); return; }
+  if(r.error){ toast('❌ '+r.error.message); return; }
   toast('Recette supprimée');
   closeDetail();
   loadRecipes();
@@ -583,8 +583,8 @@ async function saveRecipe(){
   } else {
     r = await sb.from('recettes').insert({nom:nom, repas_types:repasTypes, instructions:instructions, ingredients:ingredients, created_by:USER.id});
   }
-  if(r.error){ toast(r.error.message); return; }
-  toast(EDITING_RECIPE_ID ? 'Recette mise à jour' : 'Recette enregistrée');
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast(EDITING_RECIPE_ID ? '✅ Recette mise à jour' : '✅ Recette enregistrée');
   closeCreateModal();
   loadRecipes();
 }

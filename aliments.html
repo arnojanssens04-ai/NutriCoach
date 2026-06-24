@@ -211,15 +211,15 @@ async function saveFood(){
     data.created_by = USER.id;
     r = await sb.from('aliments_custom').insert(data);
   }
-  if(r.error){ toast(r.error.message); return; }
-  toast(EDITING_ID ? '"'+nom+'" modifié' : '"'+nom+'" ajouté');
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast(EDITING_ID ? '✅ "'+nom+'" modifié' : '✅ "'+nom+'" ajouté — déjà cherchable dans toute l\'app');
   cancelEdit();
   loadFoods();
 }
 
 async function deleteFood(id){
   var r = await sb.from('aliments_custom').delete().eq('id',id);
-  if(r.error){ toast(r.error.message); return; }
+  if(r.error){ toast('❌ '+r.error.message); return; }
   if(EDITING_ID===id) cancelEdit();
   toast('Aliment supprimé');
   loadFoods();
