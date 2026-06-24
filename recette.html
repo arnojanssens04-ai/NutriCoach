@@ -122,7 +122,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div class="wrap">
   <div class="hero">
     <h1>Recettes</h1>
-    <p>Choisissez un plat, ajoutez-le à votre journée — les quantités se calculent automatiquement selon vos besoins.</p>
+    <p>Choisissez un plat, ajoutez-le à votre journée — les quantités s'adaptent automatiquement à vos besoins.</p>
   </div>
 
   <div class="filter-tabs">
@@ -151,7 +151,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         <div class="instr-text" id="detail-instructions"></div>
       </div>
     </div>
-    <div class="ov-ftr">
+    <div class="ov-ftr" id="detail-ftr">
       <button class="btn btn-gold" onclick="openMealPicker()">Ajouter à mon repas</button>
     </div>
   </div>
@@ -173,10 +173,10 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   </div>
 </div>
 
-<!-- CRÉATION DE RECETTE (admin) -->
+<!-- CRÉATION / ÉDITION DE RECETTE (admin) -->
 <div class="ov" id="create-ov">
   <div class="ov-card">
-    <div class="ov-hdr"><h3>Nouvelle recette</h3><button class="ov-close" onclick="closeCreateModal()">✕</button></div>
+    <div class="ov-hdr"><h3 id="create-modal-title">Nouvelle recette</h3><button class="ov-close" onclick="closeCreateModal()">✕</button></div>
     <div class="ov-body">
       <div class="field"><label>Nom du plat</label><input type="text" id="c-nom" placeholder="Ex: Poulet rôti aux légumes"></div>
       <div class="field"><label>Convient à</label>
@@ -217,6 +217,7 @@ var CURRENT_FILTER = 'all';
 var SELECTED_RECIPE = null;
 var ING_ROW_COUNT = 0;
 var SELECTED_INGREDIENTS = {}; // rowId -> food object choisi
+var EDITING_RECIPE_ID = null; // null = création, id = édition
 
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
@@ -410,6 +411,16 @@ function openDetail(id){
     return '<div class="ing-row"><span>'+esc(i.nom)+'</span><span class="ing-qty">'+Math.round(i.qty)+'g</span></div>';
   }).join('');
   document.getElementById('detail-instructions').textContent = SELECTED_RECIPE.instructions || 'Aucune instruction renseignée.';
+  // Boutons admin dans le footer
+  var ftr = document.getElementById('detail-ftr');
+  if(PROF && PROF.role==='admin'){
+    ftr.innerHTML =
+      '<button class="btn btn-outline2" onclick="deleteRecipe()">🗑 Supprimer</button>'
+      +'<button class="btn btn-outline2" onclick="openEditModal()">✏️ Modifier</button>'
+      +'<button class="btn btn-gold" onclick="openMealPicker()">Ajouter à mon repas</button>';
+  } else {
+    ftr.innerHTML = '<button class="btn btn-gold" onclick="openMealPicker()">Ajouter à mon repas</button>';
+  }
   document.getElementById('detail-ov').classList.add('on');
 }
 function closeDetail(){ document.getElementById('detail-ov').classList.remove('on'); }
@@ -447,8 +458,10 @@ async function confirmAddToMeal(meal){
   toast('✅ "'+SELECTED_RECIPE.nom+'" ajouté à votre '+MEAL_LABELS[meal].toLowerCase());
 }
 
-// ── CRÉATION (admin) ──
+// ── CRÉATION / ÉDITION (admin) ──
 function openCreateModal(){
+  EDITING_RECIPE_ID = null;
+  document.getElementById('create-modal-title').textContent = 'Nouvelle recette';
   document.getElementById('c-nom').value='';
   document.getElementById('c-instructions').value='';
   document.querySelectorAll('.meal-check').forEach(function(m){ m.classList.remove('on'); });
@@ -457,7 +470,53 @@ function openCreateModal(){
   addIngRow();
   document.getElementById('create-ov').classList.add('on');
 }
-function closeCreateModal(){ document.getElementById('create-ov').classList.remove('on'); }
+
+function openEditModal(){
+  if(!SELECTED_RECIPE) return;
+  EDITING_RECIPE_ID = SELECTED_RECIPE.id;
+  document.getElementById('create-modal-title').textContent = 'Modifier la recette';
+  document.getElementById('c-nom').value = SELECTED_RECIPE.nom || '';
+  document.getElementById('c-instructions').value = SELECTED_RECIPE.instructions || '';
+  // Repas types
+  document.querySelectorAll('.meal-check').forEach(function(el){
+    var meal = el.getAttribute('data-meal');
+    el.classList.toggle('on', (SELECTED_RECIPE.repas_types||[]).indexOf(meal)>=0);
+  });
+  // Ingrédients
+  document.getElementById('c-ing-rows').innerHTML='';
+  SELECTED_INGREDIENTS = {}; ING_ROW_COUNT = 0;
+  (SELECTED_RECIPE.ingredients||[]).forEach(function(ing){
+    ING_ROW_COUNT++;
+    var id = ING_ROW_COUNT;
+    // Reconstruire un objet food depuis les données sauvegardées
+    var food = DB.find(function(f){ return f.code===ing.code; }) || {code:ing.code,nom:ing.nom,kcal:ing.kcal,prot:ing.prot,gluc:ing.gluc,lip:ing.lip,ags:ing.ags||0,pot:ing.pot||0};
+    SELECTED_INGREDIENTS[id] = food;
+    var div = document.createElement('div');
+    div.innerHTML = '<div class="ing-edit-row">'
+      +'<input type="text" placeholder="Rechercher un aliment..." oninput="searchIngredient('+id+',this.value)" id="ing-search-'+id+'" value="'+esc(ing.nom)+'">'
+      +'<input type="number" placeholder="g" id="ing-qty-'+id+'" value="'+Math.round(ing.qty||100)+'">'
+      +'<button class="ing-del" onclick="this.closest(\'.ing-wrap\').remove()">✕</button>'
+      +'</div>'
+      +'<div class="ing-search-results" id="ing-results-'+id+'"></div>';
+    div.className = 'ing-wrap';
+    document.getElementById('c-ing-rows').appendChild(div);
+  });
+  if(!(SELECTED_RECIPE.ingredients||[]).length) addIngRow();
+  closeDetail();
+  document.getElementById('create-ov').classList.add('on');
+}
+
+function closeCreateModal(){ document.getElementById('create-ov').classList.remove('on'); EDITING_RECIPE_ID = null; }
+
+async function deleteRecipe(){
+  if(!SELECTED_RECIPE) return;
+  if(!confirm('Supprimer "'+SELECTED_RECIPE.nom+'" ? Cette action est irréversible.')) return;
+  var r = await sb.from('recettes').delete().eq('id', SELECTED_RECIPE.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('Recette supprimée');
+  closeDetail();
+  loadRecipes();
+}
 function toggleMealCheck(el){ el.classList.toggle('on'); }
 
 function addIngRow(){
@@ -518,11 +577,14 @@ async function saveRecipe(){
 
   var instructions = document.getElementById('c-instructions').value.trim();
 
-  var r = await sb.from('recettes').insert({
-    nom:nom, repas_types:repasTypes, instructions:instructions, ingredients:ingredients, created_by:USER.id
-  });
+  var r;
+  if(EDITING_RECIPE_ID){
+    r = await sb.from('recettes').update({nom:nom, repas_types:repasTypes, instructions:instructions, ingredients:ingredients}).eq('id', EDITING_RECIPE_ID);
+  } else {
+    r = await sb.from('recettes').insert({nom:nom, repas_types:repasTypes, instructions:instructions, ingredients:ingredients, created_by:USER.id});
+  }
   if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Recette enregistrée');
+  toast(EDITING_RECIPE_ID ? '✅ Recette mise à jour' : '✅ Recette enregistrée');
   closeCreateModal();
   loadRecipes();
 }
