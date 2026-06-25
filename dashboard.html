@@ -392,6 +392,19 @@ body {
 .ov-step { display: none; }
 .ov-step.on { display: block; animation: fi .3s ease; }
 .ov-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gold-l); color: var(--gold); font-size: .68rem; font-weight: 600; padding: 4px 11px; border-radius: 4px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .06em; border: 1px solid var(--border2); }
+
+.welcome-slides { position:relative; min-height:220px; display:flex; align-items:center; }
+.w-slide { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0; pointer-events:none; transition:opacity .3s ease; padding-top:10px; }
+.w-slide.on { opacity:1; pointer-events:auto; }
+.w-emoji { font-size:2.6rem; margin-bottom:14px; }
+.w-title { font-family:'Lora',serif; font-size:1.3rem; font-weight:700; margin-bottom:12px; }
+.w-txt { font-size:.88rem; color:var(--text2); line-height:1.65; max-width:320px; }
+.w-txt b { color:var(--text); }
+.w-dots { display:flex; justify-content:center; gap:7px; margin:18px 0 22px; }
+.w-dot { width:7px; height:7px; border-radius:50%; background:var(--border2); cursor:pointer; transition:all .2s; }
+.w-dot.on { background:var(--gold); width:20px; border-radius:4px; }
+.ov-btn-next { width:100%; padding:14px; background:var(--gold); border:none; border-radius:12px; font-family:'Lora',serif; font-size:.95rem; font-weight:700; color:#fff; cursor:pointer; }
+.w-skip { text-align:center; font-size:.78rem; color:var(--text3); margin-top:14px; cursor:pointer; text-decoration:underline; }
 .ov-title { font-family: 'Lora', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -.02em; }
 .ov-sub { font-size: .85rem; color: var(--text2); margin-bottom: 22px; line-height: 1.6; }
 .field { margin-bottom: 14px; }
@@ -697,9 +710,36 @@ body {
 <!-- SETUP OVERLAY -->
 <div class="ov" id="ov">
 <div class="ov-inner">
-  <div class="ov-prog"><div class="ov-prog-f" id="ov-pf" style="width:25%"></div></div>
+  <div class="ov-prog" id="ov-prog-wrap"><div class="ov-prog-f" id="ov-pf" style="width:25%"></div></div>
 
-  <div class="ov-step on" id="st-1">
+  <div class="ov-step on" id="st-0">
+    <div class="welcome-slides" id="welcome-slides">
+      <div class="w-slide on" data-slide="0">
+        <div class="w-emoji">👋</div>
+        <h2 class="w-title">Bienvenue sur NutriCoach</h2>
+        <p class="w-txt">Une nutrition pensée pour <b>vous</b>, pas pour une moyenne générique. Tout est personnalisé selon votre profil, votre activité réelle et vos éventuelles pathologies.</p>
+      </div>
+      <div class="w-slide" data-slide="1">
+        <div class="w-emoji">⚙️</div>
+        <h2 class="w-title">Comment ça marche</h2>
+        <p class="w-txt">1. Quelques questions rapides sur vous<br>2. On calcule votre plan précis<br>3. Vous suivez votre journée — chaque semaine, on ajuste automatiquement selon vos résultats réels</p>
+      </div>
+      <div class="w-slide" data-slide="2">
+        <div class="w-emoji">📊</div>
+        <h2 class="w-title">Basé sur de vraies données</h2>
+        <p class="w-txt">Nos calculs s'appuient sur <b>Ciqual</b>, la base de référence officielle française, et des formules nutritionnelles reconnues (Mifflin-St Jeor). Pas de recette magique — de la science appliquée à votre cas précis.</p>
+      </div>
+    </div>
+    <div class="w-dots" id="w-dots">
+      <div class="w-dot on" onclick="goWelcomeSlide(0)"></div>
+      <div class="w-dot" onclick="goWelcomeSlide(1)"></div>
+      <div class="w-dot" onclick="goWelcomeSlide(2)"></div>
+    </div>
+    <button class="ov-btn-next" onclick="nextWelcomeSlide()" id="w-next-btn">Suivant</button>
+    <div class="w-skip" onclick="goSt(1)">Passer l'introduction</div>
+  </div>
+
+  <div class="ov-step" id="st-1">
     <div class="ov-badge">📏 Profil physique</div>
     <h2 class="ov-title">Votre profil</h2>
     <p class="ov-sub">Ces données permettent de calculer vos besoins caloriques personnalisés.</p>
@@ -2528,6 +2568,18 @@ function renderProfile(){
 }
 
 // ── SETUP ──
+var welcomeSlideIdx = 0;
+function goWelcomeSlide(i){
+  welcomeSlideIdx = i;
+  document.querySelectorAll('.w-slide').forEach(function(s){ s.classList.toggle('on', parseInt(s.getAttribute('data-slide'))===i); });
+  document.querySelectorAll('.w-dot').forEach(function(d,idx){ d.classList.toggle('on', idx===i); });
+  document.getElementById('w-next-btn').textContent = (i===2) ? 'Commencer' : 'Suivant';
+}
+function nextWelcomeSlide(){
+  if(welcomeSlideIdx>=2){ goSt(1); return; }
+  goWelcomeSlide(welcomeSlideIdx+1);
+}
+
 function openSetup(){
   var p=PROF||{};
   setup.sex=p.sexe||'F'; setup.act=p.activite||'sedentary'; setup.pathos=p.pathologies||[]; setup.objectif=p.objectif||'maintien';
@@ -2538,8 +2590,18 @@ function openSetup(){
   setSex(setup.sex); setAct(setup.act); setObj(setup.objectif);
   setup.pathos.forEach(function(pp){var c=document.getElementById('pc-'+pp);var k=document.getElementById('pk-'+pp);if(c){c.classList.add('on');k.innerHTML='✓';}});
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
-  document.getElementById('st-1').classList.add('on');
-  document.getElementById('ov-pf').style.width='25%';
+  // L'écran d'accueil ne se montre qu'une seule fois, à la toute première
+  // inscription — quelqu'un qui rouvre juste pour modifier son profil n'a
+  // pas besoin de revoir l'explication du fonctionnement.
+  var isBrandNew = !p.age;
+  if(isBrandNew){
+    document.getElementById('st-0').classList.add('on');
+    document.getElementById('ov-prog-wrap').style.visibility='hidden';
+  } else {
+    document.getElementById('st-1').classList.add('on');
+    document.getElementById('ov-prog-wrap').style.visibility='visible';
+    document.getElementById('ov-pf').style.width='25%';
+  }
   document.getElementById('ov').classList.add('on');
 }
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
@@ -2550,6 +2612,7 @@ function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
   document.getElementById('st-'+n).classList.add('on');
+  document.getElementById('ov-prog-wrap').style.visibility='visible';
   var pts={1:20,2:50,3:75,4:95};document.getElementById('ov-pf').style.width=(pts[n]||50)+'%';
   if(n===4){ updateMealTabsVisibility(); refreshSetupJournal(); }
 }
