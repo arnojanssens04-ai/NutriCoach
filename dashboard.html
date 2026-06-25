@@ -405,6 +405,13 @@ body {
 .w-dot.on { background:var(--gold); width:20px; border-radius:4px; }
 .ov-btn-next { width:100%; padding:14px; background:var(--gold); border:none; border-radius:12px; font-family:'Lora',serif; font-size:.95rem; font-weight:700; color:#fff; cursor:pointer; }
 .w-skip { text-align:center; font-size:.78rem; color:var(--text3); margin-top:14px; cursor:pointer; text-decoration:underline; }
+
+.consent-row { display:flex; align-items:flex-start; gap:10px; background:var(--gold-l); border:1px solid var(--border2); border-radius:12px; padding:13px 14px; margin-top:14px; cursor:pointer; }
+.consent-box { width:19px; height:19px; border-radius:5px; border:1.5px solid var(--border2); background:var(--card); flex-shrink:0; margin-top:1px; position:relative; cursor:pointer; }
+.consent-box.on { background:var(--gold); border-color:var(--gold); }
+.consent-box.on::after { content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.7rem; font-weight:700; }
+.consent-lbl { font-size:.8rem; color:var(--text2); line-height:1.5; cursor:pointer; }
+.consent-lbl a { color:var(--gold); }
 .ov-title { font-family: 'Lora', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -.02em; }
 .ov-sub { font-size: .85rem; color: var(--text2); margin-bottom: 22px; line-height: 1.6; }
 .field { margin-bottom: 14px; }
@@ -679,6 +686,11 @@ body {
     <div class="prof-card-body">
       <button class="btn-full-g" onclick="openSetup()">Modifier mon profil</button>
       <button class="btn-danger" onclick="logout()">Se déconnecter</button>
+      <div style="text-align:center;margin-top:14px;font-size:.76rem;color:var(--text3)">
+        <a href="confidentialite.html" style="color:var(--text3);text-decoration:underline">Confidentialité</a>
+        &nbsp;·&nbsp;
+        <a href="cgu.html" style="color:var(--text3);text-decoration:underline">CGU</a>
+      </div>
     </div>
   </div>
 </div>
@@ -805,9 +817,15 @@ body {
       <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
       <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
     </div>
+
+    <div class="consent-row" id="consent-row" style="display:none">
+      <div class="consent-box" id="consent-box" onclick="toggleHealthConsent()"></div>
+      <label class="consent-lbl" onclick="toggleHealthConsent()">J'accepte que ces informations de santé soient utilisées pour personnaliser mes recommandations, conformément à la <a href="confidentialite.html" target="_blank" onclick="event.stopPropagation()">politique de confidentialité</a>.</label>
+    </div>
+
     <div class="btn-nav-row">
       <button class="btn-back" onclick="goSt(2)">← Retour</button>
-      <button class="btn-next" onclick="goSt(4)">Continuer →</button>
+      <button class="btn-next" onclick="validateSt3()">Continuer →</button>
     </div>
   </div>
 
@@ -870,7 +888,7 @@ var USER = null, PROF = null;
 var activeMeal = 'breakfast';
 var wkOffset = 0;
 var srchTimer = null, srchRes = [];
-var setup = { sex:'F', act:'sedentary', pathos:[], objectif:'maintien' };
+var setup = { sex:'F', act:'sedentary', pathos:[], objectif:'maintien', healthConsent:false };
 var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:''}, lunch:{l:'Déjeuner',i:''}, snack:{l:'Collation',i:''}, dinner:{l:'Souper',i:''}, snack2:{l:'Collation 2',i:''} };
 // Au-delà de 3000kcal/jour, étaler sur 5 repas évite des portions trop
 // volumineuses dans les 4 repas habituels — la collation 2 n'apparaît
@@ -2589,6 +2607,13 @@ function openSetup(){
   document.getElementById('s-jourbilan').value=p.jour_bilan||'dimanche';
   setSex(setup.sex); setAct(setup.act); setObj(setup.objectif);
   setup.pathos.forEach(function(pp){var c=document.getElementById('pc-'+pp);var k=document.getElementById('pk-'+pp);if(c){c.classList.add('on');k.innerHTML='✓';}});
+  // Si la personne a déjà des pathologies enregistrées, le consentement a
+  // forcément déjà été donné lors d'un précédent passage — pas besoin de
+  // le redemander à chaque simple réouverture du profil.
+  var hasRealPathoNow = setup.pathos.some(function(x){return x!=='none';});
+  setup.healthConsent = hasRealPathoNow;
+  document.getElementById('consent-row').style.display = hasRealPathoNow ? 'flex' : 'none';
+  document.getElementById('consent-box').classList.toggle('on', hasRealPathoNow);
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
   // L'écran d'accueil ne se montre qu'une seule fois, à la toute première
   // inscription — quelqu'un qui rouvre juste pour modifier son profil n'a
@@ -2607,7 +2632,25 @@ function openSetup(){
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
 function setObj(o){setup.objectif=o;['perte','maintien','prise'].forEach(function(x){document.getElementById('obj-'+x).classList.toggle('on',x===o);});}
 function setAct(a){setup.act=a;['sedentary','light','moderate','active','sportif'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
-function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}}
+function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}
+  // Le consentement n'est demandé que si une vraie pathologie est cochée
+  // (pas pour "Aucune pathologie") — donnée de santé = consentement explicite.
+  var hasRealPatho = setup.pathos.some(function(x){return x!=='none';});
+  document.getElementById('consent-row').style.display = hasRealPatho ? 'flex' : 'none';
+  if(!hasRealPatho){ setup.healthConsent=false; document.getElementById('consent-box').classList.remove('on'); }
+}
+function toggleHealthConsent(){
+  setup.healthConsent = !setup.healthConsent;
+  document.getElementById('consent-box').classList.toggle('on', setup.healthConsent);
+}
+function validateSt3(){
+  var hasRealPatho = setup.pathos.some(function(x){return x!=='none';});
+  if(hasRealPatho && !setup.healthConsent){
+    toast('Merci de cocher la case de consentement pour continuer');
+    return;
+  }
+  goSt(4);
+}
 function goSt(n){
   if(n===2){var a=parseInt(document.getElementById('s-age').value),h=parseInt(document.getElementById('s-h').value),w=parseFloat(document.getElementById('s-w').value);if(!a||!h||!w){toast('Remplissez âge, taille et poids');return;}}
   document.querySelectorAll('.ov-step').forEach(function(s){s.classList.remove('on');});
