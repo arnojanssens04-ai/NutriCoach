@@ -146,6 +146,18 @@ body {
 .motiv-lbl { font-size:.66rem; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
 
 /* ── KCAL RING CARD ── */
+.clinical-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:16px; margin-bottom:14px; box-shadow:var(--sh); }
+.clinical-hdr { font-family:'Lora',serif; font-size:1rem; font-weight:600; margin-bottom:10px; color:var(--gold); }
+.clinical-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
+.clinical-row:last-child { border-bottom:none; }
+.clinical-ico { font-size:1.2rem; flex-shrink:0; }
+.clinical-txt { flex:1; font-size:.84rem; line-height:1.4; color:var(--text2); }
+.clinical-txt b { color:var(--text); }
+.clinical-pct { font-family:'Lora',serif; font-weight:700; font-size:1.1rem; flex-shrink:0; }
+.clinical-pct.ok { color:var(--sage); }
+.clinical-pct.warn { color:var(--amber); }
+.clinical-pct.bad { color:var(--rose); }
+
 .kcal-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -499,6 +511,11 @@ body {
       <div class="motiv-val" id="path-val">—</div>
       <div class="motiv-lbl">depuis le début</div>
     </div>
+  </div>
+
+  <div class="clinical-card" id="clinical-card" style="display:none">
+    <div class="clinical-hdr">Indicateurs clés</div>
+    <div id="clinical-body"></div>
   </div>
 
   <div class="kcal-card">
@@ -926,7 +943,7 @@ function calcTargets(){
   // Si un plan fixe est actif, on utilise directement ses kcal comme objectif.
   if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target){
     var kk=p.kcal_target;
-    return{kcal:kk,prot:Math.round(kk*0.15/4),gluc:Math.round(kk*0.50/4),lip:Math.round(kk*0.35/9),ags:Math.round(kk*0.07/9),o3:2.0,fer:14,cal:900,pot:3500,na:2300,mg:300,zn:10};
+    return{kcal:kk,prot:Math.round(kk*0.15/4),gluc:Math.round(kk*0.50/4),lip:Math.round(kk*0.35/9),ags:Math.round(kk*0.07/9),o3:2.0,fer:14,cal:900,pot:3500,na:2300,mg:300,zn:10,fibres:27};
   }
   var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
   var act=p.activite||'sedentary',pathos=p.pathologies||[];
@@ -1101,6 +1118,45 @@ function showMilestoneCelebration(m){
   document.body.appendChild(ov);
 }
 
+// ── INDICATEURS CLINIQUES ── remplace le réflexe "compteur de calories"
+// par "ce que ça signifie pour VOTRE santé" — uniquement pour les
+// pathologies où on suit une vraie donnée fiable (sodium, graisses
+// saturées, fibres). Rien à afficher si aucune de ces pathologies n'est
+// renseignée — on ne fabrique pas un indicateur factice.
+function renderClinicalIndicators(T, tgt, pathos){
+  var card = document.getElementById('clinical-card');
+  var body = document.getElementById('clinical-body');
+  if(!card || !body) return;
+  var rows = [];
+
+  function pctClass(pct){ return pct>=100?'bad':pct>=75?'warn':'ok'; }
+
+  if(pathos.indexOf('hypertension')>=0){
+    var pctNa = Math.round(T.na/tgt.na*100);
+    rows.push({ico:'🧂', pct:pctNa,
+      txt:'<b>Sodium</b> — '+Math.round(T.na)+'mg sur '+tgt.na+'mg visés aujourd\'hui'+(pctNa>=100?' · seuil déjà dépassé':'')});
+  }
+  if(pathos.indexOf('diabetes')>=0){
+    var pctFib = Math.round(T.fibres/(tgt.fibres||27)*100);
+    rows.push({ico:'🌿', pct:Math.min(150,pctFib),
+      txt:'<b>Régulation glycémique</b> (fibres) — '+T.fibres.toFixed(0)+'g sur '+(tgt.fibres||27)+'g, '+(pctFib>=75?'un bon soutien pour votre glycémie':'encore léger pour bien réguler votre glycémie')});
+  }
+  if(pathos.indexOf('cholesterol')>=0 || pathos.indexOf('cardiac')>=0){
+    var pctAgs = Math.round(T.ags/tgt.ags*100);
+    rows.push({ico:'🫀', pct:pctAgs,
+      txt:'<b>Graisses saturées</b> — '+T.ags.toFixed(0)+'g sur '+tgt.ags+'g visés'+(pctAgs>=100?' · au-dessus du seuil cardiovasculaire':'')});
+  }
+
+  if(!rows.length){ card.style.display='none'; return; }
+
+  card.style.display='block';
+  body.innerHTML = rows.map(function(r){
+    return '<div class="clinical-row"><span class="clinical-ico">'+r.ico+'</span>'
+      +'<span class="clinical-txt">'+r.txt+'</span>'
+      +'<span class="clinical-pct '+pctClass(r.pct)+'">'+r.pct+'%</span></div>';
+  }).join('');
+}
+
 async function checkUnreadMessages(){
   var r = await sb.from('messages').select('id',{count:'exact',head:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
   var n = r.count || 0;
@@ -1181,14 +1237,16 @@ async function refreshDash(){
   }
 
   var entries=await getEntries();
-  var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,o3a:0,o3e:0,o3d:0,fer:0,cal:0,pot:0};
+  var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,o3a:0,o3e:0,o3d:0,fer:0,cal:0,pot:0,na:0,fibres:0};
   entries.forEach(function(e){
     T.kcal+=e.kcal||0;T.prot+=e.proteines||0;T.gluc+=e.glucides||0;T.lip+=e.lipides||0;
     T.ags+=(e.food_ags_100||0)*e.quantite/100;T.o3a+=(e.food_o3a_100||0)*e.quantite/100;
     T.o3e+=(e.food_o3e_100||0)*e.quantite/100;T.o3d+=(e.food_o3d_100||0)*e.quantite/100;
     T.fer+=(e.food_fer_100||0)*e.quantite/100;T.cal+=(e.food_cal_100||0)*e.quantite/100;
     T.pot+=(e.food_pot_100||0)*e.quantite/100;
+    T.na+=(e.food_na_100||0)*e.quantite/100;T.fibres+=(e.food_fibres_100||0)*e.quantite/100;
   });
+  renderClinicalIndicators(T, tgt, pathos);
   // Kcal
   var kcalRound=Math.round(T.kcal);
   document.getElementById('d-kcal').textContent=kcalRound;
