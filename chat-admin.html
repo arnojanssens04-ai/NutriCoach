@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — Messages (Admin)</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
@@ -17,7 +17,7 @@
 html,body { background:var(--bg); height:100%; }
 body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-.topbar { flex-shrink:0; background:#f5f3ee; border-bottom:1px solid var(--border);  padding:0 18px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.topbar { flex-shrink:0; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 18px; height:58px; display:flex; align-items:center; justify-content:space-between; }
 .t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
 .t-logo span { color:var(--gold); }
 .t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
@@ -73,7 +73,7 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, ALL_USERS={}, CURRENT_CONV=null, ALL_MSGS=[];
