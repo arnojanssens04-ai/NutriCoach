@@ -1118,8 +1118,12 @@ function calcScore(T,tgt,pathos){
   // ── PÉNALITÉ AGS ── ne doit pas dépasser 12% des lipides totaux du
   // jour. Au-delà, la pénalité accélère (quadratique) — dépasser de peu
   // coûte presque rien, dépasser beaucoup coûte très cher.
+  // Sous 15g de lipides totaux, le pourcentage devient statistiquement
+  // instable (1-2g d'AGS peuvent représenter 50% d'un tout petit total,
+  // sans aucun risque réel) — on attend d'avoir assez de lipides pour
+  // que ce ratio ait un sens avant de pénaliser.
   var penAGS = 0;
-  if(T.lip>0){
+  if(T.lip>=15){
     var pctAGS = T.ags/T.lip*100;
     var excesAGS = Math.max(0, pctAGS-12);
     penAGS = excesAGS*excesAGS*0.4;
@@ -1495,14 +1499,10 @@ function st4DoSearch(q){
       if(aliasFood){ciq=ciq.filter(function(x){return x.food.code!==aliasCode;});ciq.unshift({food:aliasFood,score:50,source:'ciqual'});}
     }
   }
-  searchOFF(q,function(off){
-    var all=ciq.concat(off);
-    all.sort(function(a,b){return b.score-a.score;});
-    var seen={};st4SrchRes=[];
-    all.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seen[k]){seen[k]=true;st4SrchRes.push(r);}});
-    st4SrchRes=st4SrchRes.slice(0,8);
-    st4RenderRes(st4SrchRes);
-  });
+  var ciqOnly=[];var seenCiq={};
+  ciq.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seenCiq[k]){seenCiq[k]=true;ciqOnly.push(r);}});
+  st4SrchRes=ciqOnly.slice(0,8);
+  st4RenderRes(st4SrchRes);
 }
 function st4RenderRes(res){
   var sz=document.getElementById('st4-srch-zone');
@@ -1582,26 +1582,11 @@ var CIQUAL_BLOCKLIST = [
   // plutôt que de risquer un faux match (ex: "big mac" → "Mâche, crue")
 ];
 
-var offCache={};
-function nv(v){if(v===null||v===undefined||v==='')return '-';var n=parseFloat(v);return isNaN(n)?'-':String(n);}
-function parseOFF(prods,q){var r=[];(prods||[]).forEach(function(p){var nom=(p.product_name||'').trim();if(!nom||nom.length<2)return;if(p.brands){var b=p.brands.split(',')[0].trim();if(b&&nom.toLowerCase().indexOf(b.toLowerCase())<0)nom=nom+' ('+b+')';}var n=p.nutriments||{};var kcal=n['energy-kcal_100g'];if(!kcal&&n['energy_100g']&&n['energy_100g']>0)kcal=Math.round(n['energy_100g']/4.184);r.push({food:{code:'off_'+Math.random().toString(36).slice(2,8),nom:nom,kcal:kcal!=null?String(Math.round(kcal)):'-',prot:nv(n['proteins_100g']),gluc:nv(n['carbohydrates_100g']),lip:nv(n['fat_100g']),ags:nv(n['saturated-fat_100g']),mono:nv(n['monounsaturated-fat_100g']),o3a:nv(n['alpha-linolenic-acid_100g']),o3e:nv(n['eicosapentaenoic-acid_100g']),o3d:nv(n['docosahexaenoic-acid_100g']),fer:n['iron_100g']!=null?String((n['iron_100g']*1000).toFixed(2)):'-',cal:n['calcium_100g']!=null?String(Math.round(n['calcium_100g']*1000)):'-',pot:n['potassium_100g']!=null?String(Math.round(n['potassium_100g']*1000)):'-',fibres:nv(n['fiber_100g']),mg:n['magnesium_100g']!=null?String(Math.round(n['magnesium_100g']*1000)):'-',na:n['sodium_100g']!=null?String(Math.round(n['sodium_100g']*1000)):'-',zn:n['zinc_100g']!=null?String((n['zinc_100g']*1000).toFixed(2)):'-',_source:'off'},score:scoreFn(tok(q),tok(nom),nom),source:'off'});});r.sort(function(a,b){return b.score-a.score;});return r;}
-function searchOFF(q,cb){var key=normQ(q);if(offCache[key]){cb(offCache[key]);return;}
-  // Ancienne API OFF abandonnée (legacy search en 503 depuis avril 2026) —
-  // migration vers Search-a-licious, le remplacement officiel.
-  var u1='https://search.openfoodfacts.org/search?q='+encodeURIComponent(q)+'&page_size=10&fields=product_name,nutriments,brands&langs=fr';
-  function tryU(url,next){
-    var ctrl = new AbortController();
-    var timer = setTimeout(function(){ ctrl.abort(); }, 5000);
-    fetch(url,{signal:ctrl.signal}).then(function(r){clearTimeout(timer);if(!r.ok)throw r.status;return r.json();}).then(function(d){var r=parseOFF(d.products||d.hits||[],q);offCache[key]=r;cb(r);}).catch(function(){clearTimeout(timer);if(next)next();else{offCache[key]=[];cb([]);}});
-  }
-  tryU(u1,null);
-}
-
 function onSearch(val){
   clearTimeout(srchTimer);
   var sz=document.getElementById('srch-zone');
   if(!val||val.trim().length<2){sz.innerHTML='';return;}
-  sz.innerHTML='<div class="spin-row"><div class="spin"></div>Recherche Ciqual + Open Food Facts…</div>';
+  sz.innerHTML='<div class="spin-row"><div class="spin"></div>Recherche…</div>';
   srchTimer=setTimeout(function(){doSearch(val.trim());},350);
 }
 
@@ -1632,21 +1617,12 @@ function doSearch(q){
     }
   }
 
-  // Ciqual est local et instantané — on l'affiche tout de suite, sans
-  // attendre Open Food Facts (réseau externe, parfois lent). Les résultats
-  // OFF viendront s'ajouter ensuite, sans jamais bloquer l'affichage initial.
+  // Ciqual est notre unique source — locale, instantanée, et couvre déjà
+  // très bien l'essentiel d'un suivi nutritionnel quotidien.
   var ciqOnly=[];var seenCiq={};
   ciq.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seenCiq[k]){seenCiq[k]=true;ciqOnly.push(r);}});
-  if(ciqOnly.length){ srchRes=ciqOnly.slice(0,8); renderRes(srchRes); }
-
-  searchOFF(q,function(off){
-    var all=ciq.concat(off);
-    all.sort(function(a,b){return b.score-a.score;});
-    var seen={};srchRes=[];
-    all.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seen[k]){seen[k]=true;srchRes.push(r);}});
-    srchRes=srchRes.slice(0,8);
-    renderRes(srchRes);
-  });
+  srchRes=ciqOnly.slice(0,8);
+  renderRes(srchRes);
 }
 
 function renderRes(res){
