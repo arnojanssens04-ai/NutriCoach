@@ -904,6 +904,38 @@ function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2500);}
 
+// ── JOURNAL DES MISES À JOUR ── liste à compléter à chaque évolution
+// notable. La personne voit un pop-up uniquement si une version plus
+// récente que celle déjà vue existe — jamais répété inutilement.
+var CHANGELOG = [
+  {v:0.1, date:'26 juin 2026', items:[
+    'Le site web fonctionne désormais également sur téléphone / Tablette, tout est désormais cliquable',
+    'Chat direct avec l\'équipe NutriCoach pour toute question',
+    'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée'
+  ]}
+];
+
+function checkChangelog(){
+  var latest = CHANGELOG[CHANGELOG.length-1];
+  var seen = parseFloat(localStorage.getItem('nutricoach_changelog_seen')||'0');
+  if(latest.v <= seen) return;
+  var unseen = CHANGELOG.filter(function(c){ return c.v>seen; });
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:380px;max-height:80vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.25)">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">✨</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.25rem;font-weight:700;margin-bottom:14px">Quoi de neuf</div>'
+    +unseen.slice().reverse().map(function(c){
+      return '<div style="margin-bottom:14px"><div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">'+c.date+'</div>'
+        +'<ul style="padding-left:18px;margin:0">'+c.items.map(function(it){ return '<li style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:4px">'+it+'</li>'; }).join('')+'</ul></div>';
+    }).join('')
+    +'<div style="font-size:.85rem;color:var(--text2);margin:16px 0 4px;text-align:center">Bonne journée sur NutriCoach 👋</div>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px">Compris !</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  localStorage.setItem('nutricoach_changelog_seen', String(latest.v));
+}
+
 // ── AUTH CHECK ──
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){window.location.href='index.html';return;}
@@ -923,7 +955,7 @@ sb.auth.getSession().then(function(r){
     }
     initGreeting();
     if(needsSetup())openSetup();
-    else refreshDash();
+    else { refreshDash(); checkChangelog(); }
   });
 });
 sb.auth.onAuthStateChange(function(ev,sess){
