@@ -1115,28 +1115,30 @@ function calcScore(T,tgt,pathos){
 
   var base = ptsEnergie + ptsProt + ptsGluc + ptsLip + ptsFibres;
 
-  // ── PÉNALITÉ AGS ── ne doit pas dépasser 12% des lipides totaux du
-  // jour. Au-delà, la pénalité accélère (quadratique) — dépasser de peu
-  // coûte presque rien, dépasser beaucoup coûte très cher.
-  // Sous 15g de lipides totaux, le pourcentage devient statistiquement
-  // instable (1-2g d'AGS peuvent représenter 50% d'un tout petit total,
-  // sans aucun risque réel) — on attend d'avoir assez de lipides pour
-  // que ce ratio ait un sens avant de pénaliser.
+  // ── PÉNALITÉ AGS ── seuil relevé à 20% des lipides totaux (12% des
+  // lipides équivaut mathématiquement à ~4% des calories totales —
+  // bien plus strict que la référence ANSES/OMS de ~10% des calories,
+  // ce qui pénalisait même une alimentation normale). Courbe nettement
+  // adoucie : un écart modéré ne doit coûter que quelques points.
   var penAGS = 0;
   if(T.lip>=15){
     var pctAGS = T.ags/T.lip*100;
-    var excesAGS = Math.max(0, pctAGS-12);
-    penAGS = excesAGS*excesAGS*0.4;
+    var excesAGS = Math.max(0, pctAGS-20);
+    penAGS = excesAGS*excesAGS*0.15;
   }
 
-  // ── PÉNALITÉ SODIUM ── seuil général 6g/jour (distinct du seuil plus
-  // strict utilisé pour l'indicateur hypertension). Chaque gramme
-  // au-delà coûte des points, de façon visible mais pas punitive au
-  // premier écart.
+  // ── PÉNALITÉ SODIUM ── seuil général 6g/jour, adouci également.
   var excesNa = Math.max(0, (T.na-6000)/1000);
-  var penNa = excesNa*8;
+  var penNa = excesNa*5;
 
-  var s = base - penAGS - penNa;
+  // ── PLANCHER DE PROTECTION ── les pénalités peuvent faire baisser le
+  // score, mais ne doivent jamais, à elles seules, l'écraser à zéro.
+  // La base (calories/macros/fibres) garde toujours une vraie influence
+  // — sinon le score reste bloqué aux extrêmes et perd tout son sens
+  // pour suivre une vraie progression au jour le jour.
+  var penaliteTotale = Math.min(penAGS + penNa, 35);
+
+  var s = base - penaliteTotale;
   return Math.max(0,Math.min(100,Math.round(s)));
 }
 
