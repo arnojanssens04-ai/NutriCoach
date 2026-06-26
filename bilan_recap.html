@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — Récapitulatif des bilans (Admin)</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#f5f3ee; --card:#ffffff; --card2:#f8f6f1;
@@ -12,14 +12,14 @@
   --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
   --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
   --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
-  --rose:#8b2a2a; --amber:#d97706;
+  --rose:#8b2a2a; --amber:#7a5c1e;
   --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { background:var(--bg); }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:50px; }
 
-.topbar { position:sticky; top:0; z-index:100; background:#f5f3ee; border-bottom:1px solid var(--border);  padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
 .t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
 .t-logo span { color:var(--gold); }
 .t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
@@ -41,7 +41,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .bc-pill { font-size:.7rem; padding:1px 8px; border-radius:999px; }
 .pill-Bien { background:var(--sage-l); color:var(--sage); }
 .pill-Moyen { background:rgba(217,119,6,0.12); color:var(--amber); }
-.pill-Difficile { background:rgba(201,122,110,0.1); color:var(--rose); }
+.pill-Difficile { background:rgba(139,42,42,0.08); color:var(--rose); }
 .bc-notes { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:.8rem; color:var(--text2); line-height:1.5; }
 .bc-notes b { color:var(--text); }
 
@@ -67,7 +67,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, ALL_USERS=[], ALL_BILANS=[];
