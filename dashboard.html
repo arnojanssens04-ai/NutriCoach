@@ -1585,7 +1585,17 @@ var CIQUAL_BLOCKLIST = [
 var offCache={};
 function nv(v){if(v===null||v===undefined||v==='')return '-';var n=parseFloat(v);return isNaN(n)?'-':String(n);}
 function parseOFF(prods,q){var r=[];(prods||[]).forEach(function(p){var nom=(p.product_name||'').trim();if(!nom||nom.length<2)return;if(p.brands){var b=p.brands.split(',')[0].trim();if(b&&nom.toLowerCase().indexOf(b.toLowerCase())<0)nom=nom+' ('+b+')';}var n=p.nutriments||{};var kcal=n['energy-kcal_100g'];if(!kcal&&n['energy_100g']&&n['energy_100g']>0)kcal=Math.round(n['energy_100g']/4.184);r.push({food:{code:'off_'+Math.random().toString(36).slice(2,8),nom:nom,kcal:kcal!=null?String(Math.round(kcal)):'-',prot:nv(n['proteins_100g']),gluc:nv(n['carbohydrates_100g']),lip:nv(n['fat_100g']),ags:nv(n['saturated-fat_100g']),mono:nv(n['monounsaturated-fat_100g']),o3a:nv(n['alpha-linolenic-acid_100g']),o3e:nv(n['eicosapentaenoic-acid_100g']),o3d:nv(n['docosahexaenoic-acid_100g']),fer:n['iron_100g']!=null?String((n['iron_100g']*1000).toFixed(2)):'-',cal:n['calcium_100g']!=null?String(Math.round(n['calcium_100g']*1000)):'-',pot:n['potassium_100g']!=null?String(Math.round(n['potassium_100g']*1000)):'-',fibres:nv(n['fiber_100g']),mg:n['magnesium_100g']!=null?String(Math.round(n['magnesium_100g']*1000)):'-',na:n['sodium_100g']!=null?String(Math.round(n['sodium_100g']*1000)):'-',zn:n['zinc_100g']!=null?String((n['zinc_100g']*1000).toFixed(2)):'-',_source:'off'},score:scoreFn(tok(q),tok(nom),nom),source:'off'});});r.sort(function(a,b){return b.score-a.score;});return r;}
-function searchOFF(q,cb){var key=normQ(q);if(offCache[key]){cb(offCache[key]);return;}var u1='https://world.openfoodfacts.org/api/v2/search?search_terms='+encodeURIComponent(q)+'&page_size=10&fields=product_name,nutriments,brands&sort_by=unique_scans_n&app_name=NutriCoach&app_version=1.0';var u2='https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments,brands&sort_by=unique_scans_n';function tryU(url,next){fetch(url).then(function(r){if(!r.ok)throw r.status;return r.json();}).then(function(d){var r=parseOFF(d.products||d.hits||[],q);offCache[key]=r;cb(r);}).catch(function(){if(next)next();else{offCache[key]=[];cb([]);}});}tryU(u1,function(){tryU(u2,null);});}
+function searchOFF(q,cb){var key=normQ(q);if(offCache[key]){cb(offCache[key]);return;}
+  // Ancienne API OFF abandonnée (legacy search en 503 depuis avril 2026) —
+  // migration vers Search-a-licious, le remplacement officiel.
+  var u1='https://search.openfoodfacts.org/search?q='+encodeURIComponent(q)+'&page_size=10&fields=product_name,nutriments,brands&langs=fr';
+  function tryU(url,next){
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, 5000);
+    fetch(url,{signal:ctrl.signal}).then(function(r){clearTimeout(timer);if(!r.ok)throw r.status;return r.json();}).then(function(d){var r=parseOFF(d.products||d.hits||[],q);offCache[key]=r;cb(r);}).catch(function(){clearTimeout(timer);if(next)next();else{offCache[key]=[];cb([]);}});
+  }
+  tryU(u1,null);
+}
 
 function onSearch(val){
   clearTimeout(srchTimer);
@@ -1621,6 +1631,13 @@ function doSearch(q){
       }
     }
   }
+
+  // Ciqual est local et instantané — on l'affiche tout de suite, sans
+  // attendre Open Food Facts (réseau externe, parfois lent). Les résultats
+  // OFF viendront s'ajouter ensuite, sans jamais bloquer l'affichage initial.
+  var ciqOnly=[];var seenCiq={};
+  ciq.forEach(function(r){var k=r.food.nom.toLowerCase().trim();if(!seenCiq[k]){seenCiq[k]=true;ciqOnly.push(r);}});
+  if(ciqOnly.length){ srchRes=ciqOnly.slice(0,8); renderRes(srchRes); }
 
   searchOFF(q,function(off){
     var all=ciq.concat(off);
