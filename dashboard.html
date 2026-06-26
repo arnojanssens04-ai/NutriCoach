@@ -135,7 +135,9 @@ body {
   padding: 4px 11px; border-radius: 999px;
 }
 .pill-good { background: var(--sage-l); color: var(--sage); border: 1px solid rgba(122,155,124,0.25); }
-.pill-warn { background: rgba(45,79,28,0.08); color: var(--gold); border: 1px solid rgba(45,79,28,0.2); }
+.pill-good2 { background: rgba(107,155,71,0.1); color: #6b9b47; border: 1px solid rgba(107,155,71,0.25); }
+.pill-warn { background: rgba(212,160,23,0.1); color: #b8890f; border: 1px solid rgba(212,160,23,0.25); }
+.pill-warn2 { background: rgba(212,114,10,0.1); color: #c2660a; border: 1px solid rgba(212,114,10,0.25); }
 .pill-bad  { background: var(--rose-l); color: var(--rose); border: 1px solid rgba(201,122,110,0.25); }
 
 /* ── MOTIV ROW ── */
@@ -908,18 +910,31 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 // notable. La personne voit un pop-up uniquement si une version plus
 // récente que celle déjà vue existe — jamais répété inutilement.
 var CHANGELOG = [
-  {v:0.1, date:'26 juin 2026', items:[
+  {v:'0.1.1', date:'26 juin 2026', items:[
     'Le site web fonctionne désormais également sur téléphone / Tablette, tout est désormais cliquable',
     'Chat direct avec l\'équipe NutriCoach pour toute question',
-    'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée'
+    'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée',
+    'Nouveau Score Santé, plus précis et qui reflète mieux votre alimentation réelle du jour',
+    'Bilan hebdomadaire : les réponses (sommeil, digestion, ressenti...) sont désormais mieux adaptées à chaque question'
   ]}
 ];
 
+// Comparaison de versions façon "1.2.3" — plus robuste qu'un simple
+// nombre, pour pouvoir continuer à versionner proprement par la suite.
+function compareVersions(a,b){
+  var pa=String(a).split('.').map(Number), pb=String(b).split('.').map(Number);
+  for(var i=0;i<Math.max(pa.length,pb.length);i++){
+    var x=pa[i]||0, y=pb[i]||0;
+    if(x!==y) return x-y;
+  }
+  return 0;
+}
+
 function checkChangelog(){
   var latest = CHANGELOG[CHANGELOG.length-1];
-  var seen = parseFloat(localStorage.getItem('nutricoach_changelog_seen')||'0');
-  if(latest.v <= seen) return;
-  var unseen = CHANGELOG.filter(function(c){ return c.v>seen; });
+  var seen = localStorage.getItem('nutricoach_changelog_seen')||'0';
+  if(compareVersions(latest.v, seen) <= 0) return;
+  var unseen = CHANGELOG.filter(function(c){ return compareVersions(c.v, seen)>0; });
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
   ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:380px;max-height:80vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.25)">'
@@ -933,7 +948,7 @@ function checkChangelog(){
     +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px">Compris !</button>'
     +'</div>';
   document.body.appendChild(ov);
-  localStorage.setItem('nutricoach_changelog_seen', String(latest.v));
+  localStorage.setItem('nutricoach_changelog_seen', latest.v);
 }
 
 // ── AUTH CHECK ──
@@ -1080,13 +1095,44 @@ function calcTargets(){
 
 function calcScore(T,tgt,pathos){
   if(T.kcal<100)return null;
-  var s=100,r=T.kcal/tgt.kcal;
-  if(r>1.3)s-=25;else if(r>1.15)s-=12;else if(r<0.6)s-=15;
-  if(T.prot<tgt.prot*0.6)s-=10;
-  if(pathos.indexOf('diabetes')>=0&&T.gluc/tgt.gluc>1.2)s-=20;
-  if((pathos.indexOf('cholesterol')>=0||pathos.indexOf('cardiac')>=0)&&T.ags/tgt.ags>1.0)s-=15;
-  if(pathos.indexOf('renal')>=0&&T.pot>2000)s-=20;
-  if(pathos.indexOf('hypertension')>=0&&T.pot<tgt.pot*0.6)s-=10;
+
+  // ── ÉNERGIE (40 pts) ── plus on se rapproche de l'objectif, mieux c'est ;
+  // au-delà de l'objectif, le score chute de façon volontairement plus
+  // agressive que la montée (dépasser pèse plus que ne pas finir).
+  var rE = T.kcal/tgt.kcal;
+  var ptsEnergie = rE<=1 ? rE*40 : Math.max(0, 40*(1-(rE-1)*2));
+
+  // ── MACROS (15 pts chacun) ── proximité symétrique à l'objectif —
+  // trop ou pas assez réduit le score de la même façon.
+  function proximite(val,obj){ return obj>0 ? Math.max(0, 1-Math.abs(val-obj)/obj) : 0; }
+  var ptsProt = proximite(T.prot, tgt.prot) * 15;
+  var ptsGluc = proximite(T.gluc, tgt.gluc) * 15;
+  var ptsLip  = proximite(T.lip,  tgt.lip)  * 15;
+
+  // ── FIBRES (15 pts, bonus caché) ── jamais affiché comme tel à l'écran,
+  // mais plus on s'approche de l'objectif fibres, plus le score grimpe.
+  var ptsFibres = Math.min(1, T.fibres/(tgt.fibres||27)) * 15;
+
+  var base = ptsEnergie + ptsProt + ptsGluc + ptsLip + ptsFibres;
+
+  // ── PÉNALITÉ AGS ── ne doit pas dépasser 12% des lipides totaux du
+  // jour. Au-delà, la pénalité accélère (quadratique) — dépasser de peu
+  // coûte presque rien, dépasser beaucoup coûte très cher.
+  var penAGS = 0;
+  if(T.lip>0){
+    var pctAGS = T.ags/T.lip*100;
+    var excesAGS = Math.max(0, pctAGS-12);
+    penAGS = excesAGS*excesAGS*0.4;
+  }
+
+  // ── PÉNALITÉ SODIUM ── seuil général 6g/jour (distinct du seuil plus
+  // strict utilisé pour l'indicateur hypertension). Chaque gramme
+  // au-delà coûte des points, de façon visible mais pas punitive au
+  // premier écart.
+  var excesNa = Math.max(0, (T.na-6000)/1000);
+  var penNa = excesNa*8;
+
+  var s = base - penAGS - penNa;
   return Math.max(0,Math.min(100,Math.round(s)));
 }
 
@@ -1360,12 +1406,29 @@ async function refreshDash(){
   rn.textContent=score!==null?score:'—';
   if(score!==null){
     rf.style.strokeDashoffset=251.3-(251.3*score/100);
-    rf.style.stroke=score>=75?'#4a7a3a':score>=50?'#2d4f1c':'#8b2a2a';
+    // 5 niveaux façon Nutri-Score (A à E), couleur + texte alignés.
+    var ratioKcalJour = tgt.kcal>0 ? T.kcal/tgt.kcal : 0;
+    var manqueDeDonnees = ratioKcalJour < 0.35; // journée à peine commencée
+    var niveau;
+    if(score>=85) niveau={cls:'pill-good',  color:'#2d4f1c', lbl:'Excellent'};
+    else if(score>=70) niveau={cls:'pill-good2', color:'#6b9b47', lbl:'Bon'};
+    else if(score>=50) niveau={cls:'pill-warn',  color:'#b8890f', lbl:'Correct'};
+    else if(score>=30) niveau={cls:'pill-warn2', color:'#c2660a', lbl:'À surveiller'};
+    else niveau={cls:'pill-bad', color:'#8b2a2a', lbl:'Insuffisant'};
+
+    rf.style.stroke=niveau.color;
     document.getElementById('score-ttl').textContent='Score Santé du jour';
-    document.getElementById('score-desc').textContent=score>=75?'Vos apports sont bien équilibrés pour votre profil.':score>=50?'Quelques ajustements peuvent améliorer votre bilan.':'Des nutriments importants manquent à votre bilan.';
-    var cls=score>=75?'pill-good':score>=50?'pill-warn':'pill-bad';
-    var lbl=score>=75?'Excellent':score>=50?'À améliorer':'Attention';
-    document.getElementById('score-pill').innerHTML='<div class="score-pill '+cls+'">'+lbl+' · '+score+'/100</div>';
+    // Si le score est bas PARCE QUE peu de choses ont été enregistrées
+    // aujourd'hui, le message reste neutre (pas de jugement sur un
+    // équilibre qu'on n'a pas encore vraiment pu évaluer).
+    document.getElementById('score-desc').textContent = manqueDeDonnees
+      ? 'Continuez à enregistrer vos repas pour un score représentatif de votre journée.'
+      : (score>=85?'Vos apports sont parfaitement équilibrés pour votre profil.'
+        :score>=70?'Vos apports sont globalement bien équilibrés.'
+        :score>=50?'Quelques ajustements amélioreraient votre équilibre.'
+        :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
+        :'Votre équilibre nutritionnel du jour est insuffisant.');
+    document.getElementById('score-pill').innerHTML='<div class="score-pill '+niveau.cls+'">'+niveau.lbl+' · '+score+'/100</div>';
   } else {
     rf.style.strokeDashoffset='251.3';
     rf.style.stroke='rgba(255,255,255,.08)';
