@@ -238,9 +238,9 @@ body {
   padding: 12px 14px; border-radius: 12px; border: 1px solid;
   font-size: .8rem; line-height: 1.55;
 }
-.alert-good { background: var(--sage-l); border-color: rgba(122,155,124,0.25); color: #9aba9c; }
+.alert-good { background: var(--sage-l); border-color: rgba(74,122,58,0.25); color: var(--sage); }
 .alert-warn { background: var(--gold-l); border-color: rgba(45,79,28,0.15); color: var(--gold); }
-.alert-bad  { background: var(--rose-l); border-color: rgba(201,122,110,0.2); color: #c97a6e; }
+.alert-bad  { background: var(--rose-l); border-color: rgba(139,42,42,0.2); color: var(--rose); }
 .alert-ico { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
 .alert-ttl { font-weight: 600; margin-bottom: 1px; }
 
@@ -963,9 +963,9 @@ function needsSetup(){return !PROF||!PROF.age||!PROF.poids||!PROF.taille;}
 // personne garde toujours la même couleur, sans bibliothèque d'avatars.
 var AVATAR_PALETTE = [
   {bg:'rgba(45,79,28,0.08)', border:'rgba(45,79,28,0.25)', text:'#2d4f1c'},
-  {bg:'rgba(122,155,124,0.12)', border:'rgba(122,155,124,0.32)', text:'#7a9b7c'},
-  {bg:'rgba(201,122,110,0.1)', border:'rgba(201,122,110,0.32)', text:'#c97a6e'},
-  {bg:'rgba(110,168,201,0.1)', border:'rgba(110,168,201,0.32)', text:'#6ea8c9'}
+  {bg:'rgba(74,122,58,0.1)', border:'rgba(74,122,58,0.3)', text:'#4a7a3a'},
+  {bg:'rgba(139,42,42,0.08)', border:'rgba(139,42,42,0.3)', text:'#8b2a2a'},
+  {bg:'rgba(30,90,122,0.08)', border:'rgba(30,90,122,0.3)', text:'#1e5a7a'}
 ];
 function avatarColor(seed){
   seed = seed||'?';
@@ -1017,7 +1017,7 @@ function calcTargets(){
     : bmr*(af[act]||1.2);
   var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
   var kcal=tdee;
-  if(objectif==='perte') kcal = tdee-500;
+  if(objectif==='perte') kcal = tdee-200;
   if(objectif==='prise') kcal = tdee+300;
   // Ajustement adaptatif cumulatif : appliqué par le bilan hebdomadaire quand
   // le poids stagne 2 semaines (-200 si perte, +200 si prise). Jamais en
@@ -1328,7 +1328,7 @@ async function refreshDash(){
   rn.textContent=score!==null?score:'—';
   if(score!==null){
     rf.style.strokeDashoffset=251.3-(251.3*score/100);
-    rf.style.stroke=score>=75?'#7a9b7c':score>=50?'#c9a96e':'#c97a6e';
+    rf.style.stroke=score>=75?'#4a7a3a':score>=50?'#2d4f1c':'#8b2a2a';
     document.getElementById('score-ttl').textContent='Score Santé du jour';
     document.getElementById('score-desc').textContent=score>=75?'Vos apports sont bien équilibrés pour votre profil.':score>=50?'Quelques ajustements peuvent améliorer votre bilan.':'Des nutriments importants manquent à votre bilan.';
     var cls=score>=75?'pill-good':score>=50?'pill-warn':'pill-bad';
@@ -1738,7 +1738,7 @@ async function renderWeekly(){
     var ents=byD[dt]||[];var dk=ents.reduce(function(s,e){return s+(e.kcal||0);},0);
     totD.push({date:dt,kcal:dk,ents:ents});
     var h=maxK>0?Math.max(3,dk/maxK*100):0;
-    var col=dk===0?'rgba(255,255,255,.06)':dk>tgt.kcal*1.15?'#c97a6e':dk>tgt.kcal*0.85?'#7a9b7c':'#c9a96e';
+    var col=dk===0?'rgba(26,25,22,.08)':dk>tgt.kcal*1.15?'#8b2a2a':dk>tgt.kcal*0.85?'#4a7a3a':'#2d4f1c';
     var isT=dt===todayStr;
     bars+='<div class="bar-col">'+(dk>0?'<div class="bar-v">'+Math.round(dk)+'</div>':'<div class="bar-v" style="opacity:0">0</div>')+'<div class="bar-track"><div class="bar-fill" style="height:'+h+'%;background:'+col+'"></div></div><div class="bar-d'+(isT?' bar-today':'')+'">'+days[i]+'</div></div>';
   });
@@ -2783,7 +2783,7 @@ function loadCustomFoods(){
 <style>
 #loading-screen {
   position: fixed; inset: 0; z-index: 999;
-  background: #0e100d;
+  background: #f5f3ee;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity .4s ease;
   pointer-events: all;
@@ -2809,7 +2809,7 @@ function loadCustomFoods(){
   margin-bottom: 10px;
 }
 .ls-msg {
-  font-size: .82rem; color: #7a9b7c;
+  font-size: .82rem; color: #4a7a3a;
   margin-bottom: 28px; min-height: 20px;
   transition: opacity .3s ease;
 }
