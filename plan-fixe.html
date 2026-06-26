@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — Mon plan fixe</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
@@ -19,49 +19,47 @@
 html { background:var(--bg); }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
 
-.topbar { position:sticky; top:0; z-index:100; background:#f5f3ee; border-bottom:1px solid var(--border); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
-.t-logo { font-family:'Lora',serif; font-size:1.2rem; font-weight:700; color:var(--text); }
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
 .t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:7px; }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
 .t-back:hover { border-color:var(--gold); color:var(--gold); }
 
 .wrap { max-width:600px; margin:0 auto; padding:20px 16px; }
-.hero h1 { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; margin-bottom:5px; letter-spacing:-.02em; }
-.hero p { font-size:.84rem; color:var(--text2); line-height:1.6; margin-bottom:16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:16px; }
 
-.status-banner { padding:11px 15px; border-radius:8px; margin-bottom:16px; font-size:.82rem; line-height:1.5; }
-.status-on { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); color:var(--sage); }
+.status-banner { padding:11px 15px; border-radius:11px; margin-bottom:16px; font-size:.82rem; line-height:1.5; }
+.status-on { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); color:#2d4f1c; }
 .status-off { background:var(--card2); border:1px solid var(--border); color:var(--text2); }
 
-.totals-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; margin-bottom:16px; box-shadow:var(--sh); }
+.totals-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; margin-bottom:16px; }
 .tot-row { display:flex; justify-content:space-between; font-size:.82rem; padding:3px 0; }
 .tot-row span:first-child { color:var(--text2); }
 
 .meal-section { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
-.meal-hdr { padding:13px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.meal-hdr span { font-family:'Lora',serif; font-size:.95rem; font-weight:600; }
+.meal-hdr { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.meal-hdr span { font-family:'Lora',serif; font-size:1.05rem; }
 .meal-body { padding:14px 16px; }
 
 .food-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
 .food-row:last-child { border-bottom:none; }
-.food-del { width:26px; height:26px; border-radius:6px; background:var(--rose-l); border:1px solid rgba(139,42,42,0.2); color:var(--rose); cursor:pointer; font-size:.8rem; flex-shrink:0; margin-left:8px; }
+.food-del { width:26px; height:26px; border-radius:7px; background:var(--rose-l); border:1px solid rgba(139,42,42,0.25); color:var(--rose); cursor:pointer; font-size:.8rem; flex-shrink:0; margin-left:8px; }
 
 .add-row { display:grid; grid-template-columns:1fr 70px 34px; gap:7px; margin-top:8px; }
-.add-row input { padding:9px 11px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:.84rem; outline:none; transition:border-color .15s; }
-.add-row input:focus { border-color:var(--gold); }
-.add-btn { width:34px; height:34px; border-radius:7px; background:var(--gold-l); border:1px solid var(--border2); color:var(--gold); cursor:pointer; font-size:1.1rem; }
-.search-results { background:var(--card); border:1px solid var(--border); border-radius:7px; margin-top:5px; max-height:160px; overflow-y:auto; display:none; box-shadow:var(--sh); }
+.add-row input { padding:9px 11px; background:var(--card2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:.84rem; outline:none; }
+.add-btn { width:34px; height:34px; border-radius:8px; background:var(--gold-l); border:1px solid rgba(45,79,28,0.3); color:var(--gold); cursor:pointer; font-size:1.1rem; }
+.search-results { background:var(--card2); border:1px solid var(--border); border-radius:9px; margin-top:5px; max-height:160px; overflow-y:auto; display:none; }
 .search-results.show { display:block; }
 .search-item { padding:9px 12px; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); }
-.search-item:hover { background:var(--bg2); }
+.search-item:hover { background:var(--card); }
 
-.btn { padding:13px; border-radius:8px; border:none; font-family:'Inter',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer; width:100%; transition:background .15s; }
+.btn { padding:13px; border-radius:11px; border:none; font-family:'Lora',serif; font-size:1rem; font-weight:600; cursor:pointer; width:100%; }
 .btn-gold { background:var(--gold); color:#fff; margin-bottom:10px; }
-.btn-gold:hover { background:#3d6128; }
-.btn-outline2 { background:none; border:1px solid var(--border); color:var(--text2); }
+.btn-outline2 { background:none; border:1px solid var(--border); color:var(--text2); font-family:'Inter',sans-serif; font-size:.85rem; }
 .btn-outline2:hover { border-color:var(--rose); color:var(--rose); }
 
-.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#1a1916; border:none; color:#f5f3ee; padding:10px 18px; border-radius:7px; font-size:.82rem; font-weight:500; box-shadow:0 4px 16px rgba(0,0,0,.2); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
 .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -88,9 +86,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 <!-- Avertissement écart objectif -->
 <div id="warn-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px 24px;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.15)">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px 24px;max-width:380px;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="font-size:1.8rem;margin-bottom:10px">⚠️</div>
-    <div style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700;margin-bottom:10px">Ce plan ne correspond pas à votre objectif</div>
+    <div style="font-family:'Lora',serif;font-size:1.15rem;font-weight:600;margin-bottom:10px">Ce plan ne correspond pas à votre objectif</div>
     <p id="warn-text" style="font-size:.85rem;color:var(--text2);line-height:1.55;margin-bottom:20px"></p>
     <button class="btn btn-gold" onclick="confirmSaveAnyway()" style="margin-bottom:8px">Enregistrer malgré tout</button>
     <button class="btn btn-outline2" onclick="closeWarn()">Modifier mon plan</button>
@@ -102,7 +100,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
-var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var SKEY = 'REMPLACE_PAR_TA_CLE_ANON';
 var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, PROF=null, DB=[];
@@ -163,7 +161,7 @@ function calcTargets(){
   var tdee=hasMet?bmr*1.2+p.activite_met_kcal:bmr*(af[act]||1.2);
   var objectif=p.objectif||(pathos.indexOf('obesity')>=0?'perte':'maintien');
   var kcal=tdee;
-  if(objectif==='perte')kcal=tdee-500;
+  if(objectif==='perte')kcal=tdee-200;
   if(objectif==='prise')kcal=tdee+300;
   kcal+=(p.kcal_adjustment||0);
   kcal=Math.max(1200,Math.min(5000,Math.round(kcal)));
@@ -187,8 +185,7 @@ async function init(){
   }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });
 
   if(PROF.plan_fixe){
-    var pf = PROF.plan_fixe;
-    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (pf[k]||[]).slice(); });
+    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (PROF.plan_fixe[k]||[]).slice(); });
   }
 
   renderStatus();
@@ -208,20 +205,13 @@ function loadCustomFoods(){
   }).catch(function(){ console.warn('Aliments personnalisés non chargés'); });
 }
 
-function isPlanActive(){
-  if(!PROF.plan_fixe) return false;
-  if(PROF.plan_fixe._active === false) return false;
-  return Object.keys(PROF.plan_fixe).some(function(k){ return k!=='_active' && Array.isArray(PROF.plan_fixe[k]) && PROF.plan_fixe[k].length; });
-}
 function renderStatus(){
   var el = document.getElementById('status-banner');
-  var active = isPlanActive();
+  var active = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
   el.className = 'status-banner '+(active?'status-on':'status-off');
   el.textContent = active
     ? '✅ Votre plan fixe est actif — il remplace les suggestions automatiques sur "Mon plan alimentaire".'
-    : (PROF.plan_fixe && Object.keys(PROF.plan_fixe).some(function(k){ return k!=='_active' && Array.isArray(PROF.plan_fixe[k]) && PROF.plan_fixe[k].length; })
-      ? '⏸️ Votre plan fixe est désactivé. Enregistrez-le à nouveau pour le réactiver.'
-      : 'Aucun plan fixe actif. Construisez-le ci-dessous puis enregistrez.');
+    : 'Aucun plan fixe actif pour le moment. Construisez-le ci-dessous puis enregistrez.';
 }
 
 function activeMealKeys(){
@@ -375,24 +365,20 @@ function closeWarn(){ document.getElementById('warn-ov').style.display = 'none';
 async function confirmSaveAnyway(){ closeWarn(); await doSavePlanFixe(); }
 
 async function doSavePlanFixe(){
-  var T = currentTotals();
-  var planKcal = Math.round(T.kcal);
-  var toSave = Object.assign({}, MEALS, {_active: true});
-  var r = await sb.from('profiles').update({plan_fixe: toSave, kcal_target: planKcal}).eq('id', USER.id);
+  var r = await sb.from('profiles').update({plan_fixe:MEALS}).eq('id',USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = toSave;
-  PROF.kcal_target = planKcal;
+  PROF.plan_fixe = MEALS;
   renderStatus();
-  toast('✅ Plan fixe enregistré ('+planKcal+' kcal) — il remplace désormais les suggestions automatiques');
+  toast('✅ Plan fixe enregistré — il remplace désormais les suggestions automatiques');
 }
 
 async function disablePlanFixe(){
-  var toSave = Object.assign({}, MEALS, {_active: false});
-  var r = await sb.from('profiles').update({plan_fixe: toSave}).eq('id', USER.id);
+  var r = await sb.from('profiles').update({plan_fixe:null}).eq('id',USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = toSave;
-  renderStatus();
-  toast('Plan fixe désactivé — vos données sont conservées, cliquez "Enregistrer" pour le réactiver');
+  PROF.plan_fixe = null;
+  MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
+  renderStatus(); renderMeals(); renderTotals();
+  toast('Plan fixe désactivé — les suggestions automatiques reprennent le relais');
 }
 </script>
 </body>
