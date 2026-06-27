@@ -4,208 +4,123 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — La nutrition la plus personnalisée</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: #f5f3ee; }
+html { background: #faf9f6; }
 body {
   min-height: 100vh;
-  background: #f5f3ee;
+  background: #faf9f6;
   font-family: 'Inter', sans-serif;
-  color: #1a1916;
-  -webkit-font-smoothing: antialiased;
+  color: #1a1a1a;
 }
 
-/* ── NAV ── */
+/* ── TOP NAV ── */
 .topnav {
   position: sticky; top: 0; z-index: 100;
-  background: #f5f3ee;
-  border-bottom: 1px solid #e2ddd4;
-  padding: 0 28px; height: 62px;
+  background: rgba(250,249,246,0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding: 0 24px; height: 64px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.nav-logo {
-  font-family: 'Lora', serif;
-  font-size: 1.25rem; font-weight: 700;
-  letter-spacing: -.2px;
-  color: #1a1916;
-}
-.nav-logo span { color: #2d4f1c; }
-.nav-btns { display: flex; gap: 8px; }
+.nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; letter-spacing: -.3px; }
+.nav-logo span { color: #16a34a; }
+.nav-btns { display: flex; gap: 10px; }
 .nav-btn {
-  font-family: 'Inter', sans-serif; font-size: .82rem; font-weight: 500;
-  padding: 9px 18px; border-radius: 7px; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-size: .82rem; font-weight: 600;
+  padding: 9px 18px; border-radius: 9px; cursor: pointer; border: none;
   transition: all .15s;
 }
-.nav-btn.ghost {
-  background: transparent; color: #5c5852;
-  border: 1px solid transparent;
-}
-.nav-btn.ghost:hover { color: #1a1916; border-color: #e2ddd4; }
-.nav-btn.solid {
-  background: #2d4f1c; color: #fff; border: 1px solid #2d4f1c;
-}
-.nav-btn.solid:hover { background: #3d6128; border-color: #3d6128; }
+.nav-btn.ghost { background: transparent; color: #1a1a1a; }
+.nav-btn.ghost:hover { background: rgba(0,0,0,0.05); }
+.nav-btn.solid { background: #16a34a; color: #fff; box-shadow: 0 2px 12px rgba(22,163,74,0.25); }
+.nav-btn.solid:hover { background: #128a3e; }
 
 /* ── HERO ── */
-.hero {
-  max-width: 760px; margin: 0 auto;
-  padding: 80px 28px 48px;
-  text-align: center;
-}
-.hero-label {
-  display: inline-block;
-  font-size: .72rem; font-weight: 600; letter-spacing: .08em;
-  text-transform: uppercase; color: #2d4f1c;
-  margin-bottom: 22px;
-}
+.hero { max-width: 880px; margin: 0 auto; padding: 64px 24px 36px; text-align: center; }
 .hero h1 {
-  font-family: 'Lora', serif;
-  font-weight: 700;
-  font-size: clamp(2rem, 4.5vw, 3rem);
-  line-height: 1.2;
-  color: #1a1916;
-  margin-bottom: 20px;
-  letter-spacing: -.02em;
-}
-.hero h1 em { font-style: italic; color: #2d4f1c; }
-.hero p {
-  font-size: 1rem; color: #5c5852; line-height: 1.7;
-  max-width: 540px; margin: 0 auto 36px;
-}
-.hero-cta {
-  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
-}
-.cta-main {
-  padding: 13px 28px; background: #2d4f1c; color: #fff;
-  border: none; border-radius: 7px; font-size: .92rem;
-  font-weight: 500; cursor: pointer; transition: background .15s;
-}
-.cta-main:hover { background: #3d6128; }
-.cta-ghost {
-  padding: 13px 28px; background: transparent; color: #1a1916;
-  border: 1px solid #ccc8bc; border-radius: 7px; font-size: .92rem;
-  font-weight: 500; cursor: pointer; transition: all .15s;
-}
-.cta-ghost:hover { border-color: #1a1916; }
-
-/* ── CARDS GRID ── */
-.cards-wrap {
-  max-width: 1080px; margin: 0 auto;
-  padding: 0 28px 72px;
-}
-.cards-label {
-  font-size: .72rem; font-weight: 600; letter-spacing: .08em;
-  text-transform: uppercase; color: #a09c94;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800; letter-spacing: -1px;
+  font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; text-transform: uppercase;
   margin-bottom: 18px;
 }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-@media (max-width: 960px) { .cards { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 540px) { .cards { grid-template-columns: 1fr 1fr; gap: 10px; } }
+.hero p { font-size: 1.02rem; color: #555; line-height: 1.65; max-width: 620px; margin: 0 auto; }
+
+/* ── CARDS ── */
+.cards-wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+@media (max-width: 980px) { .cards { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
 
 .feat-card {
-  position: relative; border-radius: 12px; overflow: hidden;
-  aspect-ratio: 3/4; background: #e2ddd4;
+  position: relative; border-radius: 20px; overflow: hidden; aspect-ratio: 3/4;
+  background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  transition: transform .25s;
 }
-.feat-card img {
-  width: 100%; height: 100%; object-fit: cover;
-  position: absolute; inset: 0;
-  transition: transform .4s ease;
-}
-.feat-card:hover img { transform: scale(1.03); }
+.feat-card:hover { transform: translateY(-4px); }
+.feat-card img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
 .feat-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(15,12,8,0.72) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.85) 100%);
 }
-.feat-text { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; }
-.ft-title {
-  font-family: 'Lora', serif; font-weight: 600; color: #fff;
-  font-size: .92rem; line-height: 1.35; margin-bottom: 3px;
-}
-.ft-sub { font-size: .68rem; color: rgba(255,255,255,.7); line-height: 1.4; }
-
-/* ── DIVIDER ── */
-.section-divider {
-  max-width: 1080px; margin: 0 auto;
-  padding: 0 28px 60px;
-  border-top: 1px solid #e2ddd4;
-}
+.feat-text { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px; }
+.feat-text .ft-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #fff; font-size: 1.02rem; text-transform: uppercase; letter-spacing: .2px; margin-bottom: 4px; }
+.feat-text .ft-sub { font-size: .73rem; color: rgba(255,255,255,0.78); }
 
 /* ── AUTH SECTION ── */
-.auth-section {
-  background: #fff;
-  border-top: 1px solid #e2ddd4;
-  padding: 64px 20px 80px;
-}
-.auth-wrap { max-width: 400px; margin: 0 auto; }
-.auth-hdr { text-align: center; margin-bottom: 32px; }
-.auth-hdr h2 {
-  font-family: 'Lora', serif; font-weight: 700;
-  font-size: 1.6rem; color: #1a1916; margin-bottom: 8px;
-  letter-spacing: -.02em;
-}
-.auth-hdr p { font-size: .85rem; color: #5c5852; }
+.auth-section { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); padding: 56px 20px 64px; }
+.auth-wrap { max-width: 420px; margin: 0 auto; }
+.auth-hdr { text-align: center; margin-bottom: 26px; }
+.auth-hdr h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.5rem; margin-bottom: 6px; }
+.auth-hdr p { font-size: .85rem; color: #777; }
 
 .tabs {
   display: grid; grid-template-columns: 1fr 1fr;
-  border: 1px solid #e2ddd4; border-radius: 8px;
-  padding: 4px; margin-bottom: 28px; gap: 4px;
-  background: #f5f3ee;
+  background: #f3f2ee; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px;
+  padding: 5px; margin-bottom: 24px; gap: 5px;
 }
 .tab {
-  padding: 10px; border-radius: 5px;
-  font-size: .84rem; font-weight: 500; color: #a09c94;
-  cursor: pointer; border: none; background: transparent; transition: all .15s;
+  padding: 10px; border-radius: 8px; font-family: 'Space Grotesk', sans-serif;
+  font-size: .86rem; font-weight: 600; color: #888; cursor: pointer; border: none;
+  background: transparent; transition: all .2s;
 }
-.tab.on { background: #fff; color: #1a1916; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.tab.on { background: #fff; color: #16a34a; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
 .form { display: none; }
-.form.on { display: block; animation: fu .2s ease both; }
-@keyframes fu { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+.form.on { display: block; animation: fu .22s ease both; }
+@keyframes fu { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
 
-.field { margin-bottom: 16px; }
-.field label {
-  display: block; font-size: .72rem; font-weight: 600;
-  color: #a09c94; margin-bottom: 6px;
-  text-transform: uppercase; letter-spacing: .06em;
-}
+.field { margin-bottom: 15px; }
+.field label { display: block; font-size: .7rem; font-weight: 600; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .6px; }
 .field input {
-  width: 100%; padding: 12px 14px; background: #f5f3ee;
-  border: 1px solid #e2ddd4; border-radius: 7px;
-  font-family: 'Inter', sans-serif; font-size: .9rem;
-  color: #1a1916; outline: none; transition: border-color .15s;
+  width: 100%; padding: 12px 15px; background: #faf9f6;
+  border: 1px solid rgba(0,0,0,0.1); border-radius: 11px;
+  font-family: 'Inter', sans-serif; font-size: .92rem; color: #1a1a1a; outline: none;
+  transition: border-color .2s, box-shadow .2s;
 }
-.field input::placeholder { color: #c0bbb4; }
-.field input:focus { border-color: #2d4f1c; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field input::placeholder { color: #aaa; }
+.field input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
 
 .btn {
-  width: 100%; padding: 13px; margin-top: 4px;
-  background: #2d4f1c; border: none; border-radius: 7px;
-  font-family: 'Inter', sans-serif; font-size: .9rem;
-  font-weight: 600; color: #fff; cursor: pointer;
-  transition: background .15s;
+  width: 100%; padding: 14px; margin-top: 6px; background: #16a34a; border: none;
+  border-radius: 11px; font-family: 'Space Grotesk', sans-serif; font-size: .94rem;
+  font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 18px rgba(22,163,74,0.28);
+  transition: transform .2s, box-shadow .2s;
 }
-.btn:hover { background: #3d6128; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.36); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
-.forgot {
-  text-align: center; margin-top: 16px;
-  font-size: .78rem; color: #a09c94;
-}
-.forgot a { color: #2d4f1c; text-decoration: none; font-weight: 500; }
-.forgot a:hover { text-decoration: underline; }
+.forgot { text-align: center; margin-top: 14px; font-size: .77rem; color: #999; }
+.forgot a { color: #16a34a; text-decoration: none; font-weight: 600; }
 
-.msg { padding: 10px 13px; border-radius: 7px; font-size: .8rem; margin-bottom: 14px; display: none; line-height: 1.5; }
-.msg.err { background: #f9efef; border: 1px solid rgba(139,42,42,0.2); color: #6b2121; }
-.msg.ok { background: rgba(45,79,28,0.07); border: 1px solid rgba(45,79,28,0.2); color: #2d4f1c; }
+.msg { padding: 10px 13px; border-radius: 9px; font-size: .8rem; margin-bottom: 14px; display: none; line-height: 1.5; }
+.msg.err { background: rgba(220,38,38,0.07); border: 1px solid rgba(220,38,38,0.2); color: #b91c1c; }
+.msg.ok { background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.22); color: #15803d; }
 .msg.on { display: block; animation: fu .2s ease; }
 
-.badge {
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; margin-top: 24px; font-size: .68rem; color: #c0bbb4;
-}
-.dot { width: 4px; height: 4px; border-radius: 50%; background: #2d4f1c; }
+.badge { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; font-size: .68rem; color: #aaa; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: #16a34a; }
 
 @media (max-width: 460px) { .row2 { grid-template-columns: 1fr; gap: 0; } }
 </style>
@@ -216,65 +131,48 @@ body {
   <div class="nav-logo">Nutri<span>Coach</span></div>
   <div class="nav-btns">
     <button class="nav-btn ghost" onclick="goAuth('login')">Connexion</button>
-    <button class="nav-btn solid" onclick="goAuth('signup')">Commencer</button>
+    <button class="nav-btn solid" onclick="goAuth('signup')">Inscription</button>
   </div>
 </header>
 
 <section class="hero">
-  <h1>Manger mieux,<br><em>à votre façon </em></h1>
-  <p>NutriCoach adapte votre plan alimentaire à vos objectifs, votre activité réelle et vos éventuelles pathologies. Recettes savoureuses, recalcul automatique chaque semaine.</p>
-  <div class="hero-cta">
-    <button class="cta-main" onclick="goAuth('signup')">Créer mon compte</button>
-    <button class="cta-ghost" onclick="goAuth('login')">Se connecter</button>
-  </div>
+  <h1>La méthode nutritionnelle<br>la plus personnalisée</h1>
+  <p>NutriCoach adapte votre plan alimentaire à vos objectifs, votre activité réelle et vos éventuelles pathologies. Recettes savoureuses, recalcul automatique chaque semaine, et un suivi qui s'ajuste vraiment à vous — pas l'inverse.</p>
 </section>
 
 <div class="cards-wrap">
-  <div class="cards-label">Ce qui change tout</div>
   <div class="cards">
     <div class="feat-card">
       <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=700&q=80&fm=jpg&fit=crop" alt="Ajustement hebdomadaire">
       <div class="feat-overlay"></div>
-      <div class="feat-text">
-        <div class="ft-title">Objectif ajusté chaque semaine</div>
-        <div class="ft-sub">Calcul calorique précis, recalculé selon votre progression</div>
-      </div>
+      <div class="feat-text"><div class="ft-title">Objectif ajusté chaque semaine</div><div class="ft-sub">Calcul calorique précis, recalculé selon votre progression</div></div>
     </div>
     <div class="feat-card">
       <img src="https://images.unsplash.com/photo-1712955685153-1b9c8edd071f?w=700&q=80&fm=jpg&fit=crop" alt="Performance sportive">
       <div class="feat-overlay"></div>
-      <div class="feat-text">
-        <div class="ft-title">Performance sportive</div>
-        <div class="ft-sub">Précision MET pour les sportifs réguliers</div>
-      </div>
+      <div class="feat-text"><div class="ft-title">Performance sportive</div><div class="ft-sub">Précision MET pour les sportifs réguliers</div></div>
     </div>
     <div class="feat-card">
       <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&q=80&fm=jpg&fit=crop" alt="Prise en compte des pathologies">
       <div class="feat-overlay"></div>
-      <div class="feat-text">
-        <div class="ft-title">Prise en compte des pathologies</div>
-        <div class="ft-sub">Alertes adaptées au diabète, cholestérol, hypertension…</div>
-      </div>
+      <div class="feat-text"><div class="ft-title">Prise en compte des pathologies</div><div class="ft-sub">Alertes adaptées au diabète, cholestérol, hypertension...</div></div>
     </div>
     <div class="feat-card">
       <img src="https://images.unsplash.com/photo-1667499745120-f9bcef8f584e?w=700&q=80&fm=jpg&fit=crop" alt="Recettes personnalisées">
       <div class="feat-overlay"></div>
-      <div class="feat-text">
-        <div class="ft-title">Recettes personnalisées</div>
-        <div class="ft-sub">Adaptées à vos repas et à vos pathologies éventuelles</div>
-      </div>
+      <div class="feat-text"><div class="ft-title">Recettes personnalisées</div><div class="ft-sub">Adaptées à vos repas et à vos pathologies éventuelles</div></div>
     </div>
   </div>
 </div>
 
 <section class="auth-section" id="auth">
   <div class="auth-wrap">
-    <div class="auth-hdr">
-      <h2>Commencez dès aujourd'hui</h2>
-      <p>Créez votre compte ou connectez-vous</p>
+    <div class="auth-hdr" id="auth-hdr">
+      <h2 id="auth-title">Commencez dès aujourd'hui</h2>
+      <p id="auth-sub">Créez votre compte ou connectez-vous</p>
     </div>
 
-    <div class="tabs">
+    <div class="tabs" id="auth-tabs">
       <button class="tab on" onclick="sw('login')">Connexion</button>
       <button class="tab"    onclick="sw('signup')">Inscription</button>
     </div>
@@ -319,6 +217,17 @@ body {
                onkeydown="if(event.key==='Enter')signup()">
       </div>
       <button class="btn" id="sb" onclick="signup()">Créer mon compte</button>
+    </div>
+
+    <!-- NOUVEAU MOT DE PASSE (après clic sur le lien reçu par email) -->
+    <div class="form" id="fr">
+      <div class="msg err" id="re"></div>
+      <div class="field">
+        <label>Nouveau mot de passe</label>
+        <input type="password" id="r-pwd" placeholder="Min. 8 caractères" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')setNewPassword()">
+      </div>
+      <button class="btn" id="rb" onclick="setNewPassword()">Définir mon nouveau mot de passe</button>
     </div>
 
     <div class="badge">
@@ -398,12 +307,47 @@ async function reset(e) {
   e.preventDefault();
   var email = document.getElementById('le-email').value.trim();
   if (!email) { showMsg('le', 'Entrez votre email d\'abord.'); return; }
-  await sb.auth.resetPasswordForEmail(email);
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html' });
   showMsg('le', '📧 Email de réinitialisation envoyé !', 'ok');
 }
 
+// ── RÉCUPÉRATION DE MOT DE PASSE ──
+// En arrivant via le lien reçu par email, Supabase crée une session
+// technique de type "recovery" — sans cette détection, la redirection
+// automatique plus bas nous renverrait au dashboard avant même d'avoir pu
+// définir le nouveau mot de passe. On vérifie l'URL directement (immédiat,
+// fiable) ET on écoute l'événement officiel (filet de sécurité).
+var inRecoveryMode = (window.location.hash.indexOf('type=recovery') >= 0);
+
+function showRecoveryForm(){
+  document.getElementById('auth-tabs').style.display = 'none';
+  document.getElementById('auth-title').textContent = 'Nouveau mot de passe';
+  document.getElementById('auth-sub').textContent = 'Choisissez un nouveau mot de passe pour votre compte';
+  document.querySelectorAll('.form').forEach(function(f){ f.classList.remove('on'); });
+  document.getElementById('fr').classList.add('on');
+}
+if (inRecoveryMode) showRecoveryForm();
+
+sb.auth.onAuthStateChange(function(event, session) {
+  if (event === 'PASSWORD_RECOVERY') {
+    inRecoveryMode = true;
+    showRecoveryForm();
+  }
+});
+
+async function setNewPassword(){
+  var pwd = document.getElementById('r-pwd').value;
+  if (!pwd || pwd.length < 8) { showMsg('re', 'Le mot de passe doit contenir au moins 8 caractères.'); return; }
+  var btn = document.getElementById('rb');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  var r = await sb.auth.updateUser({ password: pwd });
+  btn.disabled = false; btn.textContent = 'Définir mon nouveau mot de passe';
+  if (r.error) { showMsg('re', r.error.message); return; }
+  window.location.href = 'dashboard.html';
+}
+
 sb.auth.getSession().then(function(r) {
-  if (r.data && r.data.session) window.location.href = 'dashboard.html';
+  if (r.data && r.data.session && !inRecoveryMode) window.location.href = 'dashboard.html';
 });
 </script>
 
