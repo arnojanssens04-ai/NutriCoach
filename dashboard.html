@@ -1682,7 +1682,7 @@ function pickRes(i){
 function handleScanNav(){
   var isAdmin = PROF && PROF.role==='admin';
   if(isAdmin){ openScanner(); return; }
-  toast('📷 Le scan de code-barres est en cours de développement !');
+  toast('📷 Le scan de code-barres est en cours de développement — bientôt disponible !');
 }
 var html5QrCode = null;
 var scanLock = false;
@@ -1692,12 +1692,14 @@ function openScanner(){
   document.getElementById('scanner-status').textContent='Visez le code-barres du produit...';
   scanLock = false;
   html5QrCode = new Html5Qrcode('scanner-reader');
-  var config = {
-    fps:10, qrbox:{width:280,height:160},
-    formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E]
-  };
-  html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(){
+  // Configuration volontairement simple — la restriction stricte aux
+  // formats EAN/UPC s'est révélée empêcher toute détection en pratique.
+  // Une zone de visée plus grande, sans filtrer les formats, est plus
+  // fiable, au prix d'accepter aussi les QR codes (sans conséquence ici).
+  var config = { fps:10, qrbox:{width:250,height:250} };
+  html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(err){
     document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
+    console.error('Erreur scanner:', err);
   });
 }
 
