@@ -627,11 +627,16 @@ body {
     <div class="mtab" id="tab-dinner" onclick="selMeal('dinner')"><span class="ti"> </span>Souper</div>
     <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"> </span>Collation 2</div>
   </div>
-  <div class="search-wrap">
-    <span class="search-ico">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </span>
-    <input class="search-inp" id="srch" type="text" placeholder="Rechercher un aliment..." oninput="onSearch(this.value)">
+  <div class="search-wrap" style="display:flex;gap:8px;align-items:stretch">
+    <div style="flex:1;position:relative;display:flex;align-items:center">
+      <span class="search-ico">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input class="search-inp" id="srch" type="text" placeholder="Rechercher un aliment..." oninput="onSearch(this.value)">
+    </div>
+    <button onclick="handleScanNav()" title="Scanner un code-barres" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
+    </button>
   </div>
   <div id="srch-zone"></div>
   <div class="div-line"></div>
@@ -697,6 +702,16 @@ body {
   </div>
 </div>
 
+<!-- SCANNER CODE-BARRES -->
+<div id="scanner-ov" style="position:fixed;inset:0;background:#000;z-index:997;display:none;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:rgba(0,0,0,0.6);position:relative;z-index:2">
+    <span style="color:#fff;font-family:'Lora',serif;font-size:1.05rem">Scanner un produit</span>
+    <button onclick="closeScanner()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.1rem;cursor:pointer">✕</button>
+  </div>
+  <div id="scanner-reader" style="flex:1"></div>
+  <div id="scanner-status" style="position:absolute;bottom:30px;left:0;right:0;text-align:center;color:#fff;font-size:.85rem;padding:0 20px"></div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bnav">
   <button class="bnav-btn on" id="nav-dashboard" onclick="goPage('dashboard')">
@@ -715,6 +730,11 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2a7 7 0 0 1 7 7c0 3.5-2.5 6.4-6 7.4V20h-2v-3.6C7.5 15.4 5 12.5 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
     Recettes
   </a>
+  <button class="bnav-btn" id="nav-scan" onclick="handleScanNav()" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
+    Scan
+    <span id="scan-dev-badge" style="display:none;position:absolute;top:-2px;right:6px;font-size:.52rem;background:var(--rose);color:#fff;padding:1px 5px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
+  </button>
   <a class="bnav-btn" href="chat.html" id="nav-coach">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     Coach
@@ -880,6 +900,7 @@ body {
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -1040,6 +1061,8 @@ function initGreeting(){
   applyAvatar(document.getElementById('pav'), initial, seed);
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
+  var scanBadge=document.getElementById('scan-dev-badge');
+  if(scanBadge) scanBadge.style.display = (p.role==='admin') ? 'none' : 'block';
 }
 
 // ── TARGETS ──
@@ -1576,7 +1599,12 @@ var CIQUAL_ALIAS = {
   'amande':  '15000',  // → "Amande, avec peau, sans sel ajouté" (au lieu de "Croissant aux amandes")
   'amandes': '15000',
   'lait d amande': '18111',  // → "Boisson à l'amande, préemballée" (au lieu de "Kéfir de lait")
-  'lait amande':   '18111'
+  'lait amande':   '18111',
+  // Ciqual nomme par type d'animal ("Boeuf, steak haché...") jamais par le
+  // mot générique "viande" — sans alias, le mot-clé le plus courant ne
+  // matche jamais le bon aliment (signalé par des bêta-testeurs).
+  'viande hachee': '6259',  // → "Boeuf, steak haché, cuit (aliment moyen)"
+  'viande hache':  '6259'
 };
 var CIQUAL_BLOCKLIST = [
   'big mac', 'kellogg s', 'kelloggs', 'special k'
@@ -1648,6 +1676,102 @@ function pickRes(i){
   var r=srchRes[i];if(!r)return;
   pendingFood = r.food;
   openPortionPicker(r.food);
+}
+
+// ── SCAN DE CODE-BARRES ──
+function handleScanNav(){
+  var isAdmin = PROF && PROF.role==='admin';
+  if(isAdmin){ openScanner(); return; }
+  toast('📷 Le scan de code-barres est en cours de développement — bientôt disponible !');
+}
+var html5QrCode = null;
+var scanLock = false;
+
+function openScanner(){
+  document.getElementById('scanner-ov').style.display='flex';
+  document.getElementById('scanner-status').textContent='Visez le code-barres du produit...';
+  scanLock = false;
+  html5QrCode = new Html5Qrcode('scanner-reader');
+  var config = {
+    fps:10, qrbox:{width:280,height:160},
+    formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E]
+  };
+  html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(){
+    document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
+  });
+}
+
+function closeScanner(){
+  if(html5QrCode){
+    html5QrCode.stop().then(function(){ html5QrCode.clear(); html5QrCode=null; }).catch(function(){ html5QrCode=null; });
+  }
+  document.getElementById('scanner-ov').style.display='none';
+}
+
+function onBarcodeScanned(code){
+  if(scanLock) return;
+  scanLock = true;
+  document.getElementById('scanner-status').textContent='Recherche du produit…';
+  lookupBarcode(code).then(function(food){
+    closeScanner();
+    if(food){
+      pendingFood = food;
+      openPortionPicker(food);
+    } else {
+      toast('Produit introuvable — essayez la recherche manuelle');
+    }
+  });
+}
+
+// Convertit une ligne aliments_custom (issue du cache ou d'Open Food Facts)
+// vers le même format qu'un aliment Ciqual, pour réutiliser tout le circuit
+// existant (sélecteur de portion, ajout au repas...) sans rien dupliquer.
+function alimentCustomToFood(c){
+  return {
+    code: 'custom_'+(c.id||c.code_barres),
+    nom: c.nom, kcal: c.kcal, prot: c.prot, gluc: c.gluc, lip: c.lip,
+    ags: c.ags||0, fibres: c.fibres||0, fer: c.fer||0, cal: c.cal||0,
+    pot: c.pot||0, mg: c.mg||0, na: c.na||0, zn: c.zn||0
+  };
+}
+
+async function lookupBarcode(code){
+  // 1. Notre propre cache d'abord — instantané, aucun appel externe si
+  // ce produit a déjà été scanné une fois par n'importe quel utilisateur.
+  var cached = await sb.from('aliments_custom').select('*').eq('code_barres', code).maybeSingle();
+  if(cached.data) return alimentCustomToFood(cached.data);
+
+  // 2. Sinon, lecture directe par code-barres chez Open Food Facts — cette
+  // route est stable (contrairement à leur recherche texte, abandonnée).
+  try{
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, 6000);
+    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,nutriments,brands', {signal:ctrl.signal});
+    clearTimeout(timer);
+    var d = await r.json();
+    if(d.status!==1 || !d.product) return null;
+    var p = d.product;
+    var nom = (p.product_name||'').trim();
+    if(!nom) return null;
+    if(p.brands){ var b=p.brands.split(',')[0].trim(); if(b && nom.toLowerCase().indexOf(b.toLowerCase())<0) nom = nom+' ('+b+')'; }
+    var n = p.nutriments||{};
+    function nv(v){ var x=parseFloat(v); return isNaN(x)?0:x; }
+    var entry = {
+      nom: nom,
+      kcal: nv(n['energy-kcal_100g']), prot: nv(n['proteins_100g']), gluc: nv(n['carbohydrates_100g']), lip: nv(n['fat_100g']),
+      fibres: nv(n['fiber_100g']), ags: nv(n['saturated-fat_100g']),
+      fer: nv(n['iron_100g'])*1000, cal: nv(n['calcium_100g'])*1000, pot: nv(n['potassium_100g'])*1000,
+      mg: nv(n['magnesium_100g'])*1000, na: nv(n['sodium_100g'])*1000, zn: nv(n['zinc_100g'])*1000,
+      code_barres: code
+    };
+    // 3. Mise en cache pour tout le monde. Si un autre utilisateur a scanné
+    // exactement ce produit entre-temps, l'index unique bloque l'insertion
+    // — on l'ignore simplement, la donnée existe déjà.
+    var ins = await sb.from('aliments_custom').insert(entry).select().maybeSingle();
+    return ins.data ? alimentCustomToFood(ins.data) : alimentCustomToFood(entry);
+  }catch(e){
+    return null;
+  }
 }
 
 // ── DÉTECTION DE CATÉGORIE D'ALIMENT — pour des unités de portion logiques ──
