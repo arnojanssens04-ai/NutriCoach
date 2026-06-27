@@ -1815,12 +1815,17 @@ async function lookupBarcode(code){
   try{
     var ctrl = new AbortController();
     var timer = setTimeout(function(){ ctrl.abort(); }, 6000);
-    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,nutriments,brands', {signal:ctrl.signal});
+    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,generic_name,quantity,nutriments,brands', {signal:ctrl.signal});
     clearTimeout(timer);
     var d = await r.json();
     if(d.status!==1 || !d.product) return null;
     var p = d.product;
-    var nom = (p.product_name||'').trim();
+    // De nombreuses fiches communautaires n'ont pas de product_name rempli,
+    // même quand toutes les valeurs nutritionnelles sont présentes — on se
+    // rabat alors sur la marque (+ nom générique/quantité si disponibles)
+    // plutôt que de jeter une donnée par ailleurs complète et utilisable.
+    var nom = (p.product_name||p.generic_name||'').trim();
+    if(!nom && p.brands){ nom = p.brands.split(',')[0].trim() + (p.quantity?' '+p.quantity:''); }
     if(!nom) return null;
     if(p.brands){ var b=p.brands.split(',')[0].trim(); if(b && nom.toLowerCase().indexOf(b.toLowerCase())<0) nom = nom+' ('+b+')'; }
     var n = p.nutriments||{};
