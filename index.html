@@ -307,7 +307,14 @@ async function reset(e) {
   e.preventDefault();
   var email = document.getElementById('le-email').value.trim();
   if (!email) { showMsg('le', 'Entrez votre email d\'abord.'); return; }
-  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html' });
+  var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html' });
+  if (r.error) {
+    var msg = r.error.message.indexOf('rate limit') >= 0
+      ? 'Trop de tentatives — réessayez dans environ 1 heure.'
+      : r.error.message;
+    showMsg('le', msg);
+    return;
+  }
   showMsg('le', '📧 Email de réinitialisation envoyé !', 'ok');
 }
 
