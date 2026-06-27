@@ -1739,7 +1739,9 @@ function startNativeScanner(){
 function startFallbackScanner(){
   document.getElementById('scanner-status').textContent = 'Mode bibliothèque (repli) · visez le code-barres…';
   html5QrCode = new Html5Qrcode('scanner-reader');
-  var config = { fps:10, qrbox:{width:250,height:250} };
+  // Zone de visée large et basse — adaptée à la forme d'un code-barres
+  // (contrairement à une zone carrée, pensée pour les QR codes).
+  var config = { fps:10, qrbox:{width:280,height:120} };
   html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(err){
     document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
     console.error('Erreur scanner (repli):', err);
