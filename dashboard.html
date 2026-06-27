@@ -900,7 +900,7 @@ body {
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -1685,6 +1685,7 @@ function handleScanNav(){
   toast('📷 Le scan de code-barres est en cours de développement — bientôt disponible !');
 }
 var html5QrCode = null;
+var zxingReader = null;
 var scanLock = false;
 var nativeStream = null;
 var nativeLoopActive = false;
@@ -1737,15 +1738,26 @@ function startNativeScanner(){
 }
 
 function startFallbackScanner(){
-  document.getElementById('scanner-status').textContent = 'Mode bibliothèque (repli) · visez le code-barres…';
-  html5QrCode = new Html5Qrcode('scanner-reader');
-  // Zone de visée large et basse — adaptée à la forme d'un code-barres
-  // (contrairement à une zone carrée, pensée pour les QR codes).
-  var config = { fps:10, qrbox:{width:280,height:120} };
-  html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(err){
-    document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
-    console.error('Erreur scanner (repli):', err);
-  });
+  document.getElementById('scanner-status').textContent = 'Visez le code-barres…';
+  var reader = document.getElementById('scanner-reader');
+  reader.innerHTML = '<video id="zxing-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>';
+  var video = document.getElementById('zxing-video');
+  try{
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+    zxingReader.decodeFromConstraints(
+      { video: { facingMode: 'environment' } },
+      video,
+      function(result, err){
+        if(result) onBarcodeScanned(result.getText());
+      }
+    ).catch(function(err){
+      document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
+      console.error('Erreur scanner (ZXing):', err);
+    });
+  }catch(err){
+    document.getElementById('scanner-status').textContent='Le scan n\'est pas disponible sur ce navigateur.';
+    console.error('Erreur init ZXing:', err);
+  }
 }
 
 function closeScanner(){
@@ -1753,6 +1765,10 @@ function closeScanner(){
   if(nativeStream){
     nativeStream.getTracks().forEach(function(t){ t.stop(); });
     nativeStream = null;
+  }
+  if(zxingReader){
+    try{ zxingReader.reset(); }catch(e){}
+    zxingReader = null;
   }
   if(html5QrCode){
     html5QrCode.stop().then(function(){ html5QrCode.clear(); html5QrCode=null; }).catch(function(){ html5QrCode=null; });
