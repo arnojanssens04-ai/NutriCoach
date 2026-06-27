@@ -1706,6 +1706,7 @@ function openScanner(){
 }
 
 function startNativeScanner(){
+  document.getElementById('scanner-status').innerHTML = 'Mode natif · <span id="scan-counter">0</span> images analysées';
   var reader = document.getElementById('scanner-reader');
   reader.innerHTML = '<video id="scanner-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>';
   var video = document.getElementById('scanner-video');
@@ -1714,12 +1715,19 @@ function startNativeScanner(){
     video.srcObject = stream;
     var detector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});
     nativeLoopActive = true;
+    var frameCount = 0;
     function loop(){
       if(!nativeLoopActive) return;
       detector.detect(video).then(function(codes){
+        frameCount++;
+        var c = document.getElementById('scan-counter'); if(c) c.textContent = frameCount;
         if(codes.length>0 && !scanLock){ onBarcodeScanned(codes[0].rawValue); return; }
         setTimeout(loop, 350);
-      }).catch(function(){ setTimeout(loop, 350); });
+      }).catch(function(err){
+        frameCount++;
+        var c = document.getElementById('scan-counter'); if(c) c.textContent = frameCount+' (erreur détection)';
+        setTimeout(loop, 350);
+      });
     }
     video.addEventListener('loadedmetadata', function(){ loop(); }, {once:true});
   }).catch(function(err){
@@ -1729,6 +1737,7 @@ function startNativeScanner(){
 }
 
 function startFallbackScanner(){
+  document.getElementById('scanner-status').textContent = 'Mode bibliothèque (repli) · visez le code-barres…';
   html5QrCode = new Html5Qrcode('scanner-reader');
   var config = { fps:10, qrbox:{width:250,height:250} };
   html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(err){
