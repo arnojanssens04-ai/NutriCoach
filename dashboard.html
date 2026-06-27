@@ -1686,27 +1686,67 @@ function handleScanNav(){
 }
 var html5QrCode = null;
 var scanLock = false;
+var nativeStream = null;
+var nativeLoopActive = false;
 
 function openScanner(){
   document.getElementById('scanner-ov').style.display='flex';
-  document.getElementById('scanner-status').textContent='Visez le code-barres du produit...';
+  document.getElementById('scanner-status').textContent='Visez le code-barres du produit…';
   scanLock = false;
+  // L'API native du navigateur (BarcodeDetector) s'appuie directement sur
+  // les outils de reconnaissance du système (ex: Google Play Services sur
+  // Android) — plus fiable qu'une bibliothèque JS tierce, mais uniquement
+  // disponible sur Chrome/Chromium. Sur Safari/iOS, on retombe sur la
+  // bibliothèque existante.
+  if('BarcodeDetector' in window){
+    startNativeScanner();
+  } else {
+    startFallbackScanner();
+  }
+}
+
+function startNativeScanner(){
+  var reader = document.getElementById('scanner-reader');
+  reader.innerHTML = '<video id="scanner-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>';
+  var video = document.getElementById('scanner-video');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    nativeStream = stream;
+    video.srcObject = stream;
+    var detector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});
+    nativeLoopActive = true;
+    function loop(){
+      if(!nativeLoopActive) return;
+      detector.detect(video).then(function(codes){
+        if(codes.length>0 && !scanLock){ onBarcodeScanned(codes[0].rawValue); return; }
+        setTimeout(loop, 350);
+      }).catch(function(){ setTimeout(loop, 350); });
+    }
+    video.addEventListener('loadedmetadata', function(){ loop(); }, {once:true});
+  }).catch(function(err){
+    document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
+    console.error('Erreur caméra (native):', err);
+  });
+}
+
+function startFallbackScanner(){
   html5QrCode = new Html5Qrcode('scanner-reader');
-  // Configuration volontairement simple — la restriction stricte aux
-  // formats EAN/UPC s'est révélée empêcher toute détection en pratique.
-  // Une zone de visée plus grande, sans filtrer les formats, est plus
-  // fiable, au prix d'accepter aussi les QR codes (sans conséquence ici).
   var config = { fps:10, qrbox:{width:250,height:250} };
   html5QrCode.start({facingMode:'environment'}, config, onBarcodeScanned, function(){}).catch(function(err){
     document.getElementById('scanner-status').textContent='Impossible d\'accéder à la caméra — vérifiez les autorisations de votre navigateur.';
-    console.error('Erreur scanner:', err);
+    console.error('Erreur scanner (repli):', err);
   });
 }
 
 function closeScanner(){
+  nativeLoopActive = false;
+  if(nativeStream){
+    nativeStream.getTracks().forEach(function(t){ t.stop(); });
+    nativeStream = null;
+  }
   if(html5QrCode){
     html5QrCode.stop().then(function(){ html5QrCode.clear(); html5QrCode=null; }).catch(function(){ html5QrCode=null; });
   }
+  document.getElementById('scanner-reader').innerHTML = '';
   document.getElementById('scanner-ov').style.display='none';
 }
 
