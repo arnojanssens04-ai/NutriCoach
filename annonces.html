@@ -163,7 +163,15 @@ async function publishAnnonce(){
 
   if(SEND_EMAIL){
     try{
-      await sb.functions.invoke('envoyer-annonce', {body:{contenu:contenu}});
+      var sessionRes = await sb.auth.getSession();
+      var token = sessionRes.data.session.access_token;
+      var emailRes = await fetch(SURL+'/functions/v1/envoyer-annonce', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer '+token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({contenu: contenu})
+      });
+      var emailJson = await emailRes.json();
+      console.log('Réponse envoyer-annonce:', emailJson);
     }catch(e){ console.error('Erreur envoi email annonce:', e); }
     SEND_EMAIL=false;
     document.getElementById('a-email-box').classList.remove('on');
