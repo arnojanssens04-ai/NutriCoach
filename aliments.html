@@ -76,6 +76,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div class="card-hdr"><span id="form-card-title">Nouvel aliment</span></div>
     <div class="card-body">
       <div class="field"><label>Nom</label><input type="text" id="f-nom" placeholder="Ex: Galette de pois chiches maison"></div>
+      <div class="field"><label>Code-barres (optionnel)</label><input type="text" id="f-barcode" placeholder="Ex: 5400113744122" inputmode="numeric">
+        <div class="field-hint">Si renseigné, ce produit sera reconnu automatiquement la prochaine fois qu'il sera scanné.</div>
+      </div>
 
       <div class="section-lbl">Pour 100g</div>
       <div class="grid3">
@@ -159,13 +162,14 @@ async function loadFoods(){
   }).join('');
 }
 
-var FORM_FIELDS = ['f-nom','f-kcal','f-prot','f-gluc','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'];
+var FORM_FIELDS = ['f-nom','f-barcode','f-kcal','f-prot','f-gluc','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'];
 
 function editFood(id){
   var f = CURRENT_FOODS.find(function(x){ return x.id===id; });
   if(!f) return;
   EDITING_ID = id;
   document.getElementById('f-nom').value = f.nom||'';
+  document.getElementById('f-barcode').value = f.code_barres||'';
   document.getElementById('f-kcal').value = f.kcal||0;
   document.getElementById('f-prot').value = f.prot||0;
   document.getElementById('f-gluc').value = f.gluc||0;
@@ -197,8 +201,9 @@ function numVal(id){ var v = parseFloat(document.getElementById(id).value); retu
 async function saveFood(){
   var nom = document.getElementById('f-nom').value.trim();
   if(!nom){ toast('Indiquez un nom pour cet aliment'); return; }
+  var barcode = document.getElementById('f-barcode').value.trim();
   var data = {
-    nom: nom, kcal: numVal('f-kcal'), prot: numVal('f-prot'), gluc: numVal('f-gluc'),
+    nom: nom, code_barres: barcode||null, kcal: numVal('f-kcal'), prot: numVal('f-prot'), gluc: numVal('f-gluc'),
     lip: numVal('f-lip'), ags: numVal('f-ags'), fibres: numVal('f-fibres'),
     fer: numVal('f-fer'), cal: numVal('f-cal'), pot: numVal('f-pot'),
     mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn')
