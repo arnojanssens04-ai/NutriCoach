@@ -1800,9 +1800,26 @@ function closeScanner(){
   document.getElementById('scanner-ov').style.display='none';
 }
 
+var lastScanCode = null;
+var lastScanCount = 0;
+
 function onBarcodeScanned(code){
   if(scanLock) return;
+  // Un reflet sur l'emballage peut produire une lecture fausse mais quand
+  // même mathématiquement valide (somme de contrôle correcte) — on ne
+  // peut donc pas la détecter par calcul. La protection la plus fiable :
+  // exiger la MÊME lecture deux fois de suite avant d'agir, comme le
+  // font les scanners professionnels.
+  if(code === lastScanCode){
+    lastScanCount++;
+  } else {
+    lastScanCode = code;
+    lastScanCount = 1;
+  }
+  if(lastScanCount < 2) return;
+
   scanLock = true;
+  lastScanCode = null; lastScanCount = 0;
   document.getElementById('scanner-status').textContent='Recherche du produit…';
   lookupBarcode(code).then(function(food){
     closeScanner();
@@ -1911,11 +1928,17 @@ var PORTION_CATEGORIES = [
       {label:'1 c. à soupe', sub:'~15g', grams:15, icon:'🍯'},
       {label:'2 c. à soupe', sub:'~30g', grams:30, icon:'🍯'}
     ]},
-  { id:'beurre', keywords:['beurre','margarine'],
+  { id:'beurre', keywords:['beurre','margarine','tartiner sale','tartiner salé','spread'],
     options:[
       {label:'Une noix', sub:'~10g', grams:10, icon:'🧈'},
       {label:'Une portion', sub:'~15g', grams:15, icon:'🧈'},
       {label:'Grosse noix', sub:'~25g', grams:25, icon:'🧈'}
+    ]},
+  { id:'biscuit', keywords:['biscuit','biscuits','cookie','cookies','sable','sablé','speculoos','spéculoos','petit beurre','gaufrette','gaufrettes','mergpijpjes','frangipane','frangipanes'],
+    options:[
+      {label:'1 biscuit', sub:'~10g', grams:10, icon:'🍪'},
+      {label:'3 biscuits', sub:'~30g', grams:30, icon:'🍪'},
+      {label:'5 biscuits', sub:'~50g', grams:50, icon:'🍪'}
     ]},
   { id:'pain', keywords:['pain','baguette','tartine'],
     options:[
