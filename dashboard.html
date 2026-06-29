@@ -1810,7 +1810,12 @@ function onBarcodeScanned(code){
       pendingFood = food;
       openPortionPicker(food);
     } else {
-      toast('Produit introuvable — essayez la recherche manuelle');
+      var isAdmin = PROF && PROF.role==='admin';
+      if(isAdmin && confirm('Produit introuvable (code '+code+').\n\nVoulez-vous l\'ajouter maintenant ? Il sera reconnu automatiquement la prochaine fois.')){
+        window.location.href = 'aliments.html?barcode='+encodeURIComponent(code);
+      } else {
+        toast('Produit introuvable — essayez la recherche manuelle');
+      }
     }
   });
 }
