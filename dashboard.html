@@ -739,6 +739,11 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     Coach
   </a>
+  <a class="bnav-btn" href="annonces.html" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8L13 21l-1.5.5L9 18"/></svg>
+    Annonces
+    <span id="annonces-badge" style="display:none;position:absolute;top:-2px;right:10px;font-size:.62rem;background:var(--rose);color:#fff;min-width:16px;height:16px;padding:0 4px;border-radius:999px;line-height:16px;font-weight:700;text-align:center">+0</span>
+  </a>
 </nav>
 
 <!-- SETUP OVERLAY -->
@@ -1253,7 +1258,14 @@ async function checkMilestones(){
   if(!p.created_at) return;
   var shown = p.milestones_shown||[];
   var daysSinceSignup = (Date.now()-new Date(p.created_at).getTime())/86400000;
-  var weightDiff = (p.poids_initial && p.poids) ? Math.abs(p.poids-p.poids_initial) : 0;
+  // Le changement de poids n'est un motif de célébration QUE s'il va dans
+  // le sens de l'objectif — prendre du poids n'est pas un "palier" pour
+  // quelqu'un qui veut en perdre, et inversement. En mode maintien, ce
+  // n'est jamais une célébration (voir la logique d'ajustement séparée).
+  var rawDiff = (p.poids_initial && p.poids) ? p.poids - p.poids_initial : 0;
+  var weightDiff = 0;
+  if(p.objectif==='perte') weightDiff = Math.max(0, -rawDiff);
+  else if(p.objectif==='prise') weightDiff = Math.max(0, rawDiff);
   var bilanRes = await sb.from('bilans').select('id',{count:'exact',head:true}).eq('user_id',USER.id);
   var bilanCount = bilanRes.count || 0;
   var ctx = {daysSinceSignup:daysSinceSignup, weightDiff:weightDiff, bilanCount:bilanCount};
@@ -1322,6 +1334,16 @@ function renderClinicalIndicators(T, tgt, pathos){
   }).join('');
 }
 
+async function checkUnreadAnnonces(){
+  var badge = document.getElementById('annonces-badge');
+  if(!badge) return;
+  var lastSeen = (PROF && PROF.last_seen_annonce_at) || '1970-01-01';
+  var r = await sb.from('annonces').select('id',{count:'exact',head:true}).gt('created_at', lastSeen);
+  var n = r.count || 0;
+  if(n>0){ badge.textContent = '+'+n; badge.style.display='flex'; badge.style.alignItems='center'; badge.style.justifyContent='center'; }
+  else { badge.style.display='none'; }
+}
+
 async function checkUnreadMessages(){
   var r = await sb.from('messages').select('id',{count:'exact',head:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
   var n = r.count || 0;
@@ -1375,6 +1397,7 @@ async function refreshDash(){
   var tgt=calcTargets();
   renderMotivationCards();
   checkUnreadMessages();
+  checkUnreadAnnonces();
 
   // Le bilan n'est accessible que le jour choisi par la personne — les
   // autres jours, la carte est grisée et non-cliquable (modifiable dans
