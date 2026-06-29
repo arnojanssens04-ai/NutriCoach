@@ -223,6 +223,13 @@ function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMont
 // ── Pills interactifs ── délégation sur le formulaire entier plutôt que
 // sur chaque pastille individuellement : plus robuste sur mobile, et
 // continue de fonctionner même si une partie du formulaire est régénérée.
+// Chaque pastille a sa propre formulation (Bien/Bonne/Bon/Oui/Faible...),
+// mais ne représente toujours que 3 états visuels : bon, moyen, mauvais.
+var PILL_STATE = {
+  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien',
+  moyen:'moyen', moyenne:'moyen', moyennement:'moyen',
+  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', élevée:'difficile'
+};
 document.getElementById('bilan-form').addEventListener('click', function(e){
   var p = e.target.closest('.pill');
   if(!p) return;
@@ -230,7 +237,8 @@ document.getElementById('bilan-form').addEventListener('click', function(e){
   var field = row.getAttribute('data-field');
   row.querySelectorAll('.pill').forEach(function(x){ x.className='pill'; });
   var val = p.getAttribute('data-val');
-  p.classList.add('on-'+val.toLowerCase());
+  var state = PILL_STATE[val.toLowerCase()] || 'moyen';
+  p.classList.add('on-'+state);
   pillValues[field] = val;
 });
 
@@ -392,41 +400,92 @@ function showThankYouScreen(){
 }
 
 // ── ALGORITHME ADAPTATIF ──
-// Si le poids n'a pas bougé depuis ~2 semaines, on ajuste l'objectif calorique
-// de 200 kcal dans la direction de l'objectif (jamais en mode "maintien").
-// Planchers/plafonds absolus (1200-5000) appliqués dans calcTargets() côté dashboard.
+// Deux garde-fous avant tout ajustement automatique :
+// 1. Le ressenti qualitatif du bilan compte AVANT le poids — si la semaine
+//    a été majoritairement difficile, bouger les calories ne réglerait pas
+//    le vrai problème (l'adhésion au plan), donc on n'ajuste rien et on
+//    encourage plutôt à se remobiliser.
+// 2. Le sens de l'ajustement dépend de l'objectif : perte/prise poussent
+//    plus fort si la tendance est stagnante ; le maintien corrige dans le
+//    sens opposé si le poids a dévié de façon notable.
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,non:0,'élevée':0,elevee:0};
+
+function qualiteBilanScore(){
+  var champs = ['respect_plan','activite_semaine','troubles_digestifs','sommeil','difficulte_semaine','satisfaction_semaine'];
+  var total = 0, compte = 0;
+  champs.forEach(function(c){
+    var v = pillValues[c];
+    if(v){ var pts=PILL_SCORE[v.toLowerCase()]; total += (pts!==undefined?pts:1); compte++; }
+  });
+  return compte>0 ? total : null; // null si rien n'a été rempli (ne devrait pas arriver)
+}
+
 async function checkAndAdjustKcal(newWeight){
   var objectif = PROF.objectif;
-  if(objectif !== 'perte' && objectif !== 'prise') return; // pas d'ajustement en mode maintien
+  var banner = document.getElementById('adj-banner');
 
-  var d1 = new Date(); d1.setDate(d1.getDate()-16);
-  var d2 = new Date(); d2.setDate(d2.getDate()-12);
-  var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
-    .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
-    .order('date',{ascending:true}).limit(1);
-
-  if(!res.data || !res.data.length || !res.data[0].poids) return; // pas assez d'historique encore
-
-  var oldWeight = res.data[0].poids;
-  var delta = newWeight - oldWeight;
-  var stalled = Math.abs(delta) < 0.3;
-  if(!stalled) return;
+  // Garde-fou n°1 : le ressenti général de la semaine.
+  var score = qualiteBilanScore(); // sur 12 (6 champs × 2 pts max)
+  if(score !== null && score < 6){
+    banner.className = 'adj-banner show adj-down';
+    banner.innerHTML = '<strong>💛 Un mot avant tout</strong><br>'
+      + 'Cette semaine semble avoir été difficile sur plusieurs points. Plutôt que de changer encore les chiffres, '
+      + 'si vous désirez atteindre votre objectif, reprenez-vous en main — vous en êtes capable. '
+      + 'Le plan reste inchangé cette semaine ; concentrons-nous sur la régularité avant d\'ajuster quoi que ce soit.';
+    return;
+  }
 
   var currentAdj = PROF.kcal_adjustment || 0;
-  var newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
-  // Les bornes absolues 1200/5000 sont déjà appliquées dans calcTargets(),
-  // mais on évite ici d'accumuler un ajustement déraisonnable au fil du temps.
-  newAdj = Math.max(-1200, Math.min(2500, newAdj));
 
-  await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
+  if(objectif==='perte' || objectif==='prise'){
+    // Stagnation sur ~2 semaines -> on pousse dans le sens de l'objectif.
+    var d1 = new Date(); d1.setDate(d1.getDate()-16);
+    var d2 = new Date(); d2.setDate(d2.getDate()-12);
+    var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
+      .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
+      .order('date',{ascending:true}).limit(1);
+    if(!res.data || !res.data.length || !res.data[0].poids) return;
 
-  var banner = document.getElementById('adj-banner');
-  banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
-  banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
-    + (objectif==='perte'
-      ? 'On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
-      : 'On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.')
-    + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+    var oldWeight = res.data[0].poids;
+    var delta = newWeight - oldWeight;
+    var stalled = Math.abs(delta) < 0.3;
+    if(!stalled) return;
+
+    var newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+    newAdj = Math.max(-1200, Math.min(2500, newAdj));
+    await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
+
+    banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
+    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
+      + (objectif==='perte'
+        ? 'On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
+        : 'On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.')
+      + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+
+  } else if(objectif==='maintien'){
+    // En maintien, on corrige dans le sens OPPOSÉ à la dérive constatée —
+    // comparaison sur la semaine écoulée (1 bilan en arrière), pas 2.
+    var d1m = new Date(); d1m.setDate(d1m.getDate()-9);
+    var d2m = new Date(); d2m.setDate(d2m.getDate()-5);
+    var resM = await sb.from('bilans').select('*').eq('user_id',USER.id)
+      .gte('date', d1m.toISOString().slice(0,10)).lte('date', d2m.toISOString().slice(0,10))
+      .order('date',{ascending:true}).limit(1);
+    if(!resM.data || !resM.data.length || !resM.data[0].poids) return;
+
+    var oldWeightM = resM.data[0].poids;
+    var deltaM = newWeight - oldWeightM;
+    if(Math.abs(deltaM) < 0.5) return; // dérive normale, rien à corriger
+
+    var sensPerte = deltaM > 0; // poids monté -> on réduit ; poids descendu -> on augmente
+    var newAdjM = currentAdj + (sensPerte ? -200 : 200);
+    newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
+    await sb.from('profiles').update({kcal_adjustment:newAdjM}).eq('id',USER.id);
+
+    banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
+    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids a '
+      + (sensPerte ? 'augmenté' : 'diminué') + ' de '+Math.abs(deltaM).toFixed(1)+'kg cette semaine, alors que votre objectif est le maintien. '
+      + 'On '+(sensPerte?'réduit':'augmente')+' votre objectif calorique de 200 kcal/jour pour vous recentrer.';
+  }
 }
 </script>
 </body>
