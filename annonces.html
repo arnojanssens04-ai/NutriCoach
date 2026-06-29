@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriCoach — Annonces</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); }
+.card-hdr span { font-family:'Lora',serif; font-size:1.05rem; }
+.card-body { padding:16px 18px; }
+
+textarea#a-contenu { width:100%; padding:11px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:'Inter',sans-serif; font-size:.9rem; resize:vertical; min-height:90px; outline:none; }
+textarea#a-contenu:focus { border-color:rgba(45,79,28,0.4); }
+
+.check-row { display:flex; align-items:center; gap:9px; margin:12px 0; cursor:pointer; }
+.check-box { width:19px; height:19px; border-radius:5px; border:1.5px solid var(--border2); background:var(--card2); flex-shrink:0; position:relative; }
+.check-box.on { background:var(--gold); border-color:var(--gold); }
+.check-box.on::after { content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.7rem; font-weight:700; }
+.check-lbl { font-size:.84rem; color:var(--text2); }
+
+.btn-gold { width:100%; padding:12px; border-radius:10px; border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; }
+
+.annonce { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:12px; box-shadow:var(--sh); }
+.annonce-date { font-size:.68rem; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.annonce-txt { font-size:.92rem; line-height:1.6; margin-bottom:14px; white-space:pre-wrap; }
+.reactions { display:flex; gap:6px; flex-wrap:wrap; }
+.react-btn { background:var(--card2); border:1px solid var(--border); border-radius:999px; padding:5px 11px; font-size:.85rem; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s; }
+.react-btn.mine { background:var(--gold-l); border-color:rgba(45,79,28,0.3); }
+.react-count { font-size:.72rem; color:var(--text2); font-weight:600; }
+.admin-del { float:right; background:none; border:none; color:var(--text3); cursor:pointer; font-size:.78rem; }
+
+.empty { text-align:center; padding:40px 20px; color:var(--text2); font-size:.86rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Nutri<span>Coach</span></div>
+  <a href="dashboard.html" class="t-back">← Retour</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>📣 Annonces</h1>
+    <p>Conseils, citations et messages de l'équipe NutriCoach.</p>
+  </div>
+
+  <div class="card" id="admin-form-card" style="display:none">
+    <div class="card-hdr"><span>Écrire une annonce</span></div>
+    <div class="card-body">
+      <textarea id="a-contenu" placeholder="Écrivez votre message, conseil ou citation du jour..."></textarea>
+      <div class="check-row" onclick="toggleSendEmail()">
+        <div class="check-box" id="a-email-box"></div>
+        <span class="check-lbl">Envoyer aussi un email à tous les utilisateurs</span>
+      </div>
+      <button class="btn-gold" onclick="publishAnnonce()">Publier</button>
+    </div>
+  </div>
+
+  <div id="annonces-list"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null, PROF=null, IS_ADMIN=false, ANNONCES=[], REACTIONS=[], SEND_EMAIL=false;
+var EMOJIS = ['🙌','👏','💪','❤️','👌','👍🏻'];
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'}); }
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  init();
+});
+
+async function init(){
+  var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
+  PROF = pr.data || {};
+  IS_ADMIN = PROF.role === 'admin';
+  if(IS_ADMIN) document.getElementById('admin-form-card').style.display='block';
+
+  await loadAnnonces();
+
+  // Marque tout comme vu dès l'ouverture de cette page.
+  await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
+}
+
+async function loadAnnonces(){
+  var r = await sb.from('annonces').select('*').order('created_at',{ascending:false});
+  ANNONCES = r.data || [];
+  var rr = await sb.from('annonce_reactions').select('*');
+  REACTIONS = rr.data || [];
+  renderAnnonces();
+}
+
+function renderAnnonces(){
+  var el = document.getElementById('annonces-list');
+  if(!ANNONCES.length){ el.innerHTML = '<div class="empty">Aucune annonce pour le moment.</div>'; return; }
+
+  el.innerHTML = ANNONCES.map(function(a){
+    var reacts = REACTIONS.filter(function(r){ return r.annonce_id===a.id; });
+    var byEmoji = {};
+    reacts.forEach(function(r){ byEmoji[r.emoji] = (byEmoji[r.emoji]||0)+1; });
+    var mine = reacts.find(function(r){ return r.user_id===USER.id; });
+
+    var reactionsHtml = EMOJIS.map(function(em){
+      var count = byEmoji[em]||0;
+      var isMine = mine && mine.emoji===em;
+      return '<button class="react-btn'+(isMine?' mine':'')+'" onclick="toggleReaction(\''+a.id+'\',\''+em+'\')">'+em
+        +(count>0?'<span class="react-count">'+count+'</span>':'')+'</button>';
+    }).join('');
+
+    return '<div class="annonce">'
+      +(IS_ADMIN?'<button class="admin-del" onclick="deleteAnnonce(\''+a.id+'\')">✕ Supprimer</button>':'')
+      +'<div class="annonce-date">'+fmtDate(a.created_at)+'</div>'
+      +'<div class="annonce-txt">'+esc(a.contenu)+'</div>'
+      +'<div class="reactions">'+reactionsHtml+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function toggleSendEmail(){
+  SEND_EMAIL = !SEND_EMAIL;
+  document.getElementById('a-email-box').classList.toggle('on', SEND_EMAIL);
+}
+
+async function publishAnnonce(){
+  var contenu = document.getElementById('a-contenu').value.trim();
+  if(!contenu){ alert('Écrivez un message avant de publier.'); return; }
+  var r = await sb.from('annonces').insert({contenu:contenu, created_by:USER.id}).select().single();
+  if(r.error){ alert('Erreur : '+r.error.message); return; }
+  document.getElementById('a-contenu').value='';
+
+  if(SEND_EMAIL){
+    try{
+      await sb.functions.invoke('envoyer-annonce', {body:{contenu:contenu}});
+    }catch(e){ console.error('Erreur envoi email annonce:', e); }
+    SEND_EMAIL=false;
+    document.getElementById('a-email-box').classList.remove('on');
+  }
+  loadAnnonces();
+}
+
+async function toggleReaction(annonceId, emoji){
+  var existing = REACTIONS.find(function(r){ return r.annonce_id===annonceId && r.user_id===USER.id; });
+  if(existing && existing.emoji===emoji){
+    await sb.from('annonce_reactions').delete().eq('id',existing.id);
+  } else if(existing){
+    await sb.from('annonce_reactions').update({emoji:emoji}).eq('id',existing.id);
+  } else {
+    await sb.from('annonce_reactions').insert({annonce_id:annonceId, user_id:USER.id, emoji:emoji});
+  }
+  loadAnnonces();
+}
+
+async function deleteAnnonce(id){
+  if(!confirm('Supprimer cette annonce ?')) return;
+  await sb.from('annonces').delete().eq('id',id);
+  loadAnnonces();
+}
+</script>
+</body>
+</html>
