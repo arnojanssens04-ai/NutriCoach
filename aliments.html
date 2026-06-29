@@ -141,6 +141,16 @@ async function checkAdminAndLoad(){
     return;
   }
   loadFoods();
+
+  // Arrivée depuis un scan sans résultat — le code-barres est déjà connu,
+  // pas besoin de le retaper.
+  var params = new URLSearchParams(window.location.search);
+  var barcode = params.get('barcode');
+  if(barcode){
+    document.getElementById('f-barcode').value = barcode;
+    document.getElementById('f-nom').focus();
+    toast('Code-barres pré-rempli — indiquez le nom et les valeurs nutritionnelles');
+  }
 }
 
 var EDITING_ID = null;
