@@ -1194,6 +1194,15 @@ function afterJournalChange(){
   if(ov && ov.classList.contains('on')) refreshSetupJournal();
 }
 
+// ── INDICATEUR GLYCÉMIQUE (proxy) ── le riz blanc a ~28g de glucides et
+// seulement ~0,4g de fibres pour 100g (ratio 1,4%) — un très mauvais choix
+// glycémique malgré un total de fibres journalier qui peut sembler correct.
+// Seuils : ≥10% bon, 5-10% moyen, <5% à éviter pour le diabète.
+function fibreGlucRatio(gluc100, fibres100){
+  if(!gluc100 || gluc100<=0) return null;
+  return (fibres100||0)/gluc100*100;
+}
+
 async function addEntry(food,qty){
   var r = await sb.from('journal').insert({
     user_id:USER.id,date:today(),repas:activeMeal,aliment:food.nom,
@@ -1211,7 +1220,33 @@ async function addEntry(food,qty){
   });
   if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
+
+  // Avertissement diabète — seulement si l'aliment contribue vraiment à la
+  // charge glycémique du repas (pas pour 3g de glucides anecdotiques).
+  var pathos = (PROF && PROF.pathologies) || [];
+  var carbGrams = pN(food.gluc)*qty/100;
+  if(pathos.indexOf('diabetes')>=0 && carbGrams>15){
+    var ratio = fibreGlucRatio(pN(food.gluc), pN(food.fibres));
+    if(ratio!==null && ratio<5){
+      showDiabetesWarning(food.nom, carbGrams, ratio);
+    }
+  }
+
   afterJournalChange();
+}
+
+function showDiabetesWarning(nom, carbGrams, ratio){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:360px;box-shadow:0 30px 80px rgba(0,0,0,.25)">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">🌿</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">Impact glycémique à surveiller</div>'
+    +'<p style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:18px">'
+    +'<b>'+esc(nom)+'</b> apporte '+carbGrams.toFixed(0)+'g de glucides pour très peu de fibres (à peine '+ratio.toFixed(1)+'% du poids en glucides) — ce type d\'aliment fait monter la glycémie plus rapidement. '
+    +'Pas de souci ponctuel, mais essayez de l\'associer à des fibres ou des protéines, ou de limiter la quantité la prochaine fois.</p>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">Compris</button>'
+    +'</div>';
+  document.body.appendChild(ov);
 }
 async function delEntry(id){
   var r = await sb.from('journal').delete().eq('id',id);
@@ -2315,10 +2350,37 @@ var RECIPES = [
 
 // Choisit une recette compatible (pathologie) pour ce repas, en évitant si
 // possible celles déjà utilisées ailleurs dans la journée.
+// Calcule le ratio fibres/glucides agrégé d'une recette, en retrouvant les
+// fibres de chaque ingrédient via son code Ciqual (pas stocké directement
+// dans la recette, pour éviter de ressaisir des données déjà disponibles).
+function recipeFibreGlucRatio(recipe){
+  var totalGluc = 0, totalFibres = 0;
+  recipe.ing.forEach(function(ing){
+    var portion = ing.qty/100;
+    totalGluc += (ing.gluc||0)*portion;
+    var ciq = DB.find(function(d){ return d.code===ing.code; });
+    totalFibres += (ciq ? (ciq.fibres||0) : 0)*portion;
+  });
+  if(totalGluc<=2) return null; // recette quasi sans glucides — non pertinent pour ce filtre
+  return totalFibres/totalGluc*100;
+}
+
 function pickRecipe(meal, pathologies, usedIds){
   var pool = RECIPES.filter(function(r){
     return r.meal===meal && !r.excludeFor.some(function(p){ return pathologies.indexOf(p)>=0; });
   });
+
+  // Diabète : on évite les recettes trop pauvres en fibres par rapport à
+  // leurs glucides (ratio <5%, ex: riz blanc seul) — sauf si ça laisserait
+  // ce repas sans aucune suggestion, pour ne jamais se retrouver bloqué.
+  if(pathologies.indexOf('diabetes')>=0){
+    var filtered = pool.filter(function(r){
+      var ratio = recipeFibreGlucRatio(r);
+      return ratio===null || ratio>=5;
+    });
+    if(filtered.length) pool = filtered;
+  }
+
   var fresh = pool.filter(function(r){ return !usedIds[r.id]; });
   var finalPool = fresh.length ? fresh : pool;
   if(!finalPool.length) return null;
