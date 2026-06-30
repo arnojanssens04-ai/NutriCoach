@@ -2460,19 +2460,23 @@ function recipeHasGlycemicCulprit(recipe){
   });
 }
 
-function pickRecipe(meal, pathologies, usedIds){
-  var pool = RECIPES.filter(function(r){
-    return r.meal===meal && !r.excludeFor.some(function(p){ return pathologies.indexOf(p)>=0; });
+// Filtre commun aux DEUX endroits où une recette est choisie (génération
+// initiale du plan ET bouton "⇄" pour changer de suggestion) — avoir une
+// seule fonction partagée évite qu'un filtre corrigé à un endroit soit
+// oublié dans l'autre, comme ça a été le cas pour le filtre diabète.
+function filterRecipesForPathologies(pool, pathologies){
+  var filtered = pool.filter(function(r){
+    return !r.excludeFor.some(function(p){ return pathologies.indexOf(p)>=0; });
   });
-
-  // Diabète : on exclut toute recette contenant un ingrédient à fort
-  // impact glycémique (ex: pain blanc, riz blanc seul en grande quantité)
-  // — sauf si ça laisserait ce repas totalement sans suggestion, pour ne
-  // jamais se retrouver bloqué dans un cas de figure trop restrictif.
   if(pathologies.indexOf('diabetes')>=0){
-    var filtered = pool.filter(function(r){ return !recipeHasGlycemicCulprit(r); });
-    if(filtered.length) pool = filtered;
+    var noCulprit = filtered.filter(function(r){ return !recipeHasGlycemicCulprit(r); });
+    if(noCulprit.length) filtered = noCulprit;
   }
+  return filtered;
+}
+
+function pickRecipe(meal, pathologies, usedIds){
+  var pool = filterRecipesForPathologies(RECIPES.filter(function(r){ return r.meal===meal; }), pathologies);
 
   var fresh = pool.filter(function(r){ return !usedIds[r.id]; });
   var finalPool = fresh.length ? fresh : pool;
@@ -2562,10 +2566,10 @@ function changeMealRecipe(mealKey){
     : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
 
   var currentId = CURRENT_PLAN[mealKey] ? CURRENT_PLAN[mealKey].recipeId : null;
-  var pool = RECIPES.filter(function(r){
-    return r.meal===mealKey && r.id!==currentId &&
-      !r.excludeFor.some(function(x){ return pathos.indexOf(x)>=0; });
-  });
+  var pool = filterRecipesForPathologies(
+    RECIPES.filter(function(r){ return r.meal===mealKey && r.id!==currentId; }),
+    pathos
+  );
   if(!pool.length) { toast('Aucune autre recette disponible pour ce repas.'); return; }
   var recipe = pool[Math.floor(Math.random()*pool.length)];
   var mealKcalTarget = tgt.kcal * (mealPcts[mealKey]||0.2);
@@ -3067,7 +3071,7 @@ function regenerateMealPlan(){
 // recettes change (champs ajoutés/modifiés) — sinon un plan sauvegardé
 // avant la modification continue d'être rechargé tel quel indéfiniment,
 // perpétuant un bug déjà corrigé dans le code.
-var GENERIC_PLAN_VERSION = 3;
+var GENERIC_PLAN_VERSION = 4;
 function saveGenericPlan(){
   if(!CURRENT_PLAN || !USER) return;
   var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS, version:GENERIC_PLAN_VERSION});
