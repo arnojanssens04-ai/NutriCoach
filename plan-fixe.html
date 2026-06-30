@@ -221,13 +221,31 @@ function activeMealKeys(){
   return keys;
 }
 
+// Même logique que dans le Journal — ratio fibres/glucides, proxy de
+// l'impact glycémique. Affiché en badge discret ici (pas en pop-up), car
+// on ajoute/retire souvent plusieurs aliments d'affilée en construisant
+// un plan ; une fenêtre à chaque clic serait vite agaçante.
+function fibreGlucRatio(gluc100, fibres100){
+  if(!gluc100 || gluc100<=0) return null;
+  return (fibres100||0)/gluc100*100;
+}
+function glycemicBadge(it){
+  var pathos = (PROF && PROF.pathologies) || [];
+  if(pathos.indexOf('diabetes')<0) return '';
+  var carbGrams = (it.gluc||0)*it.qty/100;
+  if(carbGrams<=15) return '';
+  var ratio = fibreGlucRatio(it.gluc, it.fibres);
+  if(ratio===null || ratio>=5) return '';
+  return ' <span title="Peu de fibres pour la quantité de glucides — impact glycémique plus marqué" style="cursor:help">🌿</span>';
+}
+
 function renderMeals(){
   var container = document.getElementById('meals-container');
   container.innerHTML = activeMealKeys().map(function(mk){
     var items = MEALS[mk]||[];
     var rows = items.map(function(it,idx){
       var kcal = Math.round(it.kcal*it.qty/100);
-      return '<div class="food-row"><span>'+esc(it.nom)+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
+      return '<div class="food-row"><span>'+esc(it.nom)+glycemicBadge(it)+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
         +'<button class="food-del" onclick="removeFood(\''+mk+'\','+idx+')">✕</button></div>';
     }).join('');
     return '<div class="meal-section"><div class="meal-hdr"><span>'+MEAL_LABELS[mk]+'</span></div><div class="meal-body">'
@@ -305,7 +323,7 @@ function confirmAddFood(mealKey){
   var raw = parseFloat(qtyInput.value)||1;
   var unitGrams = qtyInput.getAttribute('data-unit-grams');
   var qty = unitGrams ? raw*parseFloat(unitGrams) : raw;
-  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0});
+  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0, fibres:food.fibres||0});
   delete SEARCH_PICKED[mealKey];
   document.getElementById('search-'+mealKey).value='';
   qtyInput.value='100';
@@ -319,17 +337,26 @@ function removeFood(mealKey, idx){
 }
 
 function renderTotals(){
-  var T = {kcal:0,prot:0,gluc:0,lip:0};
-  Object.values(MEALS).forEach(function(items){
-    (items||[]).forEach(function(it){ var r=it.qty/100; T.kcal+=it.kcal*r; T.prot+=it.prot*r; T.gluc+=it.gluc*r; T.lip+=it.lip*r; });
-  });
-  // Pas d'objectif affiché ici — juste ce qui a été additionné. L'objectif
-  // est vérifié uniquement à l'enregistrement (voir savePlanFixe).
+  var T = currentTotals();
+  var tgt = calcTargets();
+  function bar(label, val, target, unit, dec){
+    var pct = target>0 ? Math.min(130, val/target*100) : 0;
+    var over = pct>110;
+    var color = over ? 'var(--rose)' : (pct>=85 ? 'var(--sage)' : 'var(--gold)');
+    return '<div class="tot-row" style="flex-direction:column;align-items:stretch;gap:4px;padding:7px 0">'
+      +'<div style="display:flex;justify-content:space-between"><span>'+label+'</span><span style="color:'+(over?'var(--rose)':'var(--text)')+'">'+val.toFixed(dec||0)+unit+' <span style="color:var(--text3)">/ '+target.toFixed(dec||0)+unit+'</span></span></div>'
+      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+color+';border-radius:999px"></div></div>'
+      +'</div>';
+  }
+  // Les objectifs sont désormais visibles EN DIRECT pendant la
+  // construction du plan, pas seulement au moment d'enregistrer — pour
+  // que la personne voie immédiatement où elle en est, comme le ferait
+  // n'importe quel bon outil de planification nutritionnelle.
   document.getElementById('totals-card').innerHTML =
-    '<div class="tot-row"><span>Calories</span><span>'+Math.round(T.kcal)+' kcal</span></div>'
-    +'<div class="tot-row"><span>Protéines</span><span>'+T.prot.toFixed(0)+' g</span></div>'
-    +'<div class="tot-row"><span>Glucides</span><span>'+T.gluc.toFixed(0)+' g</span></div>'
-    +'<div class="tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' g</span></div>';
+    bar('Calories', T.kcal, tgt.kcal, ' kcal', 0)
+    + bar('Protéines', T.prot, tgt.prot, 'g', 0)
+    + bar('Glucides', T.gluc, tgt.gluc, 'g', 0)
+    + bar('Lipides', T.lip, tgt.lip, 'g', 0);
 }
 
 function currentTotals(){
