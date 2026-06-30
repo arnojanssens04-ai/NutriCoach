@@ -451,6 +451,13 @@ body {
 .btn-back:hover { border-color: var(--gold); color: var(--gold); }
 
 /* ── PLAN ALIMENTAIRE ── */
+/* Ces classes manquaient totalement de style — chaque repas s'affichait
+   sans boîte ni séparation réelle, d'où la confusion entre les repas. */
+.card { background:var(--card); border:1px solid var(--border2); border-radius:14px; box-shadow:var(--sh); overflow:hidden; }
+.mb-12 { margin-bottom: 22px; }
+.card-header { padding:14px 16px; background:var(--gold-l); border-bottom:1px solid var(--border2); }
+.card-title { font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--text); }
+.card-body { padding:6px 16px 4px; }
 .mp-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
 .mp-item:last-child { border-bottom:none; }
 .mp-item-info { flex:1; }
@@ -604,6 +611,7 @@ body {
     <h2 class="section-title" style="font-size:1.3rem;margin:0">Mon plan alimentaire</h2>
   </div>
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
+  <div id="mealplan-diabetes-note" style="display:none;background:var(--sage-l);border:1px solid rgba(74,122,58,0.25);border-radius:11px;padding:12px 15px;margin-bottom:16px;font-size:.83rem;color:var(--sage);line-height:1.55"></div>
   <div class="card mb-12">
     <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journée</span></div>
     <div class="card-body" id="mp-totals"></div>
@@ -2385,6 +2393,24 @@ var RECIPES = [
     {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110,unit:'pot',gpu:125},
     {code:'13039',nom:'Pomme',qty:150,kcal:54,prot:0.25,gluc:11.6,lip:0.3,ags:0.052,pot:119,unit:'fruit',gpu:150}
   ]},
+  {id:'l8', meal:'lunch', nom:'Lentilles, riz complet & carotte', excludeFor:[], ing:[
+    {code:'20429',nom:'Lentilles cuites',qty:180,kcal:116,prot:9.0,gluc:20.0,lip:0.4,ags:0.06,pot:369,unit:'g'},
+    {code:'9410',nom:'Riz complet cuit',qty:120,kcal:123,prot:2.7,gluc:25.8,lip:1.0,ags:0.2,pot:86,unit:'g'},
+    {code:'20009',nom:'Carotte',qty:100,kcal:30.2,prot:0.78,gluc:5.2,lip:0.3,ags:0.15,pot:274,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:15,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:15}
+  ]},
+  {id:'l9', meal:'lunch', nom:'Pois chiches, quinoa & poivron', excludeFor:[], ing:[
+    {code:'20410',nom:'Pois chiches cuits',qty:170,kcal:164,prot:8.9,gluc:27.4,lip:2.6,ags:0.27,pot:291,unit:'g'},
+    {code:'9341',nom:'Quinoa cuit',qty:100,kcal:149,prot:4.7,gluc:27.9,lip:1.1,ags:0.14,pot:220,unit:'g'},
+    {code:'20087',nom:'Poivron rouge',qty:120,kcal:33.6,prot:1.1,gluc:6.0,lip:0.3,ags:0.01,pot:180,unit:'g'},
+    {code:'17270',nom:"Huile d'olive",qty:15,kcal:899,prot:0.25,gluc:0,lip:99.9,ags:15.2,pot:0,unit:'cuillère à soupe',gpu:15}
+  ]},
+  {id:'d7', meal:'dinner', nom:'Haricots rouges, riz complet & courgette', excludeFor:[], ing:[
+    {code:'20425',nom:'Haricots rouges cuits',qty:170,kcal:127,prot:8.7,gluc:21.4,lip:0.5,ags:0.07,pot:403,unit:'g'},
+    {code:'9410',nom:'Riz complet cuit',qty:110,kcal:123,prot:2.7,gluc:25.8,lip:1.0,ags:0.2,pot:86,unit:'g'},
+    {code:'20021',nom:'Courgette',qty:130,kcal:15.5,prot:0.9,gluc:1.4,lip:0.4,ags:0.1,pot:238,unit:'g'},
+    {code:'17130',nom:'Huile de colza',qty:15,kcal:900,prot:0,gluc:0,lip:100,ags:7.26,pot:0,unit:'cuillère à soupe',gpu:15}
+  ]},
   // ── COLLATION 2 (haut besoin calorique, ≥3000kcal) ──
   {id:'s2_1', meal:'snack2', nom:'Œuf & amandes', excludeFor:[], ing:[
     {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120,unit:'oeuf',gpu:50},
@@ -2398,19 +2424,25 @@ var RECIPES = [
 
 // Choisit une recette compatible (pathologie) pour ce repas, en évitant si
 // possible celles déjà utilisées ailleurs dans la journée.
-// Calcule le ratio fibres/glucides agrégé d'une recette, en retrouvant les
-// fibres de chaque ingrédient via son code Ciqual (pas stocké directement
-// dans la recette, pour éviter de ressaisir des données déjà disponibles).
-function recipeFibreGlucRatio(recipe){
-  var totalGluc = 0, totalFibres = 0;
-  recipe.ing.forEach(function(ing){
-    var portion = ing.qty/100;
-    totalGluc += (ing.gluc||0)*portion;
+// Repère si UN SEUL ingrédient de la recette (à sa quantité de base, avant
+// mise à l'échelle) a un impact glycémique marqué — mêmes seuils que le
+// badge 🌿 utilisé partout ailleurs (Journal, Plan fixe, Recettes), pour
+// rester cohérent : plus de 15g de glucides apportés, et moins de 5% de
+// fibres par rapport aux glucides. Le pain blanc, par exemple, est détecté
+// ainsi sans avoir besoin d'une liste figée de noms d'aliments à exclure.
+function recipeHasGlycemicCulprit(recipe){
+  return recipe.ing.some(function(ing){
+    var carbGrams = (ing.gluc||0)*ing.qty/100;
+    if(carbGrams<=15) return false;
     var ciq = DB.find(function(d){ return d.code===ing.code; });
-    totalFibres += (ciq ? (ciq.fibres||0) : 0)*portion;
+    // Si l'aliment n'est pas retrouvé dans la base (code absent ou non
+    // encore chargée), on ne le pénalise jamais — un manque de données ne
+    // doit jamais être interprété comme "zéro fibre", ce qui exclurait à
+    // tort des aliments sains comme les légumineuses.
+    if(!ciq) return false;
+    var ratio = fibreGlucRatio(ing.gluc, ciq.fibres||0);
+    return ratio!==null && ratio<5;
   });
-  if(totalGluc<=2) return null; // recette quasi sans glucides — non pertinent pour ce filtre
-  return totalFibres/totalGluc*100;
 }
 
 function pickRecipe(meal, pathologies, usedIds){
@@ -2418,14 +2450,12 @@ function pickRecipe(meal, pathologies, usedIds){
     return r.meal===meal && !r.excludeFor.some(function(p){ return pathologies.indexOf(p)>=0; });
   });
 
-  // Diabète : on évite les recettes trop pauvres en fibres par rapport à
-  // leurs glucides (ratio <5%, ex: riz blanc seul) — sauf si ça laisserait
-  // ce repas sans aucune suggestion, pour ne jamais se retrouver bloqué.
+  // Diabète : on exclut toute recette contenant un ingrédient à fort
+  // impact glycémique (ex: pain blanc, riz blanc seul en grande quantité)
+  // — sauf si ça laisserait ce repas totalement sans suggestion, pour ne
+  // jamais se retrouver bloqué dans un cas de figure trop restrictif.
   if(pathologies.indexOf('diabetes')>=0){
-    var filtered = pool.filter(function(r){
-      var ratio = recipeFibreGlucRatio(r);
-      return ratio===null || ratio>=5;
-    });
+    var filtered = pool.filter(function(r){ return !recipeHasGlycemicCulprit(r); });
     if(filtered.length) pool = filtered;
   }
 
@@ -2829,6 +2859,17 @@ function renderMealPlan(){
       : (allMealsCovered
         ? "Basé sur les aliments que vous avez réellement enregistrés aujourd'hui."
         : "Les repas déjà enregistrés restent inchangés (ce sont des faits) ; les repas suivants sont ajustés pour compenser et se rapprocher au maximum de vos objectifs du jour.");
+
+    // Réassurance visible — le filtrage diabète existe déjà en coulisses,
+    // mais le rendre explicite aide la personne à comprendre pourquoi
+    // certaines suggestions reviennent souvent (ex: jamais de pain blanc).
+    var diabNote = document.getElementById('mealplan-diabetes-note');
+    if(pathos.indexOf('diabetes')>=0){
+      diabNote.style.display = 'block';
+      diabNote.innerHTML = '🌿 Les suggestions ci-dessous excluent automatiquement les aliments à fort impact glycémique (peu de fibres pour beaucoup de glucides, comme le pain blanc) — vous pouvez les consommer en quantité raisonnable, mais elles ne sont pas proposées par défaut.';
+    } else {
+      diabNote.style.display = 'none';
+    }
 
     var byMeal = {};
     if(analysis) analysis.adjusted.forEach(function(a){
