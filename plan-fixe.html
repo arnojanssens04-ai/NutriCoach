@@ -98,6 +98,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="regles-pathologies.js"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -221,23 +222,8 @@ function activeMealKeys(){
   return keys;
 }
 
-// Même logique que dans le Journal — ratio fibres/glucides, proxy de
-// l'impact glycémique. Affiché en badge discret ici (pas en pop-up), car
-// on ajoute/retire souvent plusieurs aliments d'affilée en construisant
-// un plan ; une fenêtre à chaque clic serait vite agaçante.
-function fibreGlucRatio(gluc100, fibres100){
-  if(!gluc100 || gluc100<=0) return null;
-  return (fibres100||0)/gluc100*100;
-}
-function glycemicBadge(it){
-  var pathos = (PROF && PROF.pathologies) || [];
-  if(pathos.indexOf('diabetes')<0) return '';
-  var carbGrams = (it.gluc||0)*it.qty/100;
-  if(carbGrams<=15) return '';
-  var ratio = fibreGlucRatio(it.gluc, it.fibres);
-  if(ratio===null || ratio>=5) return '';
-  return ' <span title="Peu de fibres pour la quantité de glucides — impact glycémique plus marqué" style="cursor:help">🌿</span>';
-}
+// fibreGlucRatio() et glycemicBadge() sont désormais fournies par
+// regles-pathologies.js (fichier partagé inclus en haut de page).
 
 function renderMeals(){
   var container = document.getElementById('meals-container');
