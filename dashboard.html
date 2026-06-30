@@ -2181,12 +2181,12 @@ var FOOD_BANK = {
     {code:'13043', nom:'Pêche', kcal:37.9, prot:0.91, gluc:7.6, lip:0.25, ags:0.019, pot:215, unit:'fruit', gpu:130}
   ],
   matieres_grasses: [
-    {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0, lip:99.9, ags:15.2, pot:0, unit:'cuillère à soupe', gpu:10},
+    {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0, lip:99.9, ags:15.2, pot:0, unit:'cuillère à soupe', gpu:15, fits:['lunch','dinner']},
     {code:'13004', nom:'Avocat', kcal:203, prot:1.6, gluc:0, lip:20.6, ags:4.51, pot:430, unit:'g'},
     {code:'15000', nom:'Amandes', kcal:615, prot:18.8, gluc:9.5, lip:51.3, ags:4.11, pot:800, unit:'poignée', gpu:20},
     {code:'16400', nom:'Beurre', kcal:753, prot:0.64, gluc:0.7, lip:83, ags:60, pot:36.1, unit:'noix', gpu:10},
     {code:'15005', nom:'Noix', kcal:709, prot:13.3, gluc:6.9, lip:67.3, ags:6.45, pot:430, unit:'poignée', gpu:20},
-    {code:'17130', nom:'Huile de colza', kcal:900, prot:0, gluc:0, lip:100, ags:7.26, pot:0, unit:'cuillère à soupe', gpu:10}
+    {code:'17130', nom:'Huile de colza', kcal:900, prot:0, gluc:0, lip:100, ags:7.26, pot:0, unit:'cuillère à soupe', gpu:15, fits:['lunch','dinner']}
   ],
   laitier: [
     {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml', fits:['breakfast']},
@@ -2403,14 +2403,20 @@ function scaleRecipe(recipe, targetKcal){
   });
 }
 
+// Pondération par repas, partagée entre la génération initiale du plan
+// générique et le recalcul en direct des portions restantes (pour ne
+// jamais avoir deux logiques de répartition différentes qui divergent).
+function getMealPcts(){
+  return needsSecondSnack()
+    ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
+    : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
+}
+
 function generateMealPlan(){
   var p = PROF || {};
   var pathos = p.pathologies || [];
   var tgt = calcTargets();
-  var need2ndSnack = needsSecondSnack();
-  var mealPcts = need2ndSnack
-    ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
-    : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
+  var mealPcts = getMealPcts();
 
   var plan = {};
   var usedIds = {};
@@ -2554,11 +2560,29 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
     : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
 
-  var SUGGEST_DEFAULTS = {
-    carb:    {code:'9104',  nom:'Riz blanc',     kcal:155, prot:3.2,  gluc:33.2, lip:0.7,  ags:0.17, pot:21.9, maxQty:400},
-    protein: {code:'25997', nom:'Cabillaud',     kcal:100, prot:23.3, gluc:0,    lip:0.8,  ags:0.17, pot:327,  maxQty:300},
-    fat:     {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0,    lip:99.9, ags:15.2, pot:0,    maxQty:40}
+  // Aliments par défaut adaptés AU TYPE DE REPAS — un cabillaud n'a aucun
+  // sens proposé au petit-déjeuner. Chaque créneau a son propre jeu
+  // d'aliments suggérés, cohérents avec ce qu'on mange réellement à ce
+  // moment de la journée.
+  var SUGGEST_DEFAULTS_BY_MEAL = {
+    breakfast: {
+      protein: {code:'22010', nom:'Œuf dur',      kcal:134, prot:13.5, gluc:0.5,  lip:8.6,  ags:3.22, pot:120,  maxQty:150},
+      carb:    {code:'7001',  nom:'Pain blanc',    kcal:287, prot:8.3,  gluc:58.3, lip:1.4,  ags:0.45, pot:180,  maxQty:150},
+      fat:     {code:'16400', nom:'Beurre',        kcal:753, prot:0.64, gluc:0.7,  lip:83,   ags:60,   pot:36.1, maxQty:30}
+    },
+    snack: {
+      protein: {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6,  gluc:3.5,  lip:3.0,  ags:2.13, pot:110,  maxQty:250},
+      carb:    {code:'13005', nom:'Banane',        kcal:87.6, prot:1.1,  gluc:19.7, lip:0.5,  ags:0.01, pot:320,  maxQty:200},
+      fat:     {code:'15000', nom:'Amandes',       kcal:615,  prot:18.8, gluc:9.5,  lip:51.3, ags:4.11, pot:800,  maxQty:40}
+    },
+    lunch: {
+      protein: {code:'25997', nom:'Cabillaud',     kcal:100, prot:23.3, gluc:0,    lip:0.8,  ags:0.17, pot:327,  maxQty:300},
+      carb:    {code:'9104',  nom:'Riz blanc',     kcal:155, prot:3.2,  gluc:33.2, lip:0.7,  ags:0.17, pot:21.9, maxQty:400},
+      fat:     {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0,    lip:99.9, ags:15.2, pot:0,    maxQty:40}
+    }
   };
+  SUGGEST_DEFAULTS_BY_MEAL.dinner = SUGGEST_DEFAULTS_BY_MEAL.lunch;
+  SUGGEST_DEFAULTS_BY_MEAL.snack2 = SUGGEST_DEFAULTS_BY_MEAL.snack;
 
   var adjusted = [];
   var suggestionAlerts = [];
@@ -2572,6 +2596,12 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     var buckets = {protein:0, carb:0, fat:0};
     mealEntries.forEach(function(e){ var cat=classifyDominant(e); if(buckets[cat]!==undefined) buckets[cat]+=(e.kcal||0); });
 
+    // Les facteurs ne servent plus qu'à DÉTECTER une catégorie absente
+    // (null = aucun aliment de cette catégorie dans le repas) — un repas
+    // déjà mangé est un FAIT, on ne réécrit jamais une quantité réellement
+    // consommée. La seule action possible est de COMPLÉTER avec une
+    // suggestion si une catégorie manque totalement, jamais de modifier
+    // ce qui a déjà été enregistré.
     var fProt = scaleFactor(buckets.protein, mProt*4);
     var protFinal = buckets.protein*(fProt||1);
     var remaining = Math.max(0, mKcal-protFinal);
@@ -2581,31 +2611,19 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     var fCarb = scaleFactor(buckets.carb, tgtCarbKcal);
     var fFat  = scaleFactor(buckets.fat, tgtFatKcal);
 
-    function computeMeal(fP,fC,fF){
+    function computeMeal(){
+      // Quantité réelle, immuable — jamais de "250g → 100g" sur un repas
+      // déjà consommé. Le total du repas reflète fidèlement la réalité.
       var adj = mealEntries.map(function(e){
         var cat = classifyDominant(e);
-        var f = cat==='protein'?fP:cat==='carb'?fC:cat==='fat'?fF:1;
-        if(f===null) f=1;
-        return {entry:e, cat:cat, oldQty:e.quantite, newQty:roundToNaturalUnit(e.quantite*f, e.aliment), factor:f};
+        return {entry:e, cat:cat, oldQty:e.quantite, newQty:e.quantite, factor:1};
       });
       var lip=0, gluc=0;
       adj.forEach(function(a){ var r=a.newQty/100; lip+=pN2(a.entry.food_lip_100)*r; gluc+=pN2(a.entry.food_gluc_100)*r; });
       return {adj:adj, lip:lip, gluc:gluc};
     }
 
-    var res = computeMeal(fProt,fCarb,fFat);
-    // Correction sur grammes réels, à l'échelle DE CE REPAS seulement.
-    if(res.lip > mLip*1.05 && buckets.fat>0){
-      var exLip=(res.lip-mLip)*9, fatNow=buckets.fat*(fFat||1), floor=buckets.fat*0.4;
-      fFat = Math.max(floor, fatNow-exLip)/buckets.fat;
-      res = computeMeal(fProt,fCarb,fFat);
-    }
-    if(res.gluc > mGluc*1.05 && buckets.carb>0){
-      var exC=(res.gluc-mGluc)*4, carbNow=buckets.carb*(fCarb||1), cfloor=buckets.carb*0.4;
-      fCarb = Math.max(cfloor, carbNow-exC)/buckets.carb;
-      res = computeMeal(fProt,fCarb,fFat);
-    }
-
+    var res = computeMeal();
     adjusted = adjusted.concat(res.adj);
 
     // Suggestion d'aliment si une catégorie est VIDE — injectée DANS ce repas
@@ -2615,7 +2633,8 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       if(factor !== null) return;
       emptyBucketFlags[key] = true;
       var override = SUGGESTED_OVERRIDES[key];
-      var def = override || SUGGEST_DEFAULTS[key];
+      var pool = SUGGEST_DEFAULTS_BY_MEAL[mealKey] || SUGGEST_DEFAULTS_BY_MEAL.lunch;
+      var def = override || pool[key];
       var qty = Math.min(def.maxQty, Math.max(10, roundTo(targetKcal/def.kcal*100, 5)));
       var se = {aliment:def.nom, repas:mealKey, quantite:qty, id:'sugg-'+key+'-'+mealKey,
         food_kcal_100:def.kcal, food_prot_100:def.prot, food_gluc_100:def.gluc, food_lip_100:def.lip,
@@ -2738,14 +2757,40 @@ function renderMealPlan(){
     document.getElementById('mealplan-mode-note').textContent = !hasAnyReal
       ? "Aucun aliment enregistré aujourd'hui : voici une journée type générique en attendant. Ajoutez vos repas dans le Journal ou via une recette pour obtenir un plan basé sur vos propres habitudes."
       : (allMealsCovered
-        ? "Basé sur les aliments que vous avez déjà enregistrés aujourd'hui — quantités ajustées pour se rapprocher de vos objectifs."
-        : "Les repas déjà enregistrés sont ajustés à vos besoins ; les autres restent des suggestions génériques en attendant que vous les complétiez.");
+        ? "Basé sur les aliments que vous avez réellement enregistrés aujourd'hui."
+        : "Les repas déjà enregistrés restent inchangés (ce sont des faits) ; les repas suivants sont ajustés pour compenser et se rapprocher au maximum de vos objectifs du jour.");
 
     var byMeal = {};
     if(analysis) analysis.adjusted.forEach(function(a){
       if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
       byMeal[a.entry.repas].push(a);
     });
+
+    // ── Répartition du budget RESTANT sur les repas pas encore décidés ──
+    // Les repas déjà mangés sont des faits immuables : on ne les modifie
+    // jamais. Mais pour vraiment "faire le maximum" pour atteindre les
+    // objectifs du jour, les repas encore suggérés (pas de plan fixe, pas
+    // encore enregistrés) sont recalculés à la volée pour combler ce qu'il
+    // reste à atteindre — pas juste leur pourcentage théorique du jour
+    // entier, qui ignorerait ce qui a déjà été consommé.
+    var mealPcts = getMealPcts();
+    var eatenKcal = 0, eatenProt = 0, eatenGluc = 0, eatenLip = 0;
+    var genericMealIds = [];
+    activeMealIds().forEach(function(mid){
+      if(mealsWithRealData[mid]){
+        (byMeal[mid]||[]).forEach(function(a){ var r=a.newQty/100; eatenKcal+=pN2(a.entry.food_kcal_100)*r; eatenProt+=pN2(a.entry.food_prot_100)*r; eatenGluc+=pN2(a.entry.food_gluc_100)*r; eatenLip+=pN2(a.entry.food_lip_100)*r; });
+        return;
+      }
+      var pfOk0 = PROF && PROF.plan_fixe && PROF.plan_fixe._active !== false;
+      var pf0 = (pfOk0 && PROF.plan_fixe[mid] && PROF.plan_fixe[mid].length) ? PROF.plan_fixe[mid] : null;
+      if(pf0){
+        pf0.forEach(function(it){ var r=it.qty/100; eatenKcal+=pN2(it.kcal)*r; eatenProt+=pN2(it.prot)*r; eatenGluc+=pN2(it.gluc)*r; eatenLip+=pN2(it.lip)*r; });
+        return;
+      }
+      genericMealIds.push(mid);
+    });
+    var genericWeightSum = genericMealIds.reduce(function(s,m){ return s+(mealPcts[m]||0); },0) || 1;
+    var remainingKcal = Math.max(0, tgt.kcal - eatenKcal);
 
     var html = '';
     var combinedT = {kcal:0,prot:0,gluc:0,lip:0};
@@ -2760,13 +2805,10 @@ function renderMealPlan(){
         items.forEach(function(a){ var r=a.newQty/100; combinedT.kcal+=pN2(a.entry.food_kcal_100)*r; combinedT.prot+=pN2(a.entry.food_prot_100)*r; combinedT.gluc+=pN2(a.entry.food_gluc_100)*r; combinedT.lip+=pN2(a.entry.food_lip_100)*r; });
         html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
         items.forEach(function(a){
-          var changed = a.newQty !== a.oldQty;
           var newKcal = Math.round(pN2(a.entry.food_kcal_100)*a.newQty/100);
           html += '<div class="mp-item"><div class="mp-item-info">'
             +'<div class="mp-item-name">'+esc(a.entry.aliment)+(a.suggested?' <span style="font-size:.62rem;background:var(--sage-l);color:var(--sage);padding:1px 7px;border-radius:999px;margin-left:4px;text-transform:uppercase;letter-spacing:.4px">Suggéré</span>':'')+'</div>'
-            +'<div class="mp-item-qty">'
-            +(changed ? '<span style="text-decoration:line-through;color:var(--text3)">'+a.oldQty+'g</span> → <strong style="color:var(--gold)">'+a.newQty+'g</strong>' : a.newQty+'g')
-            +' · '+newKcal+' kcal</div></div>'
+            +'<div class="mp-item-qty">'+a.newQty+'g · '+newKcal+' kcal</div></div>'
             +(a.suggested ? '<button class="mp-swap" onclick="openSubstituteSuggested(\''+a.cat+'\')">⇄</button>' : '')
             +'</div>';
         });
@@ -2793,6 +2835,17 @@ function renderMealPlan(){
           var mealData = CURRENT_PLAN[mid] || {recipeName:'',items:[]};
           var gItems = mealData.items || [];
           if(!gItems.length) return;
+
+          // Recalcul en direct des PORTIONS (pas du choix de recette, qui
+          // reste stable) selon ce qu'il reste réellement à atteindre dans
+          // la journée, réparti entre les repas pas encore décidés.
+          var recipeFull = mealData.recipeId ? RECIPES.find(function(r){ return r.id===mealData.recipeId; }) : null;
+          if(recipeFull){
+            var weight = (mealPcts[mid]||0)/genericWeightSum;
+            var mealTarget = remainingKcal*weight;
+            gItems = scaleRecipe(recipeFull, mealTarget);
+          }
+
           gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
           html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
             +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
