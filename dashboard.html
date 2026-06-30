@@ -914,6 +914,10 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<!-- Règles nutritionnelles partagées (diabète, cœliaque à venir, FODMAP à
+     venir) — même fichier inclus dans plan-fixe.html et recette.html,
+     pour qu'une correction faite ici profite partout automatiquement. -->
+<script src="regles-pathologies.js"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -1202,14 +1206,8 @@ function afterJournalChange(){
   if(ov && ov.classList.contains('on')) refreshSetupJournal();
 }
 
-// ── INDICATEUR GLYCÉMIQUE (proxy) ── le riz blanc a ~28g de glucides et
-// seulement ~0,4g de fibres pour 100g (ratio 1,4%) — un très mauvais choix
-// glycémique malgré un total de fibres journalier qui peut sembler correct.
-// Seuils : ≥10% bon, 5-10% moyen, <5% à éviter pour le diabète.
-function fibreGlucRatio(gluc100, fibres100){
-  if(!gluc100 || gluc100<=0) return null;
-  return (fibres100||0)/gluc100*100;
-}
+// fibreGlucRatio() est désormais fournie par regles-pathologies.js
+// (fichier partagé inclus en haut de page) — plus de définition locale ici.
 
 async function addEntry(food,qty){
   var r = await sb.from('journal').insert({
@@ -2348,6 +2346,21 @@ var RECIPES = [
     {code:'16400',nom:'Beurre',qty:8,kcal:753,prot:0.64,gluc:0.7,lip:83,ags:60,pot:36.1,unit:'noix',gpu:10},
     {code:'13005',nom:'Banane',qty:120,kcal:87.6,prot:1.1,gluc:19.7,lip:0.5,ags:0.01,pot:320,unit:'fruit',gpu:120}
   ]},
+  {id:'b7', meal:'breakfast', nom:'Œufs, avocat & tomate', excludeFor:[], ing:[
+    {code:'22010',nom:'Œuf dur',qty:100,kcal:134,prot:13.5,gluc:0.5,lip:8.6,ags:3.22,pot:120,unit:'oeuf',gpu:50},
+    {code:'13004',nom:'Avocat',qty:80,kcal:203,prot:1.6,gluc:0,lip:20.6,ags:4.51,pot:430,unit:'g'},
+    {code:'20111',nom:'Tomate',qty:150,kcal:18,prot:0.9,gluc:2.9,lip:0.2,ags:0.03,pot:237,unit:'g'}
+  ]},
+  {id:'b8', meal:'breakfast', nom:'Fromage blanc, framboises & amandes', excludeFor:[], ing:[
+    {code:'19501',nom:'Fromage blanc',qty:150,kcal:80,prot:7.0,gluc:6.3,lip:2.8,ags:1.83,pot:162,unit:'g'},
+    {code:'13057',nom:'Framboises',qty:100,kcal:33,prot:1.2,gluc:4.4,lip:0.4,ags:0.02,pot:151,unit:'g'},
+    {code:'15000',nom:'Amandes',qty:15,kcal:615,prot:18.8,gluc:9.5,lip:51.3,ags:4.11,pot:800,unit:'poignée',gpu:10}
+  ]},
+  {id:'b9', meal:'breakfast', nom:'Yaourt, myrtilles & noix', excludeFor:[], ing:[
+    {code:'19554',nom:'Yaourt nature',qty:125,kcal:66.5,prot:5.6,gluc:3.5,lip:3.0,ags:2.13,pot:110,unit:'pot',gpu:125},
+    {code:'13058',nom:'Myrtilles',qty:120,kcal:36,prot:0.6,gluc:8.0,lip:0.3,ags:0.02,pot:78,unit:'g'},
+    {code:'15005',nom:'Noix',qty:15,kcal:709,prot:13.3,gluc:6.9,lip:67.3,ags:6.45,pot:430,unit:'poignée',gpu:10}
+  ]},
   {id:'l6', meal:'lunch', nom:'Poulet, riz & courgette au beurre', excludeFor:['cholesterol','cardiac'], ing:[
     {code:'28963',nom:'Blanc de poulet',qty:150,kcal:105,prot:20.7,gluc:1.4,lip:1.8,ags:0.54,pot:380,unit:'g'},
     {code:'9104',nom:'Riz blanc cuit',qty:150,kcal:155,prot:3.2,gluc:33.2,lip:0.7,ags:0.17,pot:21.9,unit:'g'},
@@ -2424,56 +2437,9 @@ var RECIPES = [
 
 // Choisit une recette compatible (pathologie) pour ce repas, en évitant si
 // possible celles déjà utilisées ailleurs dans la journée.
-// Repère si UN SEUL ingrédient de la recette (à sa quantité de base, avant
-// mise à l'échelle) a un impact glycémique marqué — mêmes seuils que le
-// badge 🌿 utilisé partout ailleurs (Journal, Plan fixe, Recettes), pour
-// rester cohérent : plus de 15g de glucides apportés, et moins de 5% de
-// fibres par rapport aux glucides. Le pain blanc, par exemple, est détecté
-// ainsi sans avoir besoin d'une liste figée de noms d'aliments à exclure.
-// Table de fibres dédiée aux aliments utilisés dans les recettes
-// suggérées — indépendante du chargement asynchrone de la base Ciqual
-// (qui peut ne pas être encore prêt au moment de générer le plan) et de
-// tout risque d'incohérence de code. C'est ce qui garantit que le filtre
-// diabète fonctionne de façon fiable et immédiate, à chaque fois.
-var RECIPE_FIBRES_BY_NOM = {
-  'Pain blanc':2.7, 'Beurre':0, 'Yaourt nature':0, 'Banane':1.7, 'Œuf dur':0,
-  'Avocat':6.7, 'Orange':1.9, "Flocons d'avoine":9.0, 'Lait demi-écrémé':0,
-  'Pomme':2.0, 'Amandes':9.4, 'Fromage blanc':0, 'Kiwi':2.6,
-  'Blanc de poulet':0, 'Riz blanc cuit':0.4, 'Brocoli':2.5, "Huile d'olive":0,
-  'Cabillaud':0, 'Patate douce cuite':2.5, 'Courgette':1.1, 'Saumon':0,
-  'Quinoa cuit':2.8, 'Épinards':2.2, 'Steak de bœuf grillé':0,
-  'Pâtes cuites':1.8, 'Pâtes complètes cuites':5.0, 'Carotte':2.6,
-  'Tofu nature':0.7, 'Boulgour cuit':4.5, 'Poivron rouge':1.6,
-  'Colin (lieu jaune)':0, 'Pomme de terre cuite':1.8, 'Haricots verts':2.7,
-  'Dinde rôtie':0, 'Chou-fleur':2.0, 'Salade verte':1.5, 'Huile de colza':0,
-  'Pêche':1.4, 'Lentilles cuites':7.9, 'Riz complet cuit':1.8,
-  'Pois chiches cuits':7.6, 'Haricots rouges cuits':6.0, 'Noix':5.0
-};
-
-function recipeHasGlycemicCulprit(recipe){
-  return recipe.ing.some(function(ing){
-    var carbGrams = (ing.gluc||0)*ing.qty/100;
-    if(carbGrams<=15) return false;
-    if(!RECIPE_FIBRES_BY_NOM.hasOwnProperty(ing.nom)) return false; // donnée inconnue -> jamais pénalisé par défaut
-    var ratio = fibreGlucRatio(ing.gluc, RECIPE_FIBRES_BY_NOM[ing.nom]);
-    return ratio!==null && ratio<5;
-  });
-}
-
-// Filtre commun aux DEUX endroits où une recette est choisie (génération
-// initiale du plan ET bouton "⇄" pour changer de suggestion) — avoir une
-// seule fonction partagée évite qu'un filtre corrigé à un endroit soit
-// oublié dans l'autre, comme ça a été le cas pour le filtre diabète.
-function filterRecipesForPathologies(pool, pathologies){
-  var filtered = pool.filter(function(r){
-    return !r.excludeFor.some(function(p){ return pathologies.indexOf(p)>=0; });
-  });
-  if(pathologies.indexOf('diabetes')>=0){
-    var noCulprit = filtered.filter(function(r){ return !recipeHasGlycemicCulprit(r); });
-    if(noCulprit.length) filtered = noCulprit;
-  }
-  return filtered;
-}
+// RECIPE_FIBRES_BY_NOM, recipeHasGlycemicCulprit() et
+// filterRecipesForPathologies() sont désormais fournies par
+// regles-pathologies.js (fichier partagé inclus en haut de page).
 
 function pickRecipe(meal, pathologies, usedIds){
   var pool = filterRecipesForPathologies(RECIPES.filter(function(r){ return r.meal===meal; }), pathologies);
