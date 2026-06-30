@@ -30,6 +30,14 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:16px; }
 
 .status-banner { padding:11px 15px; border-radius:11px; margin-bottom:16px; font-size:.82rem; line-height:1.5; }
+
+.history-hdr { font-family:'Lora',serif; font-size:.95rem; font-weight:700; margin-bottom:10px; }
+.history-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
+.history-row:last-child { border-bottom:none; }
+.history-date { font-size:.85rem; font-weight:500; color:var(--text); }
+.history-meta { font-size:.74rem; color:var(--text2); margin-top:1px; }
+.history-btn { padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:var(--gold-l); color:var(--gold); font-size:.78rem; font-weight:600; cursor:pointer; flex-shrink:0; }
+.history-btn:hover { background:rgba(45,79,28,0.15); }
 .status-on { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); color:#2d4f1c; }
 .status-off { background:var(--card2); border:1px solid var(--border); color:var(--text2); }
 
@@ -77,6 +85,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   </div>
 
   <div class="status-banner" id="status-banner"></div>
+  <div id="history-card" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:14px;box-shadow:var(--sh);padding:14px 16px;margin-bottom:16px"></div>
   <div class="totals-card" id="totals-card"></div>
   <div id="meals-container"></div>
 
@@ -192,6 +201,7 @@ async function init(){
   renderStatus();
   renderMeals();
   renderTotals();
+  renderHistory();
 }
 
 // Aliments ajoutés manuellement par les admins (aliments.html) — fusionnés
@@ -386,12 +396,52 @@ async function doSavePlanFixe(){
 }
 
 async function disablePlanFixe(){
-  var r = await sb.from('profiles').update({plan_fixe:null}).eq('id',USER.id);
+  // On garde une trace du plan désactivé (jusqu'à 3 plans précédents),
+  // plutôt que de tout effacer sans retour possible — la personne pourra
+  // le réintégrer plus tard au lieu de tout retaper à la main.
+  var history = (PROF.plan_fixe_history || []).slice();
+  var hasContent = Object.values(MEALS).some(function(arr){ return arr && arr.length; });
+  if(hasContent){
+    history.unshift({ meals: JSON.parse(JSON.stringify(MEALS)), date: new Date().toISOString() });
+    history = history.slice(0, 3);
+  }
+  var r = await sb.from('profiles').update({plan_fixe:null, plan_fixe_history:history}).eq('id',USER.id);
   if(r.error){ toast('❌ '+r.error.message); return; }
   PROF.plan_fixe = null;
+  PROF.plan_fixe_history = history;
   MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
-  renderStatus(); renderMeals(); renderTotals();
-  toast('Plan fixe désactivé — les suggestions automatiques reprennent le relais');
+  renderStatus(); renderMeals(); renderTotals(); renderHistory();
+  toast('Plan fixe désactivé — vous pourrez le réintégrer plus tard depuis cette page');
+}
+
+// Affiche jusqu'à 3 plans précédemment désactivés, avec possibilité de les
+// réintégrer en un clic plutôt que de tout reconstruire à la main.
+function renderHistory(){
+  var el = document.getElementById('history-card');
+  var history = PROF.plan_fixe_history || [];
+  var planActif = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
+  if(planActif || !history.length){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML = '<div class="history-hdr">Plans précédents</div>'
+    + history.map(function(h, idx){
+        var d = new Date(h.date);
+        var nbItems = Object.values(h.meals).reduce(function(s,arr){return s+(arr?arr.length:0);},0);
+        return '<div class="history-row">'
+          + '<div><div class="history-date">'+d.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'})+'</div>'
+          + '<div class="history-meta">'+nbItems+' aliment'+(nbItems>1?'s':'')+'</div></div>'
+          + '<button class="history-btn" onclick="restoreHistory('+idx+')">Réintégrer</button>'
+          + '</div>';
+      }).join('');
+}
+
+function restoreHistory(idx){
+  var history = PROF.plan_fixe_history || [];
+  var entry = history[idx];
+  if(!entry) return;
+  Object.keys(MEALS).forEach(function(k){ MEALS[k] = (entry.meals[k]||[]).slice(); });
+  renderMeals(); renderTotals();
+  toast('Plan réintégré — vérifiez puis cliquez sur Enregistrer pour l\'activer');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 </script>
 </body>
