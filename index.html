@@ -3,172 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriCoach — La nutrition la plus personnalisée</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Cap Santé — Votre cap, pas une moyenne</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root {
+  --bg: #f5f3ee;
+  --bg2: #efece4;
+  --ink: #16241b;
+  --ink2: #5c5852;
+  --ink3: #a09c94;
+  --card: #ffffff;
+  --line: rgba(22,36,27,0.12);
+  --line2: rgba(22,36,27,0.2);
+  --cap: #2d4f1c;
+  --cap-l: rgba(45,79,28,0.08);
+  --sage: #4a7a3a;
+  --needle: #8b2a2a;
+  --needle-l: rgba(139,42,42,0.08);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: #faf9f6; }
+html { background: var(--bg); }
 body {
   min-height: 100vh;
-  background: #faf9f6;
+  background: var(--bg);
   font-family: 'Inter', sans-serif;
-  color: #1a1a1a;
+  color: var(--ink);
 }
+.mono { font-family: 'IBM Plex Mono', monospace; }
 
 /* ── TOP NAV ── */
 .topnav {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(250,249,246,0.92);
+  background: rgba(245,243,238,0.92);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--line);
   padding: 0 24px; height: 64px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; letter-spacing: -.3px; }
-.nav-logo span { color: #16a34a; }
+.nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; letter-spacing: -.3px; }
+.nav-logo span { color: var(--cap); }
 .nav-btns { display: flex; gap: 10px; }
 .nav-btn {
   font-family: 'Space Grotesk', sans-serif; font-size: .82rem; font-weight: 600;
   padding: 9px 18px; border-radius: 9px; cursor: pointer; border: none;
   transition: all .15s;
 }
-.nav-btn.ghost { background: transparent; color: #1a1a1a; }
-.nav-btn.ghost:hover { background: rgba(0,0,0,0.05); }
-.nav-btn.solid { background: #16a34a; color: #fff; box-shadow: 0 2px 12px rgba(22,163,74,0.25); }
-.nav-btn.solid:hover { background: #128a3e; }
+.nav-btn.ghost { background: transparent; color: var(--ink); }
+.nav-btn.ghost:hover { background: rgba(22,36,27,0.05); }
+.nav-btn.solid { background: var(--cap); color: #fff; box-shadow: 0 2px 12px rgba(45,79,28,0.25); }
+.nav-btn.solid:hover { background: #244016; }
 
-/* ── HERO ── */
-.hero { max-width: 880px; margin: 0 auto; padding: 64px 24px 36px; text-align: center; }
+/* ── HERO ── asymétrique, pas centré : le texte ancre à gauche, le cadran à droite */
+.hero-wrap { max-width: 1180px; margin: 0 auto; padding: 56px 24px 28px; }
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+@media (max-width: 880px) { .hero { grid-template-columns: 1fr; gap: 38px; } }
+
+.eyebrow { display: inline-flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); margin-bottom: 18px; }
+.eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--sage); }
+
 .hero h1 {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 800; letter-spacing: -1px;
-  font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; text-transform: uppercase;
-  margin-bottom: 18px;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -1.2px;
+  font-size: clamp(2.1rem, 4.4vw, 3.3rem); line-height: 1.08;
+  margin-bottom: 20px;
 }
-.hero p { font-size: 1.02rem; color: #555; line-height: 1.65; max-width: 620px; margin: 0 auto; }
+.hero h1 em { font-style: normal; color: var(--cap); }
+.hero p { font-size: 1rem; color: var(--ink2); line-height: 1.65; max-width: 480px; margin-bottom: 26px; }
+.hero-cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.hero-btn {
+  font-family: 'Space Grotesk', sans-serif; font-size: .9rem; font-weight: 700;
+  padding: 13px 24px; border-radius: 11px; cursor: pointer; border: none;
+  background: var(--cap); color: #fff; box-shadow: 0 4px 18px rgba(45,79,28,0.28);
+  transition: transform .2s, box-shadow .2s;
+}
+.hero-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(45,79,28,0.36); }
+.hero-sub-cta { font-size: .78rem; color: var(--ink3); }
 
-/* ── CARDS ── */
-.cards-wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-@media (max-width: 980px) { .cards { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+/* ── CADRAN (élément signature) ── */
+.dial-wrap { display: flex; flex-direction: column; align-items: center; }
+.dial-card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); width: 100%; max-width: 320px; }
+.dial-svg { width: 100%; height: auto; display: block; }
+.dial-readout { text-align: center; margin-top: 4px; }
+.dial-readout .num { font-family: 'IBM Plex Mono', monospace; font-size: 2.1rem; font-weight: 600; color: var(--ink); letter-spacing: -.5px; }
+.dial-readout .lbl { font-size: .74rem; color: var(--ink3); margin-top: 2px; }
+.dial-foot { text-align: center; font-size: .72rem; color: var(--ink3); margin-top: 14px; line-height: 1.5; }
 
-.feat-card {
-  position: relative; border-radius: 20px; overflow: hidden; aspect-ratio: 3/4;
-  background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-  transition: transform .25s;
-}
-.feat-card:hover { transform: translateY(-4px); }
-.feat-card img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
-.feat-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.85) 100%);
-}
-.feat-text { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px; }
-.feat-text .ft-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #fff; font-size: 1.02rem; text-transform: uppercase; letter-spacing: .2px; margin-bottom: 4px; }
-.feat-text .ft-sub { font-size: .73rem; color: rgba(255,255,255,0.78); }
+/* ── PARCOURS D'UNE JOURNÉE ── timeline ancrée dans le vrai produit */
+.journey-wrap { max-width: 740px; margin: 0 auto; padding: 64px 24px 70px; }
+.journey-hdr { margin-bottom: 36px; }
+.journey-hdr .eyebrow { margin-bottom: 12px; }
+.journey-hdr h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.5rem; letter-spacing: -.4px; margin-bottom: 8px; }
+.journey-hdr p { font-size: .9rem; color: var(--ink2); line-height: 1.6; max-width: 540px; }
+
+.way { position: relative; padding-left: 44px; padding-bottom: 38px; }
+.way:last-child { padding-bottom: 0; }
+.way::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: -10px; width: 1px; background: var(--line2); }
+.way:last-child::before { display: none; }
+.way-dot { position: absolute; left: 0; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: var(--cap-l); border: 1.5px solid var(--cap); display: flex; align-items: center; justify-content: center; font-size: .82rem; }
+.way-tag { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--sage); margin-bottom: 5px; }
+.way h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
+.way p { font-size: .87rem; color: var(--ink2); line-height: 1.6; max-width: 480px; }
 
 /* ── AUTH SECTION ── */
-.auth-section { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); padding: 56px 20px 64px; }
+.auth-section { background: var(--card); border-top: 1px solid var(--line); padding: 56px 20px 50px; }
 .auth-wrap { max-width: 420px; margin: 0 auto; }
 .auth-hdr { text-align: center; margin-bottom: 26px; }
 .auth-hdr h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.5rem; margin-bottom: 6px; }
-.auth-hdr p { font-size: .85rem; color: #777; }
+.auth-hdr p { font-size: .85rem; color: var(--ink2); }
 
 .tabs {
   display: grid; grid-template-columns: 1fr 1fr;
-  background: #f3f2ee; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px;
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
   padding: 5px; margin-bottom: 24px; gap: 5px;
 }
 .tab {
   padding: 10px; border-radius: 8px; font-family: 'Space Grotesk', sans-serif;
-  font-size: .86rem; font-weight: 600; color: #888; cursor: pointer; border: none;
+  font-size: .86rem; font-weight: 600; color: var(--ink3); cursor: pointer; border: none;
   background: transparent; transition: all .2s;
 }
-.tab.on { background: #fff; color: #16a34a; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.tab.on { background: #fff; color: var(--cap); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
 .form { display: none; }
 .form.on { display: block; animation: fu .22s ease both; }
 @keyframes fu { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
 
 .field { margin-bottom: 15px; }
-.field label { display: block; font-size: .7rem; font-weight: 600; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .6px; }
+.field label { display: block; font-size: .7rem; font-weight: 600; color: var(--ink3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .6px; }
 .field input {
-  width: 100%; padding: 12px 15px; background: #faf9f6;
-  border: 1px solid rgba(0,0,0,0.1); border-radius: 11px;
-  font-family: 'Inter', sans-serif; font-size: .92rem; color: #1a1a1a; outline: none;
+  width: 100%; padding: 12px 15px; background: var(--bg);
+  border: 1px solid var(--line2); border-radius: 11px;
+  font-family: 'Inter', sans-serif; font-size: .92rem; color: var(--ink); outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
-.field input::placeholder { color: #aaa; }
-.field input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+.field input::placeholder { color: var(--ink3); }
+.field input:focus { border-color: var(--cap); box-shadow: 0 0 0 3px rgba(45,79,28,0.12); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
 
 .btn {
-  width: 100%; padding: 14px; margin-top: 6px; background: #16a34a; border: none;
+  width: 100%; padding: 14px; margin-top: 6px; background: var(--cap); border: none;
   border-radius: 11px; font-family: 'Space Grotesk', sans-serif; font-size: .94rem;
-  font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 18px rgba(22,163,74,0.28);
+  font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 18px rgba(45,79,28,0.28);
   transition: transform .2s, box-shadow .2s;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.36); }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(45,79,28,0.36); }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
-.forgot { text-align: center; margin-top: 14px; font-size: .77rem; color: #999; }
-.forgot a { color: #16a34a; text-decoration: none; font-weight: 600; }
+.forgot { text-align: center; margin-top: 14px; font-size: .77rem; color: var(--ink3); }
+.forgot a { color: var(--cap); text-decoration: none; font-weight: 600; }
 
 .msg { padding: 10px 13px; border-radius: 9px; font-size: .8rem; margin-bottom: 14px; display: none; line-height: 1.5; }
-.msg.err { background: rgba(220,38,38,0.07); border: 1px solid rgba(220,38,38,0.2); color: #b91c1c; }
-.msg.ok { background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.22); color: #15803d; }
+.msg.err { background: rgba(139,42,42,0.07); border: 1px solid rgba(139,42,42,0.2); color: var(--needle); }
+.msg.ok { background: rgba(45,79,28,0.08); border: 1px solid rgba(45,79,28,0.22); color: var(--cap); }
 .msg.on { display: block; animation: fu .2s ease; }
 
-.badge { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; font-size: .68rem; color: #aaa; }
-.dot { width: 5px; height: 5px; border-radius: 50%; background: #16a34a; }
+.badge { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; font-size: .68rem; color: var(--ink3); }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cap); }
 
 @media (max-width: 460px) { .row2 { grid-template-columns: 1fr; gap: 0; } }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--line); padding: 22px 24px; text-align: center; }
+footer p { font-size: .72rem; color: var(--ink3); }
+footer a { color: var(--ink3); text-decoration: underline; }
 </style>
 </head>
 <body>
 
 <header class="topnav">
-  <div class="nav-logo">Nutri<span>Coach</span></div>
+  <div class="nav-logo">Cap<span>Santé</span></div>
   <div class="nav-btns">
     <button class="nav-btn ghost" onclick="goAuth('login')">Connexion</button>
     <button class="nav-btn solid" onclick="goAuth('signup')">Inscription</button>
   </div>
 </header>
 
-<section class="hero">
-  <h1>La méthode nutritionnelle<br>la plus personnalisée</h1>
-  <p>NutriCoach adapte votre plan alimentaire à vos objectifs, votre activité réelle et vos éventuelles pathologies. Recettes savoureuses, recalcul automatique chaque semaine, et un suivi qui s'ajuste vraiment à vous — pas l'inverse.</p>
-</section>
+<div class="hero-wrap">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Nutrition adaptée, pas générique</div>
+      <h1>Votre <em>cap</em>, pas une moyenne.</h1>
+      <p>Cap Santé calcule votre objectif nutritionnel à partir de données vérifiées (base Ciqual, formule de Mifflin-St Jeor), l'adapte à vos pathologies éventuelles, et le recalcule chaque semaine selon votre progression réelle — pas un calcul générique valable pour tout le monde.</p>
+      <div class="hero-cta">
+        <button class="hero-btn" onclick="goAuth('signup')">Trouver mon cap</button>
+        <span class="hero-sub-cta">Gratuit pour commencer</span>
+      </div>
+    </div>
 
-<div class="cards-wrap">
-  <div class="cards">
-    <div class="feat-card">
-      <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=700&q=80&fm=jpg&fit=crop" alt="Ajustement hebdomadaire">
-      <div class="feat-overlay"></div>
-      <div class="feat-text"><div class="ft-title">Objectif ajusté chaque semaine</div><div class="ft-sub">Calcul calorique précis, recalculé selon votre progression</div></div>
+    <div class="dial-wrap">
+      <div class="dial-card">
+        <svg class="dial-svg" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="120" cy="120" r="98" fill="none" stroke="#efece4" stroke-width="14"/>
+          <circle cx="120" cy="120" r="98" fill="none" stroke="#2d4f1c" stroke-width="14"
+                  stroke-dasharray="615" stroke-dashoffset="165" stroke-linecap="round" transform="rotate(-90 120 120)"/>
+          <g stroke="#a09c94" stroke-width="1.5">
+            <line x1="120" y1="14" x2="120" y2="24"/>
+            <line x1="120" y1="216" x2="120" y2="226"/>
+            <line x1="14" y1="120" x2="24" y2="120"/>
+            <line x1="216" y1="120" x2="226" y2="120"/>
+          </g>
+          <g transform="rotate(48 120 120)">
+            <polygon points="120,55 126,120 120,132 114,120" fill="#8b2a2a"/>
+            <circle cx="120" cy="120" r="7" fill="#16241b"/>
+          </g>
+        </svg>
+        <div class="dial-readout">
+          <div class="num">82</div>
+          <div class="lbl">Cap du jour — exemple</div>
+        </div>
+      </div>
+      <div class="dial-foot">Le même cadran que dans l'app, recalculé chaque jour selon ce que vous mangez réellement.</div>
     </div>
-    <div class="feat-card">
-      <img src="https://images.unsplash.com/photo-1712955685153-1b9c8edd071f?w=700&q=80&fm=jpg&fit=crop" alt="Performance sportive">
-      <div class="feat-overlay"></div>
-      <div class="feat-text"><div class="ft-title">Performance sportive</div><div class="ft-sub">Précision MET pour les sportifs réguliers</div></div>
-    </div>
-    <div class="feat-card">
-      <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&q=80&fm=jpg&fit=crop" alt="Prise en compte des pathologies">
-      <div class="feat-overlay"></div>
-      <div class="feat-text"><div class="ft-title">Prise en compte des pathologies</div><div class="ft-sub">Alertes adaptées au diabète, cholestérol, hypertension...</div></div>
-    </div>
-    <div class="feat-card">
-      <img src="https://images.unsplash.com/photo-1667499745120-f9bcef8f584e?w=700&q=80&fm=jpg&fit=crop" alt="Recettes personnalisées">
-      <div class="feat-overlay"></div>
-      <div class="feat-text"><div class="ft-title">Recettes personnalisées</div><div class="ft-sub">Adaptées à vos repas et à vos pathologies éventuelles</div></div>
-    </div>
+  </div>
+</div>
+
+<div class="journey-wrap">
+  <div class="journey-hdr">
+    <div class="eyebrow">Une vraie journée dans l'app</div>
+    <h2>Ce que Cap Santé fait, repas par repas</h2>
+    <p>Pas de promesse vague — voici concrètement comment l'app réagit au fil d'une journée normale.</p>
+  </div>
+
+  <div class="way">
+    <div class="way-dot">①</div>
+    <div class="way-tag">Petit-déjeuner</div>
+    <h3>Ce que vous mangez reste un fait, jamais retouché</h3>
+    <p>Une fois un repas enregistré, Cap Santé ne réécrit jamais une quantité réelle — pas de "vous auriez dû manger moins" rétroactif. C'est la base, fixe, sur laquelle tout le reste s'appuie.</p>
+  </div>
+  <div class="way">
+    <div class="way-dot">②</div>
+    <div class="way-tag">Déjeuner</div>
+    <h3>Le cap se recalcule en direct</h3>
+    <p>Si le petit-déjeuner manquait de protéines, la suggestion du déjeuner s'ajuste pour compenser et se rapprocher au maximum de vos objectifs du jour — pas juste un pourcentage fixe du total quotidien.</p>
+  </div>
+  <div class="way">
+    <div class="way-dot">③</div>
+    <div class="way-tag">Collation</div>
+    <h3>Une alerte discrète, jamais un blocage</h3>
+    <p>Pour le diabète, un repère 🌿 signale les aliments à fort impact glycémique (peu de fibres pour beaucoup de glucides) — sans jamais interdire un choix, juste pour décider en connaissance de cause.</p>
+  </div>
+  <div class="way">
+    <div class="way-dot">④</div>
+    <div class="way-tag">Bilan de la semaine</div>
+    <h3>Le réglage évolue avec vous</h3>
+    <p>Si le poids stagne deux semaines de suite, l'objectif calorique s'ajuste automatiquement — et si le bilan de la semaine était difficile, l'app le reconnaît plutôt que d'insister sur des chiffres.</p>
   </div>
 </div>
 
 <section class="auth-section" id="auth">
   <div class="auth-wrap">
     <div class="auth-hdr" id="auth-hdr">
-      <h2 id="auth-title">Commencez dès aujourd'hui</h2>
+      <h2 id="auth-title">Trouvez votre cap</h2>
       <p id="auth-sub">Créez votre compte ou connectez-vous</p>
     </div>
 
@@ -236,6 +319,10 @@ body {
     </div>
   </div>
 </section>
+
+<footer>
+  <p>© 2026 Cap Santé — Tous droits réservés &nbsp;·&nbsp; <a href="confidentialite.html">Confidentialité</a> &nbsp;·&nbsp; <a href="cgu.html">CGU</a></p>
+</footer>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
