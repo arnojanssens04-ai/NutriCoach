@@ -1227,22 +1227,51 @@ async function addEntry(food,qty){
   if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
 
-  // Avertissement diabète — seulement si l'aliment contribue vraiment à la
-  // charge glycémique du repas (pas pour 3g de glucides anecdotiques).
+  // Avertissement diabète — deux chemins complémentaires :
+  // 1. Ratio fibres/glucides (pain blanc, riz blanc...) → déjà dans fibreGlucRatio()
+  // 2. Taux de sucres (biscuits, pâtisseries) → biscuitTropSucre() dans regles-pathologies.js
+  //    Ces deux règles couvrent des cas distincts et doivent toutes les deux être appelées.
   var pathos = (PROF && PROF.pathologies) || [];
-  var carbGrams = pN(food.gluc)*qty/100;
-  console.log('[Diag diabète] pathologies du profil:', pathos, '| food.gluc:', food.gluc, '| food.fibres:', food.fibres, '| carbGrams:', carbGrams);
-  if(pathos.indexOf('diabetes')>=0 && carbGrams>15){
-    var ratio = fibreGlucRatio(pN(food.gluc), pN(food.fibres));
-    console.log('[Diag diabète] ratio calculé:', ratio, '-> popup attendu:', (ratio!==null && ratio<5));
-    if(ratio!==null && ratio<5){
-      showDiabetesWarning(food.nom, carbGrams, ratio);
+  if(pathos.indexOf('diabetes')>=0){
+    var carbGrams = pN(food.gluc)*qty/100;
+    var sucres100 = pN(food.sucres||food.sugar||0);
+    var warned = false;
+
+    // Règle 1 : ratio fibres/glucides (seuil <5%)
+    if(carbGrams>15){
+      var ratio = fibreGlucRatio(pN(food.gluc), pN(food.fibres));
+      if(ratio!==null && ratio<5){ showDiabetesWarning(food.nom, carbGrams, ratio); warned=true; }
     }
-  } else {
-    console.log('[Diag diabète] condition non remplie — diabetes coché:', pathos.indexOf('diabetes')>=0, '| carbGrams>15:', carbGrams>15);
+
+    // Règle 2 : biscuit/pâtisserie trop sucrée (>15g de sucres/100g)
+    // indépendamment du ratio fibres/glucides — une frangipane peut avoir
+    // peu de glucides totaux mais beaucoup de sucres rapides.
+    if(!warned && sucres100>0 && biscuitTropSucre(sucres100)){
+      showDiabetesWarningSucres(food.nom, sucres100); warned=true;
+    }
+
+    // Cas limite : fibres inconnues (=0) + glucides élevés → on avertit
+    // par précaution plutôt que d'ignorer le risque silencieusement.
+    if(!warned && carbGrams>20 && pN(food.fibres)===0 && pN(food.gluc)>20){
+      showDiabetesWarning(food.nom, carbGrams, 0);
+    }
   }
 
   afterJournalChange();
+}
+
+function showDiabetesWarningSucres(nom, sucres100){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:360px;box-shadow:0 30px 80px rgba(0,0,0,.25)">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">🍬</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.15rem;font-weight:700;margin-bottom:10px">Teneur en sucres élevée</div>'
+    +'<p style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:18px">'
+    +'<b>'+esc(nom)+'</b> contient '+sucres100.toFixed(0)+'g de sucres pour 100g — au-delà du seuil recommandé pour le diabète. '
+    +'En petite quantité et en dehors des repas principaux c\'est envisageable, mais à surveiller dans le total journalier.</p>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">Compris</button>'
+    +'</div>';
+  document.body.appendChild(ov);
 }
 
 function showDiabetesWarning(nom, carbGrams, ratio){
@@ -2866,10 +2895,22 @@ function renderMealPlan(){
       diabNote.style.display = 'none';
     }
 
+    // byMeal construit directement depuis les entrées brutes — plus fiable
+    // que passer par analysis.adjusted, qui peut manquer des repas si
+    // analyzeAndAdjust ne les a pas tous traités.
     var byMeal = {};
+    entries.forEach(function(e){
+      if(!byMeal[e.repas]) byMeal[e.repas]=[];
+      byMeal[e.repas].push({entry:e, newQty:e.quantite, oldQty:e.quantite, suggested:false, cat:'mixed'});
+    });
+    // On surcharge avec les données ajustées si analysis les a traitées
     if(analysis) analysis.adjusted.forEach(function(a){
-      if(!byMeal[a.entry.repas]) byMeal[a.entry.repas]=[];
-      byMeal[a.entry.repas].push(a);
+      var mid = a.entry.repas;
+      if(!byMeal[mid]) byMeal[mid]=[];
+      // Remplace l'entrée brute par la version ajustée si elle existe
+      var found = false;
+      for(var xi=0;xi<byMeal[mid].length;xi++){ if(byMeal[mid][xi].entry.id===a.entry.id){ byMeal[mid][xi]=a; found=true; break; } }
+      if(!found) byMeal[mid].push(a);
     });
 
     // ── Répartition du budget RESTANT sur les repas pas encore décidés ──
