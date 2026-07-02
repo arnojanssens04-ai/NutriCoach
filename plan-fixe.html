@@ -70,6 +70,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
 .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
+<script src="protect.js"></script>
 </head>
 <body>
 
@@ -235,13 +236,125 @@ function activeMealKeys(){
 // fibreGlucRatio() et glycemicBadge() sont désormais fournies par
 // regles-pathologies.js (fichier partagé inclus en haut de page).
 
+// Construit les badges d'avertissement pour un aliment du plan fixe.
+// Contrairement au Journal (popup bloquante), ici c'est un badge discret
+// mais CLIQUABLE — pour ne pas gêner la construction du plan mais permettre
+// de remplacer l'aliment d'un clic si on le souhaite.
+function buildWarningBadges(it, mealKey, idx){
+  var pathos = (PROF && PROF.pathologies) || [];
+  if(pathos.indexOf('diabetes')<0) return '';
+
+  var badges = '';
+
+  // Badge ratio fibres/glucides
+  var carbGrams = (it.gluc||0)*it.qty/100;
+  if(carbGrams>15){
+    var ratio = fibreGlucRatio(it.gluc, it.fibres);
+    if(ratio!==null && ratio<5){
+      var hasAlts = !!suggestAlternatives(it.nom);
+      badges += ' <button onclick="openAlternativesPanel(\''+mealKey+'\','+idx+')" '
+        +'style="background:none;border:none;cursor:pointer;padding:0;font-size:.85rem" '
+        +'title="Impact glycémique élevé'+(hasAlts?' — cliquez pour voir des alternatives':'')+'">🌿</button>';
+    }
+  }
+
+  // Badge sucres élevés (biscuits, pâtisseries)
+  if(!badges){
+    var isSugarAlert = (it.sucres>0 && biscuitTropSucre(it.sucres)) || !!detectFoodCategory(it.nom);
+    if(isSugarAlert){
+      var hasAlts2 = !!suggestAlternatives(it.nom);
+      badges += ' <button onclick="openAlternativesPanel(\''+mealKey+'\','+idx+')" '
+        +'style="background:none;border:none;cursor:pointer;padding:0;font-size:.85rem" '
+        +'title="Teneur en sucres élevée'+(hasAlts2?' — cliquez pour voir des alternatives':'')+'">🍬</button>';
+    }
+  }
+
+  return badges;
+}
+
+// Ouvre le panneau d'alternatives pour un aliment identifié comme
+// problématique — remplaçable en un clic, quantité ajustée pour
+// maintenir les mêmes calories.
+function openAlternativesPanel(mealKey, idx){
+  var it = MEALS[mealKey][idx];
+  if(!it) return;
+  var alts = suggestAlternatives(it.nom);
+
+  var existingOv = document.getElementById('alt-panel-ov');
+  if(existingOv) existingOv.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'alt-panel-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  var altRows = alts ? alts.map(function(alt, ai){
+    var altKcal = Math.round(alt.kcal * alt.qty / 100);
+    return '<div style="padding:12px 0;border-bottom:1px solid rgba(26,25,22,0.08)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">'
+      +'<div>'
+      +'<div style="font-size:.9rem;font-weight:600;color:var(--text)">'+esc(alt.nom)+'</div>'
+      +'<div style="font-size:.74rem;color:var(--text2);margin-top:2px">'+alt.qty+'g · '+altKcal+' kcal</div>'
+      +'<div style="font-size:.72rem;color:var(--sage);margin-top:3px">✓ '+esc(alt.raison)+'</div>'
+      +'</div>'
+      +'<button onclick="applyAlternative(\''+mealKey+'\','+idx+','+ai+')" '
+      +'style="flex-shrink:0;padding:8px 14px;border-radius:9px;border:none;background:var(--gold);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer">Utiliser</button>'
+      +'</div></div>';
+  }).join('') : '<div style="font-size:.85rem;color:var(--text2);padding:12px 0">Aucune alternative disponible pour cet aliment.</div>';
+
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:24px;max-width:380px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25);max-height:80vh;overflow-y:auto">'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">'
+    +'<div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.05rem;font-weight:700">Alternatives pour</div>'
+    +'<div style="font-size:.85rem;color:var(--text2);margin-top:2px">'+esc(it.nom)+'</div>'
+    +'</div>'
+    +'<button onclick="document.getElementById(\'alt-panel-ov\').remove()" '
+    +'style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;flex-shrink:0">✕</button>'
+    +'</div>'
+    + altRows
+    +'</div>';
+
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+// Remplace l'aliment problématique par l'alternative choisie.
+// La quantité est ajustée pour conserver les mêmes calories, sauf si
+// l'alternative a sa propre quantité de référence (portion courante).
+function applyAlternative(mealKey, idx, altIdx){
+  var it = MEALS[mealKey][idx];
+  var alts = suggestAlternatives(it.nom);
+  if(!alts || !alts[altIdx]) return;
+
+  var alt = alts[altIdx];
+  // On garde la même contribution calorique que l'aliment remplacé, en
+  // recalculant la quantité de l'alternative à partir de ses propres kcal/100g.
+  var originalKcal = it.kcal * it.qty / 100;
+  var newQty = alt.kcal > 0 ? Math.round(originalKcal / alt.kcal * 100) : alt.qty;
+  // Plancher et plafond raisonnables : jamais moins de 5g, jamais plus de 300g
+  newQty = Math.max(5, Math.min(300, newQty));
+
+  MEALS[mealKey][idx] = {
+    code: alt.code, nom: alt.nom, qty: newQty,
+    kcal: alt.kcal, prot: alt.prot, gluc: alt.gluc, lip: alt.lip,
+    ags: alt.ags||0, pot: alt.pot||0, fibres: alt.fibres||0, sucres: 0
+  };
+
+  var ov = document.getElementById('alt-panel-ov');
+  if(ov) ov.remove();
+
+  renderMeals();
+  renderTotals();
+  toast('✅ '+esc(alt.nom)+' utilisé à la place — pensez à enregistrer votre plan');
+}
+
 function renderMeals(){
   var container = document.getElementById('meals-container');
   container.innerHTML = activeMealKeys().map(function(mk){
     var items = MEALS[mk]||[];
     var rows = items.map(function(it,idx){
       var kcal = Math.round(it.kcal*it.qty/100);
-      return '<div class="food-row"><span>'+esc(it.nom)+glycemicBadge(it)+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
+      var badges = buildWarningBadges(it, mk, idx);
+      return '<div class="food-row"><span>'+esc(it.nom)+badges+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
         +'<button class="food-del" onclick="removeFood(\''+mk+'\','+idx+')">✕</button></div>';
     }).join('');
     return '<div class="meal-section"><div class="meal-hdr"><span>'+MEAL_LABELS[mk]+'</span></div><div class="meal-body">'
@@ -319,7 +432,7 @@ function confirmAddFood(mealKey){
   var raw = parseFloat(qtyInput.value)||1;
   var unitGrams = qtyInput.getAttribute('data-unit-grams');
   var qty = unitGrams ? raw*parseFloat(unitGrams) : raw;
-  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0, fibres:food.fibres||0});
+  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0, fibres:food.fibres||0, sucres:food.sucres||0});
   delete SEARCH_PICKED[mealKey];
   document.getElementById('search-'+mealKey).value='';
   qtyInput.value='100';
