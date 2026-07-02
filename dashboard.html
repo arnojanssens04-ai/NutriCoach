@@ -494,6 +494,7 @@ body {
   .macros-row { grid-template-columns: 1fr 1fr; }
 }
 </style>
+<script src="protect.js"></script>
 </head>
 <body>
 
@@ -3372,7 +3373,10 @@ function loadCustomFoods(){
     var custom = r.data.map(function(c){
       return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
         ags:c.ags||0, mono:0, o3a:0, o3e:0, o3d:0, fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
-        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0};
+        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0,
+        // Sucres — champ clé pour le filtre diabète sur les biscuits et
+        // produits sucrés ; manquait jusqu'ici dans le mapping.
+        sucres:c.sucres||0};
     });
     DB = DB.concat(custom);
     console.log('Aliments personnalisés ajoutés : '+custom.length);
