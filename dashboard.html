@@ -1246,7 +1246,8 @@ async function addEntry(food,qty){
         : function(nom){
             var n=(nom||'').toLowerCase().replace(/[àâä]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c');
             if(/biscuit|frangipane|sable|cookie|gaufrette|speculoos|madeleine|brownie/.test(n)) return 'biscuit';
-            if(/chocolat blanc|chocolat au lait|tablette.*chocolat|chocolat.*blanc/.test(n)) return 'chocolat';
+            if(/bonbon|caramel|sucette|guimauve|reglisse|confiserie|dragee/.test(n)) return 'bonbon';
+            if(/chocolat/.test(n) && !/chocolat noir/.test(n)) return 'chocolat';
             if(/pain blanc|baguette/.test(n)) return 'pain_blanc';
             if(/riz blanc/.test(n)) return 'riz_blanc';
             return null;
@@ -2063,6 +2064,18 @@ var PORTION_CATEGORIES = [
       {label:'Une noix', sub:'~10g', grams:10, icon:'🧈'},
       {label:'Une portion', sub:'~15g', grams:15, icon:'🧈'},
       {label:'Grosse noix', sub:'~25g', grams:25, icon:'🧈'}
+    ]},
+  { id:'chocolat', keywords:['chocolat','tablette','praline','praliné','truffe','ganache'],
+    options:[
+      {label:'1 carré', sub:'~5g', grams:5, icon:'🍫'},
+      {label:'3 carrés', sub:'~15g', grams:15, icon:'🍫'},
+      {label:'1/4 de tablette', sub:'~25g', grams:25, icon:'🍫'}
+    ]},
+  { id:'bonbon', keywords:['bonbon','caramel','sucette','guimauve','réglisse','reglisse','oursons','fraise tagada','dragee','dragée','smarties','haribo'],
+    options:[
+      {label:'2-3 bonbons', sub:'~10g', grams:10, icon:'🍬'},
+      {label:'Petite poignée', sub:'~25g', grams:25, icon:'🍬'},
+      {label:'Grande poignée', sub:'~50g', grams:50, icon:'🍬'}
     ]},
   { id:'biscuit', keywords:['biscuit','biscuits','cookie','cookies','sable','sablé','speculoos','spéculoos','petit beurre','gaufrette','gaufrettes','mergpijpjes','frangipane','frangipanes'],
     options:[
