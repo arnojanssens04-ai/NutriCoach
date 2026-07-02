@@ -1238,27 +1238,63 @@ async function addEntry(food,qty){
     var sucres100 = pN(food.sucres||food.sugar||0);
     var warned = false;
 
-    // Règle 1 : ratio fibres/glucides (seuil <5%)
+    // Règle 1 : ratio fibres/glucides (seuil <5%) — pour les grandes portions
     if(carbGrams>15){
       var ratio = fibreGlucRatio(pN(food.gluc), pN(food.fibres));
       if(ratio!==null && ratio<5){ showDiabetesWarning(food.nom, carbGrams, ratio); warned=true; }
     }
 
     // Règle 2 : biscuit/pâtisserie trop sucrée (>15g de sucres/100g)
-    // indépendamment du ratio fibres/glucides — une frangipane peut avoir
-    // peu de glucides totaux mais beaucoup de sucres rapides.
     if(!warned && sucres100>0 && biscuitTropSucre(sucres100)){
       showDiabetesWarningSucres(food.nom, sucres100); warned=true;
     }
 
-    // Cas limite : fibres inconnues (=0) + glucides élevés → on avertit
-    // par précaution plutôt que d'ignorer le risque silencieusement.
+    // Règle 3 : catégorie connue comme problématique (chocolat blanc, chocolat
+    // au lait…) — déclenche un avertissement MÊME pour de petites portions,
+    // car même 15g de chocolat blanc représentent ~8g de sucres purs.
+    // C'est le filet de sécurité pour les produits dont les valeurs
+    // nutritionnelles ne sont pas renseignées ou la portion est petite.
+    if(!warned && detectFoodCategory(food.nom)){
+      var cat = detectFoodCategory(food.nom);
+      var isChoc = cat==='chocolat';
+      showDiabetesWarningSucres(
+        food.nom,
+        sucres100>0 ? sucres100 : (isChoc ? 55 : 20) // valeur par défaut si non renseignée
+      );
+      warned = true;
+    }
+
+    // Règle 4 : fibres inconnues (=0) + glucides élevés → prudence
     if(!warned && carbGrams>20 && pN(food.fibres)===0 && pN(food.gluc)>20){
       showDiabetesWarning(food.nom, carbGrams, 0);
     }
   }
 
   afterJournalChange();
+}
+
+// Popup informatif depuis le badge du plan fixe dans dashboard.html —
+// ne remplace pas l'aliment (il est déjà enregistré), renvoie vers
+// plan-fixe.html pour le modifier.
+function showPlanDiabetesBadge(msg){
+  var existing = document.getElementById('plan-diab-badge-ov');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'plan-diab-badge-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:360px;box-shadow:0 30px 80px rgba(0,0,0,.25)">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">⚠️</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700;margin-bottom:10px">'+esc(msg)+'</div>'
+    +'<p style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:18px">'
+    +'Cet aliment de votre plan fixe présente un profil glycémique élevé. '
+    +'Des alternatives adaptées à vos besoins sont disponibles depuis le constructeur de plan fixe.</p>'
+    +'<div style="display:flex;gap:10px">'
+    +'<button onclick="document.getElementById(\'plan-diab-badge-ov\').remove()" '
+    +'style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);font-size:.88rem;cursor:pointer">Compris</button>'
+    +'<a href="plan-fixe.html" style="flex:1;padding:11px;border-radius:10px;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.88rem;font-weight:700;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center">Modifier mon plan →</a>'
+    +'</div></div>';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
 }
 
 function showDiabetesWarningSucres(nom, sucres100){
@@ -2975,7 +3011,7 @@ function renderMealPlan(){
           pf.forEach(function(it){
             var kcal = Math.round(pN2(it.kcal)*it.qty/100);
             html += '<div class="mp-item"><div class="mp-item-info">'
-              +'<div class="mp-item-name">'+esc(it.nom)+'</div>'
+              +'<div class="mp-item-name">'+esc(it.nom)+diabetePlanBadge(it)+'</div>'
               +'<div class="mp-item-qty">'+Math.round(it.qty)+'g · '+kcal+' kcal</div></div></div>';
           });
           html += '</div></div>';
