@@ -1234,39 +1234,58 @@ async function addEntry(food,qty){
   //    Ces deux règles couvrent des cas distincts et doivent toutes les deux être appelées.
   var pathos = (PROF && PROF.pathologies) || [];
   if(pathos.indexOf('diabetes')>=0){
-    var carbGrams = pN(food.gluc)*qty/100;
-    var sucres100 = pN(food.sucres||food.sugar||0);
-    var warned = false;
+    try{
+      // Fallbacks inline — si regles-pathologies.js ne charge pas, le check
+      // fonctionne quand même grâce à ces copies locales. C'est la cause
+      // la plus fréquente de "aucun message" malgré le fichier uploadé.
+      var _fibreGlucRatio = (typeof fibreGlucRatio==='function') ? fibreGlucRatio
+        : function(g,f){ return (!g||g<=0) ? null : (f||0)/g*100; };
+      var _biscuitTropSucre = (typeof biscuitTropSucre==='function') ? biscuitTropSucre
+        : function(s){ return (s||0)>15; };
+      var _detectCat = (typeof detectFoodCategory==='function') ? detectFoodCategory
+        : function(nom){
+            var n=(nom||'').toLowerCase().replace(/[àâä]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c');
+            if(/biscuit|frangipane|sable|cookie|gaufrette|speculoos|madeleine|brownie/.test(n)) return 'biscuit';
+            if(/chocolat blanc|chocolat au lait|tablette.*chocolat|chocolat.*blanc/.test(n)) return 'chocolat';
+            if(/pain blanc|baguette/.test(n)) return 'pain_blanc';
+            if(/riz blanc/.test(n)) return 'riz_blanc';
+            return null;
+          };
 
-    // Règle 1 : ratio fibres/glucides (seuil <5%) — pour les grandes portions
-    if(carbGrams>15){
-      var ratio = fibreGlucRatio(pN(food.gluc), pN(food.fibres));
-      if(ratio!==null && ratio<5){ showDiabetesWarning(food.nom, carbGrams, ratio); warned=true; }
-    }
+      var carbGrams = pN(food.gluc)*qty/100;
+      var sucres100 = pN(food.sucres||food.sugar||0);
+      var warned = false;
 
-    // Règle 2 : biscuit/pâtisserie trop sucrée (>15g de sucres/100g)
-    if(!warned && sucres100>0 && biscuitTropSucre(sucres100)){
-      showDiabetesWarningSucres(food.nom, sucres100); warned=true;
-    }
+      // Règle 1 : ratio fibres/glucides < 5% (pain blanc, riz blanc…)
+      if(carbGrams>15){
+        var ratio = _fibreGlucRatio(pN(food.gluc), pN(food.fibres));
+        if(ratio!==null && ratio<5){ showDiabetesWarning(food.nom, carbGrams, ratio); warned=true; }
+      }
 
-    // Règle 3 : catégorie connue comme problématique (chocolat blanc, chocolat
-    // au lait…) — déclenche un avertissement MÊME pour de petites portions,
-    // car même 15g de chocolat blanc représentent ~8g de sucres purs.
-    // C'est le filet de sécurité pour les produits dont les valeurs
-    // nutritionnelles ne sont pas renseignées ou la portion est petite.
-    if(!warned && detectFoodCategory(food.nom)){
-      var cat = detectFoodCategory(food.nom);
-      var isChoc = cat==='chocolat';
-      showDiabetesWarningSucres(
-        food.nom,
-        sucres100>0 ? sucres100 : (isChoc ? 55 : 20) // valeur par défaut si non renseignée
-      );
-      warned = true;
-    }
+      // Règle 2 : sucres > 15g/100g explicitement renseignés
+      if(!warned && sucres100>0 && _biscuitTropSucre(sucres100)){
+        showDiabetesWarningSucres(food.nom, sucres100); warned=true;
+      }
 
-    // Règle 4 : fibres inconnues (=0) + glucides élevés → prudence
-    if(!warned && carbGrams>20 && pN(food.fibres)===0 && pN(food.gluc)>20){
-      showDiabetesWarning(food.nom, carbGrams, 0);
+      // Règle 3 : catégorie reconnue par le nom — déclenche QUELLE QUE SOIT
+      // la portion, même 5g. C'est le check le plus important pour les
+      // chocolats, biscuits et confiseries ajoutés sans valeurs nutritionnelles.
+      if(!warned){
+        var cat = _detectCat(food.nom);
+        if(cat){
+          var defaultSucres = (cat==='chocolat') ? 55 : 20;
+          showDiabetesWarningSucres(food.nom, sucres100>0 ? sucres100 : defaultSucres);
+          warned=true;
+        }
+      }
+
+      // Règle 4 : glucides élevés + fibres nulles (produit inconnu mais suspect)
+      if(!warned && carbGrams>20 && pN(food.fibres)===0 && pN(food.gluc)>20){
+        showDiabetesWarning(food.nom, carbGrams, 0);
+      }
+
+    }catch(e){
+      console.error('[Cap Santé] Erreur check diabète :', e);
     }
   }
 
