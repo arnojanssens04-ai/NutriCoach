@@ -88,6 +88,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 @media(max-width:380px){ .row3,.row2,.pill-row { grid-template-columns:1fr 1fr; } }
 </style>
+<script src="protect.js"></script>
 </head>
 <body>
 
@@ -124,14 +125,22 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
+    <!-- BLOC 1 — Alimentation -->
     <div class="card">
       <div class="card-hdr"><span class="card-hdr-ico">🍽️</span><span>Alimentation</span></div>
       <div class="card-body">
-        <div class="field"><label>Respect du plan alimentaire</label>
+        <div class="field"><label>Respect du plan alimentaire cette semaine</label>
           <div class="pill-row" data-field="respect_plan">
-            <div class="pill" data-val="Bien">Bien</div>
-            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Bien">Bien respecté</div>
+            <div class="pill" data-val="Moyen">Moyennement</div>
             <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>Envies incontrôlables de manger cette semaine ?</label>
+          <div class="pill-row" data-field="envies_sucrees">
+            <div class="pill" data-val="Non">Non</div>
+            <div class="pill" data-val="Moyen">Parfois</div>
+            <div class="pill" data-val="Difficile">Souvent</div>
           </div>
         </div>
         <div class="field"><label>Écarts alimentaires (optionnel)</label>
@@ -140,6 +149,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
+    <!-- BLOC 2 — Activité physique -->
     <div class="card">
       <div class="card-hdr"><span class="card-hdr-ico">🏃</span><span>Activité physique</span></div>
       <div class="card-body">
@@ -153,6 +163,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
+    <!-- BLOC 3 — Digestion & sommeil -->
     <div class="card">
       <div class="card-hdr"><span class="card-hdr-ico">🌀</span><span>Digestion & sommeil</span></div>
       <div class="card-body">
@@ -173,30 +184,43 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
+    <!-- BLOC 4 — Énergie & bien-être -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">💭</span><span>Ressenti & bien-être général</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">💭</span><span>Énergie & bien-être</span></div>
       <div class="card-body">
-        <div class="field"><label>Niveau de difficulté ressenti cette semaine</label>
-          <div class="pill-row" data-field="difficulte_semaine">
-            <div class="pill" data-val="Faible">Faible</div>
-            <div class="pill" data-val="Moyen">Moyenne</div>
-            <div class="pill" data-val="Élevé">Élevée</div>
+        <div class="field"><label>Niveau d'énergie cette semaine</label>
+          <div class="pill-row" data-field="niveau_energie">
+            <div class="pill" data-val="Bien">Élevé</div>
+            <div class="pill" data-val="Moyen">Normal</div>
+            <div class="pill" data-val="Difficile">Faible</div>
           </div>
         </div>
-        <div class="field"><label>Êtes-vous satisfait(e) de votre travail cette semaine ?</label>
-          <div class="pill-row" data-field="satisfaction_semaine">
-            <div class="pill" data-val="Oui">Oui</div>
-            <div class="pill" data-val="Moyennement">Moyennement</div>
-            <div class="pill" data-val="Non">Non</div>
+        <div class="field"><label>Humeur générale cette semaine</label>
+          <div class="pill-row" data-field="humeur_semaine">
+            <div class="pill" data-val="Bien">Bonne</div>
+            <div class="pill" data-val="Moyen">Neutre</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- BLOC 5 — Questions spécifiques aux pathologies (conditionnelles) -->
+    <div class="card" id="bloc-patho" style="display:none">
+      <div class="card-hdr"><span class="card-hdr-ico">🩺</span><span>Suivi de votre santé</span></div>
+      <div class="card-body" id="bloc-patho-body"></div>
+    </div>
+
+    <!-- BLOC 6 — Objectifs & commentaire libre -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">🎯</span><span>Objectifs pour la semaine prochaine</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">🎯</span><span>Semaine prochaine</span></div>
       <div class="card-body">
-        <div class="field"><textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une séance de sport..."></textarea></div>
+        <div class="field"><label>Objectifs pour la semaine prochaine</label>
+          <textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une séance de sport..."></textarea>
+        </div>
+        <div class="field"><label>Un commentaire à partager avec votre équipe ? (optionnel)</label>
+          <textarea id="b-commentaire" placeholder="Exprimez librement ce que les réponses ci-dessus ne capturent pas..."></textarea>
+        </div>
       </div>
     </div>
 
@@ -214,6 +238,50 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, PROF=null;
 var pillValues = {};
+
+// Génère les questions spécifiques à la pathologie (Bloc 5) — n'affiche
+// que ce que le patient peut vraiment observer lui-même sans matériel médical.
+function renderPathoBloc(pathos){
+  var bloc = document.getElementById('bloc-patho');
+  var body = document.getElementById('bloc-patho-body');
+  var questions = [];
+
+  if(pathos.indexOf('diabetes')>=0){
+    questions.push({
+      label: 'Fatigabilité après les repas cette semaine ?',
+      field: 'diabetes_fatigue',
+      opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
+    });
+    questions.push({
+      label: 'Envies de sucre importantes (au-delà des envies habituelles) ?',
+      field: 'diabetes_envies_sucre',
+      opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
+    });
+  }
+
+  if(pathos.indexOf('hypertension')>=0){
+    questions.push({
+      label: 'Avez-vous limité votre consommation de sel cette semaine ?',
+      field: 'hta_sel',
+      opts: [['Bien','Oui, attentif(ve)'],['Moyen','Moyennement'],['Difficile','Non']]
+    });
+    questions.push({
+      label: 'Maux de tête ou vertiges notés cette semaine ?',
+      field: 'hta_symptomes',
+      opts: [['Bien','Non'],['Moyen','Parfois'],['Difficile','Oui, souvent']]
+    });
+  }
+
+  if(!questions.length){ bloc.style.display='none'; return; }
+
+  body.innerHTML = questions.map(function(q){
+    return '<div class="field"><label>'+q.label+'</label>'
+      +'<div class="pill-row" data-field="'+q.field+'">'
+      +q.opts.map(function(o){ return '<div class="pill" data-val="'+o[0]+'">'+o[1]+'</div>'; }).join('')
+      +'</div></div>';
+  }).join('');
+  bloc.style.display = 'block';
+}
 
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2800);}
@@ -271,6 +339,9 @@ async function loadProfileAndHistory(){
   document.getElementById('hero-sub').textContent =
     (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
   if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
+
+  // Bloc 5 — questions conditionnelles selon les pathologies
+  renderPathoBloc(PROF.pathologies || []);
 
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
   var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
@@ -364,13 +435,19 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     tour_taille: parseFloat(document.getElementById('b-taille').value)||null,
     tour_hanche: parseFloat(document.getElementById('b-hanche').value)||null,
     respect_plan: pillValues.respect_plan||null,
+    envies_sucrees: pillValues.envies_sucrees||null,
     ecart_alimentaire: document.getElementById('b-ecart').value.trim()||null,
     activite_semaine: pillValues.activite_semaine||null,
     troubles_digestifs: pillValues.troubles_digestifs||null,
     sommeil: pillValues.sommeil||null,
-    difficulte_semaine: pillValues.difficulte_semaine||null,
-    satisfaction_semaine: pillValues.satisfaction_semaine||null,
-    objectifs_notes: document.getElementById('b-objectifs').value.trim()||null
+    niveau_energie: pillValues.niveau_energie||null,
+    humeur_semaine: pillValues.humeur_semaine||null,
+    diabetes_fatigue: pillValues.diabetes_fatigue||null,
+    diabetes_envies_sucre: pillValues.diabetes_envies_sucre||null,
+    hta_sel: pillValues.hta_sel||null,
+    hta_symptomes: pillValues.hta_symptomes||null,
+    objectifs_notes: document.getElementById('b-objectifs').value.trim()||null,
+    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null
   };
 
   var r = await sb.from('bilans').insert(data);
@@ -411,7 +488,7 @@ function showThankYouScreen(){
 var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,non:0,'élevée':0,elevee:0};
 
 function qualiteBilanScore(){
-  var champs = ['respect_plan','activite_semaine','troubles_digestifs','sommeil','difficulte_semaine','satisfaction_semaine'];
+  var champs = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
   var total = 0, compte = 0;
   champs.forEach(function(c){
     var v = pillValues[c];
