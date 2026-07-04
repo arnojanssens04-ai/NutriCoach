@@ -1290,6 +1290,19 @@ async function addEntry(food,qty){
     }
   }
 
+  // ── CHECK CŒLIAQUE ──────────────────────────────────────────────────────
+  if(pathos.indexOf('coeliac')>=0 || pathos.indexOf('coeliaque')>=0){
+    try{
+      var _containsGluten = (typeof containsGluten==='function') ? containsGluten
+        : function(nom){
+            var n=(nom||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+            return /\bpain\b|\bpates?\b|\bcouscous\b|\bboulgour\b|\bsemoule\b|\bbiscuit\b|\bbrioche\b|\bble\b|\bseigle\b|\borge\b|\bpanure\b|\bchapelure\b/.test(n) ? 'gluten' : false;
+          };
+      var catGluten = _containsGluten(food.nom);
+      if(catGluten){ showGlutenWarning(food.nom); }
+    }catch(e){ console.error('[Cap Santé] Erreur check cœliaque :', e); }
+  }
+
   afterJournalChange();
 }
 
@@ -1313,6 +1326,31 @@ function showPlanDiabetesBadge(msg){
     +'style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);font-size:.88rem;cursor:pointer">Compris</button>'
     +'<a href="plan-fixe.html" style="flex:1;padding:11px;border-radius:10px;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.88rem;font-weight:700;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center">Modifier mon plan →</a>'
     +'</div></div>';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function showGlutenWarning(nom){
+  var alts = (typeof glutenAlternatives==='function') ? (glutenAlternatives(nom)||[]) : [];
+  var symptoms = (typeof GLUTEN_SYMPTOMS!=='undefined') ? GLUTEN_SYMPTOMS
+    : 'douleurs abdominales, diarrhées, fatigue intense et malabsorption des nutriments.';
+  var altsHtml = alts.length ? '<div style="margin-top:12px;padding:10px;background:var(--sage-l);border-radius:9px">'
+    +'<div style="font-size:.74rem;font-weight:700;color:var(--sage);margin-bottom:6px">ALTERNATIVES SANS GLUTEN</div>'
+    +alts.map(function(a){ return '<div style="font-size:.8rem;color:var(--text2);margin-bottom:4px">→ <b>'+esc(a.nom)+'</b> — '+esc(a.raison)+'</div>'; }).join('')
+    +'</div>' : '';
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:26px 24px;max-width:380px;box-shadow:0 30px 80px rgba(0,0,0,.25);max-height:85vh;overflow-y:auto">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">🌾</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700;margin-bottom:10px">Contient du gluten</div>'
+    +'<p style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:6px">'
+    +'<b>'+esc(nom)+'</b> est une source de gluten. Pour les personnes atteintes de la maladie cœliaque, '
+    +'même de petites traces (au-dessus de 20mg/kg) peuvent provoquer des réactions immunitaires '
+    +'et des lésions intestinales.</p>'
+    +'<p style="font-size:.82rem;color:var(--rose);line-height:1.5;margin-bottom:4px"><b>Symptômes possibles :</b> '+esc(symptoms)+'</p>'
+    + altsHtml
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:11px;margin-top:16px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">Compris</button>'
+    +'</div>';
   ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
 }
