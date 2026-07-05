@@ -850,8 +850,31 @@ body {
       <div class="pc" onclick="togP('hypertension')" id="pc-hypertension"><span class="pc-name">Hypertension</span><div class="pc-chk" id="pk-hypertension"></div></div>
       <div class="pc" onclick="togP('cardiac')" id="pc-cardiac"><span class="pc-name">Maladies cardiaques</span><div class="pc-chk" id="pk-cardiac"></div></div>
       <div class="pc" onclick="togP('obesity')" id="pc-obesity"><span class="pc-name">Obésité / Poids</span><div class="pc-chk" id="pk-obesity"></div></div>
-      <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Cœliaque</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
+      <div class="pc" onclick="togP('coeliac')" id="pc-coeliac"><span class="pc-name">Maladie cœliaque</span><div class="pc-chk" id="pk-coeliac"></div></div>
+      <div class="pc" onclick="togP('menopause')" id="pc-menopause"><span class="pc-name">Ménopause</span><div class="pc-chk" id="pk-menopause"></div></div>
       <div class="pc pc-disabled" style="opacity:.45;cursor:not-allowed;pointer-events:none"><span class="pc-name">Insuffisance rénale</span><span style="font-size:.6rem;color:var(--text3);margin-left:auto;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px">Bientôt</span></div>
+    </div>
+
+    <!-- Sous-questions ménopause — apparaissent uniquement si ménopause cochée -->
+    <div id="menopause-subq" style="display:none;margin-top:12px;background:var(--card2);border-radius:11px;padding:13px 15px;border:1px solid var(--border2)">
+      <div style="font-size:.78rem;font-weight:600;color:var(--text2);margin-bottom:10px">Précisez votre situation</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.84rem">
+          <input type="radio" name="menophase" value="perimenopause" onchange="setup.menophase=this.value"> Périménopause <span style="color:var(--text3);font-size:.72rem">(cycles irréguliers)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.84rem">
+          <input type="radio" name="menophase" value="menopause" onchange="setup.menophase=this.value"> Ménopause confirmée <span style="color:var(--text3);font-size:.72rem">(> 12 mois sans règles)</span>
+        </label>
+      </div>
+      <div style="font-size:.78rem;font-weight:600;color:var(--text2);margin-bottom:8px">Traitement hormonal substitutif (THS) ?</div>
+      <div style="display:flex;gap:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.84rem">
+          <input type="radio" name="menoths" value="oui" onchange="setup.menoths=this.value"> Oui
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.84rem">
+          <input type="radio" name="menoths" value="non" onchange="setup.menoths=this.value"> Non
+        </label>
+      </div>
     </div>
 
     <div class="consent-row" id="consent-row" style="display:none">
@@ -1113,10 +1136,33 @@ function calcTargets(){
   kcal += (p.kcal_adjustment||0);
   kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
   // Répartition macro universelle : 50% glucides / 15% protéines / 35% lipides.
-  // Les pathologies n'ajustent plus ces pourcentages — elles déclenchent plutôt
-  // des contrôles de QUALITÉ (fibres pour diabète, graisses saturées pour
-  // cardiovasculaire) gérés séparément dans genAlerts().
+  // La ménopause ajuste ces pourcentages selon la phase et le THS, pour tenir
+  // compte de la résistance à l'insuline accrue et des besoins en protéines
+  // plus élevés documentés dans la littérature scientifique 2023-2025.
   var pp=0.15, gp=0.50, lp=0.35;
+  var calTarget = 1000; // calcium
+
+  if(pathos.indexOf('menopause')>=0){
+    var phase = p.menophase||'menopause';
+    var ths   = p.menoths==='oui';
+    if(phase==='perimenopause'){
+      // Périménopause — ajustements modérés
+      pp = ths ? 0.17 : 0.18; // +protéines
+      gp = ths ? 0.48 : 0.46; // légère réduction glucides
+      lp = 1 - pp - gp;
+      calTarget = ths ? 1000 : 1100;
+    } else {
+      // Ménopause confirmée — ajustements complets
+      // Protéines : 1,3-1,4g/kg selon la littérature (vs 0,9g/kg standard)
+      // On approche cela via les % macro plutôt que de recalculer sur poids
+      // pour rester cohérent avec le reste du système.
+      pp = ths ? 0.19 : 0.22;
+      gp = ths ? 0.45 : 0.42; // résistance insuline plus marquée
+      lp = 1 - pp - gp;
+      calTarget = ths ? 1100 : 1200; // ostéoporose post-ménopausique
+    }
+  }
+
   return{
     kcal:kcal,
     prot:Math.round(kcal*pp/4),
@@ -1126,7 +1172,7 @@ function calcTargets(){
     o3:2.0,
     fibres:27,
     fer:(g==='F'&&a<50)?16:9,
-    cal:1000,
+    cal:calTarget,
     mg:g==='M'?380:300,
     zn:g==='M'?12:10,
     pot:pathos.indexOf('hypertension')>=0?3500:2000,
@@ -1557,8 +1603,8 @@ async function renderMotivationCards(){
   document.getElementById('streak-val').textContent = streak;
   document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
 
-  if(p.poids_initial && p.poids){
-    var diff = p.poids - p.poids_initial;
+  if(p.poids_initial && p.poids && !isNaN(p.poids_initial) && !isNaN(p.poids) && p.poids_initial > 0){
+    var diff = Math.round((p.poids - p.poids_initial)*10)/10;
     var pathEl = document.getElementById('path-val');
     var iconEl = document.getElementById('path-ico');
     if(Math.abs(diff) < 0.1){
@@ -3331,6 +3377,14 @@ function openSetup(){
   document.getElementById('s-jourbilan').value=p.jour_bilan||'dimanche';
   setSex(setup.sex); setAct(setup.act); setObj(setup.objectif);
   setup.pathos.forEach(function(pp){var c=document.getElementById('pc-'+pp);var k=document.getElementById('pk-'+pp);if(c){c.classList.add('on');k.innerHTML='✓';}});
+  // Restaurer les sous-questions ménopause si déjà cochée
+  if(setup.pathos.indexOf('menopause')>=0){
+    var sq=document.getElementById('menopause-subq'); if(sq) sq.style.display='block';
+    setup.menophase = PROF.menophase||null;
+    setup.menoths   = PROF.menoths||null;
+    if(setup.menophase){ var r=document.querySelector('input[name="menophase"][value="'+setup.menophase+'"]'); if(r) r.checked=true; }
+    if(setup.menoths){   var r2=document.querySelector('input[name="menoths"][value="'+setup.menoths+'"]');   if(r2) r2.checked=true; }
+  }
   // Si la personne a déjà des pathologies enregistrées, le consentement a
   // forcément déjà été donné lors d'un précédent passage — pas besoin de
   // le redemander à chaque simple réouverture du profil.
@@ -3357,6 +3411,13 @@ function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getEle
 function setObj(o){setup.objectif=o;['perte','maintien','prise'].forEach(function(x){document.getElementById('obj-'+x).classList.toggle('on',x===o);});}
 function setAct(a){setup.act=a;['sedentary','light','moderate','active','sportif'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
 function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}
+  // Sous-questions ménopause
+  var menoSubq = document.getElementById('menopause-subq');
+  if(menoSubq){
+    var hasMeno = setup.pathos.indexOf('menopause')>=0;
+    menoSubq.style.display = hasMeno ? 'block' : 'none';
+    if(!hasMeno){ setup.menophase=null; setup.menoths=null; }
+  }
   // Le consentement n'est demandé que si une vraie pathologie est cochée
   // (pas pour "Aucune pathologie") — donnée de santé = consentement explicite.
   var hasRealPatho = setup.pathos.some(function(x){return x!=='none';});
@@ -3384,7 +3445,7 @@ function goSt(n){
   if(n===4){ updateMealTabsVisibility(); refreshSetupJournal(); }
 }
 async function finSetup(){
-  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos,menophase:setup.menophase||null,menoths:setup.menoths||null};
   data.kcal_target=calcTargets().kcal;
   // Capture le poids de départ UNE SEULE FOIS (jamais réécrasé par la suite)
   // — c'est la référence pour "chemin parcouru depuis le début".
@@ -3555,7 +3616,7 @@ function loadCustomFoods(){
 // Override finSetup to show loading screen
 var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
-  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos};
+  var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos,menophase:setup.menophase||null,menoths:setup.menoths||null};
   data.kcal_target=calcTargets().kcal;
   if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
