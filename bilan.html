@@ -515,7 +515,6 @@ async function checkAndAdjustKcal(newWeight){
   var currentAdj = PROF.kcal_adjustment || 0;
 
   if(objectif==='perte' || objectif==='prise'){
-    // Stagnation sur ~2 semaines -> on pousse dans le sens de l'objectif.
     var d1 = new Date(); d1.setDate(d1.getDate()-16);
     var d2 = new Date(); d2.setDate(d2.getDate()-12);
     var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
@@ -524,20 +523,43 @@ async function checkAndAdjustKcal(newWeight){
     if(!res.data || !res.data.length || !res.data[0].poids) return;
 
     var oldWeight = res.data[0].poids;
-    var delta = newWeight - oldWeight;
-    var stalled = Math.abs(delta) < 0.3;
-    if(!stalled) return;
+    var delta = newWeight - oldWeight; // positif = prise, négatif = perte
 
-    var newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+    // Trois situations possibles :
+    // 1. Bonne progression (poids évolue dans le bon sens) → rien à faire
+    // 2. Stagnation (< 0.3kg de différence) → nudge de -200kcal (perte) ou +200 (prise)
+    // 3. Mauvaise direction (poids augmente sur perte, ou diminue sur prise) → correction
+    //    plus marquée car la situation est plus urgente qu'une simple stagnation.
+    var goodProgress = (objectif==='perte' && delta < -0.3) || (objectif==='prise' && delta > 0.3);
+    var stalled     = Math.abs(delta) < 0.3;
+    var wrongWay    = (objectif==='perte' && delta > 0.5) || (objectif==='prise' && delta < -0.5);
+
+    if(goodProgress) return; // tout va bien, on ne touche à rien
+
+    var newAdj = currentAdj;
+    var msgContext = '';
+
+    if(wrongWay){
+      // Poids part dans la mauvaise direction — même ajustement de 200 kcal que
+      // pour une stagnation : les changements brusques sont contre-productifs,
+      // mieux vaut des corrections progressives et soutenables dans le temps.
+      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      msgContext = objectif==='perte'
+        ? 'Votre poids a augmenté cette semaine alors que votre objectif est la perte. On ajuste votre objectif calorique de −200 kcal/jour pour corriger progressivement la trajectoire.'
+        : 'Votre poids a diminué cette semaine alors que votre objectif est la prise. On ajuste votre objectif calorique de +200 kcal/jour pour corriger progressivement la trajectoire.';
+    } else if(stalled){
+      // Poids stable depuis 2 semaines → nudge de 200 kcal
+      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      msgContext = objectif==='perte'
+        ? 'Votre poids n\'a pas bougé depuis 2 semaines. On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
+        : 'Votre poids n\'a pas bougé depuis 2 semaines. On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.';
+    }
+
     newAdj = Math.max(-1200, Math.min(2500, newAdj));
     await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
 
     banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
-    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids n\'a pas bougé depuis 2 semaines. '
-      + (objectif==='perte'
-        ? 'On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
-        : 'On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.')
-      + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>' + msgContext + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
 
   } else if(objectif==='maintien'){
     // En maintien, on corrige dans le sens OPPOSÉ à la dérive constatée —
