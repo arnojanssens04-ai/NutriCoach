@@ -149,6 +149,13 @@ body {
 
 /* ── KCAL RING CARD ── */
 .clinical-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:16px; margin-bottom:14px; box-shadow:var(--sh); }
+.extra-score-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh); }
+.extra-score-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.extra-score-ttl { font-size:.85rem; font-weight:600; color:var(--text); }
+.extra-score-num { font-size:1rem; font-weight:700; color:var(--gold); }
+.extra-score-bar { height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-bottom:7px; }
+.extra-score-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .5s ease; }
+.extra-score-tip { font-size:.78rem; color:var(--text2); line-height:1.5; }
 .clinical-hdr { font-family:'Lora',serif; font-size:1rem; font-weight:600; margin-bottom:10px; color:var(--gold); }
 .clinical-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
 .clinical-row:last-child { border-bottom:none; }
@@ -563,6 +570,26 @@ body {
       <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
       <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
       <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Qualité nutritionnelle + Répartition journée -->
+  <div id="extra-scores-row" style="display:none;flex-direction:column;gap:10px;margin-bottom:14px">
+    <div class="extra-score-card">
+      <div class="extra-score-hdr">
+        <span class="extra-score-ttl">Qualité nutritionnelle</span>
+        <span class="extra-score-num" id="qn-num">—</span>
+      </div>
+      <div class="extra-score-bar"><div class="extra-score-fill" id="qn-bar" style="width:0%"></div></div>
+      <div class="extra-score-tip" id="qn-tip">Commencez à remplir votre journal pour voir votre score.</div>
+    </div>
+    <div class="extra-score-card">
+      <div class="extra-score-hdr">
+        <span class="extra-score-ttl">Répartition journée</span>
+        <span class="extra-score-num" id="rj-num">—</span>
+      </div>
+      <div class="extra-score-bar"><div class="extra-score-fill" id="rj-bar" style="width:0%"></div></div>
+      <div class="extra-score-tip" id="rj-tip">Commencez à remplir votre journal pour voir votre score.</div>
     </div>
   </div>
 
@@ -1229,6 +1256,103 @@ function calcScore(T,tgt,pathos){
   return Math.max(0,Math.min(100,Math.round(s)));
 }
 
+// ── QUALITÉ NUTRITIONNELLE (0-100) ────────────────────────────────────────
+// Évalue la composition de ce qui a réellement été mangé : présence de
+// légumes, protéines maigres, fibres, contrôle des graisses saturées.
+// Donne un conseil ciblé sur le repas le plus déséquilibré de la journée.
+function calcNutritionalQuality(entries, tgt){
+  if(!entries || !entries.length) return null;
+  var T = {kcal:0, prot:0, gluc:0, lip:0, ags:0, fibres:0};
+  var byMeal = {};
+  entries.forEach(function(e){
+    T.kcal += e.kcal||0; T.prot += e.proteines||0;
+    T.gluc += e.glucides||0; T.lip += e.lipides||0;
+    T.ags += (e.food_ags_100||0)*e.quantite/100;
+    T.fibres += (e.food_fibres_100||0)*e.quantite/100;
+    if(!byMeal[e.repas]) byMeal[e.repas]={kcal:0,prot:0,veg:0};
+    byMeal[e.repas].kcal += e.kcal||0;
+    byMeal[e.repas].prot += e.proteines||0;
+    // Détection simplifiée légume par le nom (heuristique)
+    var n=(e.aliment||'').toLowerCase();
+    if(/salade|brocoli|carotte|courgette|epinard|haricot|tomate|poivron|chou|celeri|poireau|champignon/.test(n))
+      byMeal[e.repas].veg++;
+  });
+  if(T.kcal<100) return null;
+
+  var score = 0;
+  // Protéines : 25 pts (couvrir 80%+ de l'objectif)
+  var protRatio = tgt.prot>0 ? Math.min(1, T.prot/tgt.prot) : 0;
+  score += Math.round(protRatio * 25);
+  // Fibres : 25 pts (objectif 27g/j)
+  var fibreRatio = Math.min(1, T.fibres/(tgt.fibres||27));
+  score += Math.round(fibreRatio * 25);
+  // AGS : 25 pts (pénalité si > 10% des kcal totales)
+  var agsKcalPct = T.kcal>0 ? (T.ags*9)/T.kcal : 0;
+  var agsPts = agsKcalPct<=0.10 ? 25 : Math.max(0, Math.round(25 - (agsKcalPct-0.10)*200));
+  score += agsPts;
+  // Diversité légumes : 25 pts
+  var vegMeals = Object.values(byMeal).filter(function(m){ return m.veg>0; }).length;
+  score += Math.round(Math.min(1, vegMeals/2) * 25);
+
+  // Conseil ciblé : trouver le repas le plus pauvre en légumes ET protéines
+  var worst=null, worstScore=999;
+  Object.keys(byMeal).forEach(function(m){
+    var ms = byMeal[m].prot*4 + byMeal[m].veg*10;
+    if(ms<worstScore){ worstScore=ms; worst=m; }
+  });
+  var mealLabels={breakfast:'petit-déjeuner',lunch:'déjeuner',snack:'collation',dinner:'souper',snack2:'collation 2'};
+  var tip = '';
+  if(fibreRatio<0.5) tip = 'Pensez à ajouter des légumes ou des légumineuses pour atteindre votre objectif en fibres.';
+  else if(protRatio<0.7) tip = 'Vos apports en protéines sont insuffisants — ajoutez une source maigre (œuf, poulet, poisson, légumineuses).';
+  else if(worst && byMeal[worst].veg===0) tip = 'Ajoutez des légumes au '+(mealLabels[worst]||worst)+' pour améliorer la qualité nutritionnelle.';
+  else if(agsKcalPct>0.12) tip = 'Les graisses saturées représentent une part importante — privilégiez les huiles végétales et les poissons gras.';
+  else tip = 'Belle qualité nutritionnelle — continuez comme ça !';
+
+  return {score:Math.min(100,score), tip:tip};
+}
+
+// ── RÉPARTITION DE LA JOURNÉE (0-100) ─────────────────────────────────────
+// Évalue si les calories sont bien distribuées entre les repas : pas de
+// repas sauté, pas d'un seul repas qui représente 80% des calories.
+function calcDayDistribution(entries, activeMealIds){
+  if(!entries || !entries.length) return null;
+  var totalKcal = entries.reduce(function(s,e){ return s+(e.kcal||0); }, 0);
+  if(totalKcal<100) return null;
+
+  var byMeal = {};
+  activeMealIds.forEach(function(m){ byMeal[m]=0; });
+  entries.forEach(function(e){ byMeal[e.repas] = (byMeal[e.repas]||0) + (e.kcal||0); });
+
+  var filledMeals = Object.keys(byMeal).filter(function(m){ return byMeal[m]>50; });
+  var totalMeals  = activeMealIds.length;
+  var score = 0;
+  var tip = '';
+
+  // Présence des repas principaux : 40 pts
+  var mainPresent = (byMeal.breakfast||0)>50 ? 1 : 0;
+  mainPresent    += (byMeal.lunch||0)>50 ? 1 : 0;
+  mainPresent    += (byMeal.dinner||0)>50 ? 1 : 0;
+  score += Math.round((mainPresent/3)*40);
+
+  // Distribution équilibrée : 40 pts (aucun repas > 60% du total)
+  var maxMealPct = 0;
+  filledMeals.forEach(function(m){ maxMealPct = Math.max(maxMealPct, byMeal[m]/totalKcal); });
+  var distScore = maxMealPct<=0.60 ? 40 : Math.max(0, Math.round(40-(maxMealPct-0.60)*200));
+  score += distScore;
+
+  // Progression de remplissage : 20 pts (bonus si journée complète)
+  score += Math.round((filledMeals.length/totalMeals)*20);
+
+  // Conseil ciblé
+  if((byMeal.breakfast||0)<50) tip = 'Le petit-déjeuner est absent — il contribue à stabiliser la glycémie et l\'énergie matinale.';
+  else if((byMeal.lunch||0)<50) tip = 'Le déjeuner est absent, ce qui fragilise l\'interprétation de la journée.';
+  else if(maxMealPct>0.65){ var heavy=Object.keys(byMeal).sort(function(a,b){return byMeal[b]-byMeal[a];})[0]; tip='Le '+(({breakfast:'petit-déjeuner',lunch:'déjeuner',dinner:'souper',snack:'collation'}[heavy]||heavy))+' concentre l\'essentiel des calories — répartissez davantage.'; }
+  else if(filledMeals.length<2) tip = 'Ajoutez d\'autres repas pour obtenir une analyse complète de votre journée.';
+  else tip = 'Bonne répartition des repas sur la journée !';
+
+  return {score:Math.min(100,score), tip:tip};
+}
+
 function genAlerts(T,tgt,pathos){
   var al=[];if(T.kcal<100)return al;
   var r=T.kcal/tgt.kcal;
@@ -1731,10 +1855,36 @@ async function refreshDash(){
   // Alerts
   var alerts=genAlerts(T,tgt,pathos);
   var az=document.getElementById('alerts-zone');
-  if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';return;}
-  az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
+  if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';}
+  else { az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
     return '<div class="alert-item alert-'+a.t+'"><span class="alert-ico">'+a.i+'</span><div><div class="alert-ttl">'+a.ttl+'</div>'+a.txt+'</div></div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>'; }
+
+  // Qualité nutritionnelle + Répartition journée
+  var extraRow = document.getElementById('extra-scores-row');
+  var qnRes = calcNutritionalQuality(entries, tgt);
+  var rjRes = calcDayDistribution(entries, activeMealIds());
+  if(qnRes || rjRes){
+    extraRow.style.display='flex';
+    if(qnRes){
+      document.getElementById('qn-num').textContent = qnRes.score+'/100';
+      var qnColor = qnRes.score>=70?'var(--sage)':qnRes.score>=45?'var(--amber)':'var(--rose)';
+      document.getElementById('qn-bar').style.width = qnRes.score+'%';
+      document.getElementById('qn-bar').style.background = qnColor;
+      document.getElementById('qn-num').style.color = qnColor;
+      document.getElementById('qn-tip').textContent = qnRes.tip;
+    }
+    if(rjRes){
+      document.getElementById('rj-num').textContent = rjRes.score+'/100';
+      var rjColor = rjRes.score>=70?'var(--sage)':rjRes.score>=45?'var(--amber)':'var(--rose)';
+      document.getElementById('rj-bar').style.width = rjRes.score+'%';
+      document.getElementById('rj-bar').style.background = rjColor;
+      document.getElementById('rj-num').style.color = rjColor;
+      document.getElementById('rj-tip').textContent = rjRes.tip;
+    }
+  } else {
+    extraRow.style.display='none';
+  }
 }
 
 // ── JOURNAL PAGE ──
