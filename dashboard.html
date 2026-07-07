@@ -836,6 +836,9 @@ body {
         <div class="sel-btn" onclick="setObj('maintien')" id="obj-maintien"><span class="si">⚖️</span>Maintien</div>
         <div class="sel-btn" onclick="setObj('prise')" id="obj-prise"><span class="si">📈</span>Prise de poids</div>
       </div>
+      <div id="imc-warn" style="display:none;margin-top:10px;padding:10px 13px;background:rgba(139,42,42,0.07);border:1px solid rgba(139,42,42,0.2);border-radius:9px;font-size:.8rem;color:var(--rose);line-height:1.55">
+        ⚠️ <strong>IMC inférieur à 20</strong> — Un objectif de perte de poids n'est pas recommandé dans votre situation. Cela pourrait entraîner de la dénutrition ou une perte de masse musculaire. Consultez un professionnel de santé avant de continuer.
+      </div>
     </div>
     <div class="field"><label>Jour de votre bilan hebdomadaire</label>
       <select id="s-jourbilan">
@@ -1130,7 +1133,7 @@ function initGreeting(){
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
   var scanBadge=document.getElementById('scan-dev-badge');
-  if(scanBadge) scanBadge.style.display = (p.role==='admin') ? 'none' : 'block';
+  if(scanBadge) scanBadge.style.display = 'none'; // Scan désormais public pour tous
 }
 
 // ── TARGETS ──
@@ -1168,6 +1171,14 @@ function calcTargets(){
   // plus élevés documentés dans la littérature scientifique 2023-2025.
   var pp=0.15, gp=0.50, lp=0.35;
   var calTarget = 1000; // calcium
+
+  // Protéines augmentées pour les profils sportifs — les études recommandent
+  // 1.4-1.7g/kg pour les sportifs réguliers vs 0.8-1.0g/kg pour un adulte sédentaire.
+  if(act==='active' || act==='sportif' || hasMetData){
+    pp = act==='sportif' ? 0.22 : 0.20; // ~1.4-1.7g/kg selon le poids
+    gp = act==='sportif' ? 0.45 : 0.46;
+    lp = 1 - pp - gp;
+  }
 
   if(pathos.indexOf('menopause')>=0){
     var phase = p.menophase||'menopause';
@@ -1355,9 +1366,17 @@ function calcDayDistribution(entries, activeMealIds){
 
 function genAlerts(T,tgt,pathos){
   var al=[];if(T.kcal<100)return al;
+  var p=PROF||{};
   var r=T.kcal/tgt.kcal;
   if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
   else if(r>0.85)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
+  // Alerte protéines faibles — seuil minimal de 0.83g/kg (recommandation OMS)
+  // affiché uniquement en fin de journée quand il reste peu à manger (>60% kcal atteints)
+  var w = p.poids||70;
+  var protMin = w * 0.83;
+  if(r > 0.6 && T.prot < protMin * 0.75){
+    al.push({t:'warn',i:'🥩',ttl:'Protéines insuffisantes',txt:'Vos apports en protéines ('+Math.round(T.prot)+'g) sont en dessous du minimum recommandé de '+Math.round(protMin)+'g pour votre poids. Ajoutez une source maigre : œuf, poulet, poisson, légumineuses.'});
+  }
   if(pathos.indexOf('diabetes')>=0&&T.gluc/tgt.gluc>1.2)al.push({t:'bad',i:'🩸',ttl:'Glucides élevés (Diabète)',txt:'Privilégiez les aliments à faible index glycémique.'});
   if((pathos.indexOf('cholesterol')>=0||pathos.indexOf('cardiac')>=0)&&T.ags/tgt.ags>1.0)al.push({t:'bad',i:'🫀',ttl:'Graisses saturées trop élevées',txt:'Limitez charcuteries, beurre et fromages gras.'});
   if(pathos.indexOf('hypertension')>=0&&T.pot<tgt.pot*0.7&&T.kcal>400)al.push({t:'warn',i:'🍌',ttl:'Potassium insuffisant',txt:'Augmentez légumes, fruits et légumineuses.'});
@@ -1835,7 +1854,11 @@ async function refreshDash(){
         :score>=50?'Quelques ajustements amélioreraient votre équilibre.'
         :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
         :'Votre équilibre nutritionnel du jour est insuffisant.');
-    document.getElementById('score-pill').innerHTML='<div class="score-pill '+niveau.cls+'">'+niveau.lbl+' · '+score+'/100</div>';
+    document.getElementById('score-pill').innerHTML=
+      '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
+      +'<span style="font-size:1rem">'+
+        (score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')
+      +'</span>'+niveau.lbl+'</div>';
   } else {
     rf.style.strokeDashoffset='251.3';
     rf.style.stroke='rgba(255,255,255,.08)';
@@ -2084,9 +2107,7 @@ function pickRes(i){
 
 // ── SCAN DE CODE-BARRES ──
 function handleScanNav(){
-  var isAdmin = PROF && PROF.role==='admin';
-  if(isAdmin){ openScanner(); return; }
-  toast('📷 Le scan de code-barres est en cours de développement — bientôt disponible !');
+  openScanner(); // Scan désormais disponible pour tous les utilisateurs
 }
 var html5QrCode = null;
 var zxingReader = null;
@@ -3558,7 +3579,18 @@ function openSetup(){
   document.getElementById('ov').classList.add('on');
 }
 function setSex(s){setup.sex=s;['F','M','A'].forEach(function(x){document.getElementById('sx-'+x).classList.toggle('on',x===s);});}
-function setObj(o){setup.objectif=o;['perte','maintien','prise'].forEach(function(x){document.getElementById('obj-'+x).classList.toggle('on',x===o);});}
+function setObj(o){
+  setup.objectif=o;
+  ['perte','maintien','prise'].forEach(function(x){document.getElementById('obj-'+x).classList.toggle('on',x===o);});
+  // Avertissement IMC < 20 si objectif perte de poids — en dessous de 20,
+  // une perte de poids supplémentaire présente des risques cliniques réels
+  // (dénutrition, sarcopénie, ostéoporose) et n'est pas recommandée.
+  var w=parseFloat(document.getElementById('s-w')&&document.getElementById('s-w').value)||0;
+  var h=parseFloat(document.getElementById('s-h')&&document.getElementById('s-h').value)||0;
+  var imc = h>0 && w>0 ? w/((h/100)*(h/100)) : 0;
+  var imcWarn = document.getElementById('imc-warn');
+  if(imcWarn) imcWarn.style.display = (o==='perte' && imc>0 && imc<20) ? 'block' : 'none';
+}
 function setAct(a){setup.act=a;['sedentary','light','moderate','active','sportif'].forEach(function(x){document.getElementById('ac-'+x).classList.toggle('on',x===a);});}
 function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('pc-'+p);var k=document.getElementById('pk-'+p);if(idx>=0){setup.pathos.splice(idx,1);c.classList.remove('on');k.innerHTML='';}else{setup.pathos.push(p);c.classList.add('on');k.innerHTML='✓';}
   // Sous-questions ménopause
