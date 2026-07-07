@@ -2207,12 +2207,14 @@ function closePhotoScanner(){
 async function onPhotoSelected(input){
   var file = input.files[0];
   if(!file) return;
-  // Afficher prévisualisation
+
   var reader = new FileReader();
   reader.onload = async function(e){
-    var dataUrl = e.target.result;
+    var originalDataUrl = e.target.result;
+
+    // Afficher prévisualisation immédiate
     var img = document.getElementById('photo-preview-img');
-    img.src = dataUrl;
+    img.src = originalDataUrl;
     img.style.display='block';
     document.getElementById('photo-placeholder').style.display='none';
     document.getElementById('photo-capture-btns').style.display='none';
@@ -2220,33 +2222,72 @@ async function onPhotoSelected(input){
     document.getElementById('photo-error').style.display='none';
     document.getElementById('photo-results').style.display='none';
 
-    // Extraire base64 pur (sans le préfixe data:...)
-    var base64 = dataUrl.split(',')[1];
-    var mimeType = dataUrl.split(';')[0].split(':')[1];
-
     try{
+      // Compression obligatoire — une photo iPhone fait 3-5MB en base64,
+      // ce qui dépasse les limites de l'Edge Function et provoque "Load failed".
+      // On redimensionne à 800px max et on compresse en JPEG 0.75.
+      // Compression agressive — iOS Safari bloque les requêtes > ~500KB
+      // avant même de les envoyer (aucun log côté serveur dans ce cas).
+      var compressedDataUrl = await compressImage(originalDataUrl, 512, 0.6);
+      var base64 = compressedDataUrl.split(',')[1];
+      var sizeKB = Math.round(base64.length * 0.75 / 1024);
+      console.log('[Photo IA] Taille image compressée :', sizeKB, 'KB');
+      document.getElementById('photo-loading').innerHTML = '<div style="font-size:1.4rem;margin-bottom:8px">⏳</div><div style="font-size:.85rem;opacity:.7">Gemini analyse votre repas... ('+sizeKB+'KB)</div>';
+      var mimeType = 'image/jpeg';
+
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
+
       var res = await fetch(SURL+'/functions/v1/analyser-photo', {
         method: 'POST',
         headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
       });
-      var data = await res.json();
+
       document.getElementById('photo-loading').style.display='none';
 
+      if(!res.ok){
+        var errText = await res.text();
+        showPhotoError('Erreur serveur ('+res.status+') — vérifiez que la clé GEMINI_API_KEY est bien configurée dans Supabase.');
+        console.error('analyser-photo error:', errText);
+        return;
+      }
+
+      var data = await res.json();
       if(!data.aliments || !data.aliments.length){
-        showPhotoError('Aucun aliment détecté sur cette photo. Essayez avec une image plus claire.');
+        showPhotoError('Aucun aliment détecté. Essayez avec une image plus nette ou sous un meilleur éclairage.');
         return;
       }
       showPhotoResults(data.aliments);
+
     }catch(err){
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur lors de l\'analyse : '+err.message);
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé Gemini est bien ajoutée dans Supabase.');
+      console.error('photo scan error:', err);
     }
   };
   reader.readAsDataURL(file);
-  input.value=''; // reset pour permettre de re-sélectionner le même fichier
+  input.value='';
+}
+
+// Compresse et redimensionne une image via un canvas HTML5
+// — réduit de 4MB à ~150KB, indispensable pour les photos mobiles.
+function compressImage(dataUrl, maxPx, quality){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){
+      var w=img.width, h=img.height;
+      if(w>maxPx||h>maxPx){
+        if(w>h){ h=Math.round(h*maxPx/w); w=maxPx; }
+        else    { w=Math.round(w*maxPx/h); h=maxPx; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
 }
 
 function showPhotoError(msg){
