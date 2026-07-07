@@ -2238,7 +2238,7 @@ async function onPhotoSelected(input){
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
 
-      var res = await fetch(SURL+'/functions/v1/analyser-photo', {
+      var res = await fetch(SURL+'/functions/v1/dynamic-endpoint', {
         method: 'POST',
         headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
