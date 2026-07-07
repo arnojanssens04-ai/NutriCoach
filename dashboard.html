@@ -156,6 +156,7 @@ body {
 .extra-score-bar { height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-bottom:7px; }
 .extra-score-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .5s ease; }
 .extra-score-tip { font-size:.78rem; color:var(--text2); line-height:1.5; }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 .clinical-hdr { font-family:'Lora',serif; font-size:1rem; font-weight:600; margin-bottom:10px; color:var(--gold); }
 .clinical-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
 .clinical-row:last-child { border-bottom:none; }
@@ -673,6 +674,9 @@ body {
     <button onclick="handleScanNav()" title="Scanner un code-barres" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
     </button>
+    <button onclick="openPhotoScanner()" title="Scanner un plat en photo" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
   </div>
   <div id="srch-zone"></div>
   <div class="div-line"></div>
@@ -735,6 +739,57 @@ body {
         <a href="cgu.html" style="color:var(--text3);text-decoration:underline">CGU</a>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PHOTO SCANNER -->
+<div id="photo-ov" style="position:fixed;inset:0;background:rgba(22,36,27,0.96);z-index:998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:400px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="color:#fff;font-family:'Lora',serif;font-size:1.1rem;font-weight:700">📷 Photo du repas</span>
+      <button onclick="closePhotoScanner()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.1rem;cursor:pointer">✕</button>
+    </div>
+
+    <!-- Zone de prévisualisation / capture -->
+    <div id="photo-preview-zone" style="width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+      <div id="photo-placeholder" style="text-align:center;color:rgba(255,255,255,0.5);padding:30px">
+        <div style="font-size:2.5rem;margin-bottom:8px">🍽️</div>
+        <div style="font-size:.85rem">Prenez une photo de votre repas<br>ou galerie</div>
+      </div>
+      <img id="photo-preview-img" style="display:none;width:100%;max-height:280px;object-fit:cover;border-radius:14px" />
+    </div>
+
+    <!-- Boutons de capture -->
+    <div id="photo-capture-btns" style="display:flex;gap:10px;margin-bottom:14px">
+      <label style="flex:1;padding:12px;background:var(--gold);border-radius:11px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Caméra
+        <input type="file" accept="image/*" capture="environment" id="photo-camera-input" style="display:none" onchange="onPhotoSelected(this)">
+      </label>
+      <label style="flex:1;padding:12px;background:rgba(255,255,255,0.12);border-radius:11px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(255,255,255,0.2)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Galerie
+        <input type="file" accept="image/*" id="photo-gallery-input" style="display:none" onchange="onPhotoSelected(this)">
+      </label>
+    </div>
+
+    <!-- Analyse en cours -->
+    <div id="photo-loading" style="display:none;text-align:center;color:#fff;padding:16px">
+      <div style="font-size:1.4rem;margin-bottom:8px;animation:spin .8s linear infinite;display:inline-block">⏳</div>
+      <div style="font-size:.85rem;opacity:.7">Gemini analyse votre repas...</div>
+    </div>
+
+    <!-- Résultats — liste de confirmation -->
+    <div id="photo-results" style="display:none">
+      <div style="color:rgba(255,255,255,0.7);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Aliments détectés — ajustez si nécessaire</div>
+      <div id="photo-results-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:14px"></div>
+      <button onclick="confirmPhotoFoods()" style="width:100%;padding:13px;border-radius:11px;border:none;background:var(--gold);color:#fff;font-family:'Lora',serif;font-size:.95rem;font-weight:700;cursor:pointer">
+        Ajouter au journal
+      </button>
+    </div>
+
+    <!-- Erreur -->
+    <div id="photo-error" style="display:none;background:rgba(139,42,42,0.3);border:1px solid rgba(139,42,42,0.5);border-radius:9px;padding:12px;color:#ffaaaa;font-size:.83rem;text-align:center"></div>
   </div>
 </div>
 
@@ -2106,6 +2161,151 @@ function pickRes(i){
 }
 
 // ── SCAN DE CODE-BARRES ──
+// ── SCAN PHOTO IA (Gemini) ────────────────────────────────────────────────
+// Workflow : photo → Edge Function analyser-photo → Gemini identifie les
+// aliments → liste de confirmation → recherche Ciqual pour chaque aliment
+// confirmé → ajout au journal avec valeurs vérifiées (pas estimées).
+
+var photoFoodsToConfirm = []; // aliments détectés en attente de confirmation
+
+function openPhotoScanner(){
+  document.getElementById('photo-ov').style.display='flex';
+  document.getElementById('photo-preview-img').style.display='none';
+  document.getElementById('photo-placeholder').style.display='block';
+  document.getElementById('photo-results').style.display='none';
+  document.getElementById('photo-loading').style.display='none';
+  document.getElementById('photo-error').style.display='none';
+  document.getElementById('photo-capture-btns').style.display='flex';
+  photoFoodsToConfirm=[];
+}
+
+function closePhotoScanner(){
+  document.getElementById('photo-ov').style.display='none';
+}
+
+async function onPhotoSelected(input){
+  var file = input.files[0];
+  if(!file) return;
+  // Afficher prévisualisation
+  var reader = new FileReader();
+  reader.onload = async function(e){
+    var dataUrl = e.target.result;
+    var img = document.getElementById('photo-preview-img');
+    img.src = dataUrl;
+    img.style.display='block';
+    document.getElementById('photo-placeholder').style.display='none';
+    document.getElementById('photo-capture-btns').style.display='none';
+    document.getElementById('photo-loading').style.display='block';
+    document.getElementById('photo-error').style.display='none';
+    document.getElementById('photo-results').style.display='none';
+
+    // Extraire base64 pur (sans le préfixe data:...)
+    var base64 = dataUrl.split(',')[1];
+    var mimeType = dataUrl.split(';')[0].split(':')[1];
+
+    try{
+      var session = await sb.auth.getSession();
+      var token = session.data.session.access_token;
+      var res = await fetch(SURL+'/functions/v1/analyser-photo', {
+        method: 'POST',
+        headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
+        body: JSON.stringify({image_base64: base64, mime_type: mimeType})
+      });
+      var data = await res.json();
+      document.getElementById('photo-loading').style.display='none';
+
+      if(!data.aliments || !data.aliments.length){
+        showPhotoError('Aucun aliment détecté sur cette photo. Essayez avec une image plus claire.');
+        return;
+      }
+      showPhotoResults(data.aliments);
+    }catch(err){
+      document.getElementById('photo-loading').style.display='none';
+      showPhotoError('Erreur lors de l\'analyse : '+err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // reset pour permettre de re-sélectionner le même fichier
+}
+
+function showPhotoError(msg){
+  var el = document.getElementById('photo-error');
+  el.textContent = msg;
+  el.style.display='block';
+  document.getElementById('photo-capture-btns').style.display='flex';
+}
+
+function showPhotoResults(aliments){
+  photoFoodsToConfirm = aliments.map(function(a,i){
+    return {id:i, nom:a.nom, qty:a.qty, included:true};
+  });
+  renderPhotoResults();
+  document.getElementById('photo-results').style.display='block';
+}
+
+function renderPhotoResults(){
+  var list = document.getElementById('photo-results-list');
+  list.innerHTML = photoFoodsToConfirm.map(function(f){
+    return '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,'+(f.included?'0.15':'0.05')+')'
+      +';opacity:'+(f.included?'1':'0.4')+'">'
+      +'<button onclick="togglePhotoFood('+f.id+')" style="flex-shrink:0;width:24px;height:24px;border-radius:50%;border:none;background:'+(f.included?'var(--gold)':'rgba(255,255,255,0.15)')+';color:#fff;cursor:pointer;font-size:.7rem">'+(f.included?'✓':'✕')+'</button>'
+      +'<div style="flex:1"><div style="color:#fff;font-size:.88rem;font-weight:600">'+esc(f.nom)+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:4px">'
+      +'<input type="number" value="'+f.qty+'" min="5" max="1000" onchange="updatePhotoQty('+f.id+',this.value)" '
+      +'style="width:60px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;padding:4px 6px;font-size:.8rem;text-align:center">'
+      +'<span style="color:rgba(255,255,255,0.5);font-size:.75rem">g</span>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function togglePhotoFood(id){
+  var f = photoFoodsToConfirm.find(function(x){return x.id===id;});
+  if(f) f.included = !f.included;
+  renderPhotoResults();
+}
+
+function updatePhotoQty(id, val){
+  var f = photoFoodsToConfirm.find(function(x){return x.id===id;});
+  if(f) f.qty = parseFloat(val)||100;
+}
+
+async function confirmPhotoFoods(){
+  var toAdd = photoFoodsToConfirm.filter(function(f){ return f.included; });
+  if(!toAdd.length){ toast('Sélectionnez au moins un aliment'); return; }
+
+  closePhotoScanner();
+  var added=0, notFound=[];
+
+  for(var i=0; i<toAdd.length; i++){
+    var item = toAdd[i];
+    // Cherche dans Ciqual + aliments personnalisés
+    var found = findFoodByName(item.nom);
+    if(found){
+      await addEntry(found, item.qty);
+      added++;
+    } else {
+      notFound.push(item.nom);
+    }
+  }
+
+  if(added>0) toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au journal');
+  if(notFound.length) toast('⚠️ Non trouvé dans Ciqual : '+notFound.join(', ')+' — cherchez-les manuellement');
+}
+
+// Recherche dans DB (Ciqual + personnalisés) — utilise le même
+// algorithme de scoring que la barre de recherche normale.
+function findFoodByName(nom){
+  if(!DB.length) return null;
+  var qt = tok(nom);
+  var best = null, bestScore = 0;
+  DB.forEach(function(d){
+    var s = scoreFn(qt, tok(d.nom), d.nom);
+    if(s>bestScore){ bestScore=s; best=d; }
+  });
+  return (bestScore>=5) ? best : null;
+}
+
 function handleScanNav(){
   openScanner(); // Scan désormais disponible pour tous les utilisateurs
 }
