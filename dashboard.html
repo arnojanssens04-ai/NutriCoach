@@ -826,6 +826,10 @@ body {
     Scan
     <span id="scan-dev-badge" style="display:none;position:absolute;top:-2px;right:6px;font-size:.52rem;background:var(--rose);color:#fff;padding:1px 5px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
+  <button class="bnav-btn" onclick="openPhotoScannerFromNav()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    Photo IA
+  </button>
   <a class="bnav-btn" href="chat.html" id="nav-coach">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     Coach
@@ -2304,6 +2308,13 @@ function findFoodByName(nom){
     if(s>bestScore){ bestScore=s; best=d; }
   });
   return (bestScore>=5) ? best : null;
+}
+
+// Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
+// dans la page Journal et sur le bon repas avant d'ouvrir la modale.
+function openPhotoScannerFromNav(){
+  goPage('journal');
+  openPhotoScanner();
 }
 
 function handleScanNav(){
