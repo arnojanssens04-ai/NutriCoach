@@ -235,20 +235,20 @@ footer a { color: var(--ink3); text-decoration: underline; }
         <svg class="dial-svg" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
           <circle cx="120" cy="120" r="98" fill="none" stroke="#efece4" stroke-width="14"/>
           <circle class="dial-arc" cx="120" cy="120" r="98" fill="none" stroke="#2d4f1c" stroke-width="14"
-                  stroke-dasharray="615" stroke-dashoffset="165" stroke-linecap="round" transform="rotate(-90 120 120)"/>
+                  stroke-dasharray="615" id="dial-arc-el" stroke-dashoffset="165" stroke-linecap="round" transform="rotate(-90 120 120)"/>
           <g stroke="#a09c94" stroke-width="1.5">
             <line x1="120" y1="14" x2="120" y2="24"/>
             <line x1="120" y1="216" x2="120" y2="226"/>
             <line x1="14" y1="120" x2="24" y2="120"/>
             <line x1="216" y1="120" x2="226" y2="120"/>
           </g>
-          <g class="dial-needle">
+          <g class="dial-needle" id="dial-needle-el">
             <polygon points="120,55 126,120 120,132 114,120" fill="#8b2a2a"/>
             <circle cx="120" cy="120" r="7" fill="#16241b"/>
           </g>
         </svg>
         <div class="dial-readout">
-          <div class="num dial-num">82</div>
+          <div class="num dial-num" id="dial-score-num">82</div>
           <div class="lbl">Cap du jour — exemple</div>
         </div>
       </div>
@@ -256,6 +256,22 @@ footer a { color: var(--ink3); text-decoration: underline; }
     </div>
   </div>
 </div>
+
+<script>
+// Le score affiché sur la vitrine change à chaque visite — donne une
+// impression de dynamisme tout en restant dans une plage plausible (65-95).
+(function(){
+  var score = Math.floor(Math.random() * 31) + 65; // 65-95
+  var el = document.getElementById('dial-score-num');
+  if(el) el.textContent = score;
+  // Arc : offset va de 615 (0%) à 0 (100%). Pour score/100 : 615 - score*6.15
+  var arc = document.getElementById('dial-arc-el');
+  if(arc) arc.setAttribute('stroke-dashoffset', Math.round(615 - score*6.15));
+  // Aiguille : -140deg (0) à +140deg (100). rotation = -140 + score*2.8
+  var needle = document.getElementById('dial-needle-el');
+  if(needle) needle.style.transform = 'rotate('+(Math.round(-140 + score*2.8))+'deg)';
+})();
+</script>
 
 <div class="journey-wrap">
   <div class="journey-hdr">
