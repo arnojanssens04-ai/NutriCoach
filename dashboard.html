@@ -826,9 +826,10 @@ body {
     Scan
     <span id="scan-dev-badge" style="display:none;position:absolute;top:-2px;right:6px;font-size:.52rem;background:var(--rose);color:#fff;padding:1px 5px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
-  <button class="bnav-btn" onclick="openPhotoScannerFromNav()">
+  <button class="bnav-btn" onclick="openPhotoScannerFromNav()" style="position:relative">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     Photo IA
+    <span style="position:absolute;top:-2px;right:2px;font-size:.5rem;background:var(--rose);color:#fff;padding:1px 4px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
   <a class="bnav-btn" href="chat.html" id="nav-coach">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -1067,6 +1068,22 @@ var CHANGELOG = [
     'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée',
     'Nouveau Score Santé, plus précis et qui reflète mieux votre alimentation réelle du jour',
     'Bilan hebdomadaire : les réponses (sommeil, digestion, ressenti...) sont désormais mieux adaptées à chaque question'
+  ]},
+  {v:'0.2.0', date:'7 juillet 2026', items:[
+    '🔬 Maladie cœliaque ajoutée : détection automatique du gluten dans le journal et les suggestions, alternatives proposées',
+    '🌸 Ménopause : option dans le profil avec adaptation des besoins (protéines, calcium) selon la phase et le THS',
+    '🩺 Diabète renforcé : filtre par ratio fibres/glucides, pain complet proposé à la place du pain blanc, avertissements pour chocolat et biscuits sucrés',
+    '📊 Bilan refondu : 6 blocs structurés, questions spécifiques selon vos pathologies (fatigue post-repas pour le diabète, sel pour l\'hypertension)',
+    '📷 Photo IA : reconnaissance des aliments par intelligence artificielle en cours de développement — bientôt disponible',
+    '🏷️ Score Santé : repère visuel rapide (⭐ Excellent, ✅ Bon, 🟡 Correct, 🟠 À surveiller, 🔴 Insuffisant)',
+    '📈 Deux nouveaux indicateurs : Qualité nutritionnelle et Répartition de la journée',
+    '⚠️ Alerte protéines : notification en fin de journée si apport insuffisant (< 0.83g/kg)',
+    '⚠️ Avertissement IMC : message si objectif perte de poids avec IMC < 20',
+    '🏃 Protéines augmentées pour les profils sportifs (1.4-1.7g/kg selon le niveau)',
+    '📦 Scanner code-barres désormais disponible pour tous (plus réservé à l\'admin)',
+    '🍔 49 produits McDonald\'s ajoutés à la base de données',
+    '🔒 Audit de sécurité complet réalisé — toutes les protections vérifiées et renforcées',
+    '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
   ]}
 ];
 
@@ -2313,8 +2330,13 @@ function findFoodByName(nom){
 // Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
 // dans la page Journal et sur le bon repas avant d'ouvrir la modale.
 function openPhotoScannerFromNav(){
-  goPage('journal');
-  openPhotoScanner();
+  var isAdmin = PROF && PROF.role==='admin';
+  if(isAdmin){
+    goPage('journal');
+    openPhotoScanner();
+  } else {
+    toast('📷 La reconnaissance photo par IA est en cours de développement — bientôt disponible !');
+  }
 }
 
 function handleScanNav(){
