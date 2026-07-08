@@ -667,7 +667,7 @@ body {
     <div class="mtab" id="tab-lunch" onclick="selMeal('lunch')"><span class="ti"> </span>Déjeuner</div>
     <div class="mtab" id="tab-snack" onclick="selMeal('snack')"><span class="ti"> </span>Collation</div>
     <div class="mtab" id="tab-dinner" onclick="selMeal('dinner')"><span class="ti"> </span>Souper</div>
-    <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"> </span>Collation 2</div>
+    <div class="mtab" id="tab-snack2" onclick="selMeal('snack2')"><span class="ti"> </span>Collation 2</div>
   </div>
   <div class="search-wrap" style="display:flex;gap:8px;align-items:stretch">
     <div style="flex:1;position:relative;display:flex;align-items:center">
@@ -876,24 +876,30 @@ body {
     <div class="welcome-slides" id="welcome-slides">
       <div class="w-slide on" data-slide="0">
         <div class="w-emoji">👋</div>
-        <h2 class="w-title">Bienvenue sur NutriCoach</h2>
+        <h2 class="w-title">Bienvenue sur Cap Santé</h2>
         <p class="w-txt">Une nutrition pensée pour <b>vous</b>, pas pour une moyenne générique. Tout est personnalisé selon votre profil, votre activité réelle et vos éventuelles pathologies.</p>
       </div>
       <div class="w-slide" data-slide="1">
-        <div class="w-emoji">⚙️</div>
-        <h2 class="w-title">Comment ça marche</h2>
-        <p class="w-txt">1. Quelques questions rapides sur vous<br>2. On calcule votre plan précis<br>3. Vous suivez votre journée — chaque semaine, on ajuste automatiquement selon vos résultats réels</p>
+        <div class="w-emoji">📸</div>
+        <h2 class="w-title">Nouveau — Photo IA</h2>
+        <p class="w-txt">Prenez une photo de votre repas et <b>l'app </b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
       </div>
       <div class="w-slide" data-slide="2">
         <div class="w-emoji">📊</div>
-        <h2 class="w-title">Basé sur de vraies données</h2>
-        <p class="w-txt">Nos calculs s'appuient sur <b>Ciqual</b>, la base de référence officielle française, et des formules nutritionnelles reconnues (Mifflin-St Jeor). Pas de recette magique — de la science appliquée à votre cas précis.</p>
+        <h2 class="w-title">Score Santé détaillé</h2>
+        <p class="w-txt">Cliquez sur votre Score Santé pour comprendre <b>pourquoi</b> vous avez ce score et comment atteindre 100 — critère par critère, avec des conseils concrets.</p>
+      </div>
+      <div class="w-slide" data-slide="3">
+        <div class="w-emoji">⚙️</div>
+        <h2 class="w-title">5 repas disponibles</h2>
+        <p class="w-txt">Petit-déjeuner, déjeuner, collation, souper et une <b>deuxième collation</b> — adaptez le nombre de repas à votre rythme de vie. Tout est enregistré séparément pour un suivi plus précis.</p>
       </div>
     </div>
     <div class="w-dots" id="w-dots">
       <div class="w-dot on" onclick="goWelcomeSlide(0)"></div>
       <div class="w-dot" onclick="goWelcomeSlide(1)"></div>
       <div class="w-dot" onclick="goWelcomeSlide(2)"></div>
+      <div class="w-dot" onclick="goWelcomeSlide(3)"></div>
     </div>
     <button class="ov-btn-next" onclick="nextWelcomeSlide()" id="w-next-btn">Suivant</button>
     <div class="w-skip" onclick="goSt(1)">Passer l'introduction</div>
@@ -1013,7 +1019,7 @@ body {
       <div class="mtab" id="st4-tab-lunch" onclick="selMeal('lunch')"><span class="ti"></span>Déjeuner</div>
       <div class="mtab" id="st4-tab-snack" onclick="selMeal('snack')"><span class="ti"></span>Collation</div>
       <div class="mtab" id="st4-tab-dinner" onclick="selMeal('dinner')"><span class="ti"></span>Souper</div>
-      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')" style="display:none"><span class="ti"></span>Collation 2</div>
+      <div class="mtab" id="st4-tab-snack2" onclick="selMeal('snack2')"><span class="ti"></span>Collation 2</div>
     </div>
 
     <div class="search-wrap">
@@ -1072,8 +1078,8 @@ var MEAL_META = { breakfast:{l:'Petit-déjeuner',i:''}, lunch:{l:'Déjeuner',i:'
 // Au-delà de 3000kcal/jour, étaler sur 5 repas évite des portions trop
 // volumineuses dans les 4 repas habituels — la collation 2 n'apparaît
 // que lorsque c'est vraiment nécessaire.
-function needsSecondSnack(){ return calcTargets().kcal >= 3000; }
-function activeMealIds(){ var ids=['breakfast','lunch','snack','dinner']; if(needsSecondSnack())ids.push('snack2'); return ids; }
+function needsSecondSnack(){ return true; } // Collation 2 visible pour tous
+function activeMealIds(){ return ['breakfast','lunch','snack','dinner','snack2']; }
 var PATHO_META = { diabetes:{l:'Diabète',i:''}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:''}, cardiac:{l:'Maladies cardiaques',i:''}, renal:{l:'Problèmes rénaux',i:''}, obesity:{l:'Obésité / Poids',i:''} };
 
 // ── UTILS ──
@@ -1111,9 +1117,9 @@ var CHANGELOG = [
     '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
   ]},
   {v:'0.3.0', date:'8 juillet 2026', items:[
-    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, Gemini identifie automatiquement les aliments et estime les quantités',
+    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, L'App identifie automatiquement les aliments et estime les quantités',
     '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse Gemini — étapes affichées en temps réel',
+    '⏱️ Animation de chargement pendant l\'analyse des repas — étapes affichées en temps réel',
     '📊 Limite de 5 scans photo par jour',
     '🔢 Calories affichées en premier sur le tableau de bord',
     '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
@@ -2424,7 +2430,7 @@ async function onPhotoSelected(input){
       var mimeType = 'image/jpeg';
 
       // Animation des étapes pendant l'attente Gemini
-      var steps = ['Envoi à Gemini...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+      var steps = ['Envoi à l'APP...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
       var stepIdx = 0;
       var stepEl = document.getElementById('photo-loading-step');
       if(stepEl) stepEl.textContent = steps[0];
@@ -2463,7 +2469,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé Gemini est bien ajoutée dans Supabase.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé  est bien ajoutée dans Supabase.');
       console.error('photo scan error:', err);
     }
   };
@@ -4006,7 +4012,7 @@ function goWelcomeSlide(i){
   document.getElementById('w-next-btn').textContent = (i===2) ? 'Commencer' : 'Suivant';
 }
 function nextWelcomeSlide(){
-  if(welcomeSlideIdx>=2){ goSt(1); return; }
+  if(welcomeSlideIdx>=3){ goSt(1); return; }
   goWelcomeSlide(welcomeSlideIdx+1);
 }
 
