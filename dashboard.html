@@ -157,6 +157,8 @@ body {
 .extra-score-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .5s ease; }
 .extra-score-tip { font-size:.78rem; color:var(--text2); line-height:1.5; }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.photo-meal-btn { padding:9px 6px; border-radius:9px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:#fff; font-size:.8rem; cursor:pointer; transition:all .15s; }
+.photo-meal-btn.selected { background:var(--gold); border-color:var(--gold); font-weight:700; }
 .clinical-hdr { font-family:'Lora',serif; font-size:1rem; font-weight:600; margin-bottom:10px; color:var(--gold); }
 .clinical-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
 .clinical-row:last-child { border-bottom:none; }
@@ -520,6 +522,27 @@ body {
 
 <!-- DASHBOARD -->
 <div class="page on" id="pg-dashboard">
+
+  <!-- KCAL EN PREMIER — plus immédiatement utile au quotidien -->
+  <div class="kcal-card">
+    <div class="kcal-ring-wrap">
+      <svg viewBox="0 0 110 110">
+        <circle class="kr-bg" cx="55" cy="55" r="46"/>
+        <circle class="kr-fill" id="ring-kcal" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+      </svg>
+      <div class="kr-center">
+        <span class="kr-num" id="d-kcal">0</span>
+        <span class="kr-unit">kcal</span>
+      </div>
+    </div>
+    <div class="kcal-info">
+      <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
+      <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- SCORE SANTÉ + description ensemble -->
   <div class="score-hero" id="score-hero">
     <div class="ring-wrap">
       <svg viewBox="0 0 96 96">
@@ -554,24 +577,6 @@ body {
   <div class="clinical-card" id="clinical-card" style="display:none">
     <div class="clinical-hdr">Indicateurs clés</div>
     <div id="clinical-body"></div>
-  </div>
-
-  <div class="kcal-card">
-    <div class="kcal-ring-wrap">
-      <svg viewBox="0 0 110 110">
-        <circle class="kr-bg" cx="55" cy="55" r="46"/>
-        <circle class="kr-fill" id="ring-kcal" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
-      </svg>
-      <div class="kr-center">
-        <span class="kr-num" id="d-kcal">0</span>
-        <span class="kr-unit">kcal</span>
-      </div>
-    </div>
-    <div class="kcal-info">
-      <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
-      <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
-      <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
-    </div>
   </div>
 
   <!-- Qualité nutritionnelle + Répartition journée -->
@@ -750,6 +755,20 @@ body {
       <button onclick="closePhotoScanner()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.1rem;cursor:pointer">✕</button>
     </div>
 
+    <!-- Sélecteur de repas -->
+    <div style="margin-bottom:14px">
+      <div style="color:rgba(255,255,255,0.7);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Pour quel repas ?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="photo-meal-selector">
+        <button onclick="selectPhotoMeal('breakfast',this)" class="photo-meal-btn">🌅 Petit-déjeuner</button>
+        <button onclick="selectPhotoMeal('lunch',this)" class="photo-meal-btn">☀️ Déjeuner</button>
+        <button onclick="selectPhotoMeal('snack',this)" class="photo-meal-btn">🍎 Collation</button>
+        <button onclick="selectPhotoMeal('dinner',this)" class="photo-meal-btn">🌙 Souper</button>
+      </div>
+    </div>
+
+    <!-- Compteur scans -->
+    <div id="photo-scan-counter" style="text-align:center;font-size:.72rem;color:rgba(255,255,255,0.4);margin-bottom:10px"></div>
+
     <!-- Zone de prévisualisation / capture -->
     <div id="photo-preview-zone" style="width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
       <div id="photo-placeholder" style="text-align:center;color:rgba(255,255,255,0.5);padding:30px">
@@ -774,9 +793,16 @@ body {
     </div>
 
     <!-- Analyse en cours -->
-    <div id="photo-loading" style="display:none;text-align:center;color:#fff;padding:16px">
-      <div style="font-size:1.4rem;margin-bottom:8px;animation:spin .8s linear infinite;display:inline-block">⏳</div>
-      <div style="font-size:.85rem;opacity:.7">Gemini analyse votre repas...</div>
+    <div id="photo-loading" style="display:none;text-align:center;color:#fff;padding:20px">
+      <div style="margin-bottom:16px">
+        <svg width="60" height="60" viewBox="0 0 60 60" style="animation:spin 2s linear infinite">
+          <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
+          <circle cx="30" cy="30" r="26" fill="none" stroke="var(--gold)" stroke-width="4"
+            stroke-dasharray="40 124" stroke-linecap="round" transform="rotate(-90 30 30)"/>
+        </svg>
+      </div>
+      <div style="font-family:'Lora',serif;font-size:1rem;font-weight:700;margin-bottom:6px">Analyse en cours...</div>
+      <div id="photo-loading-step" style="font-size:.78rem;opacity:.6;min-height:18px">Compression de l'image</div>
     </div>
 
     <!-- Résultats — liste de confirmation -->
@@ -2187,9 +2213,33 @@ function pickRes(i){
 // aliments → liste de confirmation → recherche Ciqual pour chaque aliment
 // confirmé → ajout au journal avec valeurs vérifiées (pas estimées).
 
-var photoFoodsToConfirm = []; // aliments détectés en attente de confirmation
+var photoFoodsToConfirm = [];
+var photoSelectedMeal = null;
+var PHOTO_DAILY_LIMIT = 5;
+
+function getPhotoScanCount(){
+  var today = new Date().toISOString().slice(0,10);
+  return parseInt(localStorage.getItem('photo_scans_'+today)||'0');
+}
+function incrementPhotoScanCount(){
+  var today = new Date().toISOString().slice(0,10);
+  var c = getPhotoScanCount()+1;
+  localStorage.setItem('photo_scans_'+today, c);
+  return c;
+}
+function selectPhotoMeal(meal, btn){
+  photoSelectedMeal = meal;
+  document.querySelectorAll('.photo-meal-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+}
 
 function openPhotoScanner(){
+  var count = getPhotoScanCount();
+  var isAdmin = PROF && PROF.role==='admin';
+  if(!isAdmin && count >= PHOTO_DAILY_LIMIT){
+    toast('📷 Limite de '+PHOTO_DAILY_LIMIT+' scans atteinte — revenez demain !');
+    return;
+  }
   document.getElementById('photo-ov').style.display='flex';
   document.getElementById('photo-preview-img').style.display='none';
   document.getElementById('photo-placeholder').style.display='block';
@@ -2198,6 +2248,18 @@ function openPhotoScanner(){
   document.getElementById('photo-error').style.display='none';
   document.getElementById('photo-capture-btns').style.display='flex';
   photoFoodsToConfirm=[];
+  photoSelectedMeal=null;
+  // Pré-sélectionner le repas actif
+  var meals = ['breakfast','lunch','snack','dinner'];
+  var now = new Date().getHours();
+  var defaultMeal = now<10?'breakfast':now<13?'lunch':now<17?'snack':'dinner';
+  setTimeout(function(){
+    var btn = document.querySelector('.photo-meal-btn[onclick*="\''+defaultMeal+'\'"]');
+    if(btn) selectPhotoMeal(defaultMeal, btn);
+  }, 50);
+  // Compteur
+  var counter = document.getElementById('photo-scan-counter');
+  if(counter) counter.textContent = isAdmin ? 'Admin — scans illimités' : (count+' / '+PHOTO_DAILY_LIMIT+' scans utilisés aujourd\'hui');
 }
 
 function closePhotoScanner(){
@@ -2230,10 +2292,18 @@ async function onPhotoSelected(input){
       // avant même de les envoyer (aucun log côté serveur dans ce cas).
       var compressedDataUrl = await compressImage(originalDataUrl, 512, 0.6);
       var base64 = compressedDataUrl.split(',')[1];
-      var sizeKB = Math.round(base64.length * 0.75 / 1024);
-      console.log('[Photo IA] Taille image compressée :', sizeKB, 'KB');
-      document.getElementById('photo-loading').innerHTML = '<div style="font-size:1.4rem;margin-bottom:8px">⏳</div><div style="font-size:.85rem;opacity:.7">Gemini analyse votre repas... ('+sizeKB+'KB)</div>';
       var mimeType = 'image/jpeg';
+
+      // Animation des étapes pendant l'attente Gemini
+      var steps = ['Envoi à Gemini...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+      var stepIdx = 0;
+      var stepEl = document.getElementById('photo-loading-step');
+      if(stepEl) stepEl.textContent = steps[0];
+      var stepInterval = setInterval(function(){
+        stepIdx = Math.min(stepIdx+1, steps.length-1);
+        var el = document.getElementById('photo-loading-step');
+        if(el) el.textContent = steps[stepIdx];
+      }, 2000);
 
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
@@ -2244,6 +2314,7 @@ async function onPhotoSelected(input){
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
       });
 
+      clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
 
       if(!res.ok){
@@ -2261,6 +2332,7 @@ async function onPhotoSelected(input){
       showPhotoResults(data.aliments);
 
     }catch(err){
+      clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
       showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé Gemini est bien ajoutée dans Supabase.');
       console.error('photo scan error:', err);
@@ -2335,24 +2407,25 @@ function updatePhotoQty(id, val){
 async function confirmPhotoFoods(){
   var toAdd = photoFoodsToConfirm.filter(function(f){ return f.included; });
   if(!toAdd.length){ toast('Sélectionnez au moins un aliment'); return; }
+  if(!photoSelectedMeal){ toast('Choisissez un repas d\'abord'); return; }
+
+  // Changer de repas actif si nécessaire
+  var mealBtns = document.querySelectorAll('.meal-tab');
+  mealBtns.forEach(function(b){ if(b.dataset.meal===photoSelectedMeal) b.click(); });
+  setActiveMeal && setActiveMeal(photoSelectedMeal);
 
   closePhotoScanner();
-  var added=0, notFound=[];
+  incrementPhotoScanCount();
 
+  var added=0, notFound=[];
   for(var i=0; i<toAdd.length; i++){
     var item = toAdd[i];
-    // Cherche dans Ciqual + aliments personnalisés
     var found = findFoodByName(item.nom);
-    if(found){
-      await addEntry(found, item.qty);
-      added++;
-    } else {
-      notFound.push(item.nom);
-    }
+    if(found){ await addEntry(found, item.qty); added++; }
+    else { notFound.push(item.nom); }
   }
-
-  if(added>0) toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au journal');
-  if(notFound.length) toast('⚠️ Non trouvé dans Ciqual : '+notFound.join(', ')+' — cherchez-les manuellement');
+  if(added>0) toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au '+photoSelectedMeal);
+  if(notFound.length) toast('⚠️ Non trouvé : '+notFound.join(', ')+' — cherchez manuellement');
 }
 
 // Recherche dans DB (Ciqual + personnalisés) — utilise le même
