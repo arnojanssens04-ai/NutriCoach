@@ -852,10 +852,9 @@ body {
     Scan
     <span id="scan-dev-badge" style="display:none;position:absolute;top:-2px;right:6px;font-size:.52rem;background:var(--rose);color:#fff;padding:1px 5px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
-  <button class="bnav-btn" onclick="openPhotoScannerFromNav()" style="position:relative">
+  <button class="bnav-btn" onclick="openPhotoScannerFromNav()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     Photo IA
-    <span style="position:absolute;top:-2px;right:2px;font-size:.5rem;background:var(--rose);color:#fff;padding:1px 4px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
   <a class="bnav-btn" href="chat.html" id="nav-coach">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -1110,6 +1109,14 @@ var CHANGELOG = [
     '🍔 49 produits McDonald\'s ajoutés à la base de données',
     '🔒 Audit de sécurité complet réalisé — toutes les protections vérifiées et renforcées',
     '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
+  ]},
+  {v:'0.3.0', date:'8 juillet 2026', items:[
+    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, Gemini identifie automatiquement les aliments et estime les quantités',
+    '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
+    '⏱️ Animation de chargement pendant l\'analyse Gemini — étapes affichées en temps réel',
+    '📊 Limite de 5 scans photo par jour',
+    '🔢 Calories affichées en premier sur le tableau de bord',
+    '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
   ]}
 ];
 
@@ -2444,13 +2451,8 @@ function findFoodByName(nom){
 // Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
 // dans la page Journal et sur le bon repas avant d'ouvrir la modale.
 function openPhotoScannerFromNav(){
-  var isAdmin = PROF && PROF.role==='admin';
-  if(isAdmin){
-    goPage('journal');
-    openPhotoScanner();
-  } else {
-    toast('📷 La reconnaissance photo par IA est en cours de développement — bientôt disponible !');
-  }
+  goPage('journal');
+  openPhotoScanner();
 }
 
 function handleScanNav(){
