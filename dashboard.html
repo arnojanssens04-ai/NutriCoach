@@ -1382,51 +1382,119 @@ function calcScore(T,tgt,pathos){
 // Donne un conseil ciblé sur le repas le plus déséquilibré de la journée.
 function calcNutritionalQuality(entries, tgt){
   if(!entries || !entries.length) return null;
-  var T = {kcal:0, prot:0, gluc:0, lip:0, ags:0, fibres:0};
-  var byMeal = {};
+
+  // Seuil d'activation : au moins 2 repas principaux enregistrés.
+  // Avec seulement un petit-déjeuner, aucun indicateur n'a de sens —
+  // les scores seraient faussement bas et les conseils absurdes.
+  var mainMeals = {};
   entries.forEach(function(e){
-    T.kcal += e.kcal||0; T.prot += e.proteines||0;
-    T.gluc += e.glucides||0; T.lip += e.lipides||0;
-    T.ags += (e.food_ags_100||0)*e.quantite/100;
-    T.fibres += (e.food_fibres_100||0)*e.quantite/100;
-    if(!byMeal[e.repas]) byMeal[e.repas]={kcal:0,prot:0,veg:0};
-    byMeal[e.repas].kcal += e.kcal||0;
-    byMeal[e.repas].prot += e.proteines||0;
-    // Détection simplifiée légume par le nom (heuristique)
-    var n=(e.aliment||'').toLowerCase();
-    if(/salade|brocoli|carotte|courgette|epinard|haricot|tomate|poivron|chou|celeri|poireau|champignon/.test(n))
-      byMeal[e.repas].veg++;
+    if(e.repas==='breakfast'||e.repas==='lunch'||e.repas==='dinner') mainMeals[e.repas]=true;
   });
+  if(Object.keys(mainMeals).length < 2) return null;
+
+  // Cumul des valeurs nutritionnelles de la journée
+  var T = {kcal:0, prot:0, gluc:0, lip:0, ags:0, fibres:0, sucres:0};
+  var totalVegGrams = 0;
+  var foodGroups = {};   // diversité alimentaire
+  var ultraCount  = 0;   // aliments ultra-transformés
+  var alcoholKcal = 0;   // calories alcool
+
+  entries.forEach(function(e){
+    T.kcal   += e.kcal||0;
+    T.prot   += e.proteines||0;
+    T.gluc   += e.glucides||0;
+    T.lip    += e.lipides||0;
+    T.ags    += (e.food_ags_100||0)*e.quantite/100;
+    T.fibres += (e.food_fibres_100||0)*e.quantite/100;
+    T.sucres += (e.food_sucres_100||e.sucres||0)*e.quantite/100;
+
+    var n = (e.aliment||'').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+    // ── Légumes (200g/jour OMS) ──
+    if(/salade|brocoli|carotte|courgette|epinard|haricot vert|tomate|poivron|chou|celeri|poireau|champignon|aubergine|concombre|radis|betterave|asperge|artichaut|fenouil|navet|panais|edamame|endive|petits pois/.test(n))
+      totalVegGrams += e.quantite||0;
+
+    // ── Groupes alimentaires (diversité) ──
+    if(/viande|boeuf|porc|agneau|veau|poulet|dinde|canard/.test(n)) foodGroups['viande']=1;
+    else if(/poisson|saumon|cabillaud|thon|sardine|maquereau|colin|lieu|sole|daurade/.test(n)) foodGroups['poisson']=1;
+    else if(/oeuf|oeufs/.test(n)) foodGroups['oeuf']=1;
+    else if(/lait|yaourt|fromage|kefir|skyr/.test(n)) foodGroups['laitier']=1;
+    else if(/lentille|pois chiche|haricot rouge|haricot blanc|feve|soja/.test(n)) foodGroups['legumineuse']=1;
+    else if(/pain|pate|riz|quinoa|cereale|flocon|semoule|boulgour/.test(n)) foodGroups['feculents']=1;
+    else if(totalVegGrams>0) foodGroups['legumes']=1;
+    else if(/pomme|poire|banane|orange|kiwi|fraise|raisin|peche|abricot|cerise|framboise|myrtille|mangue|ananas/.test(n)) foodGroups['fruit']=1;
+    else if(/huile|beurre|avocat|noix|amande|noisette/.test(n)) foodGroups['lipides']=1;
+
+    // ── Ultra-transformés ──
+    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king/.test(n))
+      ultraCount++;
+
+    // ── Alcool ──
+    if(/biere|vin |alcool|whisky|vodka|rhum|champagne|spiritueux|cidre|aperitif/.test(n))
+      alcoholKcal += e.kcal||0;
+  });
+
   if(T.kcal<100) return null;
 
+  // ── CALCUL DU SCORE (100 pts) ──
   var score = 0;
-  // Protéines : 25 pts (couvrir 80%+ de l'objectif)
-  var protRatio = tgt.prot>0 ? Math.min(1, T.prot/tgt.prot) : 0;
-  score += Math.round(protRatio * 25);
-  // Fibres : 25 pts (objectif 27g/j)
-  var fibreRatio = Math.min(1, T.fibres/(tgt.fibres||27));
-  score += Math.round(fibreRatio * 25);
-  // AGS : 25 pts (pénalité si > 10% des kcal totales)
-  var agsKcalPct = T.kcal>0 ? (T.ags*9)/T.kcal : 0;
-  var agsPts = agsKcalPct<=0.10 ? 25 : Math.max(0, Math.round(25 - (agsKcalPct-0.10)*200));
-  score += agsPts;
-  // Diversité légumes : 25 pts
-  var vegMeals = Object.values(byMeal).filter(function(m){ return m.veg>0; }).length;
-  score += Math.round(Math.min(1, vegMeals/2) * 25);
+  var tips = [];
 
-  // Conseil ciblé : trouver le repas le plus pauvre en légumes ET protéines
-  var worst=null, worstScore=999;
-  Object.keys(byMeal).forEach(function(m){
-    var ms = byMeal[m].prot*4 + byMeal[m].veg*10;
-    if(ms<worstScore){ worstScore=ms; worst=m; }
-  });
-  var mealLabels={breakfast:'petit-déjeuner',lunch:'déjeuner',snack:'collation',dinner:'souper',snack2:'collation 2'};
-  var tip = '';
-  if(fibreRatio<0.5) tip = 'Pensez à ajouter des légumes ou des légumineuses pour atteindre votre objectif en fibres.';
-  else if(protRatio<0.7) tip = 'Vos apports en protéines sont insuffisants — ajoutez une source maigre (œuf, poulet, poisson, légumineuses).';
-  else if(worst && byMeal[worst].veg===0) tip = 'Ajoutez des légumes au '+(mealLabels[worst]||worst)+' pour améliorer la qualité nutritionnelle.';
-  else if(agsKcalPct>0.12) tip = 'Les graisses saturées représentent une part importante — privilégiez les huiles végétales et les poissons gras.';
-  else tip = 'Belle qualité nutritionnelle — continuez comme ça !';
+  // 1. Protéines — 20 pts
+  var protRatio = tgt.prot>0 ? T.prot/tgt.prot : 0;
+  score += Math.round(Math.min(1, protRatio) * 20);
+  if(protRatio<0.8) tips.push({priority:1, msg:'Protéines insuffisantes ('+Math.round(T.prot)+'g / '+Math.round(tgt.prot)+'g) — ajoutez œuf, poulet, poisson ou légumineuses.'});
+
+  // 2. Fibres — 15 pts
+  var fibreRatio = T.fibres/(tgt.fibres||27);
+  score += Math.round(Math.min(1, fibreRatio) * 15);
+  if(fibreRatio<0.5) tips.push({priority:2, msg:'Fibres insuffisantes ('+Math.round(T.fibres)+'g / '+(tgt.fibres||27)+'g) — ajoutez légumes, légumineuses ou céréales complètes.'});
+
+  // 3. Légumes — 15 pts
+  var vegRatio = totalVegGrams/200;
+  score += Math.round(Math.min(1, vegRatio) * 15);
+  if(totalVegGrams<100) tips.push({priority:3, msg:'Légumes insuffisants ('+Math.round(totalVegGrams)+'g / 200g recommandés) — visez au moins une portion au déjeuner et au souper.'});
+  else if(totalVegGrams<150) tips.push({priority:6, msg:'Bon début avec les légumes ('+Math.round(totalVegGrams)+'g) — encore un peu pour atteindre les 200g.'});
+
+  // 4. Diversité alimentaire — 15 pts
+  var groupCount = Object.keys(foodGroups).length;
+  score += Math.round(Math.min(1, groupCount/4) * 15);
+  if(groupCount<3) tips.push({priority:4, msg:'Alimentation peu diversifiée — essayez d\'inclure au moins 4 groupes d\'aliments différents dans la journée.'});
+
+  // 5. AGS — 10 pts
+  var agsKcalPct = T.kcal>0 ? (T.ags*9)/T.kcal : 0;
+  score += agsKcalPct<=0.10 ? 10 : Math.max(0, Math.round(10-(agsKcalPct-0.10)*100));
+  if(agsKcalPct>0.12) tips.push({priority:5, msg:'Graisses saturées élevées ('+Math.round(agsKcalPct*100)+'% des kcal, seuil 10%) — limitez charcuterie, beurre, fromages gras.'});
+
+  // 6. Lipides — 10 pts
+  var lipPct = T.kcal>0 ? (T.lip*9)/T.kcal : 0;
+  score += lipPct<=0.40 ? 10 : Math.max(0, Math.round(10-(lipPct-0.40)*50));
+  if(lipPct>0.45) tips.push({priority:7, msg:'Lipides élevés ('+Math.round(lipPct*100)+'% des kcal) — vérifiez les sauces et les matières grasses de cuisson.'});
+
+  // 7. Glucides — 5 pts
+  var glucPct = T.kcal>0 ? (T.gluc*4)/T.kcal : 0;
+  score += glucPct<=0.60 ? 5 : Math.max(0, Math.round(5-(glucPct-0.60)*25));
+  if(glucPct>0.65) tips.push({priority:8, msg:'Glucides élevés ('+Math.round(glucPct*100)+'% des kcal) — rééquilibrez avec plus de protéines et légumes.'});
+
+  // 8. Sucres ajoutés — 5 pts
+  var sucresPts = T.sucres<=50 ? 5 : Math.max(0, Math.round(5-(T.sucres-50)/20));
+  score += sucresPts;
+  if(T.sucres>50) tips.push({priority:4, msg:'Sucres ajoutés élevés ('+Math.round(T.sucres)+'g / seuil 50g) — réduisez sodas, desserts sucrés et confiseries.'});
+
+  // 9. Ultra-transformés — 5 pts (pénalité si présents)
+  score += ultraCount===0 ? 5 : Math.max(0, 5-ultraCount*2);
+  if(ultraCount>0) tips.push({priority:5, msg:'Aliments ultra-transformés détectés — privilégiez les aliments bruts ou peu transformés.'});
+
+  // 10. Alcool — malus si présent (pas de pts, juste pénalité)
+  if(alcoholKcal>0){
+    score = Math.max(0, score-5);
+    tips.push({priority:3, msg:'Alcool détecté ('+Math.round(alcoholKcal)+' kcal) — l\'alcool apporte des calories vides et perturbe le métabolisme.'});
+  }
+
+  // Conseil prioritaire — le plus important d'abord
+  tips.sort(function(a,b){ return a.priority-b.priority; });
+  var tip = tips.length ? tips[0].msg : 'Excellente qualité nutritionnelle sur la journée — continuez comme ça !';
 
   return {score:Math.min(100,score), tip:tip};
 }
