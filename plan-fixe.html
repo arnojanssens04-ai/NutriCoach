@@ -3,72 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriCoach — Mon plan fixe</title>
+<title>NutriCoach — Bilan hebdomadaire</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
   --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
-  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08); --gold-g:rgba(45,79,28,0.04);
   --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
   --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
   --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --amber:#7a5c1e;
   --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { background:var(--bg); }
-body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:40px; }
 
 .topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
 .t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
 .t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
 .t-back:hover { border-color:var(--gold); color:var(--gold); }
 
-.wrap { max-width:600px; margin:0 auto; padding:20px 16px; }
-.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
-.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:16px; }
+.wrap { max-width:600px; margin:0 auto; padding:22px 18px; }
 
-.status-banner { padding:11px 15px; border-radius:11px; margin-bottom:16px; font-size:.82rem; line-height:1.5; }
+.hero { text-align:center; margin-bottom:20px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.7rem; font-weight:700; margin-bottom:6px; }
+.hero p { font-size:.84rem; color:var(--text2); line-height:1.6; }
 
-.history-hdr { font-family:'Lora',serif; font-size:.95rem; font-weight:700; margin-bottom:10px; }
-.history-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
-.history-row:last-child { border-bottom:none; }
-.history-date { font-size:.85rem; font-weight:500; color:var(--text); }
-.history-meta { font-size:.74rem; color:var(--text2); margin-top:1px; }
-.history-btn { padding:7px 14px; border-radius:8px; border:1px solid var(--border2); background:var(--gold-l); color:var(--gold); font-size:.78rem; font-weight:600; cursor:pointer; flex-shrink:0; }
-.history-btn:hover { background:rgba(45,79,28,0.15); }
-.status-on { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); color:#2d4f1c; }
-.status-off { background:var(--card2); border:1px solid var(--border); color:var(--text2); }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); overflow:hidden; }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
+.card-hdr-ico { font-size:1.1rem; }
+.card-hdr span { font-family:'Lora',serif; font-size:1rem; }
+.card-body { padding:16px 18px; }
 
-.totals-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; margin-bottom:16px; }
-.tot-row { display:flex; justify-content:space-between; font-size:.82rem; padding:3px 0; }
-.tot-row span:first-child { color:var(--text2); }
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
+.field input, .field textarea { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; font-family:'Inter',sans-serif; }
+.field input:focus, .field textarea:focus { border-color:rgba(45,79,28,0.4); }
+.field textarea { resize:vertical; min-height:70px; }
+.row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 
-.meal-section { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
-.meal-hdr { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.meal-hdr span { font-family:'Lora',serif; font-size:1.05rem; }
-.meal-body { padding:14px 16px; }
+.pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.pill { padding:13px 6px; border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--card2); transition:all .15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; }
+.pill:hover { border-color:var(--border2); }
+.pill.on-bien { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
+.pill.on-moyen { border-color:var(--amber); background:rgba(217,119,6,0.12); color:var(--amber); }
+.pill.on-difficile { border-color:var(--rose); background:var(--rose-l); color:var(--rose); }
 
-.food-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
-.food-row:last-child { border-bottom:none; }
-.food-del { width:26px; height:26px; border-radius:7px; background:var(--rose-l); border:1px solid rgba(139,42,42,0.25); color:var(--rose); cursor:pointer; font-size:.8rem; flex-shrink:0; margin-left:8px; }
+.divider { height:1px; background:var(--border); margin:16px 0; }
 
-.add-row { display:grid; grid-template-columns:1fr 70px 34px; gap:7px; margin-top:8px; }
-.add-row input { padding:9px 11px; background:var(--card2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:.84rem; outline:none; }
-.add-btn { width:34px; height:34px; border-radius:8px; background:var(--gold-l); border:1px solid rgba(45,79,28,0.3); color:var(--gold); cursor:pointer; font-size:1.1rem; }
-.search-results { background:var(--card2); border:1px solid var(--border); border-radius:9px; margin-top:5px; max-height:160px; overflow-y:auto; display:none; }
-.search-results.show { display:block; }
-.search-item { padding:9px 12px; cursor:pointer; font-size:.82rem; border-bottom:1px solid var(--border); }
-.search-item:hover { background:var(--card); }
+.btn { width:100%; padding:13px; border-radius:11px; border:none; font-family:'Lora',serif; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-gold { background:var(--gold); color:#fff; box-shadow:0 4px 20px rgba(45,79,28,0.2); }
+.btn-gold:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(45,79,28,0.3); }
+.btn-gold:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-.btn { padding:13px; border-radius:11px; border:none; font-family:'Lora',serif; font-size:1rem; font-weight:600; cursor:pointer; width:100%; }
-.btn-gold { background:var(--gold); color:#fff; margin-bottom:10px; }
-.btn-outline2 { background:none; border:1px solid var(--border); color:var(--text2); font-family:'Inter',sans-serif; font-size:.85rem; }
-.btn-outline2:hover { border-color:var(--rose); color:var(--rose); }
+.weight-chart { display:flex; align-items:flex-end; gap:6px; height:70px; margin-bottom:8px; }
+.wc-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
+.wc-track { width:100%; background:rgba(255,255,255,.05); border-radius:5px; flex:1; position:relative; overflow:hidden; }
+.wc-fill { position:absolute; bottom:0; left:0; right:0; border-radius:5px; background:var(--gold); }
+.wc-val { font-size:.62rem; color:var(--text2); }
+.wc-date { font-size:.58rem; color:var(--text3); }
 
-.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
+.history-item { padding:11px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.history-item:last-child { border-bottom:none; }
+.hi-date { font-size:.78rem; color:var(--text2); }
+.hi-weight { font-size:.88rem; font-weight:600; color:var(--gold); }
+.hi-delta { font-size:.72rem; margin-left:6px; }
+.delta-down { color:var(--sage); }
+.delta-up { color:var(--rose); }
+.delta-flat { color:var(--text3); }
+
+.adj-banner { padding:13px 16px; border-radius:11px; margin-bottom:14px; font-size:.85rem; line-height:1.55; display:none; }
+.adj-banner.show { display:block; }
+.adj-down { background:rgba(139,42,42,0.08); border:1px solid rgba(139,42,42,0.25); color:#8b2a2a; }
+.adj-up { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); color:#2d4f1c; }
+
+.empty { text-align:center; padding:30px 16px; color:var(--text2); font-size:.84rem; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; }
 .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:380px){ .row3,.row2,.pill-row { grid-template-columns:1fr 1fr; } }
 </style>
 <script src="protect.js?v=2"></script>
 </head>
@@ -76,485 +94,497 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 <header class="topbar">
   <div class="t-logo">Nutri<span>Coach</span></div>
-  <a href="dashboard.html" class="t-back">← Profil</a>
+  <a href="dashboard.html" class="t-back">← Tableau de bord</a>
 </header>
 
 <div class="wrap">
   <div class="hero">
-    <h1>Mon plan fixe</h1>
-    <p>Construisez votre propre journée type, une fois pour toutes. Tant qu'il est actif, ce plan remplace les suggestions automatiques — il ne change jamais tout seul.</p>
+    <h1>Bilan hebdomadaire</h1>
+    <p id="hero-sub">Faisons le point sur votre semaine.</p>
   </div>
 
-  <div class="status-banner" id="status-banner"></div>
-  <div id="history-card" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:14px;box-shadow:var(--sh);padding:14px 16px;margin-bottom:16px"></div>
-  <div class="totals-card" id="totals-card"></div>
-  <div id="meals-container"></div>
+  <div class="adj-banner" id="adj-banner"></div>
 
-  <button class="btn btn-gold" onclick="savePlanFixe()">Enregistrer mon plan fixe</button>
-  <button class="btn btn-outline2" onclick="disablePlanFixe()">Désactiver mon plan fixe</button>
-</div>
-
-<!-- Avertissement écart objectif -->
-<div id="warn-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px 24px;max-width:380px;box-shadow:0 30px 80px rgba(0,0,0,.6)">
-    <div style="font-size:1.8rem;margin-bottom:10px">⚠️</div>
-    <div style="font-family:'Lora',serif;font-size:1.15rem;font-weight:600;margin-bottom:10px">Ce plan ne correspond pas à votre objectif</div>
-    <p id="warn-text" style="font-size:.85rem;color:var(--text2);line-height:1.55;margin-bottom:20px"></p>
-    <button class="btn btn-gold" onclick="confirmSaveAnyway()" style="margin-bottom:8px">Enregistrer malgré tout</button>
-    <button class="btn btn-outline2" onclick="closeWarn()">Modifier mon plan</button>
+  <div class="card" id="history-card" style="display:none">
+    <div class="card-hdr"><span class="card-hdr-ico">📈</span><span>Évolution du poids</span></div>
+    <div class="card-body">
+      <div class="weight-chart" id="weight-chart"></div>
+      <div id="history-list"></div>
+    </div>
   </div>
+
+  <form id="bilan-form">
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">📏</span><span>Mensurations</span></div>
+      <div class="card-body">
+        <div class="row3">
+          <div class="field"><label>Poids (kg)</label><input type="number" id="b-poids" step="0.1" required></div>
+          <div class="field"><label>Tour de taille (cm)</label><input type="number" id="b-taille" step="0.5"></div>
+          <div class="field"><label>Tour de hanche (cm)</label><input type="number" id="b-hanche" step="0.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 1 — Alimentation -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🍽️</span><span>Alimentation</span></div>
+      <div class="card-body">
+        <div class="field"><label>Respect du plan alimentaire cette semaine</label>
+          <div class="pill-row" data-field="respect_plan">
+            <div class="pill" data-val="Bien">Bien respecté</div>
+            <div class="pill" data-val="Moyen">Moyennement</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>Envies incontrôlables de manger cette semaine ?</label>
+          <div class="pill-row" data-field="envies_sucrees">
+            <div class="pill" data-val="Non">Non</div>
+            <div class="pill" data-val="Moyen">Parfois</div>
+            <div class="pill" data-val="Difficile">Souvent</div>
+          </div>
+        </div>
+        <div class="field"><label>Écarts alimentaires (optionnel)</label>
+          <textarea id="b-ecart" placeholder="Ex: un peu plus de sucreries cette semaine..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 2 — Activité physique -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🏃</span><span>Activité physique</span></div>
+      <div class="card-body">
+        <div class="field"><label>Comment s'est passée votre activité physique cette semaine ?</label>
+          <div class="pill-row" data-field="activite_semaine">
+            <div class="pill" data-val="Bien">Bien</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 3 — Digestion & sommeil -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🌀</span><span>Digestion & sommeil</span></div>
+      <div class="card-body">
+        <div class="field"><label>Qualité digestive</label>
+          <div class="pill-row" data-field="troubles_digestifs">
+            <div class="pill" data-val="Bonne">Bonne</div>
+            <div class="pill" data-val="Moyenne">Moyenne</div>
+            <div class="pill" data-val="Mauvaise">Mauvaise</div>
+          </div>
+        </div>
+        <div class="field"><label>Qualité du sommeil</label>
+          <div class="pill-row" data-field="sommeil">
+            <div class="pill" data-val="Bon">Bon</div>
+            <div class="pill" data-val="Moyen">Moyen</div>
+            <div class="pill" data-val="Mauvais">Mauvais</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 4 — Énergie & bien-être -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">💭</span><span>Énergie & bien-être</span></div>
+      <div class="card-body">
+        <div class="field"><label>Niveau d'énergie cette semaine</label>
+          <div class="pill-row" data-field="niveau_energie">
+            <div class="pill" data-val="Bien">Élevé</div>
+            <div class="pill" data-val="Moyen">Normal</div>
+            <div class="pill" data-val="Difficile">Faible</div>
+          </div>
+        </div>
+        <div class="field"><label>Humeur générale cette semaine</label>
+          <div class="pill-row" data-field="humeur_semaine">
+            <div class="pill" data-val="Bien">Bonne</div>
+            <div class="pill" data-val="Moyen">Neutre</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 5 — Questions spécifiques aux pathologies (conditionnelles) -->
+    <div class="card" id="bloc-patho" style="display:none">
+      <div class="card-hdr"><span class="card-hdr-ico">🩺</span><span>Suivi de votre santé</span></div>
+      <div class="card-body" id="bloc-patho-body"></div>
+    </div>
+
+    <!-- BLOC 6 — Objectifs & commentaire libre -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">🎯</span><span>Semaine prochaine</span></div>
+      <div class="card-body">
+        <div class="field"><label>Objectifs pour la semaine prochaine</label>
+          <textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une séance de sport..."></textarea>
+        </div>
+        <div class="field"><label>Un commentaire à partager avec votre équipe ? (optionnel)</label>
+          <textarea id="b-commentaire" placeholder="Exprimez librement ce que les réponses ci-dessus ne capturent pas..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-gold" id="submit-btn">Valider mon bilan</button>
+  </form>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="regles-pathologies.js?v=3"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb = supabase.createClient(SURL, SKEY);
 
-var USER=null, PROF=null, DB=[];
-var MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
-var MEAL_LABELS = {breakfast:'☀️ Petit-déjeuner', lunch:'🍽️ Déjeuner', snack:'🍎 Collation', dinner:'🌙 Souper', snack2:'🥨 Collation 2'};
-var SEARCH_PICKED = {}; // mealKey -> food choisi en attente d'ajout
+var USER=null, PROF=null;
+var pillValues = {};
+
+// Génère les questions spécifiques à la pathologie (Bloc 5) — n'affiche
+// que ce que le patient peut vraiment observer lui-même sans matériel médical.
+function renderPathoBloc(pathos){
+  var bloc = document.getElementById('bloc-patho');
+  var body = document.getElementById('bloc-patho-body');
+  var questions = [];
+
+  if(pathos.indexOf('diabetes')>=0){
+    questions.push({
+      label: 'Fatigabilité après les repas cette semaine ?',
+      field: 'diabetes_fatigue',
+      opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
+    });
+    questions.push({
+      label: 'Envies de sucre importantes (au-delà des envies habituelles) ?',
+      field: 'diabetes_envies_sucre',
+      opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
+    });
+  }
+
+  if(pathos.indexOf('hypertension')>=0){
+    questions.push({
+      label: 'Avez-vous limité votre consommation de sel cette semaine ?',
+      field: 'hta_sel',
+      opts: [['Bien','Oui, attentif(ve)'],['Moyen','Moyennement'],['Difficile','Non']]
+    });
+    questions.push({
+      label: 'Maux de tête ou vertiges notés cette semaine ?',
+      field: 'hta_symptomes',
+      opts: [['Bien','Non'],['Moyen','Parfois'],['Difficile','Oui, souvent']]
+    });
+  }
+
+  if(!questions.length){ bloc.style.display='none'; return; }
+
+  body.innerHTML = questions.map(function(q){
+    return '<div class="field"><label>'+q.label+'</label>'
+      +'<div class="pill-row" data-field="'+q.field+'">'
+      +q.opts.map(function(o){ return '<div class="pill" data-val="'+o[0]+'">'+o[1]+'</div>'; }).join('')
+      +'</div></div>';
+  }).join('');
+  bloc.style.display = 'block';
+}
 
 var toastT=null;
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2800);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
-function pN(v){ if(v===null||v===undefined||v==='-'||v==='')return 0; return parseFloat(String(v).replace(',','.'))||0; }
-function tok(s){if(!s)return[];return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);}
-function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
-var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,nature:1,sel:1,ajoute:1,ajoutee:1,precision:1,moyen:1,moyenne:1,aliment:1,general:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
-function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;var meaningfulLen=ft.filter(function(t){return !CIQUAL_STOPWORDS[t];}).length||ft.length;s*=(0.4+0.6*Math.min(qt.length/Math.max(meaningfulLen,1),1));return s;}
-function ciqSearch(q,n){n=n||6;var qt=tok(q);if(!qt.length)return[];var r=[];for(var i=0;i<DB.length;i++){var s=scoreFn(qt,tok(DB[i].nom),DB[i].nom);if(s>=5)r.push({food:DB[i],score:s});}r.sort(function(a,b){return b.score-a.score;});return r.slice(0,n);}
-
-// ── UNITÉS NATURELLES ── évite de devoir connaître/saisir un grammage :
-// on propose "1 œuf", "1 pot", "1 fruit"... quand l'aliment s'y prête.
-var PORTION_KEYWORDS = {
-  yaourt:['yaourt','yogourt','skyr','fromage blanc','fromage frais'], oeuf:['oeuf','œuf'],
-  huile_sauce:['huile'], beurre:['beurre'], pain:['pain','baguette'],
-  oleagineux:['amande','noix','noisette','cacahuete','pistache']
+// ── Pills interactifs ── délégation sur le formulaire entier plutôt que
+// sur chaque pastille individuellement : plus robuste sur mobile, et
+// continue de fonctionner même si une partie du formulaire est régénérée.
+// Chaque pastille a sa propre formulation (Bien/Bonne/Bon/Oui/Faible...),
+// mais ne représente toujours que 3 états visuels : bon, moyen, mauvais.
+var PILL_STATE = {
+  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien',
+  moyen:'moyen', moyenne:'moyen', moyennement:'moyen',
+  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', élevée:'difficile'
 };
-var NATURAL_UNIT_SIZE = {yaourt:125, oeuf:50, huile_sauce:10, beurre:10, pain:30, oleagineux:10};
-var UNIT_LABELS = {yaourt:'pot', oeuf:'œuf', huile_sauce:'cuillère à café', beurre:'noix', pain:'tranche', oleagineux:'poignée'};
-var FRUIT_KEYWORDS = ['pomme','banane','orange','poire','peche','pêche','kiwi','fraise'];
-var FRUIT_UNIT_GUESS = {banane:120,pomme:150,orange:150,poire:150,kiwi:90,peche:130,pêche:130};
-function detectCategory(nom){
-  var n=tok(nom).join(' ');
-  for(var cat in PORTION_KEYWORDS){
-    for(var i=0;i<PORTION_KEYWORDS[cat].length;i++){ if(n.indexOf(PORTION_KEYWORDS[cat][i])>=0) return cat; }
-  }
-  for(var i=0;i<FRUIT_KEYWORDS.length;i++){ if(n.indexOf(FRUIT_KEYWORDS[i])>=0) return 'fruit'; }
-  return null;
-}
-function getUnitInfo(nom){
-  var cat = detectCategory(nom);
-  if(!cat) return null;
-  if(cat==='fruit'){
-    var n2 = tok(nom).join(' '); var unit=140;
-    for(var k in FRUIT_UNIT_GUESS){ if(n2.indexOf(k)>=0){ unit=FRUIT_UNIT_GUESS[k]; break; } }
-    return {label:'fruit', unitGrams:unit};
-  }
-  var unit = NATURAL_UNIT_SIZE[cat];
-  if(!unit) return null;
-  return {label:UNIT_LABELS[cat]||cat, unitGrams:unit};
-}
+document.getElementById('bilan-form').addEventListener('click', function(e){
+  var p = e.target.closest('.pill');
+  if(!p) return;
+  var row = p.closest('.pill-row');
+  var field = row.getAttribute('data-field');
+  row.querySelectorAll('.pill').forEach(function(x){ x.className='pill'; });
+  var val = p.getAttribute('data-val');
+  var state = PILL_STATE[val.toLowerCase()] || 'moyen';
+  p.classList.add('on-'+state);
+  pillValues[field] = val;
+});
 
-function calcTargets(){
-  var p=PROF||{};
-  var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
-  var act=p.activite||'sedentary',pathos=p.pathologies||[];
-  var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
-  var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
-  var hasMet=p.activite_met_kcal&&p.activite_met_kcal>0;
-  var tdee=hasMet?bmr*1.2+p.activite_met_kcal:bmr*(af[act]||1.2);
-  var objectif=p.objectif||(pathos.indexOf('obesity')>=0?'perte':'maintien');
-  var kcal=tdee;
-  if(objectif==='perte')kcal=tdee-200;
-  if(objectif==='prise')kcal=tdee+300;
-  kcal+=(p.kcal_adjustment||0);
-  kcal=Math.max(1200,Math.min(5000,Math.round(kcal)));
-  return {kcal:kcal, prot:Math.round(kcal*0.15/4), gluc:Math.round(kcal*0.50/4), lip:Math.round(kcal*0.35/9)};
-}
-function needsSecondSnack(tgt){ return tgt.kcal>=3000; }
-
+// ── AUTH ──
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
   USER = r.data.session.user;
-  init();
+  loadProfileAndHistory();
 });
 
-async function init(){
+async function loadProfileAndHistory(){
   var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
   PROF = pr.data || {};
 
-  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
-    DB = raw.map(function(r){ return {code:r[0],nom:r[1],kcal:pN(r[2]),prot:pN(r[3]),gluc:pN(r[4]),lip:pN(r[5]),ags:pN(r[6]),pot:pN(r[13])}; });
-    loadCustomFoods();
-  }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });
-
-  if(PROF.plan_fixe){
-    Object.keys(MEALS).forEach(function(k){ MEALS[k] = (PROF.plan_fixe[k]||[]).slice(); });
-  }
-
-  renderStatus();
-  renderMeals();
-  renderTotals();
-  renderHistory();
-}
-
-// Aliments ajoutés manuellement par les admins (aliments.html) — fusionnés
-// dans DB, donc cherchables exactement comme un aliment Ciqual classique.
-function loadCustomFoods(){
-  sb.from('aliments_custom').select('*').then(function(r){
-    if(!r.data) return;
-    var custom = r.data.map(function(c){
-      return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip, ags:c.ags||0, pot:c.pot||0};
-    });
-    DB = DB.concat(custom);
-  }).catch(function(){ console.warn('Aliments personnalisés non chargés'); });
-}
-
-function renderStatus(){
-  var el = document.getElementById('status-banner');
-  var active = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
-  el.className = 'status-banner '+(active?'status-on':'status-off');
-  el.textContent = active
-    ? '✅ Votre plan fixe est actif — il remplace les suggestions automatiques sur "Mon plan alimentaire".'
-    : 'Aucun plan fixe actif pour le moment. Construisez-le ci-dessous puis enregistrez.';
-}
-
-function activeMealKeys(){
-  var tgt = calcTargets();
-  var keys = ['breakfast','lunch','snack','dinner'];
-  if(needsSecondSnack(tgt)) keys.push('snack2');
-  return keys;
-}
-
-// fibreGlucRatio() et glycemicBadge() sont désormais fournies par
-// regles-pathologies.js (fichier partagé inclus en haut de page).
-
-// Construit les badges d'avertissement pour un aliment du plan fixe.
-// Contrairement au Journal (popup bloquante), ici c'est un badge discret
-// mais CLIQUABLE — pour ne pas gêner la construction du plan mais permettre
-// de remplacer l'aliment d'un clic si on le souhaite.
-function buildWarningBadges(it, mealKey, idx){
-  var pathos = (PROF && PROF.pathologies) || [];
-  if(pathos.indexOf('diabetes')<0) return '';
-
-  var badges = '';
-
-  // Badge ratio fibres/glucides
-  var carbGrams = (it.gluc||0)*it.qty/100;
-  if(carbGrams>15){
-    var ratio = fibreGlucRatio(it.gluc, it.fibres);
-    if(ratio!==null && ratio<5){
-      var hasAlts = !!suggestAlternatives(it.nom);
-      badges += ' <button onclick="openAlternativesPanel(\''+mealKey+'\','+idx+')" '
-        +'style="background:none;border:none;cursor:pointer;padding:0;font-size:.85rem" '
-        +'title="Impact glycémique élevé'+(hasAlts?' — cliquez pour voir des alternatives':'')+'">🌿</button>';
-    }
-  }
-
-  // Badge sucres élevés (biscuits, pâtisseries)
-  if(!badges){
-    var isSugarAlert = (it.sucres>0 && biscuitTropSucre(it.sucres)) || !!detectFoodCategory(it.nom);
-    if(isSugarAlert){
-      var hasAlts2 = !!suggestAlternatives(it.nom);
-      badges += ' <button onclick="openAlternativesPanel(\''+mealKey+'\','+idx+')" '
-        +'style="background:none;border:none;cursor:pointer;padding:0;font-size:.85rem" '
-        +'title="Teneur en sucres élevée'+(hasAlts2?' — cliquez pour voir des alternatives':'')+'">🍬</button>';
-    }
-  }
-
-  return badges;
-}
-
-// Ouvre le panneau d'alternatives pour un aliment identifié comme
-// problématique — remplaçable en un clic, quantité ajustée pour
-// maintenir les mêmes calories.
-function openAlternativesPanel(mealKey, idx){
-  var it = MEALS[mealKey][idx];
-  if(!it) return;
-  var alts = suggestAlternatives(it.nom);
-
-  var existingOv = document.getElementById('alt-panel-ov');
-  if(existingOv) existingOv.remove();
-
-  var ov = document.createElement('div');
-  ov.id = 'alt-panel-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;';
-
-  var altRows = alts ? alts.map(function(alt, ai){
-    var altKcal = Math.round(alt.kcal * alt.qty / 100);
-    return '<div style="padding:12px 0;border-bottom:1px solid rgba(26,25,22,0.08)">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">'
-      +'<div>'
-      +'<div style="font-size:.9rem;font-weight:600;color:var(--text)">'+esc(alt.nom)+'</div>'
-      +'<div style="font-size:.74rem;color:var(--text2);margin-top:2px">'+alt.qty+'g · '+altKcal+' kcal</div>'
-      +'<div style="font-size:.72rem;color:var(--sage);margin-top:3px">✓ '+esc(alt.raison)+'</div>'
-      +'</div>'
-      +'<button onclick="applyAlternative(\''+mealKey+'\','+idx+','+ai+')" '
-      +'style="flex-shrink:0;padding:8px 14px;border-radius:9px;border:none;background:var(--gold);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer">Utiliser</button>'
-      +'</div></div>';
-  }).join('') : '<div style="font-size:.85rem;color:var(--text2);padding:12px 0">Aucune alternative disponible pour cet aliment.</div>';
-
-  ov.innerHTML = '<div style="background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:24px;max-width:380px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25);max-height:80vh;overflow-y:auto">'
-    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">'
-    +'<div>'
-    +'<div style="font-family:\'Lora\',serif;font-size:1.05rem;font-weight:700">Alternatives pour</div>'
-    +'<div style="font-size:.85rem;color:var(--text2);margin-top:2px">'+esc(it.nom)+'</div>'
-    +'</div>'
-    +'<button onclick="document.getElementById(\'alt-panel-ov\').remove()" '
-    +'style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;flex-shrink:0">✕</button>'
-    +'</div>'
-    + altRows
-    +'</div>';
-
-  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
-  document.body.appendChild(ov);
-}
-
-// Remplace l'aliment problématique par l'alternative choisie.
-// La quantité est ajustée pour conserver les mêmes calories, sauf si
-// l'alternative a sa propre quantité de référence (portion courante).
-function applyAlternative(mealKey, idx, altIdx){
-  var it = MEALS[mealKey][idx];
-  var alts = suggestAlternatives(it.nom);
-  if(!alts || !alts[altIdx]) return;
-
-  var alt = alts[altIdx];
-  // On garde la même contribution calorique que l'aliment remplacé, en
-  // recalculant la quantité de l'alternative à partir de ses propres kcal/100g.
-  var originalKcal = it.kcal * it.qty / 100;
-  var newQty = alt.kcal > 0 ? Math.round(originalKcal / alt.kcal * 100) : alt.qty;
-  // Plancher et plafond raisonnables : jamais moins de 5g, jamais plus de 300g
-  newQty = Math.max(5, Math.min(300, newQty));
-
-  MEALS[mealKey][idx] = {
-    code: alt.code, nom: alt.nom, qty: newQty,
-    kcal: alt.kcal, prot: alt.prot, gluc: alt.gluc, lip: alt.lip,
-    ags: alt.ags||0, pot: alt.pot||0, fibres: alt.fibres||0, sucres: 0
-  };
-
-  var ov = document.getElementById('alt-panel-ov');
-  if(ov) ov.remove();
-
-  renderMeals();
-  renderTotals();
-  toast('✅ '+esc(alt.nom)+' utilisé à la place — pensez à enregistrer votre plan');
-}
-
-function renderMeals(){
-  var container = document.getElementById('meals-container');
-  container.innerHTML = activeMealKeys().map(function(mk){
-    var items = MEALS[mk]||[];
-    var rows = items.map(function(it,idx){
-      var kcal = Math.round(it.kcal*it.qty/100);
-      var badges = buildWarningBadges(it, mk, idx);
-      return '<div class="food-row"><span>'+esc(it.nom)+badges+' — '+Math.round(it.qty)+'g · '+kcal+' kcal</span>'
-        +'<button class="food-del" onclick="removeFood(\''+mk+'\','+idx+')">✕</button></div>';
-    }).join('');
-    return '<div class="meal-section"><div class="meal-hdr"><span>'+MEAL_LABELS[mk]+'</span></div><div class="meal-body">'
-      +(rows||'<div style="font-size:.8rem;color:var(--text3)">Aucun aliment ajouté.</div>')
-      +'<div class="add-row">'
-      +'<input type="text" placeholder="Rechercher un aliment..." oninput="searchFood(\''+mk+'\',this.value)" id="search-'+mk+'">'
-      +'<input type="number" placeholder="g" value="100" id="qty-'+mk+'" onchange="updateUnitHint(\''+mk+'\')">'
-      +'<button class="add-btn" onclick="confirmAddFood(\''+mk+'\')">+</button>'
-      +'</div><div id="unit-hint-'+mk+'" style="font-size:.72rem;color:var(--text3);margin-top:5px"></div>'
-      +'<div class="search-results" id="results-'+mk+'"></div>'
-      +'</div></div>';
-  }).join('');
-}
-
-var searchTimer=null;
-function searchFood(mealKey, val){
-  clearTimeout(searchTimer);
-  var resEl = document.getElementById('results-'+mealKey);
-  if(!val || val.trim().length<2){ resEl.classList.remove('show'); return; }
-  searchTimer = setTimeout(function(){
-    var results = ciqSearch(val,6);
-    if(!results.length){ resEl.innerHTML='<div class="search-item" style="color:var(--text3)">Aucun résultat</div>'; resEl.classList.add('show'); return; }
-    resEl.innerHTML = results.map(function(r,i){
-      return '<div class="search-item" onclick="pickFood(\''+mealKey+'\','+i+')">'+esc(r.food.nom)+' <span style="color:var(--text3);font-size:.74rem">('+Math.round(r.food.kcal)+'kcal/100g)</span></div>';
-    }).join('');
-    resEl.setAttribute('data-codes', JSON.stringify(results.map(function(r){return r.food.code;})));
-    resEl.classList.add('show');
-  }, 300);
-}
-function pickFood(mealKey, idx){
-  var resEl = document.getElementById('results-'+mealKey);
-  var codes = JSON.parse(resEl.getAttribute('data-codes'));
-  var food = DB.find(function(f){ return f.code===codes[idx]; });
-  if(!food) return;
-  SEARCH_PICKED[mealKey] = food;
-  document.getElementById('search-'+mealKey).value = food.nom;
-  resEl.classList.remove('show');
-
-  // Bascule en mode "portions" si l'aliment s'y prête (œuf, fruit, pot...)
-  // — personne ne devrait avoir à connaître le grammage exact d'un œuf.
-  var qtyInput = document.getElementById('qty-'+mealKey);
-  var unitInfo = getUnitInfo(food.nom);
-  if(unitInfo){
-    qtyInput.value = 1;
-    qtyInput.setAttribute('data-unit-grams', unitInfo.unitGrams);
-    qtyInput.setAttribute('placeholder', 'qté');
-  } else {
-    qtyInput.value = 100;
-    qtyInput.removeAttribute('data-unit-grams');
-    qtyInput.setAttribute('placeholder', 'g');
-  }
-  updateUnitHint(mealKey);
-}
-
-function updateUnitHint(mealKey){
-  var qtyInput = document.getElementById('qty-'+mealKey);
-  var hintEl = document.getElementById('unit-hint-'+mealKey);
-  var unitGrams = qtyInput.getAttribute('data-unit-grams');
-  var food = SEARCH_PICKED[mealKey];
-  if(!hintEl) return;
-  if(unitGrams && food){
-    var n = parseFloat(qtyInput.value)||1;
-    var info = getUnitInfo(food.nom);
-    var lbl = info.label + (n>1?'s':'');
-    hintEl.textContent = '≈ '+Math.round(n*unitGrams)+'g ('+n+' '+lbl+')';
-  } else {
-    hintEl.textContent = '';
-  }
-}
-
-function confirmAddFood(mealKey){
-  var food = SEARCH_PICKED[mealKey];
-  if(!food){ toast('Cherchez puis cliquez un aliment dans la liste'); return; }
-  var qtyInput = document.getElementById('qty-'+mealKey);
-  var raw = parseFloat(qtyInput.value)||1;
-  var unitGrams = qtyInput.getAttribute('data-unit-grams');
-  var qty = unitGrams ? raw*parseFloat(unitGrams) : raw;
-  MEALS[mealKey].push({code:food.code, nom:food.nom, qty:qty, kcal:food.kcal, prot:food.prot, gluc:food.gluc, lip:food.lip, ags:food.ags||0, pot:food.pot||0, fibres:food.fibres||0, sucres:food.sucres||0});
-  delete SEARCH_PICKED[mealKey];
-  document.getElementById('search-'+mealKey).value='';
-  qtyInput.value='100';
-  qtyInput.removeAttribute('data-unit-grams');
-  qtyInput.setAttribute('placeholder','g');
-  renderMeals(); renderTotals();
-}
-function removeFood(mealKey, idx){
-  MEALS[mealKey].splice(idx,1);
-  renderMeals(); renderTotals();
-}
-
-function renderTotals(){
-  var T = currentTotals();
-  var tgt = calcTargets();
-  function bar(label, val, target, unit, dec){
-    var pct = target>0 ? Math.min(130, val/target*100) : 0;
-    var over = pct>110;
-    var color = over ? 'var(--rose)' : (pct>=85 ? 'var(--sage)' : 'var(--gold)');
-    return '<div class="tot-row" style="flex-direction:column;align-items:stretch;gap:4px;padding:7px 0">'
-      +'<div style="display:flex;justify-content:space-between"><span>'+label+'</span><span style="color:'+(over?'var(--rose)':'var(--text)')+'">'+val.toFixed(dec||0)+unit+' <span style="color:var(--text3)">/ '+target.toFixed(dec||0)+unit+'</span></span></div>'
-      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+color+';border-radius:999px"></div></div>'
-      +'</div>';
-  }
-  // Les objectifs sont désormais visibles EN DIRECT pendant la
-  // construction du plan, pas seulement au moment d'enregistrer — pour
-  // que la personne voie immédiatement où elle en est, comme le ferait
-  // n'importe quel bon outil de planification nutritionnelle.
-  document.getElementById('totals-card').innerHTML =
-    bar('Calories', T.kcal, tgt.kcal, ' kcal', 0)
-    + bar('Protéines', T.prot, tgt.prot, 'g', 0)
-    + bar('Glucides', T.gluc, tgt.gluc, 'g', 0)
-    + bar('Lipides', T.lip, tgt.lip, 'g', 0);
-}
-
-function currentTotals(){
-  var T = {kcal:0,prot:0,gluc:0,lip:0};
-  Object.values(MEALS).forEach(function(items){
-    (items||[]).forEach(function(it){ var r=it.qty/100; T.kcal+=it.kcal*r; T.prot+=it.prot*r; T.gluc+=it.gluc*r; T.lip+=it.lip*r; });
-  });
-  return T;
-}
-
-async function savePlanFixe(){
-  var hasAny = Object.values(MEALS).some(function(arr){return arr.length;});
-  if(!hasAny){ toast('Ajoutez au moins un aliment avant d\'enregistrer'); return; }
-
-  // L'objectif n'est pas affiché pendant la construction, mais il est
-  // vérifié maintenant — un écart de plus de 200kcal dans un sens ou
-  // l'autre déclenche un avertissement (pas un blocage, juste un avis).
-  var T = currentTotals();
-  var tgt = calcTargets();
-  var diff = T.kcal - tgt.kcal;
-  if(Math.abs(diff) > 200){
-    var txt = diff > 0
-      ? 'Votre plan totalise '+Math.round(T.kcal)+' kcal, soit '+Math.round(diff)+' kcal au-dessus de votre objectif ('+tgt.kcal+' kcal).'
-      : 'Votre plan totalise '+Math.round(T.kcal)+' kcal, soit '+Math.round(-diff)+' kcal en dessous de votre objectif ('+tgt.kcal+' kcal).';
-    document.getElementById('warn-text').textContent = txt;
-    document.getElementById('warn-ov').style.display = 'flex';
+  var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var todayName = joursFR[new Date().getDay()];
+  if((PROF.jour_bilan||'dimanche') !== todayName){
+    showWrongDayScreen();
     return;
   }
-  await doSavePlanFixe();
-}
 
-function closeWarn(){ document.getElementById('warn-ov').style.display = 'none'; }
-async function confirmSaveAnyway(){ closeWarn(); await doSavePlanFixe(); }
-
-async function doSavePlanFixe(){
-  var r = await sb.from('profiles').update({plan_fixe:MEALS}).eq('id',USER.id);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = MEALS;
-  renderStatus();
-  toast('✅ Plan fixe enregistré — il remplace désormais les suggestions automatiques');
-}
-
-async function disablePlanFixe(){
-  // On garde une trace du plan désactivé (jusqu'à 3 plans précédents),
-  // plutôt que de tout effacer sans retour possible — la personne pourra
-  // le réintégrer plus tard au lieu de tout retaper à la main.
-  var history = (PROF.plan_fixe_history || []).slice();
-  var hasContent = Object.values(MEALS).some(function(arr){ return arr && arr.length; });
-  if(hasContent){
-    history.unshift({ meals: JSON.parse(JSON.stringify(MEALS)), date: new Date().toISOString() });
-    history = history.slice(0, 3);
+  // Empêche de remplir plusieurs fois le même jour — un bilan hebdomadaire
+  // n'a de sens qu'une fois par semaine, pas répété à volonté.
+  var already = await sb.from('bilans').select('id').eq('user_id',USER.id).eq('date',todayStr()).limit(1);
+  if(already.data && already.data.length){
+    showAlreadyDoneScreen();
+    return;
   }
-  var r = await sb.from('profiles').update({plan_fixe:null, plan_fixe_history:history}).eq('id',USER.id);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  PROF.plan_fixe = null;
-  PROF.plan_fixe_history = history;
-  MEALS = {breakfast:[], lunch:[], snack:[], dinner:[], snack2:[]};
-  renderStatus(); renderMeals(); renderTotals(); renderHistory();
-  toast('Plan fixe désactivé — vous pourrez le réintégrer plus tard depuis cette page');
+
+  document.getElementById('hero-sub').textContent =
+    (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
+  if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
+
+  // Bloc 5 — questions conditionnelles selon les pathologies
+  renderPathoBloc(PROF.pathologies || []);
+
+  var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
+  var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
+  renderHistory(bilans);
 }
 
-// Affiche jusqu'à 3 plans précédemment désactivés, avec possibilité de les
-// réintégrer en un clic plutôt que de tout reconstruire à la main.
-function renderHistory(){
-  var el = document.getElementById('history-card');
-  var history = PROF.plan_fixe_history || [];
-  var planActif = PROF.plan_fixe && Object.values(PROF.plan_fixe).some(function(arr){return arr&&arr.length;});
-  if(planActif || !history.length){ el.style.display='none'; return; }
-  el.style.display='block';
-  el.innerHTML = '<div class="history-hdr">Plans précédents</div>'
-    + history.map(function(h, idx){
-        var d = new Date(h.date);
-        var nbItems = Object.values(h.meals).reduce(function(s,arr){return s+(arr?arr.length:0);},0);
-        return '<div class="history-row">'
-          + '<div><div class="history-date">'+d.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'})+'</div>'
-          + '<div class="history-meta">'+nbItems+' aliment'+(nbItems>1?'s':'')+'</div></div>'
-          + '<button class="history-btn" onclick="restoreHistory('+idx+')">Réintégrer</button>'
-          + '</div>';
-      }).join('');
+function nextBilanDate(jourBilan){
+  var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var targetIdx = joursFR.indexOf(jourBilan||'dimanche');
+  var d = new Date();
+  do { d.setDate(d.getDate()+1); } while(d.getDay()!==targetIdx);
+  return d.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'});
 }
 
-function restoreHistory(idx){
-  var history = PROF.plan_fixe_history || [];
-  var entry = history[idx];
-  if(!entry) return;
-  Object.keys(MEALS).forEach(function(k){ MEALS[k] = (entry.meals[k]||[]).slice(); });
-  renderMeals(); renderTotals();
-  toast('Plan réintégré — vérifiez puis cliquez sur Enregistrer pour l\'activer');
-  window.scrollTo({top:0, behavior:'smooth'});
+function showAlreadyDoneScreen(){
+  document.getElementById('hero-sub').textContent = 'Bilan déjà complété cette semaine.';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">✅</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez déjà complété votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
+}
+
+function showWrongDayScreen(){
+  var jb = PROF.jour_bilan||'dimanche';
+  var jourLbl = jb.charAt(0).toUpperCase()+jb.slice(1);
+  document.getElementById('hero-sub').textContent = 'Votre bilan est prévu un autre jour.';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">📅</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est prévu le '+jourLbl+'. Revenez ce jour-là pour faire le point sur votre semaine.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'<a href="dashboard.html" style="display:block;margin-top:12px;font-size:.76rem;color:var(--text3);text-decoration:underline">Ce jour ne vous convient plus ? Modifiez-le dans votre profil</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
+}
+
+function renderHistory(bilans){
+  if(!bilans.length) return;
+  document.getElementById('history-card').style.display='block';
+
+  var weights = bilans.filter(function(b){return b.poids;});
+  var maxW = Math.max.apply(null, weights.map(function(b){return b.poids;}));
+  var minW = Math.min.apply(null, weights.map(function(b){return b.poids;}));
+  var range = Math.max(1, maxW-minW);
+
+  document.getElementById('weight-chart').innerHTML = weights.map(function(b){
+    var h = 15 + ((b.poids-minW)/range)*85;
+    var d = new Date(b.date);
+    return '<div class="wc-col"><div class="wc-val">'+b.poids+'</div><div class="wc-track"><div class="wc-fill" style="height:'+h+'%"></div></div><div class="wc-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div></div>';
+  }).join('');
+
+  var listHtml = '';
+  for(var i=bilans.length-1;i>=0;i--){
+    var b = bilans[i];
+    var prev = i>0?bilans[i-1]:null;
+    var deltaHtml = '';
+    if(prev && prev.poids && b.poids){
+      var d = b.poids-prev.poids;
+      var cls = Math.abs(d)<0.3?'delta-flat':(d<0?'delta-down':'delta-up');
+      deltaHtml = '<span class="hi-delta '+cls+'">'+(d>0?'+':'')+d.toFixed(1)+'kg</span>';
+    }
+    var dt = new Date(b.date);
+    listHtml += '<div class="history-item"><span class="hi-date">'+dt.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+'</span><span><span class="hi-weight">'+(b.poids||'—')+'kg</span>'+deltaHtml+'</span></div>';
+  }
+  document.getElementById('history-list').innerHTML = listHtml;
+}
+
+// ── SOUMISSION ──
+document.getElementById('bilan-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var poids = parseFloat(document.getElementById('b-poids').value);
+  if(!poids){ toast('Indiquez votre poids actuel'); return; }
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  var data = {
+    user_id: USER.id, date: todayStr(),
+    poids: poids,
+    tour_taille: parseFloat(document.getElementById('b-taille').value)||null,
+    tour_hanche: parseFloat(document.getElementById('b-hanche').value)||null,
+    respect_plan: pillValues.respect_plan||null,
+    envies_sucrees: pillValues.envies_sucrees||null,
+    ecart_alimentaire: document.getElementById('b-ecart').value.trim()||null,
+    activite_semaine: pillValues.activite_semaine||null,
+    troubles_digestifs: pillValues.troubles_digestifs||null,
+    sommeil: pillValues.sommeil||null,
+    niveau_energie: pillValues.niveau_energie||null,
+    humeur_semaine: pillValues.humeur_semaine||null,
+    diabetes_fatigue: pillValues.diabetes_fatigue||null,
+    diabetes_envies_sucre: pillValues.diabetes_envies_sucre||null,
+    hta_sel: pillValues.hta_sel||null,
+    hta_symptomes: pillValues.hta_symptomes||null,
+    objectifs_notes: document.getElementById('b-objectifs').value.trim()||null,
+    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null
+  };
+
+  var r = await sb.from('bilans').insert(data);
+  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
+
+  // Met aussi à jour le poids courant du profil
+  await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
+
+  await checkAndAdjustKcal(poids);
+  showThankYouScreen();
+});
+
+function showThankYouScreen(){
+  document.getElementById('hero-sub').textContent = '';
+  document.getElementById('bilan-form').style.display = 'none';
+  document.getElementById('history-card').style.display = 'none';
+  var el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">🙏</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">À bientôt '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'</div>';
+  document.querySelector('.wrap').appendChild(el);
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+}
+
+// ── ALGORITHME ADAPTATIF ──
+// Deux garde-fous avant tout ajustement automatique :
+// 1. Le ressenti qualitatif du bilan compte AVANT le poids — si la semaine
+//    a été majoritairement difficile, bouger les calories ne réglerait pas
+//    le vrai problème (l'adhésion au plan), donc on n'ajuste rien et on
+//    encourage plutôt à se remobiliser.
+// 2. Le sens de l'ajustement dépend de l'objectif : perte/prise poussent
+//    plus fort si la tendance est stagnante ; le maintien corrige dans le
+//    sens opposé si le poids a dévié de façon notable.
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,non:0,'élevée':0,elevee:0};
+
+function qualiteBilanScore(){
+  var champs = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
+  var total = 0, compte = 0;
+  champs.forEach(function(c){
+    var v = pillValues[c];
+    if(v){ var pts=PILL_SCORE[v.toLowerCase()]; total += (pts!==undefined?pts:1); compte++; }
+  });
+  return compte>0 ? total : null; // null si rien n'a été rempli (ne devrait pas arriver)
+}
+
+async function checkAndAdjustKcal(newWeight){
+  var objectif = PROF.objectif;
+  var banner = document.getElementById('adj-banner');
+
+  // Garde-fou n°1 : le ressenti général de la semaine.
+  var score = qualiteBilanScore(); // sur 12 (6 champs × 2 pts max)
+  if(score !== null && score < 6){
+    banner.className = 'adj-banner show adj-down';
+    banner.innerHTML = '<strong>💛 Un mot avant tout</strong><br>'
+      + 'Cette semaine semble avoir été difficile sur plusieurs points. Plutôt que de changer encore les chiffres, '
+      + 'si vous désirez atteindre votre objectif, reprenez-vous en main — vous en êtes capable. '
+      + 'Le plan reste inchangé cette semaine ; concentrons-nous sur la régularité avant d\'ajuster quoi que ce soit.';
+    return;
+  }
+
+  var currentAdj = PROF.kcal_adjustment || 0;
+
+  if(objectif==='perte' || objectif==='prise'){
+    var d1 = new Date(); d1.setDate(d1.getDate()-16);
+    var d2 = new Date(); d2.setDate(d2.getDate()-12);
+    var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
+      .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
+      .order('date',{ascending:true}).limit(1);
+    if(!res.data || !res.data.length || !res.data[0].poids) return;
+
+    var oldWeight = res.data[0].poids;
+    var delta = newWeight - oldWeight; // positif = prise, négatif = perte
+
+    // Trois situations possibles :
+    // 1. Bonne progression (poids évolue dans le bon sens) → rien à faire
+    // 2. Stagnation (< 0.3kg de différence) → nudge de -200kcal (perte) ou +200 (prise)
+    // 3. Mauvaise direction (poids augmente sur perte, ou diminue sur prise) → correction
+    //    plus marquée car la situation est plus urgente qu'une simple stagnation.
+    var goodProgress = (objectif==='perte' && delta < -0.3) || (objectif==='prise' && delta > 0.3);
+    var stalled     = Math.abs(delta) < 0.3;
+    var wrongWay    = (objectif==='perte' && delta > 0.5) || (objectif==='prise' && delta < -0.5);
+
+    if(goodProgress) return; // tout va bien, on ne touche à rien
+
+    var newAdj = currentAdj;
+    var msgContext = '';
+
+    if(wrongWay){
+      // Poids part dans la mauvaise direction — même ajustement de 200 kcal que
+      // pour une stagnation : les changements brusques sont contre-productifs,
+      // mieux vaut des corrections progressives et soutenables dans le temps.
+      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      msgContext = objectif==='perte'
+        ? 'Votre poids a augmenté cette semaine alors que votre objectif est la perte. On ajuste votre objectif calorique de −200 kcal/jour pour corriger progressivement la trajectoire.'
+        : 'Votre poids a diminué cette semaine alors que votre objectif est la prise. On ajuste votre objectif calorique de +200 kcal/jour pour corriger progressivement la trajectoire.';
+    } else if(stalled){
+      // Poids stable depuis 2 semaines → nudge de 200 kcal
+      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      msgContext = objectif==='perte'
+        ? 'Votre poids n\'a pas bougé depuis 2 semaines. On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
+        : 'Votre poids n\'a pas bougé depuis 2 semaines. On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.';
+    }
+
+    newAdj = Math.max(-1200, Math.min(2500, newAdj));
+    await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
+
+    banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
+    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>' + msgContext + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+
+  } else if(objectif==='maintien'){
+    // En maintien, on corrige dans le sens OPPOSÉ à la dérive constatée —
+    // comparaison sur la semaine écoulée (1 bilan en arrière), pas 2.
+    var d1m = new Date(); d1m.setDate(d1m.getDate()-9);
+    var d2m = new Date(); d2m.setDate(d2m.getDate()-5);
+    var resM = await sb.from('bilans').select('*').eq('user_id',USER.id)
+      .gte('date', d1m.toISOString().slice(0,10)).lte('date', d2m.toISOString().slice(0,10))
+      .order('date',{ascending:true}).limit(1);
+    if(!resM.data || !resM.data.length || !resM.data[0].poids) return;
+
+    var oldWeightM = resM.data[0].poids;
+    var deltaM = newWeight - oldWeightM;
+    if(Math.abs(deltaM) < 0.5) return; // dérive normale, rien à corriger
+
+    var sensPerte = deltaM > 0; // poids monté -> on réduit ; poids descendu -> on augmente
+    var newAdjM = currentAdj + (sensPerte ? -200 : 200);
+    newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
+    await sb.from('profiles').update({kcal_adjustment:newAdjM}).eq('id',USER.id);
+
+    banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
+    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids a '
+      + (sensPerte ? 'augmenté' : 'diminué') + ' de '+Math.abs(deltaM).toFixed(1)+'kg cette semaine, alors que votre objectif est le maintien. '
+      + 'On '+(sensPerte?'réduit':'augmente')+' votre objectif calorique de 200 kcal/jour pour vous recentrer.';
+  }
 }
 </script>
 </body>
