@@ -882,7 +882,7 @@ body {
       <div class="w-slide" data-slide="1">
         <div class="w-emoji">📸</div>
         <h2 class="w-title">Nouveau — Photo IA</h2>
-        <p class="w-txt">Prenez une photo de votre repas et <b>L'app</b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
+        <p class="w-txt">Prenez une photo de votre repas et <b>l'IA</b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
       </div>
       <div class="w-slide" data-slide="2">
         <div class="w-emoji">📊</div>
@@ -1117,9 +1117,9 @@ var CHANGELOG = [
     '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
   ]},
   {v:'0.3.0', date:'8 juillet 2026', items:[
-    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, l'app identifie automatiquement les aliments et estime les quantités',
+    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, notre IA identifie automatiquement les aliments et estime les quantités',
     '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse — étapes affichées en temps réel',
+    '⏱️ Animation de chargement pendant l\'analyse IA — étapes affichées en temps réel',
     '📊 Limite de 5 scans photo par jour',
     '🔢 Calories affichées en premier sur le tableau de bord',
     '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
@@ -2343,8 +2343,8 @@ function pickRes(i){
 }
 
 // ── SCAN DE CODE-BARRES ──
-// ── SCAN PHOTO IA (Gemini) ────────────────────────────────────────────────
-// Workflow : photo → Edge Function analyser-photo → Gemini identifie les
+// ── SCAN PHOTO IA (l'IA) ────────────────────────────────────────────────
+// Workflow : photo → Edge Function analyser-photo → l'IA identifie les
 // aliments → liste de confirmation → recherche Ciqual pour chaque aliment
 // confirmé → ajout au journal avec valeurs vérifiées (pas estimées).
 
@@ -2429,8 +2429,8 @@ async function onPhotoSelected(input){
       var base64 = compressedDataUrl.split(',')[1];
       var mimeType = 'image/jpeg';
 
-      // Animation des étapes pendant l'attente Gemini
-      var steps = ['Envoi à Gemini...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+      // Animation des étapes pendant l'attente l'IA
+      var steps = ['Envoi à l'IA...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
       var stepIdx = 0;
       var stepEl = document.getElementById('photo-loading-step');
       if(stepEl) stepEl.textContent = steps[0];
@@ -2454,7 +2454,7 @@ async function onPhotoSelected(input){
 
       if(!res.ok){
         var errText = await res.text();
-        showPhotoError('Erreur serveur ('+res.status+') — vérifiez que la clé GEMINI_API_KEY est bien configurée dans Supabase.');
+        showPhotoError('Erreur serveur ('+res.status+') — vérifiez votre connexion et réessayez.');
         console.error('analyser-photo error:', errText);
         return;
       }
@@ -2469,7 +2469,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé magique est bien ajoutée.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la configuration de l'IA dans l'app.');
       console.error('photo scan error:', err);
     }
   };
@@ -2579,8 +2579,7 @@ function findFoodByName(nom){
 // Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
 // dans la page Journal et sur le bon repas avant d'ouvrir la modale.
 function openPhotoScannerFromNav(){
-  goPage('journal');
-  openPhotoScanner();
+  window.location.href = 'photo-ia.html';
 }
 
 function handleScanNav(){
