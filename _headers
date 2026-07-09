@@ -1,0 +1,24 @@
+# Fichiers HTML — jamais mis en cache.
+# À chaque visite, le navigateur récupère la version la plus récente
+# depuis Cloudflare. C'est la règle la plus importante : elle garantit
+# que les utilisateurs voient toujours le bon fichier HTML qui référence
+# les bonnes versions des JS via ?v=X.
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
+# Fichiers JS — mis en cache 1 an (performance maximale).
+# Safe car on utilise ?v=X dans les <script src> pour forcer le rechargement
+# quand le contenu change. Un fichier dont le nom ne change pas = même cache.
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fichiers CSS — même logique que les JS
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fichiers SQL et config — ne pas servir du tout si possible
+/*.sql
+  Cache-Control: no-store
+/*.toml
+  Cache-Control: no-store
