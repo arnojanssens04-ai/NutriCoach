@@ -504,7 +504,7 @@ body {
   .macros-row { grid-template-columns: 1fr 1fr; }
 }
 </style>
-<script src="protect.js"></script>
+<script src="protect.js?v=2"></script>
 </head>
 <body>
 
@@ -882,7 +882,7 @@ body {
       <div class="w-slide" data-slide="1">
         <div class="w-emoji">📸</div>
         <h2 class="w-title">Nouveau — Photo IA</h2>
-        <p class="w-txt">Prenez une photo de votre repas et <b>l'app </b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
+        <p class="w-txt">Prenez une photo de votre repas et <b>Gemini</b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
       </div>
       <div class="w-slide" data-slide="2">
         <div class="w-emoji">📊</div>
@@ -1062,7 +1062,7 @@ body {
 <!-- Règles nutritionnelles partagées (diabète, cœliaque à venir, FODMAP à
      venir) — même fichier inclus dans plan-fixe.html et recette.html,
      pour qu'une correction faite ici profite partout automatiquement. -->
-<script src="regles-pathologies.js"></script>
+<script src="regles-pathologies.js?v=3"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -1117,9 +1117,9 @@ var CHANGELOG = [
     '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
   ]},
   {v:'0.3.0', date:'8 juillet 2026', items:[
-    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, L'App identifie automatiquement les aliments et estime les quantités',
+    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, Gemini identifie automatiquement les aliments et estime les quantités',
     '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse des repas — étapes affichées en temps réel',
+    '⏱️ Animation de chargement pendant l\'analyse Gemini — étapes affichées en temps réel',
     '📊 Limite de 5 scans photo par jour',
     '🔢 Calories affichées en premier sur le tableau de bord',
     '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
@@ -2430,7 +2430,7 @@ async function onPhotoSelected(input){
       var mimeType = 'image/jpeg';
 
       // Animation des étapes pendant l'attente Gemini
-      var steps = ['Envoi à l'APP...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+      var steps = ['Envoi à Gemini...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
       var stepIdx = 0;
       var stepEl = document.getElementById('photo-loading-step');
       if(stepEl) stepEl.textContent = steps[0];
@@ -2443,7 +2443,7 @@ async function onPhotoSelected(input){
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
 
-      var res = await fetch(SURL+'/functions/v1/dynamic-endpoint', {
+      var res = await fetch(SURL+'/functions/v1/analyser-photo', {
         method: 'POST',
         headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
@@ -2469,7 +2469,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé  est bien ajoutée dans Supabase.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé Gemini est bien ajoutée dans Supabase.');
       console.error('photo scan error:', err);
     }
   };
