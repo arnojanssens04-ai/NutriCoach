@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan Photo — Cap Santé</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f3ee;--card:#ffffff;--border:rgba(26,25,22,0.1);--border2:rgba(26,25,22,0.18);--gold:#2d4f1c;--gold-l:rgba(45,79,28,0.08);--sage:#4a7a3a;--sage-l:rgba(74,122,58,0.1);--text:#1a1916;--text2:#5c5852;--text3:#a09c94;--rose:#8b2a2a;--r:10px;--sh:0 1px 4px rgba(0,0,0,0.06);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;height:58px;display:flex;align-items:center;gap:12px;}
+.back-btn{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text);padding:8px;}
+.topbar-title{font-family:'Lora',serif;font-weight:700;font-size:1.05rem;}
+.page{max-width:480px;margin:0 auto;padding:20px 16px 100px;}
+.card{background:var(--card);border:1px solid var(--border2);border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:14px;}
+.card-body{padding:16px;}
+.btn{width:100%;padding:14px;border-radius:11px;border:none;background:var(--gold);color:#fff;font-family:'Lora',serif;font-size:.95rem;font-weight:700;cursor:pointer;}
+.photo-meal-btn{padding:10px 8px;border-radius:9px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:.82rem;cursor:pointer;transition:all .15s;}
+.photo-meal-btn.selected{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700;}
+.meal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.preview-zone{width:100%;border-radius:12px;overflow:hidden;background:#1a1916;min-height:180px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.preview-placeholder{text-align:center;color:rgba(255,255,255,0.5);padding:24px;}
+.capture-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.capture-btn{padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:.88rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+.capture-btn-primary{background:var(--gold);color:#fff;}
+.capture-btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border2);}
+.loading{display:none;text-align:center;padding:24px;}
+.result-item{background:rgba(45,79,28,0.04);border:1px solid rgba(45,79,28,0.12);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.result-item.excluded{opacity:.4;}
+.toggle-btn{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;font-size:.75rem;font-weight:700;}
+.qty-input{width:62px;padding:5px 6px;border:1px solid var(--border2);border-radius:7px;font-size:.82rem;text-align:center;background:var(--bg);}
+.error-box{background:rgba(139,42,42,0.07);border:1px solid rgba(139,42,42,0.2);border-radius:9px;padding:12px;color:var(--rose);font-size:.82rem;text-align:center;margin-bottom:14px;display:none;}
+.counter{text-align:center;font-size:.72rem;color:var(--text3);margin-bottom:10px;}
+.section-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;}
+.tip-box{background:var(--sage-l);border-radius:10px;padding:12px;font-size:.78rem;color:var(--sage);line-height:1.55;margin-bottom:14px;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spinner{animation:spin 2s linear infinite;display:inline-block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1916;color:#fff;padding:10px 20px;border-radius:999px;font-size:.82rem;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.on{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">←</button>
+  <span class="topbar-title">📷 Scan Photo IA</span>
+</div>
+
+<div class="page">
+
+  <div class="tip-box">
+    Notre IA analyse votre photo et identifie automatiquement les aliments et leurs quantités. Confirmez les résultats avant de les ajouter à votre journal.
+  </div>
+
+  <!-- Sélecteur de repas -->
+  <div class="section-lbl">Pour quel repas ?</div>
+  <div class="meal-grid" id="meal-selector">
+    <button onclick="selectMeal('breakfast',this)" class="photo-meal-btn">🌅 Petit-déjeuner</button>
+    <button onclick="selectMeal('lunch',this)" class="photo-meal-btn">☀️ Déjeuner</button>
+    <button onclick="selectMeal('snack',this)" class="photo-meal-btn">🍎 Collation</button>
+    <button onclick="selectMeal('dinner',this)" class="photo-meal-btn">🌙 Souper</button>
+    <button onclick="selectMeal('snack2',this)" class="photo-meal-btn" style="grid-column:span 2">🌙 Collation 2</button>
+  </div>
+
+  <!-- Compteur -->
+  <div class="counter" id="counter-lbl"></div>
+
+  <!-- Zone photo -->
+  <div class="preview-zone" id="preview-zone">
+    <div class="preview-placeholder" id="placeholder">
+      <div style="font-size:2.5rem;margin-bottom:8px">🍽️</div>
+      <div style="font-size:.85rem">Prenez ou importez une photo de votre repas</div>
+    </div>
+    <img id="preview-img" style="display:none;width:100%;max-height:260px;object-fit:cover;" />
+  </div>
+
+  <!-- Boutons capture -->
+  <div class="capture-btns" id="capture-btns">
+    <label class="capture-btn capture-btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Caméra
+      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected(this)">
+    </label>
+    <label class="capture-btn capture-btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Galerie
+      <input type="file" accept="image/*" style="display:none" onchange="onPhotoSelected(this)">
+    </label>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading" id="loading">
+    <div style="font-size:2rem;margin-bottom:10px"><span class="spinner">⏳</span></div>
+    <div style="font-weight:600;margin-bottom:4px">Analyse en cours...</div>
+    <div id="loading-step" style="font-size:.78rem;color:var(--text3)">Envoi à l'IA...</div>
+  </div>
+
+  <!-- Erreur -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Résultats -->
+  <div id="results-section" style="display:none">
+    <div class="section-lbl">Aliments détectés — ajustez si nécessaire</div>
+    <div id="results-list"></div>
+    <button class="btn" onclick="confirmFoods()">Ajouter au journal</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="regles-pathologies.js?v=3"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb   = supabase.createClient(SURL, SKEY);
+var USER = null, PROF = null, DB = [];
+
+var selectedMeal    = null;
+var detectedFoods   = [];
+var DAILY_LIMIT     = 5;
+
+// ── INIT ──
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  sb.from('profiles').select('*').eq('id',USER.id).single().then(function(pr){
+    PROF = pr.data||{};
+    initMealPreselect();
+    updateCounter();
+  });
+  // Charger Ciqual
+  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
+    DB = raw.map(function(r){
+      return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
+        ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
+        fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
+    });
+    sb.from('aliments_custom').select('*').then(function(rc){
+      if(rc.data) DB = DB.concat(rc.data.map(function(c){
+        return {code:'custom_'+c.id,nom:c.nom,kcal:c.kcal,prot:c.prot,gluc:c.gluc,lip:c.lip,
+          ags:c.ags||0,mono:0,o3a:0,o3e:0,o3d:0,fer:c.fer||0,cal:c.cal||0,pot:c.pot||0,
+          fibres:c.fibres||0,mg:c.mg||0,na:c.na||0,zn:c.zn||0,sucres:c.sucres||0};
+      }));
+    });
+  }).catch(function(){});
+});
+
+function initMealPreselect(){
+  var h = new Date().getHours();
+  var m = h<10?'breakfast':h<14?'lunch':h<17?'snack':'dinner';
+  var btn = document.querySelector('.photo-meal-btn[onclick*="\''+m+'\'"]');
+  if(btn) selectMeal(m, btn);
+}
+
+function selectMeal(meal, btn){
+  selectedMeal = meal;
+  document.querySelectorAll('.photo-meal-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+}
+
+function getScanCount(){
+  var t = new Date().toISOString().slice(0,10);
+  return parseInt(localStorage.getItem('photo_scans_'+t)||'0');
+}
+function incScanCount(){
+  var t = new Date().toISOString().slice(0,10);
+  localStorage.setItem('photo_scans_'+t, getScanCount()+1);
+}
+function updateCounter(){
+  var isAdmin = PROF && PROF.role==='admin';
+  var el = document.getElementById('counter-lbl');
+  if(!el) return;
+  el.textContent = isAdmin ? 'Admin — scans illimités'
+    : getScanCount()+' / '+DAILY_LIMIT+' scans utilisés aujourd\'hui';
+}
+
+async function onPhotoSelected(input){
+  var file = input.files[0]; if(!file) return;
+  var isAdmin = PROF && PROF.role==='admin';
+  if(!isAdmin && getScanCount() >= DAILY_LIMIT){
+    showError('Limite de '+DAILY_LIMIT+' scans atteinte — revenez demain !');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = async function(e){
+    var orig = e.target.result;
+    document.getElementById('preview-img').src = orig;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('capture-btns').style.display = 'none';
+    document.getElementById('error-box').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    var steps = ['Envoi à l\'IA...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+    var si = 0;
+    var iv = setInterval(function(){
+      si = Math.min(si+1, steps.length-1);
+      var el = document.getElementById('loading-step');
+      if(el) el.textContent = steps[si];
+    }, 2000);
+    var compressed = await compressImage(orig, 512, 0.6);
+    var base64 = compressed.split(',')[1];
+    try{
+      var session = await sb.auth.getSession();
+      var token = session.data.session.access_token;
+      var res = await fetch(SURL+'/functions/v1/dynamic-endpoint',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({image_base64:base64, mime_type:'image/jpeg'})
+      });
+      clearInterval(iv);
+      document.getElementById('loading').style.display = 'none';
+      if(!res.ok){ showError('Erreur serveur ('+res.status+') — réessayez.'); resetCapture(); return; }
+      var data = await res.json();
+      if(!data.aliments||!data.aliments.length){ showError('Aucun aliment détecté. Essayez avec une image plus nette.'); resetCapture(); return; }
+      incScanCount();
+      updateCounter();
+      showResults(data.aliments);
+    }catch(err){
+      clearInterval(iv);
+      document.getElementById('loading').style.display = 'none';
+      showError('Erreur : '+err.message);
+      resetCapture();
+    }
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function resetCapture(){
+  document.getElementById('capture-btns').style.display = 'grid';
+}
+
+function compressImage(dataUrl, maxPx, quality){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){
+      var w=img.width, h=img.height;
+      if(w>maxPx||h>maxPx){ if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;} }
+      var c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',quality));
+    };
+    img.src=dataUrl;
+  });
+}
+
+function showError(msg){
+  var el = document.getElementById('error-box');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function showResults(aliments){
+  detectedFoods = aliments.map(function(a,i){ return {id:i,nom:a.nom,qty:a.qty,included:true}; });
+  renderResults();
+  document.getElementById('results-section').style.display = 'block';
+}
+
+function renderResults(){
+  var list = document.getElementById('results-list');
+  list.innerHTML = detectedFoods.map(function(f){
+    return '<div class="result-item'+(f.included?'':' excluded')+'">'
+      +'<button class="toggle-btn" onclick="toggleFood('+f.id+')" style="background:'+(f.included?'var(--gold)':'rgba(0,0,0,0.1)')+';color:#fff">'+(f.included?'✓':'✕')+'</button>'
+      +'<div style="flex:1"><div style="font-size:.88rem;font-weight:600">'+esc(f.nom)+'</div></div>'
+      +'<input class="qty-input" type="number" value="'+f.qty+'" min="5" max="1000" onchange="updateQty('+f.id+',this.value)"> <span style="font-size:.75rem;color:var(--text3)">g</span>'
+      +'</div>';
+  }).join('');
+}
+
+function toggleFood(id){
+  var f = detectedFoods.find(function(x){return x.id===id;});
+  if(f) f.included = !f.included;
+  renderResults();
+}
+function updateQty(id,val){
+  var f = detectedFoods.find(function(x){return x.id===id;});
+  if(f) f.qty = parseFloat(val)||100;
+}
+
+async function confirmFoods(){
+  var toAdd = detectedFoods.filter(function(f){return f.included;});
+  if(!toAdd.length){toast('Sélectionnez au moins un aliment');return;}
+  if(!selectedMeal){toast('Choisissez un repas d\'abord');return;}
+  var mealLabel = {breakfast:'petit-déjeuner',lunch:'déjeuner',snack:'collation',dinner:'souper',snack2:'collation 2'};
+  var added=0, notFound=[];
+  for(var i=0;i<toAdd.length;i++){
+    var item = toAdd[i];
+    var food = findFood(item.nom);
+    if(food){
+      await sb.from('journal').insert({
+        user_id: USER.id,
+        repas: selectedMeal,
+        aliment: food.nom,
+        quantite: item.qty,
+        date: new Date().toISOString().slice(0,10),
+        kcal: food.kcal*item.qty/100,
+        proteines: food.prot*item.qty/100,
+        glucides: food.gluc*item.qty/100,
+        lipides: food.lip*item.qty/100,
+        food_kcal_100: food.kcal,
+        food_prot_100: food.prot,
+        food_gluc_100: food.gluc,
+        food_lip_100: food.lip,
+        food_ags_100: food.ags||0,
+        food_fibres_100: food.fibres||0,
+        food_code: food.code
+      });
+      added++;
+    } else { notFound.push(item.nom); }
+  }
+  if(added) toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au '+(mealLabel[selectedMeal]||selectedMeal));
+  if(notFound.length) toast('⚠️ Non trouvé : '+notFound.join(', '));
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 1500);
+}
+
+function tok(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(Boolean); }
+function scoreFn(qt,dt,dnom){
+  var s=0;
+  qt.forEach(function(q){ if(dt.indexOf(q)>=0) s+=10; dt.forEach(function(d){ if(d.startsWith(q)&&d!==q) s+=3; }); });
+  if(dnom.toLowerCase().includes(qt.join(' '))) s+=20;
+  return s;
+}
+function findFood(nom){
+  if(!DB.length) return null;
+  var qt = tok(nom);
+  var best=null, bestScore=0;
+  DB.forEach(function(d){
+    var s = scoreFn(qt, tok(d.nom), d.nom);
+    if(s>bestScore){bestScore=s;best=d;}
+  });
+  return (bestScore>=5)?best:null;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+var toastTimer;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('on');},3000);
+}
+</script>
+</body>
+</html>
