@@ -286,34 +286,48 @@ async function confirmFoods(){
   if(!selectedMeal){toast('Choisissez un repas d\'abord');return;}
   var mealLabel = {breakfast:'petit-déjeuner',lunch:'déjeuner',snack:'collation',dinner:'souper',snack2:'collation 2'};
   var added=0, notFound=[];
+  var today = new Date().toISOString().slice(0,10);
   for(var i=0;i<toAdd.length;i++){
     var item = toAdd[i];
     var food = findFood(item.nom);
     if(food){
-      await sb.from('journal').insert({
+      var qty = item.qty;
+      var ins = {
         user_id: USER.id,
+        date: today,
         repas: selectedMeal,
         aliment: food.nom,
-        quantite: item.qty,
-        date: new Date().toISOString().slice(0,10),
-        kcal: food.kcal*item.qty/100,
-        proteines: food.prot*item.qty/100,
-        glucides: food.gluc*item.qty/100,
-        lipides: food.lip*item.qty/100,
-        food_kcal_100: food.kcal,
-        food_prot_100: food.prot,
-        food_gluc_100: food.gluc,
-        food_lip_100: food.lip,
+        quantite: qty,
+        kcal: (food.kcal||0)*qty/100,
+        proteines: (food.prot||0)*qty/100,
+        glucides: (food.gluc||0)*qty/100,
+        lipides: (food.lip||0)*qty/100,
+        food_code: food.code||null,
+        food_source: food._source||'ciqual',
+        food_kcal_100: food.kcal||0,
+        food_prot_100: food.prot||0,
+        food_gluc_100: food.gluc||0,
+        food_lip_100: food.lip||0,
         food_ags_100: food.ags||0,
+        food_o3a_100: food.o3a||0,
+        food_o3e_100: food.o3e||0,
+        food_o3d_100: food.o3d||0,
+        food_fer_100: food.fer||0,
+        food_cal_100: food.cal||0,
+        food_pot_100: food.pot||0,
         food_fibres_100: food.fibres||0,
-        food_code: food.code
-      });
-      added++;
+        food_mg_100: food.mg||0,
+        food_na_100: food.na||0,
+        food_zn_100: food.zn||0
+      };
+      var r = await sb.from('journal').insert(ins);
+      if(r.error){ console.error('Insert error:', r.error); notFound.push(food.nom+' (erreur)'); }
+      else added++;
     } else { notFound.push(item.nom); }
   }
   if(added) toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au '+(mealLabel[selectedMeal]||selectedMeal));
   if(notFound.length) toast('⚠️ Non trouvé : '+notFound.join(', '));
-  setTimeout(function(){ window.location.href='dashboard.html'; }, 1500);
+  setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
 }
 
 function tok(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(Boolean); }
