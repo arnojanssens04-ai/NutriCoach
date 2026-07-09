@@ -2429,8 +2429,8 @@ async function onPhotoSelected(input){
       var base64 = compressedDataUrl.split(',')[1];
       var mimeType = 'image/jpeg';
 
-      // Animation des étapes pendant l'attente l'IA
-      var steps = ['Envoi à l'IA...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+      // Animation des étapes pendant le chargement
+      var steps = ['Analyse en cours...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
       var stepIdx = 0;
       var stepEl = document.getElementById('photo-loading-step');
       if(stepEl) stepEl.textContent = steps[0];
@@ -2469,7 +2469,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la configuration de l'IA dans l'app.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et réessayez.');
       console.error('photo scan error:', err);
     }
   };
