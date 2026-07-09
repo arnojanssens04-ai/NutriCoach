@@ -882,7 +882,7 @@ body {
       <div class="w-slide" data-slide="1">
         <div class="w-emoji">📸</div>
         <h2 class="w-title">Nouveau — Photo IA</h2>
-        <p class="w-txt">Prenez une photo de votre repas et <b>Gemini</b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
+        <p class="w-txt">Prenez une photo de votre repas et <b>L'app</b> identifie automatiquement les aliments et leurs quantités. Plus besoin de tout chercher manuellement — confirmez, ajustez si besoin, et c'est ajouté à votre journal.</p>
       </div>
       <div class="w-slide" data-slide="2">
         <div class="w-emoji">📊</div>
@@ -1117,9 +1117,9 @@ var CHANGELOG = [
     '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
   ]},
   {v:'0.3.0', date:'8 juillet 2026', items:[
-    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, Gemini identifie automatiquement les aliments et estime les quantités',
+    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, l'app identifie automatiquement les aliments et estime les quantités',
     '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse Gemini — étapes affichées en temps réel',
+    '⏱️ Animation de chargement pendant l\'analyse — étapes affichées en temps réel',
     '📊 Limite de 5 scans photo par jour',
     '🔢 Calories affichées en premier sur le tableau de bord',
     '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
@@ -2443,7 +2443,7 @@ async function onPhotoSelected(input){
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
 
-      var res = await fetch(SURL+'/functions/v1/analyser-photo', {
+      var res = await fetch(SURL+'/functions/v1/dynamic-endpoint', {
         method: 'POST',
         headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
@@ -2469,7 +2469,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé Gemini est bien ajoutée dans Supabase.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que la clé magique est bien ajoutée.');
       console.error('photo scan error:', err);
     }
   };
