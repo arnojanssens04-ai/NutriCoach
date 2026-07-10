@@ -280,6 +280,14 @@ function updateQty(id,val){
   if(f) f.qty = parseFloat(val)||100;
 }
 
+// Convertit les nombres Ciqual (format français avec virgule) en nombres JS
+// Ex: "2,44" → 2.44, null → 0, undefined → 0
+function pN(v){
+  if(v===null||v===undefined||v==='') return 0;
+  if(typeof v==='number') return isNaN(v)?0:v;
+  return parseFloat(String(v).replace(',','.'))||0;
+}
+
 async function confirmFoods(){
   var toAdd = detectedFoods.filter(function(f){return f.included;});
   if(!toAdd.length){toast('Sélectionnez au moins un aliment');return;}
@@ -300,23 +308,23 @@ async function confirmFoods(){
       repas:     selectedMeal,
       aliment:   food.nom,
       quantite:  qty,
-      kcal:      Math.round((food.kcal||0)*qty/100*10)/10,
-      proteines: Math.round((food.prot||0)*qty/100*10)/10,
-      glucides:  Math.round((food.gluc||0)*qty/100*10)/10,
-      lipides:   Math.round((food.lip||0)*qty/100*10)/10,
-      food_code:      food.code||null,
-      food_kcal_100:  food.kcal||0,
-      food_prot_100:  food.prot||0,
-      food_gluc_100:  food.gluc||0,
-      food_lip_100:   food.lip||0,
-      food_ags_100:   food.ags||0,
-      food_fibres_100:food.fibres||0,
-      food_fer_100:   food.fer||0,
-      food_cal_100:   food.cal||0,
-      food_pot_100:   food.pot||0,
-      food_mg_100:    food.mg||0,
-      food_na_100:    food.na||0,
-      food_zn_100:    food.zn||0
+      kcal:      Math.round(pN(food.kcal)*qty/100*10)/10,
+      proteines: Math.round(pN(food.prot)*qty/100*10)/10,
+      glucides:  Math.round(pN(food.gluc)*qty/100*10)/10,
+      lipides:   Math.round(pN(food.lip)*qty/100*10)/10,
+      food_code:       food.code||null,
+      food_kcal_100:   pN(food.kcal),
+      food_prot_100:   pN(food.prot),
+      food_gluc_100:   pN(food.gluc),
+      food_lip_100:    pN(food.lip),
+      food_ags_100:    pN(food.ags),
+      food_fibres_100: pN(food.fibres),
+      food_fer_100:    pN(food.fer),
+      food_cal_100:    pN(food.cal),
+      food_pot_100:    pN(food.pot),
+      food_mg_100:     pN(food.mg),
+      food_na_100:     pN(food.na),
+      food_zn_100:     pN(food.zn)
     };
 
     var r = await sb.from('journal').insert(ins);
