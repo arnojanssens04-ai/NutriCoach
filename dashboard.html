@@ -1119,17 +1119,20 @@ var CHANGELOG = [
   {v:'0.3.0', date:'8 juillet 2026', items:[
     '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, notre IA identifie automatiquement les aliments et estime les quantités',
     '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse IA — étapes affichées en temps réel',
+    '⏱️ Animation de chargement pendant l\'analyse — étapes affichées en temps réel',
     '📊 Limite de 5 scans photo par jour',
     '🔢 Calories affichées en premier sur le tableau de bord',
     '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
+  ]},
+  {v:'0.4.0', date:'10 juillet 2026', items:[
+    '📷 Scan Photo IA amélioré — meilleure reconnaissance des aliments et estimation des quantités réelles visibles',
+    '🔧 Corrections de bugs d\'enregistrement dans le journal depuis la Photo IA',
+    '🧠 Score Santé cliquable — cliquez pour comprendre pourquoi vous avez ce score et comment atteindre 100',
+    '🌿 Qualité nutritionnelle revue — 9 critères complets (protéines, fibres, légumes, diversité, graisses, glucides, sucres, ultra-transformés, alcool)',
+    '🍽️ 5ème repas disponible pour tous (Collation 2)',
+    '🤖 Modèle IA mis à jour pour une meilleure stabilité'
   ]}
 ];
-   {v:'0.4.0', date:'10 juillet 2026', items:[
-    '📷 Mise à jour du Photos IA et corrections de plusieurs bugs',
-  ]}
-];
-    
 
 // Comparaison de versions façon "1.2.3" — plus robuste qu'un simple
 // nombre, pour pouvoir continuer à versionner proprement par la suite.
@@ -2348,8 +2351,8 @@ function pickRes(i){
 }
 
 // ── SCAN DE CODE-BARRES ──
-// ── SCAN PHOTO IA (l'IA) ────────────────────────────────────────────────
-// Workflow : photo → Edge Function analyser-photo → l'IA identifie les
+// ── SCAN PHOTO IA (Gemini) ────────────────────────────────────────────────
+// Workflow : photo → Edge Function analyser-photo → Gemini identifie les
 // aliments → liste de confirmation → recherche Ciqual pour chaque aliment
 // confirmé → ajout au journal avec valeurs vérifiées (pas estimées).
 
@@ -2434,7 +2437,7 @@ async function onPhotoSelected(input){
       var base64 = compressedDataUrl.split(',')[1];
       var mimeType = 'image/jpeg';
 
-      // Animation des étapes pendant le chargement
+      // Animation des étapes pendant l'attente Gemini
       var steps = ['Analyse en cours...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
       var stepIdx = 0;
       var stepEl = document.getElementById('photo-loading-step');
@@ -2448,7 +2451,7 @@ async function onPhotoSelected(input){
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
 
-      var res = await fetch(SURL+'/functions/v1/dynamic-endpoint', {
+      var res = await fetch(SURL+'/functions/v1/analyser-photo', {
         method: 'POST',
         headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
         body: JSON.stringify({image_base64: base64, mime_type: mimeType})
@@ -2459,7 +2462,7 @@ async function onPhotoSelected(input){
 
       if(!res.ok){
         var errText = await res.text();
-        showPhotoError('Erreur serveur ('+res.status+') — vérifiez votre connexion et réessayez.');
+        showPhotoError('Erreur serveur ('+res.status+') — vérifiez que la clé GEMINI_API_KEY est bien configurée dans Supabase.');
         console.error('analyser-photo error:', errText);
         return;
       }
@@ -2474,7 +2477,7 @@ async function onPhotoSelected(input){
     }catch(err){
       clearInterval(stepInterval);
       document.getElementById('photo-loading').style.display='none';
-      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et réessayez.');
+      showPhotoError('Erreur : '+err.message+' — vérifiez votre connexion et que votre connexion et réessayez.');
       console.error('photo scan error:', err);
     }
   };
@@ -2584,7 +2587,8 @@ function findFoodByName(nom){
 // Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
 // dans la page Journal et sur le bon repas avant d'ouvrir la modale.
 function openPhotoScannerFromNav(){
-  window.location.href = 'photo-ia.html';
+  goPage('journal');
+  openPhotoScanner();
 }
 
 function handleScanNav(){
