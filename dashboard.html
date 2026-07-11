@@ -705,7 +705,7 @@ body {
     <button onclick="handleScanNav()" title="Scanner un code-barres" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
     </button>
-    <button onclick="openPhotoScanner()" title="Scanner un plat en photo" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
+    <button onclick="goToPhotoIA()" title="Scanner un plat en photo" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     </button>
   </div>
@@ -770,78 +770,6 @@ body {
         <a href="cgu.html" style="color:var(--text3);text-decoration:underline">CGU</a>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- PHOTO SCANNER -->
-<div id="photo-ov" style="position:fixed;inset:0;background:rgba(22,36,27,0.96);z-index:998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px">
-  <div style="width:100%;max-width:400px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="color:#fff;font-family:'Lora',serif;font-size:1.1rem;font-weight:700">📷 Photo du repas</span>
-      <button onclick="closePhotoScanner()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.1rem;cursor:pointer">✕</button>
-    </div>
-
-    <!-- Sélecteur de repas -->
-    <div style="margin-bottom:14px">
-      <div style="color:rgba(255,255,255,0.7);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Pour quel repas ?</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="photo-meal-selector">
-        <button onclick="selectPhotoMeal('breakfast',this)" class="photo-meal-btn">🌅 Petit-déjeuner</button>
-        <button onclick="selectPhotoMeal('lunch',this)" class="photo-meal-btn">☀️ Déjeuner</button>
-        <button onclick="selectPhotoMeal('snack',this)" class="photo-meal-btn">🍎 Collation</button>
-        <button onclick="selectPhotoMeal('dinner',this)" class="photo-meal-btn">🌙 Souper</button>
-      </div>
-    </div>
-
-    <!-- Compteur scans -->
-    <div id="photo-scan-counter" style="text-align:center;font-size:.72rem;color:rgba(255,255,255,0.4);margin-bottom:10px"></div>
-
-    <!-- Zone de prévisualisation / capture -->
-    <div id="photo-preview-zone" style="width:100%;border-radius:14px;overflow:hidden;background:#000;min-height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-      <div id="photo-placeholder" style="text-align:center;color:rgba(255,255,255,0.5);padding:30px">
-        <div style="font-size:2.5rem;margin-bottom:8px">🍽️</div>
-        <div style="font-size:.85rem">Prenez une photo de votre repas<br>ou galerie</div>
-      </div>
-      <img id="photo-preview-img" style="display:none;width:100%;max-height:280px;object-fit:cover;border-radius:14px" />
-    </div>
-
-    <!-- Boutons de capture -->
-    <div id="photo-capture-btns" style="display:flex;gap:10px;margin-bottom:14px">
-      <label style="flex:1;padding:12px;background:var(--gold);border-radius:11px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Caméra
-        <input type="file" accept="image/*" capture="environment" id="photo-camera-input" style="display:none" onchange="onPhotoSelected(this)">
-      </label>
-      <label style="flex:1;padding:12px;background:rgba(255,255,255,0.12);border-radius:11px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(255,255,255,0.2)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        Galerie
-        <input type="file" accept="image/*" id="photo-gallery-input" style="display:none" onchange="onPhotoSelected(this)">
-      </label>
-    </div>
-
-    <!-- Analyse en cours -->
-    <div id="photo-loading" style="display:none;text-align:center;color:#fff;padding:20px">
-      <div style="margin-bottom:16px">
-        <svg width="60" height="60" viewBox="0 0 60 60" style="animation:spin 2s linear infinite">
-          <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
-          <circle cx="30" cy="30" r="26" fill="none" stroke="var(--gold)" stroke-width="4"
-            stroke-dasharray="40 124" stroke-linecap="round" transform="rotate(-90 30 30)"/>
-        </svg>
-      </div>
-      <div style="font-family:'Lora',serif;font-size:1rem;font-weight:700;margin-bottom:6px">Analyse en cours...</div>
-      <div id="photo-loading-step" style="font-size:.78rem;opacity:.6;min-height:18px">Compression de l'image</div>
-    </div>
-
-    <!-- Résultats — liste de confirmation -->
-    <div id="photo-results" style="display:none">
-      <div style="color:rgba(255,255,255,0.7);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Aliments détectés — ajustez si nécessaire</div>
-      <div id="photo-results-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:14px"></div>
-      <button onclick="confirmPhotoFoods()" style="width:100%;padding:13px;border-radius:11px;border:none;background:var(--gold);color:#fff;font-family:'Lora',serif;font-size:.95rem;font-weight:700;cursor:pointer">
-        Ajouter au journal
-      </button>
-    </div>
-
-    <!-- Erreur -->
-    <div id="photo-error" style="display:none;background:rgba(139,42,42,0.3);border:1px solid rgba(139,42,42,0.5);border-radius:9px;padding:12px;color:#ffaaaa;font-size:.83rem;text-align:center"></div>
   </div>
 </div>
 
@@ -2612,9 +2540,15 @@ function findFoodByName(nom){
 
 // Ouvre le scanner photo depuis la barre de navigation — s'assure d'être
 // dans la page Journal et sur le bon repas avant d'ouvrir la modale.
+// Toute la logique photo IA est dans photo-ia.html (page dédiée).
+// On redirige systématiquement vers cette page pour éviter les problèmes
+// CORS d'iOS Safari avec les requêtes depuis une modale overlay.
+function goToPhotoIA(){
+  var meal = activeMeal || 'lunch';
+  window.location.href = 'photo-ia.html?meal='+encodeURIComponent(meal);
+}
 function openPhotoScannerFromNav(){
-  goPage('journal');
-  openPhotoScanner();
+  window.location.href = 'photo-ia.html';
 }
 
 function handleScanNav(){
