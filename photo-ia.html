@@ -103,7 +103,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div id="results-section" style="display:none">
     <div class="section-lbl">Aliments détectés — ajustez si nécessaire</div>
     <div id="results-list"></div>
-    <button class="btn" onclick="confirmFoods()">Ajouter au journal</button>
+    <button class="btn" id="confirm-btn" onclick="confirmFoods()">Ajouter au journal</button>
   </div>
 
 </div>
@@ -117,10 +117,64 @@ var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb   = supabase.createClient(SURL, SKEY);
 var USER = null, PROF = null, DB = [];
+var DB_READY = false; // flag — jamais null tant que le chargement n'est pas terminé
 
 var selectedMeal    = null;
 var detectedFoods   = [];
 var DAILY_LIMIT     = 5;
+
+// ── Noms courants utilisés par l'IA qui diffèrent des noms Ciqual ──
+// L'IA retourne "Brocoli" mais Ciqual a "Brocoli, cuit à l'eau" — ces
+// alias forcent le bon résultat sans toucher à l'algorithme général.
+var FOOD_ALIASES = {
+  'brocoli':      'brocoli',
+  'brocolis':     'brocoli',
+  'courgette':    'courgette',
+  'courgettes':   'courgette',
+  'carotte':      'carotte',
+  'carottes':     'carotte',
+  'epinard':      'epinard',
+  'epinards':     'epinard',
+  'haricot vert': 'haricot vert',
+  'haricots verts':'haricot vert',
+  'tomate':       'tomate',
+  'tomates':      'tomate',
+  'champignon':   'champignon',
+  'champignons':  'champignon',
+  'poivron':      'poivron',
+  'poivrons':     'poivron',
+  'salade':       'salade',
+  'chou fleur':   'chou-fleur',
+  'chou-fleur':   'chou-fleur',
+  'poulet':       'poulet',
+  'blanc de poulet':'blanc de poulet',
+  'riz':          'riz blanc',
+  'riz blanc':    'riz blanc',
+  'pates':        'pates',
+  'pate':         'pates',
+  'huile':        'huile d olive',
+  'huile de cuisson': 'huile d olive',
+  'huile d olive':'huile d olive',
+  'oeuf':         'oeuf',
+  'oeufs':        'oeuf',
+  'saumon':       'saumon',
+  'thon':         'thon',
+  'cabillaud':    'cabillaud',
+  'colin':        'colin',
+  'pomme de terre':'pomme de terre',
+  'pommes de terre':'pomme de terre',
+  'lentilles':    'lentille',
+  'lentille':     'lentille',
+  'pois chiche':  'pois chiche',
+  'pois chiches': 'pois chiche',
+  'yaourt':       'yaourt',
+  'fromage blanc':'fromage blanc',
+  'pain':         'pain',
+  'pain complet': 'pain complet',
+  'quinoa':       'quinoa',
+  'beurre':       'beurre',
+  'fromage':      'emmental'
+};
 
 // ── INIT ──
 sb.auth.getSession().then(function(r){
@@ -131,22 +185,38 @@ sb.auth.getSession().then(function(r){
     initMealPreselect();
     updateCounter();
   });
-  // Charger Ciqual
+  loadDB();
+});
+
+function loadDB(){
+  // Affiche un indicateur pendant le chargement de la base
+  var btn = document.getElementById('confirm-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Chargement de la base...'; btn.style.opacity='0.6'; }
+
   fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
         ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
         fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
     });
-    sb.from('aliments_custom').select('*').then(function(rc){
-      if(rc.data) DB = DB.concat(rc.data.map(function(c){
-        return {code:'custom_'+c.id,nom:c.nom,kcal:c.kcal,prot:c.prot,gluc:c.gluc,lip:c.lip,
-          ags:c.ags||0,mono:0,o3a:0,o3e:0,o3d:0,fer:c.fer||0,cal:c.cal||0,pot:c.pot||0,
-          fibres:c.fibres||0,mg:c.mg||0,na:c.na||0,zn:c.zn||0,sucres:c.sucres||0};
-      }));
-    });
-  }).catch(function(){});
-});
+    return sb.from('aliments_custom').select('*');
+  }).then(function(rc){
+    if(rc && rc.data) DB = DB.concat(rc.data.map(function(c){
+      return {code:'custom_'+c.id,nom:c.nom,kcal:c.kcal,prot:c.prot,gluc:c.gluc,lip:c.lip,
+        ags:c.ags||0,mono:0,o3a:0,o3e:0,o3d:0,fer:c.fer||0,cal:c.cal||0,pot:c.pot||0,
+        fibres:c.fibres||0,mg:c.mg||0,na:c.na||0,zn:c.zn||0,sucres:c.sucres||0};
+    }));
+    DB_READY = true;
+    var btn = document.getElementById('confirm-btn');
+    if(btn){ btn.disabled=false; btn.textContent='Ajouter au journal'; btn.style.opacity='1'; }
+    console.log('[Cap Santé] Ciqual chargé : '+DB.length+' aliments');
+  }).catch(function(e){
+    console.warn('[Cap Santé] Erreur chargement Ciqual:', e);
+    DB_READY = true; // on autorise quand même pour ne pas bloquer
+    var btn = document.getElementById('confirm-btn');
+    if(btn){ btn.disabled=false; btn.textContent='Ajouter au journal'; btn.style.opacity='1'; }
+  });
+}
 
 function initMealPreselect(){
   var h = new Date().getHours();
@@ -343,22 +413,56 @@ async function confirmFoods(){
   if(added && !errors.length) setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
 }
 
-function tok(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(Boolean); }
-function scoreFn(qt,dt,dnom){
-  var s=0;
-  qt.forEach(function(q){ if(dt.indexOf(q)>=0) s+=10; dt.forEach(function(d){ if(d.startsWith(q)&&d!==q) s+=3; }); });
-  if(dnom.toLowerCase().includes(qt.join(' '))) s+=20;
-  return s;
+function tok(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
 }
+
+function scoreFn(qt, dt, dnom){
+  var s = 0;
+  var dnorm = dnom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  qt.forEach(function(q){
+    if(q.length < 2) return;
+    if(dt.indexOf(q) >= 0) s += 10;                          // mot exact
+    dt.forEach(function(d){
+      if(d.startsWith(q) && d !== q) s += 5;                 // préfixe
+      if(d.indexOf(q) >= 0 && d !== q) s += 2;               // contenu
+    });
+  });
+  if(dnorm.indexOf(qt.join(' ')) >= 0) s += 20;              // phrase entière
+  // Pénalité longueur — un nom très long avec 1 seul mot en commun est moins bon
+  var ratio = Math.min(1, qt.length / Math.max(1, dt.length));
+  return s * (0.5 + 0.5 * ratio);
+}
+
 function findFood(nom){
   if(!DB.length) return null;
+  var nomNorm = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+
+  // 1. Alias direct — cas connus où l'IA retourne un nom qui diffère de Ciqual
+  var aliasKey = FOOD_ALIASES[nomNorm];
+  if(aliasKey){
+    var aliasTokens = tok(aliasKey);
+    var aliasResult = null, aliasScore = 0;
+    DB.forEach(function(d){
+      var s = scoreFn(aliasTokens, tok(d.nom), d.nom);
+      if(s > aliasScore){ aliasScore = s; aliasResult = d; }
+    });
+    if(aliasResult && aliasScore >= 3) return aliasResult;
+  }
+
+  // 2. Recherche normale sur le nom original
   var qt = tok(nom);
-  var best=null, bestScore=0;
+  var best = null, bestScore = 0;
   DB.forEach(function(d){
     var s = scoreFn(qt, tok(d.nom), d.nom);
-    if(s>bestScore){bestScore=s;best=d;}
+    if(s > bestScore){ bestScore = s; best = d; }
   });
-  return (bestScore>=5)?best:null;
+
+  // Seuil bas (3) car l'IA retourne des noms variés mais le mot-clé principal
+  // est presque toujours présent (ex: "Brocoli grillé" → "Brocoli, cuit à l'eau")
+  return (bestScore >= 3) ? best : null;
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
