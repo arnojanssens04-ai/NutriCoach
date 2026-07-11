@@ -219,10 +219,17 @@ function loadDB(){
 }
 
 function initMealPreselect(){
+  // Priorité 1 : repas passé depuis dashboard.html via ?meal=xxx
+  var urlMeal = new URLSearchParams(window.location.search).get('meal');
+  if(urlMeal){
+    var btn = document.querySelector('.photo-meal-btn[onclick*="\''+urlMeal+'\'"]');
+    if(btn){ selectMeal(urlMeal, btn); return; }
+  }
+  // Priorité 2 : heure actuelle
   var h = new Date().getHours();
   var m = h<10?'breakfast':h<14?'lunch':h<17?'snack':'dinner';
-  var btn = document.querySelector('.photo-meal-btn[onclick*="\''+m+'\'"]');
-  if(btn) selectMeal(m, btn);
+  var btn2 = document.querySelector('.photo-meal-btn[onclick*="\''+m+'\'"]');
+  if(btn2) selectMeal(m, btn2);
 }
 
 function selectMeal(meal, btn){
