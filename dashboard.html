@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriCoach — Dashboard</title>
+<title>Cap Santé — Tableau de bord</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -510,7 +510,33 @@ body {
 
 <!-- TOPBAR -->
 <header class="topbar">
-  <div class="t-logo">Nutri<span>Coach</span></div>
+  <div class="t-logo" style="display:flex;align-items:center;gap:8px">
+    <svg width="30" height="30" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg-t" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#3d6128"/>
+          <stop offset="100%" stop-color="#1e3a10"/>
+        </radialGradient>
+      </defs>
+      <circle cx="60" cy="60" r="58" fill="url(#bg-t)"/>
+      <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <line x1="60" y1="8"  x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="8"  y1="60" x2="18" y2="60"  stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+      <text x="60" y="29" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Georgia,serif" font-size="8" font-weight="700">N</text>
+      <rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>
+      <rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>
+      <path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>
+      <circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+      <circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>
+    </svg>
+    Cap<span> Santé</span>
+  </div>
   <div class="t-right">
     <a href="admin.html" id="admin-btn" style="display:none;font-size:.68rem;background:rgba(201,122,110,0.12);color:var(--rose);border:1px solid rgba(201,122,110,0.3);padding:5px 11px;border-radius:7px;text-decoration:none;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">⚙ Admin</a>
     <span class="t-greeting" id="t-greet"></span>
@@ -1095,7 +1121,7 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 var CHANGELOG = [
   {v:'0.1.1', date:'26 juin 2026', items:[
     'Le site web fonctionne désormais également sur téléphone / Tablette, tout est désormais cliquable',
-    'Chat direct avec l\'équipe NutriCoach pour toute question',
+    'Chat direct avec l\'équipe Cap Santé pour toute question',
     'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée',
     'Nouveau Score Santé, plus précis et qui reflète mieux votre alimentation réelle du jour',
     'Bilan hebdomadaire : les réponses (sommeil, digestion, ressenti...) sont désormais mieux adaptées à chaque question'
@@ -1147,7 +1173,7 @@ function compareVersions(a,b){
 
 function checkChangelog(){
   var latest = CHANGELOG[CHANGELOG.length-1];
-  var seen = localStorage.getItem('nutricoach_changelog_seen')||'0';
+  var seen = localStorage.getItem('capsante_changelog_seen')||'0';
   if(compareVersions(latest.v, seen) <= 0) return;
   var unseen = CHANGELOG.filter(function(c){ return compareVersions(c.v, seen)>0; });
   var ov = document.createElement('div');
@@ -1159,11 +1185,11 @@ function checkChangelog(){
       return '<div style="margin-bottom:14px"><div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">'+c.date+'</div>'
         +'<ul style="padding-left:18px;margin:0">'+c.items.map(function(it){ return '<li style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:4px">'+it+'</li>'; }).join('')+'</ul></div>';
     }).join('')
-    +'<div style="font-size:.85rem;color:var(--text2);margin:16px 0 4px;text-align:center">Bonne journée sur NutriCoach 👋</div>'
+    +'<div style="font-size:.85rem;color:var(--text2);margin:16px 0 4px;text-align:center">Bonne journée sur Cap Santé 👋</div>'
     +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px">Compris !</button>'
     +'</div>';
   document.body.appendChild(ov);
-  localStorage.setItem('nutricoach_changelog_seen', latest.v);
+  localStorage.setItem('capsante_changelog_seen', latest.v);
 }
 
 // ── AUTH CHECK ──
@@ -1864,9 +1890,9 @@ async function computeStreak(){
 }
 
 var MILESTONE_DEFS = [
-  {id:'usage_1week', check:function(p,ctx){ return ctx.daysSinceSignup>=7; }, icon:'🎉', title:'1 semaine avec NutriCoach !', txt:'Une semaine de suivi, c\'est un excellent début. Continuez ainsi !'},
-  {id:'usage_1month', check:function(p,ctx){ return ctx.daysSinceSignup>=30; }, icon:'🏅', title:'1 mois avec NutriCoach !', txt:'Un mois de constance — c\'est exactement ce qui fait la différence sur la durée.'},
-  {id:'usage_3months', check:function(p,ctx){ return ctx.daysSinceSignup>=90; }, icon:'🏆', title:'3 mois avec NutriCoach !', txt:'Un vrai cap : la plupart des bonnes habitudes se construisent sur cette durée.'},
+  {id:'usage_1week', check:function(p,ctx){ return ctx.daysSinceSignup>=7; }, icon:'🎉', title:'1 semaine avec Cap Santé !', txt:'Une semaine de suivi, c\'est un excellent début. Continuez ainsi !'},
+  {id:'usage_1month', check:function(p,ctx){ return ctx.daysSinceSignup>=30; }, icon:'🏅', title:'1 mois avec Cap Santé !', txt:'Un mois de constance — c\'est exactement ce qui fait la différence sur la durée.'},
+  {id:'usage_3months', check:function(p,ctx){ return ctx.daysSinceSignup>=90; }, icon:'🏆', title:'3 mois avec Cap Santé !', txt:'Un vrai cap : la plupart des bonnes habitudes se construisent sur cette durée.'},
   {id:'weight_1kg', check:function(p,ctx){ return ctx.weightDiff>=1; }, icon:'📉', title:'1er kilo !', txt:'Le premier pas est souvent le plus difficile à percevoir — vous venez de le franchir.'},
   {id:'weight_5kg', check:function(p,ctx){ return ctx.weightDiff>=5; }, icon:'⭐', title:'5 kg parcourus !', txt:'Une étape majeure sur votre trajectoire. Le travail accompli est réel.'},
   {id:'weight_10kg', check:function(p,ctx){ return ctx.weightDiff>=10; }, icon:'🌟', title:'10 kg parcourus !', txt:'Une transformation profonde, construite jour après jour.'},
@@ -4310,10 +4336,29 @@ function showLoadingScreen(){
     el.id='loading-screen';
     el.innerHTML='<div class="ls-inner">'
       +'<div class="ls-ring"><svg viewBox="0 0 100 100">'
-      +'<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(45,79,28,0.08)" stroke-width="6"/>'
+      +'<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(45,79,28,0.15)" stroke-width="6"/>'
       +'<circle cx="50" cy="50" r="42" fill="none" stroke="#2d4f1c" stroke-width="6" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" style="animation:spin-dash 2s ease-in-out infinite"/>'
-      +''
-      +'</svg><div class="ls-logo">N</div></div>'
+      +'</svg>'
+      +'<div class="ls-logo">'
+      +'<svg width="60" height="60" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">'
+      +'<defs><radialGradient id="bg-ls" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#3d6128"/><stop offset="100%" stop-color="#1e3a10"/></radialGradient></defs>'
+      +'<circle cx="60" cy="60" r="58" fill="url(#bg-ls)"/>'
+      +'<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>'
+      +'<line x1="60" y1="8" x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>'
+      +'<line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
+      +'<line x1="8" y1="60" x2="18" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
+      +'<line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
+      +'<text x="60" y="29" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Georgia,serif" font-size="8" font-weight="700">N</text>'
+      +'<rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>'
+      +'<rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>'
+      +'<path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+      +'<path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+      +'<line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>'
+      +'<line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>'
+      +'<path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>'
+      +'<circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>'
+      +'<circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>'
+      +'</svg></div></div>'
       +'<div class="ls-title">Bonjour '+prenom+' !</div>'
       +'<div class="ls-msg" id="ls-msg">'+msgs[0]+'</div>'
       +'<div class="ls-bar"><div class="ls-bar-fill" id="ls-bar"></div></div>'
