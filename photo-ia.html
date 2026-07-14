@@ -117,11 +117,12 @@ var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb   = supabase.createClient(SURL, SKEY);
 var USER = null, PROF = null, DB = [];
-var DB_READY = false; // flag — jamais null tant que le chargement n'est pas terminé
+var DB_READY = false;
 
 var selectedMeal    = null;
 var detectedFoods   = [];
 var DAILY_LIMIT     = 5;
+var userCorrections = []; // historique des corrections pour enrichir le prompt IA
 
 // ── Noms courants utilisés par l'IA qui diffèrent des noms Ciqual ──
 // L'IA retourne "Brocoli" mais Ciqual a "Brocoli, cuit à l'eau" — ces
@@ -186,7 +187,42 @@ sb.auth.getSession().then(function(r){
     updateCounter();
   });
   loadDB();
+  loadCorrections();
 });
+
+// Charge les 20 dernières corrections de l'utilisateur — utilisées pour
+// enrichir le prompt IA et améliorer les estimations de quantités.
+// On groupe par aliment et on calcule le facteur moyen de correction.
+async function loadCorrections(){
+  var r = await sb.from('photo_corrections')
+    .select('food_name, ai_qty, user_qty, correction_factor')
+    .eq('user_id', USER.id)
+    .order('created_at', {ascending: false})
+    .limit(20);
+  if(r.data && r.data.length) userCorrections = r.data;
+}
+
+// Transforme les corrections en texte compact pour le prompt IA.
+// Exemple : "Pâtes cuites : estimé 280g → corrigé 180g (×0.64)"
+function buildCorrectionContext(){
+  if(!userCorrections.length) return '';
+  // Groupe par aliment, calcule facteur moyen
+  var byFood = {};
+  userCorrections.forEach(function(c){
+    var key = c.food_name.toLowerCase();
+    if(!byFood[key]) byFood[key] = {nom:c.food_name, ai_total:0, user_total:0, count:0};
+    byFood[key].ai_total   += c.ai_qty;
+    byFood[key].user_total += c.user_qty;
+    byFood[key].count++;
+  });
+  var lines = Object.values(byFood).map(function(g){
+    var avg_ai   = Math.round(g.ai_total / g.count);
+    var avg_user = Math.round(g.user_total / g.count);
+    var factor   = (g.user_total / g.ai_total).toFixed(2);
+    return '- '+g.nom+' : tu estimais ~'+avg_ai+'g → corrigé à '+avg_user+'g (×'+factor+')';
+  });
+  return '\n\nCORRECTIONS PASSÉES de cet utilisateur (adapte tes estimations en conséquence) :\n'+lines.join('\n');
+}
 
 function loadDB(){
   // Affiche un indicateur pendant le chargement de la base
@@ -283,10 +319,15 @@ async function onPhotoSelected(input){
     try{
       var session = await sb.auth.getSession();
       var token = session.data.session.access_token;
+      var correctionContext = buildCorrectionContext();
       var res = await fetch(SURL+'/functions/v1/dynamic-endpoint',{
         method:'POST',
         headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-        body:JSON.stringify({image_base64:base64, mime_type:'image/jpeg'})
+        body:JSON.stringify({
+          image_base64:    base64,
+          mime_type:       'image/jpeg',
+          correction_context: correctionContext  // contexte d'apprentissage personnalisé
+        })
       });
       clearInterval(iv);
       document.getElementById('loading').style.display = 'none';
@@ -331,7 +372,12 @@ function showError(msg){
 }
 
 function showResults(aliments){
-  detectedFoods = aliments.map(function(a,i){ return {id:i,nom:a.nom,qty:a.qty,included:true}; });
+  // ai_qty = ce que l'IA a estimé (jamais modifié)
+  // qty    = ce que l'utilisateur valide (peut être ajusté)
+  // La différence entre les deux est la correction à apprendre.
+  detectedFoods = aliments.map(function(a,i){
+    return {id:i, nom:a.nom, ai_qty:a.qty, qty:a.qty, included:true};
+  });
   renderResults();
   document.getElementById('results-section').style.display = 'block';
 }
@@ -416,6 +462,27 @@ async function confirmFoods(){
   if(added)   toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au '+(mealLabel[selectedMeal]||selectedMeal));
   if(errors.length)   showError('Erreurs d\'enregistrement :\n'+errors.join('\n'));
   if(notFound.length) toast('⚠️ Non trouvé dans la base : '+notFound.join(', '));
+
+  // Sauvegarder les corrections — uniquement quand l'utilisateur a modifié
+  // la quantité proposée par l'IA (différence > 5g pour filtrer les arrondis).
+  // C'est cette donnée qui permettra à l'IA de mieux calibrer la prochaine fois.
+  var corrections = toAdd.filter(function(f){
+    return f.ai_qty && Math.abs(f.qty - f.ai_qty) > 5;
+  }).map(function(f){
+    return {
+      user_id:   USER.id,
+      food_name: f.nom,
+      ai_qty:    f.ai_qty,
+      user_qty:  f.qty,
+      meal_type: selectedMeal
+    };
+  });
+  if(corrections.length){
+    sb.from('photo_corrections').insert(corrections).then(function(r){
+      if(r.error) console.warn('Correction non sauvegardée:', r.error.message);
+      else console.log('[Cap Santé] '+corrections.length+' correction(s) sauvegardée(s)');
+    });
+  }
 
   if(added && !errors.length) setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
 }
