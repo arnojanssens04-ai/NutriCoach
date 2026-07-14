@@ -2026,42 +2026,64 @@ async function refreshDash(){
   document.getElementById('mp-prot').style.width=Math.min(100,tgt.prot>0?T.prot/tgt.prot*100:0)+'%';
   document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?T.gluc/tgt.gluc*100:0)+'%';
   document.getElementById('mp-lip').style.width=Math.min(100,tgt.lip>0?T.lip/tgt.lip*100:0)+'%';
-  // Score
-  var scoreResult=calcScore(T,tgt,pathos);
+  // Score — affiché uniquement quand au moins 2 repas principaux sont enregistrés.
+  // Avant ça, un score de 15/100 à 9h du matin est décourageant et non représentatif.
+  var mainMealsEntered = {};
+  entries.forEach(function(e){
+    if(e.repas==='breakfast'||e.repas==='lunch'||e.repas==='dinner') mainMealsEntered[e.repas]=true;
+  });
+  var nbMainMeals = Object.keys(mainMealsEntered).length;
+  var scoreUnlocked = nbMainMeals >= 2;
+
+  var scoreResult = scoreUnlocked ? calcScore(T,tgt,pathos) : null;
   var score = scoreResult ? scoreResult.score : null;
   lastScoreDetail = scoreResult ? scoreResult.detail : null;
   var rn=document.getElementById('ring-num');
   var rf=document.getElementById('ring-f');
-  rn.textContent=score!==null?score:'—';
-  if(score!==null){
-    rf.style.strokeDashoffset=251.3-(251.3*score/100);
-    var ratioKcalJour = tgt.kcal>0 ? T.kcal/tgt.kcal : 0;
-    var manqueDeDonnees = ratioKcalJour < 0.35;
-    var niveau;
-    if(score>=85) niveau={cls:'pill-good',  color:'#2d4f1c', lbl:'Excellent'};
-    else if(score>=70) niveau={cls:'pill-good2', color:'#6b9b47', lbl:'Bon'};
-    else if(score>=50) niveau={cls:'pill-warn',  color:'#b8890f', lbl:'Correct'};
-    else if(score>=30) niveau={cls:'pill-warn2', color:'#c2660a', lbl:'À surveiller'};
-    else niveau={cls:'pill-bad', color:'#8b2a2a', lbl:'Insuffisant'};
-    rf.style.stroke=niveau.color;
+
+  if(!scoreUnlocked){
+    // Pas encore assez de repas — message encourageant, pas de score
+    rn.textContent='—';
+    rf.style.strokeDashoffset='251.3';
+    rf.style.stroke='rgba(45,79,28,0.15)';
     document.getElementById('score-ttl').textContent='Score Santé du jour';
-    document.getElementById('score-desc').textContent = manqueDeDonnees
-      ? 'Continuez à enregistrer vos repas pour un score représentatif de votre journée.'
-      : (score>=85?'Vos apports sont parfaitement équilibrés pour votre profil.'
+    var repasManquants = 2 - nbMainMeals;
+    document.getElementById('score-desc').textContent =
+      nbMainMeals===0
+        ? 'Enregistrez vos repas de la journée — le score s\'affiche dès le 2ème repas principal.'
+        : 'Encore '+repasManquants+' repas principal à enregistrer pour voir votre score du jour.';
+    document.getElementById('score-pill').innerHTML =
+      '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:.78rem;color:var(--text3)">'
+      +'<span>'+['⬜','🟫','🟩'][nbMainMeals]+'</span>'
+      +'<span>'+nbMainMeals+' / 2 repas enregistrés</span></div>';
+  } else {
+    rn.textContent=score!==null?score:'—';
+    if(score!==null){
+      rf.style.strokeDashoffset=251.3-(251.3*score/100);
+      var niveau;
+      if(score>=85) niveau={cls:'pill-good',  color:'#2d4f1c', lbl:'Excellent'};
+      else if(score>=70) niveau={cls:'pill-good2', color:'#6b9b47', lbl:'Bon'};
+      else if(score>=50) niveau={cls:'pill-warn',  color:'#b8890f', lbl:'Correct'};
+      else if(score>=30) niveau={cls:'pill-warn2', color:'#c2660a', lbl:'À surveiller'};
+      else niveau={cls:'pill-bad', color:'#8b2a2a', lbl:'Insuffisant'};
+      rf.style.stroke=niveau.color;
+      document.getElementById('score-ttl').textContent='Score Santé du jour';
+      document.getElementById('score-desc').textContent =
+          score>=85?'Vos apports sont parfaitement équilibrés pour votre profil.'
         :score>=70?'Vos apports sont globalement bien équilibrés.'
         :score>=50?'Quelques ajustements amélioreraient votre équilibre.'
         :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
-        :'Votre équilibre nutritionnel du jour est insuffisant.');
-    document.getElementById('score-pill').innerHTML=
-      '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
-      +'<span style="font-size:1rem">'+
-        (score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')
-      +'</span>'+niveau.lbl+'</div>'
-      +(lastScoreDetail ? '<div onclick="openScoreDetail()" style="font-size:.72rem;color:var(--gold);margin-top:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">Pourquoi ce score ? <span>→</span></div>' : '');
-  } else {
-    rf.style.strokeDashoffset='251.3';
-    rf.style.stroke='rgba(255,255,255,.08)';
-    document.getElementById('score-pill').innerHTML='';
+        :'Votre équilibre nutritionnel du jour est insuffisant.';
+      document.getElementById('score-pill').innerHTML=
+        '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
+        +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
+        +niveau.lbl+'</div>'
+        +(lastScoreDetail?'<div onclick="openScoreDetail()" style="font-size:.72rem;color:var(--gold);margin-top:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">Pourquoi ce score ? <span>→</span></div>':'');
+    } else {
+      rf.style.strokeDashoffset='251.3';
+      rf.style.stroke='rgba(255,255,255,.08)';
+      document.getElementById('score-pill').innerHTML='';
+    }
   }
   // Meals summary
   var byMeal={};
