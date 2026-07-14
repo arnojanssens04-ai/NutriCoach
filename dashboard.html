@@ -1047,44 +1047,15 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 // notable. La personne voit un pop-up uniquement si une version plus
 // récente que celle déjà vue existe — jamais répété inutilement.
 var CHANGELOG = [
-  {v:'0.1.1', date:'26 juin 2026', items:[
-    'Le site web fonctionne désormais également sur téléphone / Tablette, tout est désormais cliquable',
-    'Chat direct avec l\'équipe Cap Santé pour toute question',
-    'Perte de poids : ajout d\'un déficit fixe de −200 kcal/j appliqué à la TDEE calculée',
-    'Nouveau Score Santé, plus précis et qui reflète mieux votre alimentation réelle du jour',
-    'Bilan hebdomadaire : les réponses (sommeil, digestion, ressenti...) sont désormais mieux adaptées à chaque question'
-  ]},
-  {v:'0.2.0', date:'7 juillet 2026', items:[
-    '🔬 Maladie cœliaque ajoutée : détection automatique du gluten dans le journal et les suggestions, alternatives proposées',
-    '🌸 Ménopause : option dans le profil avec adaptation des besoins (protéines, calcium) selon la phase et le THS',
-    '🩺 Diabète renforcé : filtre par ratio fibres/glucides, pain complet proposé à la place du pain blanc, avertissements pour chocolat et biscuits sucrés',
-    '📊 Bilan refondu : 6 blocs structurés, questions spécifiques selon vos pathologies (fatigue post-repas pour le diabète, sel pour l\'hypertension)',
-    '📷 Photo IA : reconnaissance des aliments par intelligence artificielle en cours de développement — bientôt disponible',
-    '🏷️ Score Santé : repère visuel rapide (⭐ Excellent, ✅ Bon, 🟡 Correct, 🟠 À surveiller, 🔴 Insuffisant)',
-    '📈 Deux nouveaux indicateurs : Qualité nutritionnelle et Répartition de la journée',
-    '⚠️ Alerte protéines : notification en fin de journée si apport insuffisant (< 0.83g/kg)',
-    '⚠️ Avertissement IMC : message si objectif perte de poids avec IMC < 20',
-    '🏃 Protéines augmentées pour les profils sportifs (1.4-1.7g/kg selon le niveau)',
-    '📦 Scanner code-barres désormais disponible pour tous (plus réservé à l\'admin)',
-    '🍔 49 produits McDonald\'s ajoutés à la base de données',
-    '🔒 Audit de sécurité complet réalisé — toutes les protections vérifiées et renforcées',
-    '🔧 Nombreux correctifs : plan alimentaire, ajustement adaptatif du bilan, portions chocolat/bonbons'
-  ]},
-  {v:'0.3.0', date:'8 juillet 2026', items:[
-    '📷 Scan Photo IA disponible pour tous — prenez une photo de votre repas, notre IA identifie automatiquement les aliments et estime les quantités',
-    '🍽️ Sélection du repas avant d\'ajouter les aliments via Photo IA (petit-déjeuner, déjeuner, collation, souper)',
-    '⏱️ Animation de chargement pendant l\'analyse — étapes affichées en temps réel',
-    '📊 Limite de 5 scans photo par jour',
-    '🔢 Calories affichées en premier sur le tableau de bord',
-    '📉 Score Santé déplacé sous les calories avec sa description pour une lecture plus claire'
-  ]},
-  {v:'0.4.0', date:'10 juillet 2026', items:[
-    '📷 Scan Photo IA amélioré — meilleure reconnaissance des aliments et estimation des quantités réelles visibles',
-    '🔧 Corrections de bugs d\'enregistrement dans le journal depuis la Photo IA',
-    '🧠 Score Santé cliquable — cliquez pour comprendre pourquoi vous avez ce score et comment atteindre 100',
-    '🌿 Qualité nutritionnelle revue — 9 critères complets (protéines, fibres, légumes, diversité, graisses, glucides, sucres, ultra-transformés, alcool)',
-    '🍽️ 5ème repas disponible pour tous (Collation 2)',
-    '🤖 Modèle IA mis à jour pour une meilleure stabilité'
+  {v:'0.5.0', date:'14 juillet 2026', items:[
+    '🧭 Nouveau nom et identité visuelle — NutriCoach devient Cap Santé, avec un logo boussole sur toutes les pages',
+    '📷 Scan Photo IA stabilisé — redirigé vers une page dédiée, plus aucune erreur sur iOS et Android',
+    '🧠 Photo IA qui apprend de vos corrections — chaque quantité modifiée améliore les estimations futures',
+    '🔍 Meilleure reconnaissance alimentaire — 30+ alias (brocoli, courgette, poulet...) et recherche plus permissive',
+    '📊 Score Santé masqué jusqu\'à 2 repas principaux enregistrés — plus de score décourageant en début de journée',
+    '➕ Ajout d\'aliments personnalisés — tout utilisateur peut ajouter un aliment absent, avec détection automatique des doublons',
+    '💬 Chat amélioré — messages proactifs automatiques, contexte profil, boutons de réponse rapide, indicateur de frappe et accusés de lecture',
+    '⏳ Base alimentaire chargée avant confirmation — plus d\'aliments introuvables par problème de timing'
   ]}
 ];
 
@@ -1100,6 +1071,8 @@ function compareVersions(a,b){
 }
 
 function checkChangelog(){
+  // Supprime les anciennes clés (NutriCoach) pour forcer l'affichage à tous
+  localStorage.removeItem('nutricoach_changelog_seen');
   var latest = CHANGELOG[CHANGELOG.length-1];
   var seen = localStorage.getItem('capsante_changelog_seen')||'0';
   if(compareVersions(latest.v, seen) <= 0) return;
@@ -2305,7 +2278,13 @@ function doSearch(q){
 
 function renderRes(res){
   var sz=document.getElementById('srch-zone');
-  if(!res.length){sz.innerHTML='<div class="empty"><p>Aucun résultat</p></div>';return;}
+  var searchQuery = (document.getElementById('srch')||{}).value||'';
+  if(!res.length){
+    sz.innerHTML='<div class="empty"><p>Aucun résultat pour <b>'+esc(searchQuery)+'</b></p>'
+      +'<button onclick="openAddCustomFood(\''+esc(searchQuery)+'\')" style="margin-top:12px;padding:9px 18px;border-radius:10px;border:1px dashed var(--border2);background:none;color:var(--gold);font-size:.82rem;cursor:pointer;font-family:\'Inter\',sans-serif">+ Ajouter cet aliment à la base</button>'
+      +'</div>';
+    return;
+  }
   sz.innerHTML=res.map(function(r,i){
     var f=r.food;var kcal=pN(f.kcal);
     var sc=r.source==='off'?'src-o':'src-c';var sl=r.source==='off'?'OFF':'Ciqual';
@@ -2315,7 +2294,148 @@ function renderRes(res){
       +'<span class="src-pill '+sc+'">'+sl+'</span>'
       +(kcal?'<span class="res-kcal">'+kcal+' kcal</span>':'')
       +'</div>';
-  }).join('');
+  }).join('')
+  +'<div style="text-align:center;margin-top:8px">'
+  +'<button onclick="openAddCustomFood(\'\''+')" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border2);background:none;color:var(--text3);font-size:.74rem;cursor:pointer">Pas ce que vous cherchez ? + Ajouter un aliment</button>'
+  +'</div>';
+}
+
+// ── AJOUT ALIMENT PERSONNALISÉ ──
+function openAddCustomFood(prefill){
+  var existing = document.getElementById('custom-food-ov');
+  if(existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'custom-food-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,25,22,0.5);z-index:998;display:flex;align-items:flex-end;justify-content:center';
+
+  ov.innerHTML='<div style="background:var(--card);border-radius:20px 20px 0 0;padding:22px 20px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.05rem;font-weight:700">Ajouter un aliment</div>'
+    +'<button onclick="document.getElementById(\'custom-food-ov\').remove()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer">✕</button>'
+    +'</div>'
+
+    +'<div style="font-size:.78rem;color:var(--text2);background:var(--gold-l);border-radius:9px;padding:10px 12px;margin-bottom:16px;line-height:1.55">'
+    +'💡 Entrez les valeurs nutritionnelles pour 100g — trouvez-les sur l\'emballage ou sur <a href="https://ciqual.anses.fr" target="_blank" style="color:var(--gold)">ciqual.anses.fr</a></div>'
+
+    +'<div style="margin-bottom:12px">'
+    +'<label style="font-size:.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Nom de l\'aliment *</label>'
+    +'<input id="cf-nom" type="text" value="'+esc(prefill||'')+'" placeholder="Ex: Barre de céréales Quaker" oninput="checkDuplicate(this.value)" '
+    +'style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:10px;font-size:.9rem;font-family:\'Inter\',sans-serif;outline:none">'
+    +'<div id="cf-duplicate" style="margin-top:6px;font-size:.78rem;display:none"></div>'
+    +'</div>'
+
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    +cfField('cf-kcal','Calories (kcal/100g) *','number','Ex: 420')
+    +cfField('cf-prot','Protéines (g/100g)','number','Ex: 8.5')
+    +cfField('cf-gluc','Glucides (g/100g)','number','Ex: 60')
+    +cfField('cf-lip','Lipides (g/100g)','number','Ex: 12')
+    +cfField('cf-fibres','Fibres (g/100g)','number','Ex: 3')
+    +cfField('cf-na','Sodium (mg/100g)','number','Ex: 250')
+    +'</div>'
+
+    +'<div id="cf-error" style="display:none;color:var(--rose);font-size:.8rem;margin-bottom:10px;padding:8px 12px;background:var(--rose-l);border-radius:8px"></div>'
+    +'<button onclick="saveCustomFood()" style="width:100%;padding:13px;border-radius:11px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:700;cursor:pointer">Enregistrer et ajouter au journal</button>'
+    +'</div>';
+
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+
+  // Focus sur le champ nom
+  setTimeout(function(){ var n=document.getElementById('cf-nom'); if(n)n.focus(); },100);
+}
+
+function cfField(id, label, type, placeholder){
+  return '<div><label style="font-size:.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">'+label+'</label>'
+    +'<input id="'+id+'" type="'+type+'" placeholder="'+placeholder+'" '
+    +'style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:.88rem;font-family:\'Inter\',sans-serif;outline:none"></div>';
+}
+
+var dupCheckTimer = null;
+function checkDuplicate(val){
+  clearTimeout(dupCheckTimer);
+  var el = document.getElementById('cf-duplicate');
+  if(!el) return;
+  if(!val || val.length < 3){ el.style.display='none'; return; }
+
+  dupCheckTimer = setTimeout(function(){
+    var qt = tok(val);
+    var best = null, bestScore = 0;
+    DB.forEach(function(d){
+      var s = scoreFn(qt, tok(d.nom), d.nom);
+      if(s > bestScore){ bestScore = s; best = d; }
+    });
+
+    // Seuil 18 = ressemblance forte (même mot principal + 1-2 mots proches)
+    if(best && bestScore >= 18){
+      el.style.display='block';
+      el.innerHTML='⚠️ Un aliment très similaire existe déjà : <b>'+esc(best.nom)+'</b> '
+        +'('+pN(best.kcal)+' kcal/100g)<br>'
+        +'<button onclick="useSimilarFood()" '
+        +'style="margin-top:6px;padding:5px 12px;border-radius:7px;border:1px solid var(--gold);background:var(--gold-l);color:var(--gold);font-size:.76rem;cursor:pointer">Utiliser cet aliment →</button>';
+      el.dataset.similarCode = best.code;
+      el.style.background='rgba(139,42,42,0.06)';
+      el.style.border='1px solid rgba(139,42,42,0.15)';
+      el.style.borderRadius='8px';
+      el.style.padding='8px 10px';
+      el.style.color='var(--rose)';
+    } else if(best && bestScore >= 10){
+      el.style.display='block';
+      el.innerHTML='ℹ️ Aliment proche trouvé : <b>'+esc(best.nom)+'</b> — c\'est peut-être le même ?<br>'
+        +'<button onclick="useSimilarFood()" '
+        +'style="margin-top:6px;padding:5px 12px;border-radius:7px;border:1px solid var(--gold);background:var(--gold-l);color:var(--gold);font-size:.76rem;cursor:pointer">Utiliser cet aliment →</button>';
+      el.dataset.similarCode = best.code;
+      el.style.background='var(--gold-l)';
+      el.style.border='1px solid var(--border2)';
+      el.style.borderRadius='8px';
+      el.style.padding='8px 10px';
+      el.style.color='var(--text2)';
+    } else {
+      el.style.display='none';
+    }
+  }, 400);
+}
+
+function useSimilarFood(){
+  var el = document.getElementById('cf-duplicate');
+  if(!el || !el.dataset.similarCode) return;
+  var code = el.dataset.similarCode;
+  var food = DB.find(function(d){ return d.code===code; });
+  if(!food) return;
+  document.getElementById('custom-food-ov').remove();
+  pendingFood = food;
+  openPortionPicker(food);
+}
+
+async function saveCustomFood(){
+  var nom    = (document.getElementById('cf-nom')||{}).value||'';
+  var kcal   = parseFloat((document.getElementById('cf-kcal')||{}).value)||0;
+  var prot   = parseFloat((document.getElementById('cf-prot')||{}).value)||0;
+  var gluc   = parseFloat((document.getElementById('cf-gluc')||{}).value)||0;
+  var lip    = parseFloat((document.getElementById('cf-lip')||{}).value)||0;
+  var fibres = parseFloat((document.getElementById('cf-fibres')||{}).value)||0;
+  var na     = parseFloat((document.getElementById('cf-na')||{}).value)||0;
+  var errEl  = document.getElementById('cf-error');
+
+  if(!nom.trim()){ errEl.textContent='Le nom est obligatoire.'; errEl.style.display='block'; return; }
+  if(!kcal){ errEl.textContent='Les calories sont obligatoires.'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+
+  var ins = {nom:nom.trim(), kcal:kcal, prot:prot, gluc:gluc, lip:lip,
+             fibres:fibres, na:na, ags:0, fer:0, cal:0, pot:0, mg:0, zn:0};
+  var r = await sb.from('aliments_custom').insert(ins).select().single();
+  if(r.error){ errEl.textContent='Erreur : '+r.error.message; errEl.style.display='block'; return; }
+
+  // Ajouter à la DB locale pour pouvoir l'utiliser immédiatement
+  var newFood = {code:'custom_'+r.data.id, nom:r.data.nom, kcal:r.data.kcal,
+    prot:r.data.prot, gluc:r.data.gluc, lip:r.data.lip,
+    ags:0, fibres:r.data.fibres||0, fer:0, cal:0, pot:0, mg:0, na:r.data.na||0, zn:0};
+  DB.push(newFood);
+
+  document.getElementById('custom-food-ov').remove();
+  toast('✅ "'+nom+'" ajouté à la base !');
+  pendingFood = newFood;
+  openPortionPicker(newFood);
 }
 
 var pendingFood = null;
