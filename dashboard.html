@@ -511,30 +511,7 @@ body {
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="t-logo" style="display:flex;align-items:center;gap:8px">
-    <svg width="30" height="30" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="bg-t" cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#3d6128"/>
-          <stop offset="100%" stop-color="#1e3a10"/>
-        </radialGradient>
-      </defs>
-      <circle cx="60" cy="60" r="58" fill="url(#bg-t)"/>
-      <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-      <line x1="60" y1="8"  x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="8"  y1="60" x2="18" y2="60"  stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-      <text x="60" y="29" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Georgia,serif" font-size="8" font-weight="700">N</text>
-      <rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>
-      <rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>
-      <path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      <line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      <path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>
-      <circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-      <circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>
-    </svg>
+    <img src="logo-capsante.png" width="30" height="30" alt="Cap Santé" style="object-fit:contain">
     Cap<span> Santé</span>
   </div>
   <div class="t-right">
@@ -582,6 +559,7 @@ body {
     </div>
     <div class="score-info">
       <div class="score-ttl" id="score-ttl">Score Santé</div>
+      <div style="font-size:.66rem;color:var(--text3);margin-top:1px;margin-bottom:4px">Équilibre calories · protéines · glucides · lipides</div>
       <div class="score-desc" id="score-desc">Ajoutez vos repas pour calculer votre score personnalisé.</div>
       <div id="score-pill"></div>
     </div>
@@ -609,7 +587,10 @@ body {
   <div id="extra-scores-row" style="display:none;flex-direction:column;gap:10px;margin-bottom:14px">
     <div class="extra-score-card">
       <div class="extra-score-hdr">
-        <span class="extra-score-ttl">Qualité nutritionnelle</span>
+        <div>
+          <span class="extra-score-ttl">Qualité nutritionnelle</span>
+          <div style="font-size:.68rem;color:var(--text3);margin-top:1px">Diversité · fibres · légumes · ultra-transformés</div>
+        </div>
         <span class="extra-score-num" id="qn-num">—</span>
       </div>
       <div class="extra-score-bar"><div class="extra-score-fill" id="qn-bar" style="width:0%"></div></div>
@@ -617,7 +598,10 @@ body {
     </div>
     <div class="extra-score-card">
       <div class="extra-score-hdr">
-        <span class="extra-score-ttl">Répartition journée</span>
+        <div>
+          <span class="extra-score-ttl">Répartition journée</span>
+          <div style="font-size:.68rem;color:var(--text3);margin-top:1px">Régularité des repas · équilibre des apports</div>
+        </div>
         <span class="extra-score-num" id="rj-num">—</span>
       </div>
       <div class="extra-score-bar"><div class="extra-score-fill" id="rj-bar" style="width:0%"></div></div>
@@ -1486,11 +1470,26 @@ function calcNutritionalQuality(entries, tgt){
     tips.push({priority:3, msg:'Alcool détecté ('+Math.round(alcoholKcal)+' kcal) — l\'alcool apporte des calories vides et perturbe le métabolisme.'});
   }
 
-  // Conseil prioritaire — le plus important d'abord
+  // Conseil rotatif — on affiche le plus prioritaire + un second conseil différent.
+  // La clé localStorage évite de toujours montrer le même message.
   tips.sort(function(a,b){ return a.priority-b.priority; });
-  var tip = tips.length ? tips[0].msg : 'Excellente qualité nutritionnelle sur la journée — continuez comme ça !';
 
-  return {score:Math.min(100,score), tip:tip};
+  var shownKey = 'capsante_last_tip_' + (new Date().toISOString().slice(0,10));
+  var lastTip  = localStorage.getItem(shownKey) || '';
+
+  // Cherche le conseil le plus urgent qui n'est pas celui d'hier
+  var primary = tips.length ? tips[0] : null;
+  if(primary && primary.msg === lastTip && tips.length > 1) primary = tips[1];
+
+  var tip = primary ? primary.msg : 'Excellente qualité nutritionnelle sur la journée — continuez comme ça !';
+  if(primary) localStorage.setItem(shownKey, primary.msg);
+
+  // Conseil secondaire : le prochain dans la liste (différent du principal)
+  var secondary = tips.find(function(t){ return t.msg !== tip; });
+  var tipHtml = tip;
+  if(secondary) tipHtml += ' · <em style="opacity:.7">' + secondary.msg + '</em>';
+
+  return {score:Math.min(100,score), tip:tip, tipHtml:tipHtml};
 }
 
 // ── RÉPARTITION DE LA JOURNÉE (0-100) ─────────────────────────────────────
@@ -1510,27 +1509,44 @@ function calcDayDistribution(entries, activeMealIds){
   var score = 0;
   var tip = '';
 
-  // Présence des repas principaux : 40 pts
-  var mainPresent = (byMeal.breakfast||0)>50 ? 1 : 0;
-  mainPresent    += (byMeal.lunch||0)>50 ? 1 : 0;
-  mainPresent    += (byMeal.dinner||0)>50 ? 1 : 0;
-  score += Math.round((mainPresent/3)*40);
+  // On ne pénalise que les repas qui auraient dû être pris à cette heure.
+  // Exemple : à 12h, le déjeuner n'est pas encore manquant — il peut venir.
+  // À 20h, s'il n'est toujours pas enregistré, là c'est pertinent.
+  var h = new Date().getHours();
+  var breakfastExpected = h >= 10;
+  var lunchExpected     = h >= 14;
+  var dinnerExpected    = h >= 20;
 
-  // Distribution équilibrée : 40 pts (aucun repas > 60% du total)
+  var mainExpected = (breakfastExpected?1:0) + (lunchExpected?1:0) + (dinnerExpected?1:0);
+  var mainPresent  = ((byMeal.breakfast||0)>50?1:0) + ((byMeal.lunch||0)>50?1:0) + ((byMeal.dinner||0)>50?1:0);
+
+  // Score sur les repas attendus seulement (pas sur ceux qui n'ont pas encore lieu)
+  score += mainExpected > 0 ? Math.round((mainPresent/mainExpected)*40) : 40;
+
+  // Distribution équilibrée : aucun repas > 60% du total
   var maxMealPct = 0;
   filledMeals.forEach(function(m){ maxMealPct = Math.max(maxMealPct, byMeal[m]/totalKcal); });
   var distScore = maxMealPct<=0.60 ? 40 : Math.max(0, Math.round(40-(maxMealPct-0.60)*200));
   score += distScore;
 
-  // Progression de remplissage : 20 pts (bonus si journée complète)
+  // Progression : bonus si journée bien avancée
   score += Math.round((filledMeals.length/totalMeals)*20);
 
-  // Conseil ciblé
-  if((byMeal.breakfast||0)<50) tip = 'Le petit-déjeuner est absent — il contribue à stabiliser la glycémie et l\'énergie matinale.';
-  else if((byMeal.lunch||0)<50) tip = 'Le déjeuner est absent, ce qui fragilise l\'interprétation de la journée.';
-  else if(maxMealPct>0.65){ var heavy=Object.keys(byMeal).sort(function(a,b){return byMeal[b]-byMeal[a];})[0]; tip='Le '+(({breakfast:'petit-déjeuner',lunch:'déjeuner',dinner:'souper',snack:'collation'}[heavy]||heavy))+' concentre l\'essentiel des calories — répartissez davantage.'; }
-  else if(filledMeals.length<2) tip = 'Ajoutez d\'autres repas pour obtenir une analyse complète de votre journée.';
-  else tip = 'Bonne répartition des repas sur la journée !';
+  // Message — neutre et bienveillant, jamais alarmiste pour un repas futur
+  if(breakfastExpected && (byMeal.breakfast||0)<50)
+    tip = 'Le petit-déjeuner n\'a pas été enregistré — il contribue à stabiliser l\'énergie matinale.';
+  else if(lunchExpected && (byMeal.lunch||0)<50)
+    tip = 'Le déjeuner manque — pensez à l\'enregistrer pour un suivi complet de la journée.';
+  else if(!lunchExpected && (byMeal.lunch||0)<50)
+    tip = 'Bonne progression — continuez à enregistrer vos repas au fil de la journée.';
+  else if(maxMealPct>0.65){
+    var heavy=Object.keys(byMeal).sort(function(a,b){return byMeal[b]-byMeal[a];})[0];
+    tip='Le '+({breakfast:'petit-déjeuner',lunch:'déjeuner',dinner:'souper',snack:'collation'}[heavy]||heavy)+' représente l\'essentiel des calories — pensez à mieux répartir.';
+  }
+  else if(filledMeals.length<2)
+    tip = 'Ajoutez d\'autres repas au fil de la journée pour un suivi complet.';
+  else
+    tip = 'Bonne répartition des repas sur la journée !';
 
   return {score:Math.min(100,score), tip:tip};
 }
@@ -2024,7 +2040,7 @@ async function refreshDash(){
         : 'Encore '+repasManquants+' repas principal à enregistrer pour voir votre score du jour.';
     document.getElementById('score-pill').innerHTML =
       '<div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:.78rem;color:var(--text3)">'
-      +'<span>'+['⬜','🟫','🟩'][nbMainMeals]+'</span>'
+      +'<span>'+['🍽️','🥗','🟩'][nbMainMeals]+'</span>'
       +'<span>'+nbMainMeals+' / 2 repas enregistrés</span></div>';
   } else {
     rn.textContent=score!==null?score:'—';
@@ -2086,7 +2102,7 @@ async function refreshDash(){
       document.getElementById('qn-bar').style.width = qnRes.score+'%';
       document.getElementById('qn-bar').style.background = qnColor;
       document.getElementById('qn-num').style.color = qnColor;
-      document.getElementById('qn-tip').textContent = qnRes.tip;
+      document.getElementById('qn-tip').innerHTML = qnRes.tipHtml || qnRes.tip;
     }
     if(rjRes){
       document.getElementById('rj-num').textContent = rjRes.score+'/100';
@@ -4506,26 +4522,7 @@ function showLoadingScreen(){
       +'<circle cx="50" cy="50" r="42" fill="none" stroke="rgba(45,79,28,0.15)" stroke-width="6"/>'
       +'<circle cx="50" cy="50" r="42" fill="none" stroke="#2d4f1c" stroke-width="6" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" style="animation:spin-dash 2s ease-in-out infinite"/>'
       +'</svg>'
-      +'<div class="ls-logo">'
-      +'<svg width="60" height="60" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">'
-      +'<defs><radialGradient id="bg-ls" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#3d6128"/><stop offset="100%" stop-color="#1e3a10"/></radialGradient></defs>'
-      +'<circle cx="60" cy="60" r="58" fill="url(#bg-ls)"/>'
-      +'<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>'
-      +'<line x1="60" y1="8" x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>'
-      +'<line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
-      +'<line x1="8" y1="60" x2="18" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
-      +'<line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>'
-      +'<text x="60" y="29" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Georgia,serif" font-size="8" font-weight="700">N</text>'
-      +'<rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>'
-      +'<rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>'
-      +'<path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
-      +'<path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
-      +'<line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>'
-      +'<line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>'
-      +'<path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>'
-      +'<circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>'
-      +'<circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>'
-      +'</svg></div></div>'
+      +'<div class="ls-logo"><img src="logo-capsante.png" width="58" height="58" alt="Cap Santé" style="object-fit:contain"></div></div>'
       +'<div class="ls-title">Bonjour '+prenom+' !</div>'
       +'<div class="ls-msg" id="ls-msg">'+msgs[0]+'</div>'
       +'<div class="ls-bar"><div class="ls-bar-fill" id="ls-bar"></div></div>'
