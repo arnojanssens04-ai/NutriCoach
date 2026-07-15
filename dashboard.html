@@ -545,8 +545,8 @@ body {
     </div>
   </div>
 
-  <!-- SCORE SANTÉ + description ensemble -->
-  <div class="score-hero" id="score-hero">
+  <!-- SCORE SANTÉ + description ensemble — cliquable partout -->
+  <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir le détail du score">
     <div class="ring-wrap">
       <svg viewBox="0 0 96 96">
         <circle class="ring-bg" cx="48" cy="48" r="40"/>
@@ -1196,56 +1196,88 @@ function calcTargets(){
   // mode maintien. Bornes absolues : jamais sous 1200, jamais au-dessus 5000.
   kcal += (p.kcal_adjustment||0);
   kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
-  // Répartition macro universelle : 50% glucides / 15% protéines / 35% lipides.
-  // La ménopause ajuste ces pourcentages selon la phase et le THS, pour tenir
-  // compte de la résistance à l'insuline accrue et des besoins en protéines
-  // plus élevés documentés dans la littérature scientifique 2023-2025.
-  var pp=0.15, gp=0.50, lp=0.35;
-  var calTarget = 1000; // calcium
+  // ── PROTÉINES : calculées en g/kg, puis plafonnées et planciées ──────────
+  // On ne travaille plus par pourcentages mais par besoins réels (g/kg),
+  // puis on répartit les calories restantes entre glucides et lipides.
+  var calTarget = 1000; // calcium de base
 
-  // Protéines augmentées pour les profils sportifs — les études recommandent
-  // 1.4-1.7g/kg pour les sportifs réguliers vs 0.8-1.0g/kg pour un adulte sédentaire.
-  if(act==='active' || act==='sportif' || hasMetData){
-    pp = act==='sportif' ? 0.22 : 0.20; // ~1.4-1.7g/kg selon le poids
-    gp = act==='sportif' ? 0.45 : 0.46;
-    lp = 1 - pp - gp;
+  var protGperKg; // g de protéines par kg de poids corporel
+  if(act==='sportif' || hasMetData){
+    protGperKg = 1.7;  // entraînement intensif, études 2020-2025
+  } else if(act==='active'){
+    protGperKg = 1.5;  // très actif
+  } else if(act==='moderate'){
+    protGperKg = 1.3;  // modérément actif
+  } else {
+    protGperKg = 1.2;  // sédentaire / légèrement actif (seuil OMS + marge)
   }
 
+  // Règle 1 : sportif en perte de poids → jamais sous 1.7g/kg
+  // La restriction calorique augmente le catabolisme musculaire ;
+  // maintenir 1.7g/kg préserve la masse maigre malgré le déficit.
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var isSportLosingWeight = (act==='sportif'||act==='active'||hasMetData) && objectif==='perte';
+  if(isSportLosingWeight) protGperKg = Math.max(1.7, protGperKg);
+
+  // Règle 2 : plafond absolu 2g/kg/j — au-delà, aucun bénéfice documenté
+  // et charge rénale inutile pour les personnes non compétitives.
+  protGperKg = Math.min(2.0, protGperKg);
+
+  // Ménopause : ajustements protéiques spécifiques (littérature 2023-2025)
   if(pathos.indexOf('menopause')>=0){
     var phase = p.menophase||'menopause';
     var ths   = p.menoths==='oui';
-    if(phase==='perimenopause'){
-      // Périménopause — ajustements modérés
-      pp = ths ? 0.17 : 0.18; // +protéines
-      gp = ths ? 0.48 : 0.46; // légère réduction glucides
-      lp = 1 - pp - gp;
-      calTarget = ths ? 1000 : 1100;
-    } else {
-      // Ménopause confirmée — ajustements complets
-      // Protéines : 1,3-1,4g/kg selon la littérature (vs 0,9g/kg standard)
-      // On approche cela via les % macro plutôt que de recalculer sur poids
-      // pour rester cohérent avec le reste du système.
-      pp = ths ? 0.19 : 0.22;
-      gp = ths ? 0.45 : 0.42; // résistance insuline plus marquée
-      lp = 1 - pp - gp;
-      calTarget = ths ? 1100 : 1200; // ostéoporose post-ménopausique
-    }
+    var menoGperKg = phase==='perimenopause' ? (ths?1.2:1.3) : (ths?1.4:1.6);
+    protGperKg = Math.min(2.0, Math.max(protGperKg, menoGperKg));
+    calTarget = phase==='perimenopause' ? (ths?1000:1100) : (ths?1100:1200);
   }
+
+  // Grammes et kcal de protéines
+  var protG  = Math.round(w * protGperKg);
+  var protKcal = protG * 4;
+
+  // ── GLUCIDES & LIPIDES : calculés sur les kcal restantes ─────────────────
+  // Une fois les protéines fixées, les calories restantes sont réparties
+  // entre glucides et lipides selon des ratios physiologiquement cohérents.
+  var remainKcal = Math.max(0, kcal - protKcal);
+
+  // Ratio glucides/lipides de base : 60/40 des kcal restantes
+  // (correspond à ~50% gluc / 35% lip sur le total, proche des recommandations ANSES)
+  var carbRatio = 0.60;
+  var fatRatio  = 0.40;
+
+  // Diabète : moins de glucides, plus de lipides sur les calories restantes
+  if(pathos.indexOf('diabetes')>=0){
+    carbRatio = 0.48;
+    fatRatio  = 0.52;
+  }
+
+  var glucG = Math.round(remainKcal * carbRatio / 4);
+  var lipG  = Math.round(remainKcal * fatRatio  / 9);
+
+  // AGS : recommandation OMS 10% des kcal totales
+  // → scale directement avec les calories, pas de bug possible
+  var agsG  = Math.round(kcal * 0.10 / 9);
+
+  // Magnésium augmenté pour les profils sportifs (pertes sudorales)
+  var mgTarget = g==='M' ? 380 : 300;
+  if(act==='active'||act==='sportif'||hasMetData) mgTarget += 60;
 
   return{
     kcal:kcal,
-    prot:Math.round(kcal*pp/4),
-    gluc:Math.round(kcal*gp/4),
-    lip:Math.round(kcal*lp/9),
-    ags:Math.round(kcal*0.07/9),
+    prot:protG,
+    gluc:glucG,
+    lip:lipG,
+    ags:agsG,
     o3:2.0,
     fibres:27,
     fer:(g==='F'&&a<50)?16:9,
     cal:calTarget,
-    mg:g==='M'?380:300,
+    mg:mgTarget,
     zn:g==='M'?12:10,
     pot:pathos.indexOf('hypertension')>=0?3500:2000,
-    na:2300
+    na:2300,
+    protGperKg:protGperKg // exposé pour affichage dans le détail
   };
 }
 
@@ -1308,48 +1340,93 @@ function calcScore(T,tgt,pathos){
 
 // Variable globale pour stocker le dernier détail de score calculé
 var lastScoreDetail = null;
+var lastScoreT = null;   // valeurs réelles de la journée
+var lastScoreTgt = null; // objectifs du profil
 
 function openScoreDetail(){
-  if(!lastScoreDetail) return;
+  if(!lastScoreT || !lastScoreTgt) return;
   var existing = document.getElementById('score-detail-ov');
   if(existing) existing.remove();
 
-  var totalScore = document.getElementById('ring-num').textContent;
+  var T   = lastScoreT;
+  var tgt = lastScoreTgt;
+  var score = document.getElementById('ring-num').textContent;
+  var p = PROF || {};
+  var isAthlete = p.activite==='active'||p.activite==='sportif'||(p.activite_met_kcal&&p.activite_met_kcal>0);
 
-  var rows = lastScoreDetail.map(function(d){
-    var barColor = d.ok ? 'var(--sage)' : (d.pts/d.max>=0.6 ? 'var(--amber)' : 'var(--rose)');
-    var barPct = Math.round(d.pts/d.max*100);
+  function bar(val, tgt_val, unit, reverse){
+    var pct = tgt_val>0 ? Math.min(100, val/tgt_val*100) : 0;
+    var ok  = reverse ? val<=tgt_val*1.1 : val>=tgt_val*0.85;
+    var color = ok ? 'var(--sage)' : pct>=60 ? 'var(--amber)' : 'var(--rose)';
+    var valFmt = Math.round(val)+(unit==='kcal'?'':unit==='%'?'%':'');
+    var tgtFmt = Math.round(tgt_val)+(unit==='kcal'?'':unit==='%'?'%':'');
     return '<div style="margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-      +'<span style="font-size:.85rem;font-weight:600;color:var(--text)">'+d.label+'</span>'
-      +'<span style="font-size:.82rem;color:'+barColor+';font-weight:700">'+Math.round(d.pts)+' / '+d.max+' pts</span>'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+      +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">'+arguments[4]+'</span>'
+      +'<span style="font-size:.82rem;font-weight:700;color:'+color+'">'+valFmt+' / '+tgtFmt+' '+unit+'</span>'
       +'</div>'
-      +'<div style="height:6px;background:var(--bg2);border-radius:999px;margin-bottom:4px;overflow:hidden">'
-      +'<div style="height:100%;width:'+barPct+'%;background:'+barColor+';border-radius:999px;transition:width .4s"></div>'
+      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden">'
+      +'<div style="height:100%;width:'+Math.round(pct)+'%;background:'+color+';border-radius:999px;transition:width .4s"></div>'
       +'</div>'
-      +'<div style="font-size:.74rem;color:var(--text2)">'+d.val+'</div>'
-      +(d.conseil ? '<div style="font-size:.74rem;color:'+barColor+';margin-top:2px">💡 '+esc(d.conseil)+'</div>' : '')
+      +(arguments[5]?'<div style="font-size:.72rem;color:'+color+';margin-top:3px">💡 '+arguments[5]+'</div>':'')
       +'</div>';
-  }).join('');
+  }
 
-  var totalPts = lastScoreDetail.reduce(function(s,d){ return s+d.max; },0);
+  // Micro disponibles uniquement si données renseignées dans Ciqual
+  var hasMicro = T.fer>0.1 || T.cal>10 || T.mg>5;
+
+  var rows = ''
+    + bar(T.kcal, tgt.kcal, 'kcal', false,
+        '⚡ Énergie',
+        T.kcal<tgt.kcal*0.85?'En dessous de l\'objectif — mangez davantage.':T.kcal>tgt.kcal*1.1?'Au-dessus de l\'objectif de '+Math.round((T.kcal/tgt.kcal-1)*100)+'%.':null)
+    + bar(T.prot, tgt.prot, 'g', false,
+        '🥩 Protéines — objectif '+tgt.protGperKg+'g/kg',
+        T.prot<tgt.prot*0.85?'Ajoutez une source maigre : œuf, poulet, poisson, légumineuses.':null)
+    + bar(T.gluc, tgt.gluc, 'g', false,
+        '🍞 Glucides',
+        T.gluc<tgt.gluc*0.75?'Insuffisant — ajoutez féculents ou fruits.':T.gluc>tgt.gluc*1.3?'Élevé — privilégiez les versions complètes.':null)
+    + bar(T.lip, tgt.lip, 'g', false,
+        '🥑 Lipides',
+        T.lip>tgt.lip*1.3?'Élevé — vérifiez sauces et matières grasses.':null)
+    + bar(T.fibres, tgt.fibres||27, 'g', false,
+        '🌿 Fibres',
+        T.fibres<(tgt.fibres||27)*0.5?'Insuffisant — ajoutez légumes, légumineuses, céréales complètes.':null)
+    + bar(T.ags*9/Math.max(T.kcal,1)*100, 10, '%', true,
+        '❤️ Graisses saturées (% kcal)',
+        T.ags*9/Math.max(T.kcal,1)*100>10?'Au-dessus de 10% — limitez beurre, charcuterie, fromages gras.':null)
+    + (T.na>0 ? bar(T.na, tgt.na||2300, 'mg', true,
+        '🧂 Sodium',
+        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '');
+
+  // Micronutriments — uniquement si des données sont disponibles
+  var microRows = '';
+  if(hasMicro){
+    microRows += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 10px">Micronutriments</div>';
+    if(T.fer>0.1)  microRows += bar(T.fer, tgt.fer||9, 'mg', false, '🩸 Fer', T.fer<(tgt.fer||9)*0.7?'Insuffisant — viandes rouges, lentilles, épinards.':null);
+    if(T.cal>10)   microRows += bar(T.cal, tgt.cal||1000, 'mg', false, '🦴 Calcium', T.cal<(tgt.cal||1000)*0.7?'Insuffisant — laitages, sardines, légumes verts.':null);
+    if(isAthlete && T.mg>5) microRows += bar(T.mg, tgt.mg||300, 'mg', false, '⚡ Magnésium', T.mg<(tgt.mg||300)*0.7?'Insuffisant pour votre activité — noix, graines, légumineuses.':null);
+  }
+
+  var sourceNote = '<div style="margin-top:16px;padding:10px 12px;background:var(--bg2);border-radius:9px;font-size:.72rem;color:var(--text3);line-height:1.55">'
+    +'ℹ️ <strong>Sources :</strong> Ciqual (ANSES), valeurs nutritionnelles pour 100g. '
+    +'Les données fer, calcium et magnésium ne sont pas disponibles pour tous les aliments enregistrés — les valeurs affichées peuvent être sous-estimées.</div>';
 
   var ov = document.createElement('div');
   ov.id = 'score-detail-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.5);z-index:998;display:flex;align-items:flex-end;justify-content:center;padding:0';
-  ov.innerHTML = '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:22px 20px 30px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.2)">'
+  ov.innerHTML = '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:22px 20px 32px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.2)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
     +'<div>'
-    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700">Score Santé : '+totalScore+'/100</div>'
-    +'<div style="font-size:.75rem;color:var(--text2);margin-top:2px">Détail des '+totalPts+' points disponibles</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700">Score Santé : '+score+'/100</div>'
+    +'<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Détail de vos apports du jour vs objectifs</div>'
     +'</div>'
     +'<button onclick="document.getElementById(\'score-detail-ov\').remove()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem">✕</button>'
     +'</div>'
     + rows
-    +'<div style="margin-top:16px;padding:12px;background:var(--sage-l);border-radius:10px;font-size:.78rem;color:var(--sage);line-height:1.55">'
-    +'💡 <strong>Pour atteindre 100</strong> : approchez chaque indicateur de son objectif. L\'énergie compte pour 40 pts — c\'est le levier le plus puissant.'
-    +'</div>'
+    + microRows
+    + sourceNote
     +'</div>';
+
   ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
 }
@@ -2024,6 +2101,13 @@ async function refreshDash(){
   var scoreResult = scoreUnlocked ? calcScore(T,tgt,pathos) : null;
   var score = scoreResult ? scoreResult.score : null;
   lastScoreDetail = scoreResult ? scoreResult.detail : null;
+  // Stocker les valeurs brutes pour le modal de détail (sans points)
+  if(scoreUnlocked){
+    lastScoreT   = Object.assign({}, T, {protGperKg: tgt.protGperKg});
+    lastScoreTgt = tgt;
+  } else {
+    lastScoreT = null; lastScoreTgt = null;
+  }
   var rn=document.getElementById('ring-num');
   var rf=document.getElementById('ring-f');
 
@@ -2064,7 +2148,7 @@ async function refreshDash(){
         '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
         +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
         +niveau.lbl+'</div>'
-        +(lastScoreDetail?'<div onclick="openScoreDetail()" style="font-size:.72rem;color:var(--gold);margin-top:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">Pourquoi ce score ? <span>→</span></div>':'');
+        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir le détail →</div>';
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
