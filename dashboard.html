@@ -801,10 +801,9 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2a7 7 0 0 1 7 7c0 3.5-2.5 6.4-6 7.4V20h-2v-3.6C7.5 15.4 5 12.5 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
     Recettes
   </a>
-  <button class="bnav-btn" id="nav-scan" onclick="handleScanNav()" style="position:relative">
+  <button class="bnav-btn" id="nav-scan" onclick="handleScanNav()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
     Scan
-    <span id="scan-dev-badge" style="display:none;position:absolute;top:-2px;right:6px;font-size:.52rem;background:var(--rose);color:#fff;padding:1px 5px;border-radius:999px;line-height:1.4;font-weight:600">Bientôt</span>
   </button>
   <button class="bnav-btn" onclick="openPhotoScannerFromNav()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -966,7 +965,7 @@ body {
   <div class="ov-step" id="st-4">
     <div class="ov-badge">🍽️ Journée type</div>
     <h2 class="ov-title" style="font-size:1.5rem">Votre journée alimentaire</h2>
-    <p class="ov-sub">Renseignez ce que vous mangez lors d'une journée habituelle — cela nous aide à personnaliser vos recommandations dès le départ. Vous pouvez aussi passer cette étape pour l'instant..</p>
+    <p class="ov-sub">Renseignez ce que vous mangez lors d'une journée habituelle — cela nous aide à personnaliser vos recommandations dès le départ. Vous pouvez aussi passer cette étape pour l'instant.</p>
 
     <div class="meal-tabs" id="st4-meal-tabs">
       <div class="mtab on" id="st4-tab-breakfast" onclick="selMeal('breakfast')"><span class="ti"></span>Petit-déj.</div>
@@ -1182,8 +1181,6 @@ function initGreeting(){
   applyAvatar(document.getElementById('pav'), initial, seed);
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
-  var scanBadge=document.getElementById('scan-dev-badge');
-  if(scanBadge) scanBadge.style.display = 'none'; // Scan désormais public pour tous
 }
 
 // ── TARGETS ──
@@ -2136,7 +2133,11 @@ function st4DoSearch(q){
   var blocked=CIQUAL_BLOCKLIST.indexOf(qNorm)>=0;
   if(!blocked && db.length){
     var dbL=db.map(function(d){return{food:d,tokens:tok(d.nom)};});
-    var sc=dbL.map(function(e){return{food:e.food,score:scoreFn(qt,e.tokens,e.food.nom),source:'ciqual'};}).filter(function(x){return x.score>=5;});
+    var sc=dbL.map(function(e){
+      var s1=scoreFn(qt,e.tokens,e.food.nom);
+      var s2=e.food.nom_original?scoreFn(qt,tok(e.food.nom_original),e.food.nom_original):0;
+      return{food:e.food,score:Math.max(s1,s2),source:'ciqual'};
+    }).filter(function(x){return x.score>=5;});
     sc.sort(function(a,b){return b.score-a.score;});
     ciq=sc.slice(0,6);
     var aliasCode=CIQUAL_ALIAS[qNorm];
@@ -2252,7 +2253,11 @@ function doSearch(q){
 
   if(!blocked && db.length){
     var dbL=db.map(function(d){return{food:d,tokens:tok(d.nom)};});
-    var sc=dbL.map(function(e){return{food:e.food,score:scoreFn(qt,e.tokens,e.food.nom),source:'ciqual'};}).filter(function(x){return x.score>=5;});
+    var sc=dbL.map(function(e){
+      var s1=scoreFn(qt,e.tokens,e.food.nom);
+      var s2=e.food.nom_original?scoreFn(qt,tok(e.food.nom_original),e.food.nom_original):0;
+      return{food:e.food,score:Math.max(s1,s2),source:'ciqual'};
+    }).filter(function(x){return x.score>=5;});
     sc.sort(function(a,b){return b.score-a.score;});
     ciq=sc.slice(0,6);
 
@@ -2286,17 +2291,22 @@ function renderRes(res){
     return;
   }
   sz.innerHTML=res.map(function(r,i){
-    var f=r.food;var kcal=pN(f.kcal);
-    var sc=r.source==='off'?'src-o':'src-c';var sl=r.source==='off'?'OFF':'Ciqual';
+    var f=r.food; var kcal=pN(f.kcal);
+    var sc=r.source==='off'?'src-o':'src-c'; var sl=r.source==='off'?'OFF':'Ciqual';
+    // Si le nom affiché (FR) diffère du nom original (langue étrangère), on le montre en dessous
+    var showOriginal = f.nom_original && f.nom_original !== f.nom;
     return '<div class="res-item" onclick="pickRes('+i+')">'
-      +'<div class="res-info"><div class="res-name">'+esc(f.nom)+'</div>'
-      +'<div class="res-meta">P:'+esc(f.prot)+'g · G:'+esc(f.gluc)+'g · L:'+esc(f.lip)+'g</div></div>'
+      +'<div class="res-info">'
+      +'<div class="res-name">'+esc(f.nom)+'</div>'
+      +(showOriginal?'<div style="font-size:.68rem;color:var(--text3);margin-top:1px;font-style:italic">'+esc(f.nom_original)+'</div>':'')
+      +'<div class="res-meta">P:'+esc(f.prot)+'g · G:'+esc(f.gluc)+'g · L:'+esc(f.lip)+'g</div>'
+      +'</div>'
       +'<span class="src-pill '+sc+'">'+sl+'</span>'
       +(kcal?'<span class="res-kcal">'+kcal+' kcal</span>':'')
       +'</div>';
   }).join('')
   +'<div style="text-align:center;margin-top:8px">'
-  +'<button onclick="openAddCustomFood(\'\''+')" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border2);background:none;color:var(--text3);font-size:.74rem;cursor:pointer">Pas ce que vous cherchez ? + Ajouter un aliment</button>'
+  +'<button onclick="openAddCustomFood(\'\')" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border2);background:none;color:var(--text3);font-size:.74rem;cursor:pointer">Pas ce que vous cherchez ? + Ajouter un aliment</button>'
   +'</div>';
 }
 
@@ -2832,54 +2842,137 @@ function onBarcodeScanned(code){
 function alimentCustomToFood(c){
   return {
     code: 'custom_'+(c.id||c.code_barres),
-    nom: c.nom, kcal: c.kcal, prot: c.prot, gluc: c.gluc, lip: c.lip,
+    nom: c.nom_fr || c.nom,  // cherche d'abord le nom français
+    nom_original: c.nom,     // garde le nom original pour affichage
+    nom_fr: c.nom_fr||null,
+    kcal: c.kcal, prot: c.prot, gluc: c.gluc, lip: c.lip,
     ags: c.ags||0, fibres: c.fibres||0, fer: c.fer||0, cal: c.cal||0,
     pot: c.pot||0, mg: c.mg||0, na: c.na||0, zn: c.zn||0
   };
 }
 
 async function lookupBarcode(code){
-  // 1. Notre propre cache d'abord — instantané, aucun appel externe si
-  // ce produit a déjà été scanné une fois par n'importe quel utilisateur.
+  // 1. Cache local d'abord
   var cached = await sb.from('aliments_custom').select('*').eq('code_barres', code).maybeSingle();
   if(cached.data) return alimentCustomToFood(cached.data);
 
-  // 2. Sinon, lecture directe par code-barres chez Open Food Facts — cette
-  // route est stable (contrairement à leur recherche texte, abandonnée).
+  // 2. Open Food Facts
   try{
     var ctrl = new AbortController();
     var timer = setTimeout(function(){ ctrl.abort(); }, 6000);
-    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,generic_name,quantity,nutriments,brands', {signal:ctrl.signal});
+    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,generic_name,quantity,nutriments,brands,product_name_fr', {signal:ctrl.signal});
     clearTimeout(timer);
     var d = await r.json();
     if(d.status!==1 || !d.product) return null;
     var p = d.product;
-    // De nombreuses fiches communautaires n'ont pas de product_name rempli,
-    // même quand toutes les valeurs nutritionnelles sont présentes — on se
-    // rabat alors sur la marque (+ nom générique/quantité si disponibles)
-    // plutôt que de jeter une donnée par ailleurs complète et utilisable.
-    var nom = (p.product_name||p.generic_name||'').trim();
-    if(!nom && p.brands){ nom = p.brands.split(',')[0].trim() + (p.quantity?' '+p.quantity:''); }
-    if(!nom) return null;
-    if(p.brands){ var b=p.brands.split(',')[0].trim(); if(b && nom.toLowerCase().indexOf(b.toLowerCase())<0) nom = nom+' ('+b+')'; }
+
+    // Nom original (langue d'origine)
+    var nomOriginal = (p.product_name||p.generic_name||'').trim();
+    if(!nomOriginal && p.brands){ nomOriginal = p.brands.split(',')[0].trim() + (p.quantity?' '+p.quantity:''); }
+    if(!nomOriginal) return null;
+    if(p.brands){ var b=p.brands.split(',')[0].trim(); if(b && nomOriginal.toLowerCase().indexOf(b.toLowerCase())<0) nomOriginal = nomOriginal+' ('+b+')'; }
+
+    // Nom français — OFF fournit parfois product_name_fr directement
+    var nomFrOff = (p.product_name_fr||'').trim();
+
     var n = p.nutriments||{};
     function nv(v){ var x=parseFloat(v); return isNaN(x)?0:x; }
     var entry = {
-      nom: nom,
+      nom: nomOriginal,
+      nom_fr: nomFrOff || null,
       kcal: nv(n['energy-kcal_100g']), prot: nv(n['proteins_100g']), gluc: nv(n['carbohydrates_100g']), lip: nv(n['fat_100g']),
       fibres: nv(n['fiber_100g']), ags: nv(n['saturated-fat_100g']),
       fer: nv(n['iron_100g'])*1000, cal: nv(n['calcium_100g'])*1000, pot: nv(n['potassium_100g'])*1000,
       mg: nv(n['magnesium_100g'])*1000, na: nv(n['sodium_100g'])*1000, zn: nv(n['zinc_100g'])*1000,
       code_barres: code
     };
-    // 3. Mise en cache pour tout le monde. Si un autre utilisateur a scanné
-    // exactement ce produit entre-temps, l'index unique bloque l'insertion
-    // — on l'ignore simplement, la donnée existe déjà.
+
+    // Si le nom est manifestement non-français, demander une confirmation
+    // avant de sauvegarder — sinon le produit sera introuvable en français.
+    var isFrench = /^[a-zàâäéèêëîïôöùûü\s'-]+$/i.test(nomOriginal.replace(/\(.*\)/g,'').trim());
+    if(!isFrench && !entry.nom_fr){
+      // Suspendre la sauvegarde — afficher la popup de nom français
+      return await askFrenchName(entry);
+    }
+
     var ins = await sb.from('aliments_custom').insert(entry).select().maybeSingle();
     return ins.data ? alimentCustomToFood(ins.data) : alimentCustomToFood(entry);
   }catch(e){
     return null;
   }
+}
+
+// Popup demandant le nom français quand le produit est dans une autre langue
+// L'IA suggère automatiquement une traduction — l'utilisateur confirme ou corrige.
+function askFrenchName(entry){
+  return new Promise(function(resolve){
+    var existing = document.getElementById('fr-name-ov');
+    if(existing) existing.remove();
+
+    var ov = document.createElement('div');
+    ov.id = 'fr-name-ov';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,25,22,0.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+    ov.innerHTML = '<div style="background:var(--card);border-radius:18px;padding:26px 22px;max-width:380px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.3)">'
+      +'<div style="font-size:1.4rem;margin-bottom:8px">🌍</div>'
+      +'<div style="font-family:\'Lora\',serif;font-size:1.05rem;font-weight:700;margin-bottom:8px">Produit en langue étrangère</div>'
+      +'<div style="font-size:.8rem;color:var(--text3);background:var(--bg2);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-style:italic">'+esc(entry.nom)+'</div>'
+      +'<p style="font-size:.82rem;color:var(--text2);line-height:1.55;margin-bottom:12px">Notre IA traduit automatiquement — vérifiez et corrigez si nécessaire :</p>'
+      +'<div style="position:relative">'
+      +'<input id="fr-name-input" type="text" placeholder="Traduction en cours..." '
+      +'style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:10px;font-size:.9rem;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:14px">'
+      +'<div id="fr-name-loading" style="position:absolute;right:12px;top:12px;font-size:.75rem;color:var(--text3)">⏳</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px">'
+      +'<button id="fr-name-skip" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-size:.85rem">Ignorer</button>'
+      +'<button id="fr-name-ok" style="flex:2;padding:11px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-weight:700;cursor:pointer;font-size:.88rem">Enregistrer →</button>'
+      +'</div></div>';
+
+    document.body.appendChild(ov);
+
+    // Lancer la traduction IA automatiquement dès l'ouverture
+    sb.auth.getSession().then(function(sess){
+      var token = sess&&sess.data&&sess.data.session&&sess.data.session.access_token;
+      if(!token) return;
+      fetch(SURL+'/functions/v1/dynamic-endpoint',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({translate_food_name: entry.nom})
+      }).then(function(r){return r.json();}).then(function(d){
+        var inp = document.getElementById('fr-name-input');
+        var ldr = document.getElementById('fr-name-loading');
+        if(inp && d.nom_fr){
+          inp.value = d.nom_fr;
+          inp.style.borderColor='rgba(45,79,28,0.35)';
+        }
+        if(ldr) ldr.textContent='✓';
+        setTimeout(function(){ if(ldr) ldr.textContent=''; },1000);
+      }).catch(function(){
+        var ldr = document.getElementById('fr-name-loading');
+        if(ldr) ldr.textContent='';
+      });
+    });
+
+    setTimeout(function(){ var inp=document.getElementById('fr-name-input'); if(inp) inp.focus(); },150);
+
+    async function saveAndResolve(nomFr){
+      ov.remove();
+      entry.nom_fr = nomFr || null;
+      var ins = await sb.from('aliments_custom').insert(entry).select().maybeSingle();
+      resolve(ins.data ? alimentCustomToFood(ins.data) : alimentCustomToFood(entry));
+    }
+
+    document.getElementById('fr-name-ok').onclick = function(){
+      var val = (document.getElementById('fr-name-input').value||'').trim();
+      saveAndResolve(val);
+    };
+    document.getElementById('fr-name-skip').onclick = function(){
+      saveAndResolve(null);
+    };
+    document.getElementById('fr-name-input').onkeydown = function(e){
+      if(e.key==='Enter') document.getElementById('fr-name-ok').click();
+    };
+  });
 }
 
 // ── DÉTECTION DE CATÉGORIE D'ALIMENT — pour des unités de portion logiques ──
@@ -4323,12 +4416,10 @@ function loadCustomFoods(){
   sb.from('aliments_custom').select('*').then(function(r){
     if(!r.data) return;
     var custom = r.data.map(function(c){
-      return {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
+      return {code:'custom_'+c.id, nom:c.nom_fr||c.nom, nom_original:c.nom, nom_fr:c.nom_fr||null,
+        kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
         ags:c.ags||0, mono:0, o3a:0, o3e:0, o3d:0, fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
-        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0,
-        // Sucres — champ clé pour le filtre diabète sur les biscuits et
-        // produits sucrés ; manquait jusqu'ici dans le mapping.
-        sucres:c.sucres||0};
+        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0};
     });
     DB = DB.concat(custom);
     console.log('Aliments personnalisés ajoutés : '+custom.length);
