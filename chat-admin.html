@@ -174,10 +174,25 @@ async function sendReply(){
   var input = document.getElementById('msg-input');
   var content = input.value.trim();
   if(!content) return;
-  var r = await sb.from('messages').insert({user_id:CURRENT_CONV, sender_id:USER.id, is_admin_sender:true, content:content, read_by_admin:true});
+  var r = await sb.from('messages').insert({user_id:CURRENT_CONV, sender_id:USER.id, is_admin_sender:true, content:content, read_by_admin:true}).select().single();
   if(r.error){ alert('Erreur : '+r.error.message); return; }
   input.value = '';
+  notifyByEmail(r.data.id);
   loadAllMessages();
+}
+
+// Déclenche l'email de notification (admin ↔ utilisateur) sans jamais
+// bloquer l'interface — un échec d'envoi ne doit pas gêner la conversation.
+async function notifyByEmail(messageId){
+  try{
+    var session = await sb.auth.getSession();
+    var token = session.data.session.access_token;
+    await fetch(SURL+'/functions/v1/notify-message', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify({ message_id: messageId })
+    });
+  }catch(e){ console.warn('[Cap Santé] notification email non envoyée:', e); }
 }
 
 function subscribeRealtime(){
