@@ -121,7 +121,6 @@ var DB_READY = false;
 
 var selectedMeal    = null;
 var detectedFoods   = [];
-var DAILY_LIMIT     = 5;
 var userCorrections = []; // historique des corrections pour enrichir le prompt IA
 
 // ── Noms courants utilisés par l'IA qui diffèrent des noms Ciqual ──
@@ -282,21 +281,24 @@ function incScanCount(){
   var t = new Date().toISOString().slice(0,10);
   localStorage.setItem('photo_scans_'+t, getScanCount()+1);
 }
+// Trace chaque scan réussi côté serveur (pour le suivi admin jour par jour).
+// N'affecte jamais l'utilisateur : purement informatif, aucune limite associée.
+function logScanToServer(){
+  sb.from('photo_scan_logs').insert({user_id: USER.id}).then(function(r){
+    if(r.error) console.warn('[Cap Santé] Erreur log scan:', r.error);
+  });
+}
 function updateCounter(){
   var isAdmin = PROF && PROF.role==='admin';
   var el = document.getElementById('counter-lbl');
   if(!el) return;
+  var n = getScanCount();
   el.textContent = isAdmin ? 'Admin — scans illimités'
-    : getScanCount()+' / '+DAILY_LIMIT+' scans utilisés aujourd\'hui';
+    : n+' scan'+(n>1?'s':'')+' aujourd\'hui';
 }
 
 async function onPhotoSelected(input){
   var file = input.files[0]; if(!file) return;
-  var isAdmin = PROF && PROF.role==='admin';
-  if(!isAdmin && getScanCount() >= DAILY_LIMIT){
-    showError('Limite de '+DAILY_LIMIT+' scans atteinte — revenez demain !');
-    return;
-  }
   var reader = new FileReader();
   reader.onload = async function(e){
     var orig = e.target.result;
@@ -336,6 +338,7 @@ async function onPhotoSelected(input){
       if(!data.aliments||!data.aliments.length){ showError('Aucun aliment détecté. Essayez avec une image plus nette.'); resetCapture(); return; }
       incScanCount();
       updateCounter();
+      logScanToServer();
       showResults(data.aliments);
     }catch(err){
       clearInterval(iv);
