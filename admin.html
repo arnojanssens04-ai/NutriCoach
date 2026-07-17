@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NutriCoach — Administration</title>
+<title>Cap Santé — Administration</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -40,6 +40,18 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .search-inp::placeholder { color:var(--text3); }
 
 .user-table { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; box-shadow:var(--sh); }
+
+.scan-section { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:20px; }
+.scan-section h3 { font-family:'Lora',serif; font-size:1.05rem; margin-bottom:4px; }
+.scan-section .scan-sub { font-size:.76rem; color:var(--text3); margin-bottom:14px; }
+.scan-day-row { display:grid; grid-template-columns:100px 1fr 34px; align-items:center; gap:10px; padding:5px 0; font-size:.82rem; }
+.scan-day-row.today { font-weight:700; }
+.scan-day-label { color:var(--text2); }
+.scan-day-row.today .scan-day-label { color:var(--gold); }
+.scan-day-bar-wrap { background:var(--bg2); border-radius:6px; height:10px; overflow:hidden; }
+.scan-day-bar { height:100%; background:var(--gold); border-radius:6px; min-width:2px; transition:width .3s; }
+.scan-day-count { text-align:right; font-weight:700; color:var(--gold); }
+.scan-empty { font-size:.82rem; color:var(--text3); text-align:center; padding:10px 0; }
 .user-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:10px; align-items:center; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
 .user-row:last-child { border-bottom:none; }
 .user-row:hover { background:var(--card2); }
@@ -109,7 +121,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Nutri<span>Coach</span> <span class="t-badge">Admin</span></div>
+  <div class="t-logo">Cap<span>Santé</span> <span class="t-badge">Admin</span></div>
   <div style="display:flex;gap:8px">
     <a href="chat-admin.html" class="t-back">💬 Messages</a>
     <a href="aliments.html" class="t-back">🍽️ Aliments</a>
@@ -124,6 +136,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div class="stat-card"><div class="stat-val" id="st-active">—</div><div class="stat-lbl">Actifs 7j</div></div>
     <div class="stat-card"><div class="stat-val" id="st-age">—</div><div class="stat-lbl">Âge moyen</div></div>
     <div class="stat-card"><div class="stat-val" id="st-patho">—</div><div class="stat-lbl">Patho. + fréquente</div></div>
+  </div>
+
+  <div class="scan-section">
+    <h3>📷 Scans Photo IA</h3>
+    <div class="scan-sub">Nombre de photos analysées par jour — 14 derniers jours</div>
+    <div id="scan-days-list">Chargement…</div>
   </div>
 
   <div class="search-row">
@@ -241,6 +259,7 @@ sb.auth.getSession().then(function(r){
       return;
     }
     loadUsers();
+    loadScanStats();
   });
 });
 
@@ -264,6 +283,46 @@ function renderStats(){
   var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
   var recent = ALL_USERS.filter(function(u){return u.created_at && new Date(u.created_at) > weekAgo;});
   document.getElementById('st-active').textContent = recent.length;
+}
+
+// ── SCANS PHOTO IA — répartition par jour (14 derniers jours) ──
+var JOURS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+async function loadScanStats(){
+  var el = document.getElementById('scan-days-list');
+  var since = new Date(); since.setDate(since.getDate()-13); since.setHours(0,0,0,0);
+  var res = await sb.from('photo_scan_logs').select('created_at').gte('created_at', since.toISOString());
+  if(res.error){ el.innerHTML = '<div class="scan-empty">Erreur de chargement</div>'; console.warn('[Cap Santé] scan stats:', res.error); return; }
+
+  // Regroupe par date (YYYY-MM-DD)
+  var counts = {};
+  (res.data||[]).forEach(function(r){
+    var d = r.created_at.slice(0,10);
+    counts[d] = (counts[d]||0) + 1;
+  });
+
+  // Construit les 14 derniers jours dans l'ordre, du plus récent au plus ancien
+  var days = [];
+  var todayStr = new Date().toISOString().slice(0,10);
+  for(var i=0;i<14;i++){
+    var d = new Date(); d.setDate(d.getDate()-i);
+    var key = d.toISOString().slice(0,10);
+    days.push({ key:key, label: JOURS_FR[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1), count: counts[key]||0, isToday: key===todayStr });
+  }
+
+  var max = Math.max.apply(null, days.map(function(d){return d.count;}).concat([1]));
+  if(!days.some(function(d){return d.count>0;})){
+    el.innerHTML = '<div class="scan-empty">Aucun scan enregistré sur cette période</div>';
+    return;
+  }
+
+  el.innerHTML = days.map(function(d){
+    var pct = Math.round((d.count/max)*100);
+    return '<div class="scan-day-row'+(d.isToday?' today':'')+'">'
+      +'<div class="scan-day-label">'+d.label+(d.isToday?' (auj.)':'')+'</div>'
+      +'<div class="scan-day-bar-wrap"><div class="scan-day-bar" style="width:'+pct+'%"></div></div>'
+      +'<div class="scan-day-count">'+d.count+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function renderUsers(list){
