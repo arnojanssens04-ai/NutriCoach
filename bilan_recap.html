@@ -32,21 +32,69 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .user-select { width:100%; padding:11px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.88rem; margin-bottom:18px; outline:none; }
 
 .bilan-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:12px; box-shadow:var(--sh); }
-.bc-hdr { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.bc-hdr { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
 .bc-date { font-family:'Lora',serif; font-size:1.05rem; font-weight:600; }
-.bc-weight { font-size:.85rem; color:var(--gold); font-weight:600; }
-.bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; font-size:.8rem; }
-.bc-row { display:flex; justify-content:space-between; padding:4px 0; }
+.bc-weight { font-size:.85rem; color:var(--gold); font-weight:600; text-align:right; }
+.bc-weight .bc-mensu { display:block; font-size:.7rem; color:var(--text3); font-weight:400; margin-top:2px; }
+
+/* ── Bloc kcal / programme ── */
+.bc-kcal { background:var(--gold-l); border:1px solid rgba(45,79,28,0.15); border-radius:9px; padding:11px 13px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.bc-kcal-cible { font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--gold); }
+.bc-kcal-cible small { font-family:'Inter',sans-serif; font-size:.68rem; font-weight:500; color:var(--text2); display:block; }
+.bc-kcal-badge { font-size:.72rem; padding:3px 10px; border-radius:999px; font-weight:600; }
+.badge-none { background:var(--card2); color:var(--text3); }
+.badge-down { background:rgba(45,79,28,0.1); color:var(--gold); }
+.badge-up { background:rgba(74,122,58,0.12); color:var(--sage); }
+.bc-kcal-raison { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; }
+.bc-kcal-na { font-size:.72rem; color:var(--text3); font-style:italic; }
+
+.bc-section-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin:12px 0 6px; }
+.bc-section-lbl:first-of-type { margin-top:0; }
+.bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; font-size:.8rem; }
+.bc-row { display:flex; justify-content:space-between; align-items:center; padding:3px 0; gap:8px; }
 .bc-row span:first-child { color:var(--text2); }
-.bc-pill { font-size:.7rem; padding:1px 8px; border-radius:999px; }
-.pill-Bien { background:var(--sage-l); color:var(--sage); }
-.pill-Moyen { background:rgba(217,119,6,0.12); color:var(--amber); }
-.pill-Difficile { background:rgba(139,42,42,0.08); color:var(--rose); }
-.bc-notes { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:.8rem; color:var(--text2); line-height:1.5; }
-.bc-notes b { color:var(--text); }
+.bc-pill { font-size:.7rem; padding:2px 9px; border-radius:999px; font-weight:600; white-space:nowrap; }
+.pill-bon { background:var(--sage-l); color:var(--sage); }
+.pill-moyen { background:rgba(217,119,6,0.12); color:var(--amber); }
+.pill-mauvais { background:rgba(139,42,42,0.08); color:var(--rose); }
+
+.bc-notes { margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:.8rem; color:var(--text2); line-height:1.5; }
+.bc-notes b { color:var(--text); display:block; margin-bottom:2px; }
+.bc-notes div { margin-bottom:8px; }
+.bc-notes div:last-child { margin-bottom:0; }
 
 .empty { text-align:center; padding:40px 16px; color:var(--text2); font-size:.86rem; }
 .denied { text-align:center; padding:60px 20px; color:var(--text2); }
+
+/* ── Toolbar (sélecteur + export) ── */
+.toolbar { display:flex; gap:10px; margin-bottom:14px; }
+.toolbar .user-select { margin-bottom:0; flex:1; }
+.btn-export { flex-shrink:0; padding:11px 16px; background:var(--card); border:1px solid var(--border); border-radius:10px; color:var(--text2); font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.btn-export:hover { border-color:var(--gold); color:var(--gold); }
+
+/* ── Bandeau utilisateurs à risque ── */
+.risk-banner { background:rgba(139,42,42,0.06); border:1px solid rgba(139,42,42,0.18); border-radius:var(--r); padding:14px 16px; margin-bottom:18px; }
+.risk-banner-hdr { font-size:.85rem; font-weight:700; color:var(--rose); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.risk-user-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:.82rem; border-top:1px solid rgba(139,42,42,0.1); }
+.risk-user-row:first-of-type { border-top:none; }
+.risk-contact-link { font-size:.74rem; color:var(--rose); text-decoration:none; font-weight:600; padding:4px 10px; border:1px solid rgba(139,42,42,0.3); border-radius:7px; }
+.risk-contact-link:hover { background:rgba(139,42,42,0.08); }
+.bc-flag { font-size:.9rem; margin-left:6px; }
+
+/* ── Mini-graphique tendance kcal (mono-utilisateur) ── */
+.kcal-trend { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:18px; box-shadow:var(--sh); }
+.kcal-trend h3 { font-family:'Lora',serif; font-size:.95rem; margin-bottom:12px; }
+.kcal-trend-chart { display:flex; align-items:flex-end; gap:8px; height:90px; }
+.kt-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+.kt-val { font-size:.65rem; color:var(--gold); font-weight:700; }
+.kt-track { width:100%; max-width:26px; background:var(--card2); border-radius:4px; flex:1; display:flex; align-items:flex-end; overflow:hidden; }
+.kt-fill { width:100%; background:var(--gold); border-radius:4px 4px 0 0; min-height:3px; }
+.kt-date { font-size:.62rem; color:var(--text3); }
+.kcal-trend-empty { font-size:.8rem; color:var(--text3); text-align:center; padding:10px 0; }
+
+/* ── Bouton contact sur chaque carte ── */
+.bc-contact { font-size:.72rem; color:var(--text2); text-decoration:none; padding:5px 11px; border:1px solid var(--border2); border-radius:7px; white-space:nowrap; }
+.bc-contact:hover { border-color:var(--gold); color:var(--gold); }
 </style>
 </head>
 <body>
@@ -61,6 +109,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <h1>Récapitulatif des bilans</h1>
     <p>Vue d'ensemble des bilans hebdomadaires de tous les utilisateurs.</p>
   </div>
+  <div id="risk-banner-zone"></div>
+  <div id="kcal-trend-zone"></div>
   <div id="content"></div>
 </div>
 
@@ -93,53 +143,233 @@ async function checkAdminAndLoad(){
   ALL_BILANS = bilansRes.data || [];
 
   renderUserSelect();
+  renderRiskBanner();
   renderBilans('all');
 }
 
 function userLabel(u){ return (u.prenom||'')+' '+(u.nom||'')+(u.email?' ('+u.email+')':''); }
 
 function renderUserSelect(){
-  var html = '<select class="user-select" id="user-filter" onchange="renderBilans(this.value)">'
+  var html = '<div class="toolbar">'
+    +'<select class="user-select" id="user-filter" onchange="renderBilans(this.value)">'
     +'<option value="all">Tous les utilisateurs</option>'
     +ALL_USERS.map(function(u){ return '<option value="'+u.id+'">'+esc(userLabel(u))+'</option>'; }).join('')
-    +'</select>';
-  document.getElementById('content').insertAdjacentHTML('beforebegin','');
+    +'</select>'
+    +'<button class="btn-export" onclick="exportCsv()">⬇ Export CSV</button>'
+    +'</div>';
   var sel = document.createElement('div');
   sel.innerHTML = html;
-  document.querySelector('.wrap').insertBefore(sel, document.getElementById('content'));
+  document.querySelector('.wrap').insertBefore(sel, document.getElementById('risk-banner-zone'));
+}
+
+// Normalise une valeur de pill (qui varie selon le champ : Bien/Bonne/Bon/Non...)
+// vers un état de couleur unique : bon (vert) / moyen (jaune) / mauvais (rouge).
+function pillColor(val){
+  if(!val) return null;
+  var v = String(val).toLowerCase();
+  if(['bien','bonne','bon','non'].indexOf(v)>=0) return 'bon';
+  if(['moyen','moyenne'].indexOf(v)>=0) return 'moyen';
+  if(['difficile','mauvaise','mauvais'].indexOf(v)>=0) return 'mauvais';
+  return null;
+}
+
+// Groupes de champs affichés dans l'ordre du formulaire bilan.html
+var FIELD_GROUPS = [
+  { lbl:'Alimentation', fields:[
+    ['respect_plan','Respect du plan'], ['envies_sucrees','Envies incontrôlables']
+  ]},
+  { lbl:'Activité physique', fields:[
+    ['activite_semaine','Activité']
+  ]},
+  { lbl:'Digestion & sommeil', fields:[
+    ['troubles_digestifs','Digestion'], ['sommeil','Sommeil']
+  ]},
+  { lbl:'Énergie & bien-être', fields:[
+    ['niveau_energie','Énergie'], ['humeur_semaine','Humeur']
+  ]},
+  { lbl:'Suivi de santé (pathologies)', fields:[
+    ['diabetes_fatigue','Fatigabilité post-repas'], ['diabetes_envies_sucre','Envies de sucre'],
+    ['hta_sel','Sel limité'], ['hta_symptomes','Maux de tête / vertiges']
+  ]}
+];
+
+// ── Score qualitatif d'un bilan (même logique que qualiteBilanScore() côté bilan.html) ──
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'élevée':0,elevee:0};
+var SCORE_FIELDS = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
+var SCORE_THRESHOLD = 7; // sur 14 (7 champs × 2 pts max) — même seuil que bilan.html
+
+function bilanScore(b){
+  var total=0, compte=0;
+  SCORE_FIELDS.forEach(function(f){
+    var v = b[f];
+    if(v){ var pts = PILL_SCORE[String(v).toLowerCase()]; total += (pts!==undefined?pts:1); compte++; }
+  });
+  return compte>0 ? total : null;
+}
+
+// Détecte les utilisateurs dont les 2 derniers bilans sont tous deux sous le
+// seuil qualitatif — signal de décrochage potentiel à surveiller de près.
+function computeAtRiskUsers(){
+  var byUser = {};
+  ALL_BILANS.forEach(function(b){
+    if(!byUser[b.user_id]) byUser[b.user_id] = [];
+    byUser[b.user_id].push(b);
+  });
+  var atRisk = [];
+  Object.keys(byUser).forEach(function(uid){
+    var bilans = byUser[uid].slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+    if(bilans.length < 2) return;
+    var s1 = bilanScore(bilans[0]), s2 = bilanScore(bilans[1]);
+    if(s1!==null && s2!==null && s1<SCORE_THRESHOLD && s2<SCORE_THRESHOLD){
+      atRisk.push({ uid:uid, lastDate:bilans[0].date, bilanIds:[bilans[0].id, bilans[1].id] });
+    }
+  });
+  return atRisk;
+}
+
+function renderRiskBanner(){
+  var zone = document.getElementById('risk-banner-zone');
+  var atRisk = computeAtRiskUsers();
+  if(!atRisk.length){ zone.innerHTML = ''; return; }
+
+  zone.innerHTML = '<div class="risk-banner">'
+    +'<div class="risk-banner-hdr">⚠️ '+atRisk.length+' utilisateur'+(atRisk.length>1?'s':'')+' à surveiller — 2 bilans consécutifs difficiles</div>'
+    +atRisk.map(function(r){
+      var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
+      return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
+        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">💬 Contacter</a></div>';
+    }).join('')
+    +'</div>';
 }
 
 function renderBilans(filterId){
   var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
   var el = document.getElementById('content');
+  var trendZone = document.getElementById('kcal-trend-zone');
+
+  // Graphique de tendance kcal : uniquement pertinent pour un utilisateur précis
+  trendZone.innerHTML = filterId!=='all' ? renderKcalTrendHtml(list) : '';
+
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun bilan enregistré pour le moment.</div>'; return; }
+
+  var riskBilanIds = {};
+  computeAtRiskUsers().forEach(function(r){ r.bilanIds.forEach(function(id){ riskBilanIds[id]=true; }); });
 
   el.innerHTML = list.map(function(b){
     var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
     var dt = new Date(b.date);
-    var pillFields = [
-      ['Alimentation', b.respect_plan], ['Activité', b.activite_semaine],
-      ['Digestion', b.troubles_digestifs], ['Sommeil', b.sommeil],
-      ['Difficulté', b.difficulte_semaine], ['Satisfaction', b.satisfaction_semaine]
-    ];
-    var pillsHtml = pillFields.filter(function(p){return p[1];}).map(function(p){
-      return '<div class="bc-row"><span>'+p[0]+'</span><span class="bc-pill pill-'+p[1]+'">'+p[1]+'</span></div>';
+
+    // ── Mensurations ──
+    var mensu = [];
+    if(b.tour_taille) mensu.push('taille '+b.tour_taille+'cm');
+    if(b.tour_hanche) mensu.push('hanche '+b.tour_hanche+'cm');
+
+    // ── Bloc kcal / décision du programme ──
+    var kcalHtml;
+    if(b.kcal_cible_apres == null && b.kcal_ajustement_delta == null){
+      kcalHtml = '<div class="bc-kcal"><span class="bc-kcal-na">📊 Pas de suivi kcal pour ce bilan (antérieur à cette fonctionnalité)</span></div>';
+    } else {
+      var delta = b.kcal_ajustement_delta || 0;
+      var badgeCls = delta===0 ? 'badge-none' : (delta<0 ? 'badge-down' : 'badge-up');
+      var badgeLbl = delta===0 ? 'Aucun changement' : (delta>0?'+':'')+delta+' kcal';
+      kcalHtml = '<div class="bc-kcal">'
+        +'<div class="bc-kcal-cible"><small>Cible calorique</small>'+(b.kcal_cible_apres!=null?Math.round(b.kcal_cible_apres)+' kcal/j':'—')+'</div>'
+        +'<div><span class="bc-kcal-badge '+badgeCls+'">'+badgeLbl+'</span>'
+        +(b.kcal_ajustement_raison?'<div class="bc-kcal-raison">'+esc(b.kcal_ajustement_raison)+'</div>':'')
+        +'</div></div>';
+    }
+
+    // ── Groupes de champs (pills) ──
+    var groupsHtml = FIELD_GROUPS.map(function(g){
+      var rows = g.fields.filter(function(f){ return b[f[0]]; }).map(function(f){
+        var val = b[f[0]];
+        var color = pillColor(val);
+        return '<div class="bc-row"><span>'+f[1]+'</span><span class="bc-pill'+(color?' pill-'+color:'')+'">'+esc(val)+'</span></div>';
+      });
+      if(!rows.length) return '';
+      return '<div class="bc-section-lbl">'+g.lbl+'</div><div class="bc-grid">'+rows.join('')+'</div>';
     }).join('');
+
+    // ── Notes libres ──
     var notes = [];
-    if(b.ecart_alimentaire) notes.push('<b>Écarts :</b> '+esc(b.ecart_alimentaire));
-    if(b.objectifs_notes) notes.push('<b>Objectifs :</b> '+esc(b.objectifs_notes));
-    if(b.tour_taille || b.tour_hanche) notes.push('<b>Mensurations :</b> '+(b.tour_taille?'taille '+b.tour_taille+'cm ':'')+(b.tour_hanche?'hanche '+b.tour_hanche+'cm':''));
+    if(b.ecart_alimentaire) notes.push('<div><b>Écarts alimentaires</b>'+esc(b.ecart_alimentaire)+'</div>');
+    if(b.objectifs_notes) notes.push('<div><b>Objectifs semaine prochaine</b>'+esc(b.objectifs_notes)+'</div>');
+    if(b.commentaire_libre) notes.push('<div><b>Commentaire libre</b>'+esc(b.commentaire_libre)+'</div>');
 
     return '<div class="bilan-card">'
       +'<div class="bc-hdr"><div>'
-        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')+'</div>'
+        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')+(riskBilanIds[b.id]?'<span class="bc-flag" title="Semaine difficile, à surveiller">⚠️</span>':'')+'</div>'
         +'<div style="font-size:.74rem;color:var(--text3)">'+dt.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'
-      +'</div><div class="bc-weight">'+(b.poids||'—')+' kg</div></div>'
-      +'<div class="bc-grid">'+pillsHtml+'</div>'
-      +(notes.length?'<div class="bc-notes">'+notes.join('<br>')+'</div>':'')
+      +'</div><div style="text-align:right">'
+        +'<div class="bc-weight">'+(b.poids||'—')+' kg'+(mensu.length?'<span class="bc-mensu">'+mensu.join(' · ')+'</span>':'')+'</div>'
+        +(u?'<a class="bc-contact" href="chat-admin.html?u='+b.user_id+'" target="_blank">💬 Contacter</a>':'')
+      +'</div></div>'
+      +kcalHtml
+      +groupsHtml
+      +(notes.length?'<div class="bc-notes">'+notes.join('')+'</div>':'')
       +'</div>';
   }).join('');
 }
+
+// Construit le HTML du mini-graphique de tendance de la cible calorique,
+// pour un utilisateur donné (liste déjà filtrée, triée du plus ancien au plus récent).
+function renderKcalTrendHtml(list){
+  var withKcal = list.filter(function(b){ return b.kcal_cible_apres!=null; })
+    .slice().sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+  if(withKcal.length < 2) return '';
+
+  var vals = withKcal.map(function(b){ return b.kcal_cible_apres; });
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  var range = Math.max(1, max-min);
+
+  var cols = withKcal.map(function(b){
+    var h = 20 + ((b.kcal_cible_apres-min)/range)*80;
+    var d = new Date(b.date);
+    return '<div class="kt-col"><div class="kt-val">'+Math.round(b.kcal_cible_apres)+'</div>'
+      +'<div class="kt-track"><div class="kt-fill" style="height:'+h+'%"></div></div>'
+      +'<div class="kt-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div></div>';
+  }).join('');
+
+  return '<div class="kcal-trend"><h3>📈 Évolution de la cible calorique</h3><div class="kcal-trend-chart">'+cols+'</div></div>';
+}
+
+// Exporte les bilans actuellement affichés (respecte le filtre utilisateur) en CSV.
+function exportCsv(){
+  var filterId = document.getElementById('user-filter').value;
+  var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
+  if(!list.length){ return; }
+
+  var cols = ['date','utilisateur','poids','tour_taille','tour_hanche',
+    'respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil',
+    'niveau_energie','humeur_semaine','diabetes_fatigue','diabetes_envies_sucre','hta_sel','hta_symptomes',
+    'ecart_alimentaire','objectifs_notes','commentaire_libre',
+    'kcal_ajustement_delta','kcal_ajustement_raison','kcal_cible_apres'];
+
+  function csvEsc(v){
+    if(v===null||v===undefined) return '';
+    var s = String(v).replace(/"/g,'""');
+    return /[",\n;]/.test(s) ? '"'+s+'"' : s;
+  }
+
+  var rows = list.map(function(b){
+    var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
+    var row = { date:b.date, utilisateur: u?userLabel(u):'Utilisateur inconnu' };
+    cols.slice(2).forEach(function(c){ row[c]=b[c]; });
+    return cols.map(function(c){ return csvEsc(row[c]); }).join(';');
+  });
+
+  var csv = cols.join(';')+'\n'+rows.join('\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'bilans_capsante_'+(filterId==='all'?'tous':filterId)+'_'+todayStrCsv()+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function todayStrCsv(){ var d=new Date(); return d.toISOString().slice(0,10); }
 </script>
 </body>
 </html>
