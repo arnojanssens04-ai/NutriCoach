@@ -97,8 +97,13 @@ async function checkAdminAndLoad(){
   var usersRes = await sb.from('profiles').select('id,prenom,nom,email');
   (usersRes.data||[]).forEach(function(u){ ALL_USERS[u.id] = u; });
 
-  loadAllMessages();
+  await loadAllMessages();
   subscribeRealtime();
+
+  // Deep-link : chat-admin.html?u=<user_id> ouvre directement la conversation
+  // (utilisé par le bouton "Contacter" depuis bilan_recap.html)
+  var uidParam = new URLSearchParams(window.location.search).get('u');
+  if(uidParam) openConv(uidParam);
 }
 
 async function loadAllMessages(){
