@@ -400,12 +400,27 @@ async function sendMessage(){
     content: content,
     read_by_user: true,
     read_by_admin: false
-  });
+  }).select().single();
   btn.disabled = false;
   if(r.error){ alert('Erreur : '+r.error.message); return; }
   input.value = '';
   document.getElementById('quick-replies').style.display = 'none';
+  notifyByEmail(r.data.id);
   loadMessages();
+}
+
+// Déclenche l'email de notification (admin ↔ utilisateur) sans jamais
+// bloquer l'interface — un échec d'envoi ne doit pas gêner la conversation.
+async function notifyByEmail(messageId){
+  try{
+    var session = await sb.auth.getSession();
+    var token = session.data.session.access_token;
+    await fetch(SURL+'/functions/v1/notify-message', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify({ message_id: messageId })
+    });
+  }catch(e){ console.warn('[Cap Santé] notification email non envoyée:', e); }
 }
 
 async function markReadByUser(){
