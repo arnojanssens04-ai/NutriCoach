@@ -1033,15 +1033,14 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 // notable. La personne voit un pop-up uniquement si une version plus
 // récente que celle déjà vue existe — jamais répété inutilement.
 var CHANGELOG = [
-  {v:'0.5.0', date:'14 juillet 2026', items:[
-    '🧭 Nouveau nom et identité visuelle — NutriCoach devient Cap Santé, avec un logo boussole sur toutes les pages',
-    '📷 Scan Photo IA stabilisé — redirigé vers une page dédiée, plus aucune erreur sur iOS et Android',
-    '🧠 Photo IA qui apprend de vos corrections — chaque quantité modifiée améliore les estimations futures',
-    '🔍 Meilleure reconnaissance alimentaire — 30+ alias (brocoli, courgette, poulet...) et recherche plus permissive',
-    '📊 Score Santé masqué jusqu\'à 2 repas principaux enregistrés — plus de score décourageant en début de journée',
-    '➕ Ajout d\'aliments personnalisés — tout utilisateur peut ajouter un aliment absent, avec détection automatique des doublons',
-    '💬 Chat amélioré — messages proactifs automatiques, contexte profil, boutons de réponse rapide, indicateur de frappe et accusés de lecture',
-    '⏳ Base alimentaire chargée avant confirmation — plus d\'aliments introuvables par problème de timing'
+  {v:'0.6.0', date:'18 juillet 2026', items:[
+    '🍽️ Le plan alimentaire passe à 95 recettes (contre 34) — bien plus de variété chaque jour',
+    '👅 Vos goûts sont pris en compte — un swipe rapide à la première connexion, et l\'app évite ce que vous n\'aimez pas',
+    '👨‍🍳 Nouveau mode cuisine — étapes détaillées, minuteur intégré, portions ajustables pour chaque recette suggérée',
+    '✏️ Vos recettes personnelles sont désormais modifiables, avec le même mode cuisine pas à pas',
+    '📷 Scans photo illimités',
+    '✅ Le plan alimentaire ne pousse plus à manger davantage si votre objectif du jour est déjà atteint',
+    '💬 Le chat vous prévient par email en cas de nouveau message'
   ]}
 ];
 
@@ -3305,58 +3304,58 @@ function chgW(d){wkOffset+=d;if(wkOffset>0)wkOffset=0;renderWeekly();}
 // la fiabilité nutritionnelle du plan généré.
 var FOOD_BANK = {
   proteines: [
-    {code:'28963', nom:'Blanc de poulet', kcal:105, prot:20.7, gluc:1.4, lip:1.8, ags:0.54, pot:380, unit:'g', fits:['lunch','dinner']},
-    {code:'36302', nom:'Dinde rôtie', kcal:151, prot:29.1, gluc:0, lip:3.8, ags:1.13, pot:483, unit:'g', fits:['lunch','dinner']},
-    {code:'25997', nom:'Cabillaud', kcal:100, prot:23.3, gluc:0, lip:0.8, ags:0.17, pot:327, unit:'g', fits:['lunch','dinner']},
-    {code:'26192', nom:'Colin (lieu jaune)', kcal:97.8, prot:24.4, gluc:0, lip:0.5, ags:0.01, pot:388, unit:'g', fits:['lunch','dinner']},
-    {code:'25996', nom:'Saumon', kcal:205, prot:23.2, gluc:0.6, lip:12.2, ags:2.48, pot:383, unit:'g', fits:['lunch','dinner']},
-    {code:'22010', nom:'Œuf dur', kcal:134, prot:13.5, gluc:0.5, lip:8.6, ags:3.22, pot:120, unit:'oeuf', gpu:50, fits:['breakfast','lunch','dinner','snack']},
-    {code:'20507', nom:'Pois chiches', kcal:148, prot:8.3, gluc:17.7, lip:3.0, ags:0.46, pot:170, unit:'g', fits:['lunch','dinner']},
-    {code:'20360', nom:'Lentilles', kcal:125, prot:10.1, gluc:16.2, lip:0.6, ags:0.09, pot:215, unit:'g', fits:['lunch','dinner']},
-    {code:'6200', nom:'Steak de bœuf grillé', kcal:128, prot:27.6, gluc:0, lip:2.0, ags:0.98, pot:371, unit:'g', fits:['lunch','dinner']},
-    {code:'20904', nom:'Tofu nature', kcal:147, prot:13.4, gluc:2.9, lip:8.5, ags:1.35, pot:140, unit:'g', fits:['lunch','dinner']}
+    {code:'28963', nom:'Blanc de poulet', kcal:105, prot:20.7, gluc:1.4, lip:1.8, ags:0.54, pot:380, unit:'g', fits:['lunch','dinner'], tc:'volaille'},
+    {code:'36302', nom:'Dinde rôtie', kcal:151, prot:29.1, gluc:0, lip:3.8, ags:1.13, pot:483, unit:'g', fits:['lunch','dinner'], tc:'volaille'},
+    {code:'25997', nom:'Cabillaud', kcal:100, prot:23.3, gluc:0, lip:0.8, ags:0.17, pot:327, unit:'g', fits:['lunch','dinner'], tc:'poisson'},
+    {code:'26192', nom:'Colin (lieu jaune)', kcal:97.8, prot:24.4, gluc:0, lip:0.5, ags:0.01, pot:388, unit:'g', fits:['lunch','dinner'], tc:'poisson'},
+    {code:'25996', nom:'Saumon', kcal:205, prot:23.2, gluc:0.6, lip:12.2, ags:2.48, pot:383, unit:'g', fits:['lunch','dinner'], tc:'poisson'},
+    {code:'22010', nom:'Œuf dur', kcal:134, prot:13.5, gluc:0.5, lip:8.6, ags:3.22, pot:120, unit:'oeuf', gpu:50, fits:['breakfast','lunch','dinner','snack'], tc:'oeufs'},
+    {code:'20507', nom:'Pois chiches', kcal:148, prot:8.3, gluc:17.7, lip:3.0, ags:0.46, pot:170, unit:'g', fits:['lunch','dinner'], tc:'legumineuses'},
+    {code:'20360', nom:'Lentilles', kcal:125, prot:10.1, gluc:16.2, lip:0.6, ags:0.09, pot:215, unit:'g', fits:['lunch','dinner'], tc:'legumineuses'},
+    {code:'6200', nom:'Steak de bœuf grillé', kcal:128, prot:27.6, gluc:0, lip:2.0, ags:0.98, pot:371, unit:'g', fits:['lunch','dinner'], tc:'viande_rouge'},
+    {code:'20904', nom:'Tofu nature', kcal:147, prot:13.4, gluc:2.9, lip:8.5, ags:1.35, pot:140, unit:'g', fits:['lunch','dinner'], tc:'tofu'}
   ],
   feculents: [
-    {code:'9104', nom:'Riz blanc', kcal:155, prot:3.2, gluc:33.2, lip:0.7, ags:0.17, pot:21.9, unit:'g', fits:['lunch','dinner']},
-    {code:'9811', nom:'Pâtes', kcal:167, prot:6.1, gluc:31.4, lip:1.1, ags:0.2, pot:52.1, unit:'g', fits:['lunch','dinner']},
-    {code:'7001', nom:'Pain blanc', kcal:287, prot:8.3, gluc:58.3, lip:1.4, ags:0.45, pot:180, unit:'g', fits:['breakfast']},
-    {code:'4048', nom:'Pomme de terre', kcal:94.9, prot:2.1, gluc:17.2, lip:1.6, ags:0.44, pot:457, unit:'g', fits:['lunch','dinner']},
-    {code:'9341', nom:'Quinoa', kcal:149, prot:4.7, gluc:27.9, lip:1.1, ags:0.14, pot:220, unit:'g', fits:['lunch','dinner']},
-    {code:'9691', nom:'Boulgour', kcal:131, prot:4.3, gluc:24.1, lip:1.0, ags:0.16, pot:67.1, unit:'g', fits:['lunch','dinner']},
-    {code:'4102', nom:'Patate douce', kcal:79.1, prot:1.7, gluc:16.3, lip:0.15, ags:0.042, pot:353, unit:'g', fits:['lunch','dinner']}
+    {code:'9104', nom:'Riz blanc', kcal:155, prot:3.2, gluc:33.2, lip:0.7, ags:0.17, pot:21.9, unit:'g', fits:['lunch','dinner'], tc:'riz'},
+    {code:'9811', nom:'Pâtes', kcal:167, prot:6.1, gluc:31.4, lip:1.1, ags:0.2, pot:52.1, unit:'g', fits:['lunch','dinner'], tc:'pates'},
+    {code:'7001', nom:'Pain blanc', kcal:287, prot:8.3, gluc:58.3, lip:1.4, ags:0.45, pot:180, unit:'g', fits:['breakfast'], tc:'pain'},
+    {code:'4048', nom:'Pomme de terre', kcal:94.9, prot:2.1, gluc:17.2, lip:1.6, ags:0.44, pot:457, unit:'g', fits:['lunch','dinner'], tc:'pdt'},
+    {code:'9341', nom:'Quinoa', kcal:149, prot:4.7, gluc:27.9, lip:1.1, ags:0.14, pot:220, unit:'g', fits:['lunch','dinner'], tc:'cereales'},
+    {code:'9691', nom:'Boulgour', kcal:131, prot:4.3, gluc:24.1, lip:1.0, ags:0.16, pot:67.1, unit:'g', fits:['lunch','dinner'], tc:'cereales'},
+    {code:'4102', nom:'Patate douce', kcal:79.1, prot:1.7, gluc:16.3, lip:0.15, ags:0.042, pot:353, unit:'g', fits:['lunch','dinner'], tc:'pdt'}
   ],
   legumes: [
-    {code:'20057', nom:'Brocoli', kcal:31.9, prot:2.9, gluc:2.2, lip:0.4, ags:0.047, pot:321, unit:'g'},
-    {code:'20021', nom:'Courgette', kcal:15.5, prot:0.9, gluc:1.4, lip:0.4, ags:0.1, pot:238, unit:'g'},
-    {code:'20030', nom:'Haricots verts', kcal:29.4, prot:2.0, gluc:3.0, lip:0.2, ags:0.059, pot:174, unit:'g'},
-    {code:'20083', nom:'Épinards', kcal:28, prot:3.3, gluc:1.0, lip:0.5, ags:0.041, pot:346, unit:'g'},
-    {code:'25604', nom:'Salade verte', kcal:13.5, prot:1.0, gluc:1.5, lip:0.1, ags:0.028, pot:260, unit:'g'},
-    {code:'20009', nom:'Carotte', kcal:30.2, prot:0.78, gluc:5.2, lip:0.3, ags:0.15, pot:274, unit:'g'},
-    {code:'20087', nom:'Poivron rouge', kcal:33.6, prot:1.1, gluc:6.0, lip:0.3, ags:0.01, pot:180, unit:'g'},
-    {code:'20016', nom:'Chou-fleur', kcal:24.9, prot:1.8, gluc:2.1, lip:0.7, ags:0.24, pot:270, unit:'g'}
+    {code:'20057', nom:'Brocoli', kcal:31.9, prot:2.9, gluc:2.2, lip:0.4, ags:0.047, pot:321, unit:'g', tc:'legumes_verts'},
+    {code:'20021', nom:'Courgette', kcal:15.5, prot:0.9, gluc:1.4, lip:0.4, ags:0.1, pot:238, unit:'g', tc:'legumes_verts'},
+    {code:'20030', nom:'Haricots verts', kcal:29.4, prot:2.0, gluc:3.0, lip:0.2, ags:0.059, pot:174, unit:'g', tc:'legumes_verts'},
+    {code:'20083', nom:'Épinards', kcal:28, prot:3.3, gluc:1.0, lip:0.5, ags:0.041, pot:346, unit:'g', tc:'legumes_verts'},
+    {code:'25604', nom:'Salade verte', kcal:13.5, prot:1.0, gluc:1.5, lip:0.1, ags:0.028, pot:260, unit:'g', tc:'legumes_verts'},
+    {code:'20009', nom:'Carotte', kcal:30.2, prot:0.78, gluc:5.2, lip:0.3, ags:0.15, pot:274, unit:'g', tc:'autres_legumes'},
+    {code:'20087', nom:'Poivron rouge', kcal:33.6, prot:1.1, gluc:6.0, lip:0.3, ags:0.01, pot:180, unit:'g', tc:'autres_legumes'},
+    {code:'20016', nom:'Chou-fleur', kcal:24.9, prot:1.8, gluc:2.1, lip:0.7, ags:0.24, pot:270, unit:'g', tc:'legumes_verts'}
   ],
   fruits: [
-    {code:'13039', nom:'Pomme', kcal:54, prot:0.25, gluc:11.6, lip:0.3, ags:0.052, pot:119, unit:'fruit', gpu:150},
-    {code:'13005', nom:'Banane', kcal:87.6, prot:1.1, gluc:19.7, lip:0.5, ags:0.01, pot:320, unit:'fruit', gpu:120},
-    {code:'13034', nom:'Orange', kcal:42, prot:0.75, gluc:8.0, lip:0.5, ags:0.01, pot:180, unit:'fruit', gpu:150},
-    {code:'13014', nom:'Fraises', kcal:35.1, prot:0.63, gluc:6.0, lip:0.5, ags:0.01, pot:140, unit:'g'},
-    {code:'13037', nom:'Poire', kcal:56.6, prot:0.36, gluc:12.3, lip:0.3, ags:0.067, pot:132, unit:'fruit', gpu:150},
-    {code:'13021', nom:'Kiwi', kcal:60.9, prot:0.88, gluc:11.0, lip:0.6, ags:0.13, pot:290, unit:'fruit', gpu:90},
-    {code:'13043', nom:'Pêche', kcal:37.9, prot:0.91, gluc:7.6, lip:0.25, ags:0.019, pot:215, unit:'fruit', gpu:130}
+    {code:'13039', nom:'Pomme', kcal:54, prot:0.25, gluc:11.6, lip:0.3, ags:0.052, pot:119, unit:'fruit', gpu:150, tc:'fruits'},
+    {code:'13005', nom:'Banane', kcal:87.6, prot:1.1, gluc:19.7, lip:0.5, ags:0.01, pot:320, unit:'fruit', gpu:120, tc:'fruits'},
+    {code:'13034', nom:'Orange', kcal:42, prot:0.75, gluc:8.0, lip:0.5, ags:0.01, pot:180, unit:'fruit', gpu:150, tc:'fruits'},
+    {code:'13014', nom:'Fraises', kcal:35.1, prot:0.63, gluc:6.0, lip:0.5, ags:0.01, pot:140, unit:'g', tc:'fruits'},
+    {code:'13037', nom:'Poire', kcal:56.6, prot:0.36, gluc:12.3, lip:0.3, ags:0.067, pot:132, unit:'fruit', gpu:150, tc:'fruits'},
+    {code:'13021', nom:'Kiwi', kcal:60.9, prot:0.88, gluc:11.0, lip:0.6, ags:0.13, pot:290, unit:'fruit', gpu:90, tc:'fruits'},
+    {code:'13043', nom:'Pêche', kcal:37.9, prot:0.91, gluc:7.6, lip:0.25, ags:0.019, pot:215, unit:'fruit', gpu:130, tc:'fruits'}
   ],
   matieres_grasses: [
     {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0, lip:99.9, ags:15.2, pot:0, unit:'cuillère à soupe', gpu:15, fits:['lunch','dinner']},
-    {code:'13004', nom:'Avocat', kcal:203, prot:1.6, gluc:0, lip:20.6, ags:4.51, pot:430, unit:'g'},
-    {code:'15000', nom:'Amandes', kcal:615, prot:18.8, gluc:9.5, lip:51.3, ags:4.11, pot:800, unit:'poignée', gpu:20},
-    {code:'16400', nom:'Beurre', kcal:753, prot:0.64, gluc:0.7, lip:83, ags:60, pot:36.1, unit:'noix', gpu:10},
-    {code:'15005', nom:'Noix', kcal:709, prot:13.3, gluc:6.9, lip:67.3, ags:6.45, pot:430, unit:'poignée', gpu:20},
+    {code:'13004', nom:'Avocat', kcal:203, prot:1.6, gluc:0, lip:20.6, ags:4.51, pot:430, unit:'g', tc:'avocat'},
+    {code:'15000', nom:'Amandes', kcal:615, prot:18.8, gluc:9.5, lip:51.3, ags:4.11, pot:800, unit:'poignée', gpu:20, tc:'fruits_coque'},
+    {code:'16400', nom:'Beurre', kcal:753, prot:0.64, gluc:0.7, lip:83, ags:60, pot:36.1, unit:'noix', gpu:10, tc:'laitier'},
+    {code:'15005', nom:'Noix', kcal:709, prot:13.3, gluc:6.9, lip:67.3, ags:6.45, pot:430, unit:'poignée', gpu:20, tc:'fruits_coque'},
     {code:'17130', nom:'Huile de colza', kcal:900, prot:0, gluc:0, lip:100, ags:7.26, pot:0, unit:'cuillère à soupe', gpu:15, fits:['lunch','dinner']}
   ],
   laitier: [
-    {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml', fits:['breakfast']},
-    {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6, gluc:3.5, lip:3.0, ags:2.13, pot:110, unit:'pot', gpu:125, fits:['breakfast','snack']},
-    {code:'19501', nom:'Fromage blanc', kcal:80, prot:7.0, gluc:6.3, lip:2.8, ags:1.83, pot:162, unit:'g', fits:['breakfast','snack']},
-    {code:'12099', nom:'Emmental', kcal:396, prot:29.7, gluc:0, lip:30.8, ags:21.4, pot:0, unit:'tranche', gpu:20, fits:[]}
+    {code:'19033', nom:'Lait demi-écrémé', kcal:47.5, prot:3.5, gluc:5.0, lip:1.6, ags:0.98, pot:158, unit:'ml', fits:['breakfast'], tc:'laitier'},
+    {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6, gluc:3.5, lip:3.0, ags:2.13, pot:110, unit:'pot', gpu:125, fits:['breakfast','snack'], tc:'laitier'},
+    {code:'19501', nom:'Fromage blanc', kcal:80, prot:7.0, gluc:6.3, lip:2.8, ags:1.83, pot:162, unit:'g', fits:['breakfast','snack'], tc:'laitier'},
+    {code:'12099', nom:'Emmental', kcal:396, prot:29.7, gluc:0, lip:30.8, ags:21.4, pot:0, unit:'tranche', gpu:20, fits:[], tc:'laitier'}
   ]
 };
 
@@ -3583,6 +3582,7 @@ function fmtQty(it){
 
 var CURRENT_PLAN = null;
 var CURRENT_PLAN_KCAL_BASIS = null;
+var CURRENT_PLAN_PREFS_BASIS = null; // signature JSON des goûts utilisés à la dernière génération
 // Permet de remplacer un aliment suggéré (riz/cabillaud/huile par défaut)
 // par une autre option de la même catégorie, persistant pour la session.
 var SUGGESTED_OVERRIDES = {};
@@ -3657,6 +3657,20 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   var allMealsCoveredForAlerts = activeMealIds().every(function(m){ return mealKeys.indexOf(m)>=0; });
   var nMeals = mealKeys.length;
 
+  // Total RÉEL déjà consommé sur la journée entière (tous repas confondus) —
+  // sert de garde-fou : on ne complète jamais un repas avec un aliment
+  // suggéré si la journée a déjà atteint (ou dépassé) l'objectif calorique
+  // ou protéique. Mieux vaut un "trou" dans une catégorie qu'un ajout de
+  // nourriture à quelqu'un qui a déjà mangé suffisamment.
+  var dayEatenKcal = 0, dayEatenProt = 0;
+  entries.forEach(function(e){
+    var r = (e.quantite||0)/100;
+    dayEatenKcal += pN2(e.food_kcal_100)*r;
+    dayEatenProt += pN2(e.food_prot_100)*r;
+  });
+  var kcalBudgetLeft = dayEatenKcal < tgt.kcal*0.97; // 3% de marge, évite de bloquer pour un écart insignifiant
+  var protBudgetLeft = dayEatenProt < tgt.prot*1.03; // idem côté protéines, avec marge dans l'autre sens
+
   var need2 = needsSecondSnack();
   var MEAL_PCTS = need2
     ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
@@ -3668,18 +3682,18 @@ function analyzeAndAdjust(entries, tgt, pathologies){
   // moment de la journée.
   var SUGGEST_DEFAULTS_BY_MEAL = {
     breakfast: {
-      protein: {code:'22010', nom:'Œuf dur',      kcal:134, prot:13.5, gluc:0.5,  lip:8.6,  ags:3.22, pot:120,  maxQty:150},
-      carb:    {code:'7001',  nom:'Pain blanc',    kcal:287, prot:8.3,  gluc:58.3, lip:1.4,  ags:0.45, pot:180,  maxQty:150},
-      fat:     {code:'16400', nom:'Beurre',        kcal:753, prot:0.64, gluc:0.7,  lip:83,   ags:60,   pot:36.1, maxQty:30}
+      protein: {code:'22010', nom:'Œuf dur',      kcal:134, prot:13.5, gluc:0.5,  lip:8.6,  ags:3.22, pot:120,  maxQty:150, tc:'oeufs'},
+      carb:    {code:'7001',  nom:'Pain blanc',    kcal:287, prot:8.3,  gluc:58.3, lip:1.4,  ags:0.45, pot:180,  maxQty:150, tc:'pain'},
+      fat:     {code:'16400', nom:'Beurre',        kcal:753, prot:0.64, gluc:0.7,  lip:83,   ags:60,   pot:36.1, maxQty:30,  tc:'laitier'}
     },
     snack: {
-      protein: {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6,  gluc:3.5,  lip:3.0,  ags:2.13, pot:110,  maxQty:250},
-      carb:    {code:'13005', nom:'Banane',        kcal:87.6, prot:1.1,  gluc:19.7, lip:0.5,  ags:0.01, pot:320,  maxQty:200},
-      fat:     {code:'15000', nom:'Amandes',       kcal:615,  prot:18.8, gluc:9.5,  lip:51.3, ags:4.11, pot:800,  maxQty:40}
+      protein: {code:'19554', nom:'Yaourt nature', kcal:66.5, prot:5.6,  gluc:3.5,  lip:3.0,  ags:2.13, pot:110,  maxQty:250, tc:'laitier'},
+      carb:    {code:'13005', nom:'Banane',        kcal:87.6, prot:1.1,  gluc:19.7, lip:0.5,  ags:0.01, pot:320,  maxQty:200, tc:'fruits'},
+      fat:     {code:'15000', nom:'Amandes',       kcal:615,  prot:18.8, gluc:9.5,  lip:51.3, ags:4.11, pot:800,  maxQty:40,  tc:'fruits_coque'}
     },
     lunch: {
-      protein: {code:'25997', nom:'Cabillaud',     kcal:100, prot:23.3, gluc:0,    lip:0.8,  ags:0.17, pot:327,  maxQty:300},
-      carb:    {code:'9104',  nom:'Riz blanc',     kcal:155, prot:3.2,  gluc:33.2, lip:0.7,  ags:0.17, pot:21.9, maxQty:400},
+      protein: {code:'25997', nom:'Cabillaud',     kcal:100, prot:23.3, gluc:0,    lip:0.8,  ags:0.17, pot:327,  maxQty:300, tc:'poisson'},
+      carb:    {code:'9104',  nom:'Riz blanc',     kcal:155, prot:3.2,  gluc:33.2, lip:0.7,  ags:0.17, pot:21.9, maxQty:400, tc:'riz'},
       fat:     {code:'17270', nom:"Huile d'olive", kcal:899, prot:0.25, gluc:0,    lip:99.9, ags:15.2, pot:0,    maxQty:40}
     }
   };
@@ -3734,9 +3748,33 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       var key=t[0], factor=t[1], targetKcal=t[2];
       if(factor !== null) return;
       emptyBucketFlags[key] = true;
+
+      // Garde-fou : ne jamais suggérer d'ajouter de la nourriture si la
+      // journée a déjà atteint son budget calorique — et, spécifiquement
+      // pour les protéines, si l'objectif protéique du jour est déjà couvert.
+      if(!kcalBudgetLeft || (key==='protein' && !protBudgetLeft)){
+        suggestionAlerts.push({t:'good',i:'✅',ttl:'Aucun ajout nécessaire',
+          txt:'Votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' manque de '+(key==='carb'?'glucides':key==='protein'?'protéines':'lipides')+', mais votre objectif du jour est déjà couvert — pas besoin d\'en ajouter davantage.'});
+        return;
+      }
+
       var override = SUGGESTED_OVERRIDES[key];
       var pool = SUGGEST_DEFAULTS_BY_MEAL[mealKey] || SUGGEST_DEFAULTS_BY_MEAL.lunch;
       var def = override || pool[key];
+
+      // Si l'aliment par défaut correspond à une catégorie de goût que la
+      // personne a explicitement écartée (swipe "pas fan"), on pioche la
+      // première alternative compatible dans FOOD_BANK plutôt que de forcer
+      // un aliment qu'elle a déjà dit ne pas aimer.
+      var dislikes = (PROF && PROF.food_preferences && PROF.food_preferences.dislikes) || [];
+      if(!override && def.tc && dislikes.indexOf(def.tc)>=0){
+        var bankCat = BUCKET_TO_BANK_CAT[key];
+        var altPool = (filterFoodBank(pathologies)[bankCat]||[]).filter(function(f){
+          return (!f.tc || dislikes.indexOf(f.tc)<0) && (!f.fits || f.fits.indexOf(mealKey)>=0);
+        });
+        if(altPool.length) def = Object.assign({}, altPool[0], {maxQty: def.maxQty});
+      }
+
       var qty = Math.min(def.maxQty, Math.max(10, roundTo(targetKcal/def.kcal*100, 5)));
       var se = {aliment:def.nom, repas:mealKey, quantite:qty, id:'sugg-'+key+'-'+mealKey,
         food_kcal_100:def.kcal, food_prot_100:def.prot, food_gluc_100:def.gluc, food_lip_100:def.lip,
@@ -3850,9 +3888,12 @@ function renderMealPlan(){
     // ont déjà des aliments réels — il comble les repas pas encore décidés
     // plutôt que de disparaître entièrement dès qu'UN repas a des données.
     if(!CURRENT_PLAN) loadGenericPlanFromProfile();
-    if(!CURRENT_PLAN || !CURRENT_PLAN_KCAL_BASIS || Math.abs(tgt.kcal-CURRENT_PLAN_KCAL_BASIS) > tgt.kcal*0.02){
+    var currentPrefsSig = JSON.stringify((PROF && PROF.food_preferences) || {});
+    var prefsChanged = CURRENT_PLAN_PREFS_BASIS !== null && CURRENT_PLAN_PREFS_BASIS !== currentPrefsSig;
+    if(!CURRENT_PLAN || !CURRENT_PLAN_KCAL_BASIS || Math.abs(tgt.kcal-CURRENT_PLAN_KCAL_BASIS) > tgt.kcal*0.02 || prefsChanged){
       CURRENT_PLAN = generateMealPlan();
       CURRENT_PLAN_KCAL_BASIS = tgt.kcal;
+      CURRENT_PLAN_PREFS_BASIS = currentPrefsSig;
       saveGenericPlan();
     }
 
@@ -3971,11 +4012,21 @@ function renderMealPlan(){
           // reste stable) selon ce qu'il reste réellement à atteindre dans
           // la journée, réparti entre les repas pas encore décidés.
           var recipeFull = mealData.recipeId ? RECIPES.find(function(r){ return r.id===mealData.recipeId; }) : null;
-          if(recipeFull){
-            var weight = (mealPcts[mid]||0)/genericWeightSum;
-            var mealTarget = remainingKcal*weight;
-            gItems = scaleRecipe(recipeFull, mealTarget);
+          var weight = (mealPcts[mid]||0)/genericWeightSum;
+          var mealTarget = remainingKcal*weight;
+
+          // Budget déjà atteint (ou quasi) sur la journée : plutôt que
+          // d'afficher une recette réduite à une portion symbolique (quelques
+          // grammes), on informe simplement que ce repas est optionnel —
+          // cohérent avec le principe de ne jamais pousser à manger au-delà
+          // de l'objectif, quelle que soit la catégorie de macro en jeu.
+          if(remainingKcal <= tgt.kcal*0.03){
+            html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div>'
+              +'<div class="card-body"><div style="font-size:.85rem;color:var(--text2);line-height:1.5">✅ Votre objectif du jour est déjà atteint — ce repas est optionnel, pas besoin de le compléter.</div></div></div>';
+            return;
           }
+
+          if(recipeFull) gItems = scaleRecipe(recipeFull, mealTarget);
 
           gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
           html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
@@ -4060,6 +4111,7 @@ function renderMealPlan(){
 function regenerateMealPlan(){
   CURRENT_PLAN = generateMealPlan();
   CURRENT_PLAN_KCAL_BASIS = calcTargets().kcal;
+  CURRENT_PLAN_PREFS_BASIS = JSON.stringify((PROF && PROF.food_preferences) || {});
   saveGenericPlan();
   renderMealPlan();
   toast('🔄 Plan régénéré');
@@ -4074,10 +4126,10 @@ function regenerateMealPlan(){
 // recettes change (champs ajoutés/modifiés) — sinon un plan sauvegardé
 // avant la modification continue d'être rechargé tel quel indéfiniment,
 // perpétuant un bug déjà corrigé dans le code.
-var GENERIC_PLAN_VERSION = 5;
+var GENERIC_PLAN_VERSION = 6; // bump : régénère une fois pour tenir compte des goûts (food_preferences)
 function saveGenericPlan(){
   if(!CURRENT_PLAN || !USER) return;
-  var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS, version:GENERIC_PLAN_VERSION});
+  var payload = JSON.stringify({plan:CURRENT_PLAN, basis:CURRENT_PLAN_KCAL_BASIS, prefsBasis:CURRENT_PLAN_PREFS_BASIS, version:GENERIC_PLAN_VERSION});
   sb.from('profiles').update({generic_meal_plan:payload}).eq('id',USER.id).then(function(){
     if(PROF) PROF.generic_meal_plan = payload;
   });
@@ -4086,7 +4138,7 @@ function loadGenericPlanFromProfile(){
   if(!PROF || !PROF.generic_meal_plan) return false;
   try{
     var data = JSON.parse(PROF.generic_meal_plan);
-    if(data && data.plan && data.version===GENERIC_PLAN_VERSION){ CURRENT_PLAN = data.plan; CURRENT_PLAN_KCAL_BASIS = data.basis; return true; }
+    if(data && data.plan && data.version===GENERIC_PLAN_VERSION){ CURRENT_PLAN = data.plan; CURRENT_PLAN_KCAL_BASIS = data.basis; CURRENT_PLAN_PREFS_BASIS = data.prefsBasis!==undefined ? data.prefsBasis : null; return true; }
   } catch(e){}
   return false; // version absente/différente → on régénère avec la structure actuelle
 }
@@ -4105,7 +4157,10 @@ function openSubstituteSuggested(bucketKey){
   var pathos = (PROF&&PROF.pathologies)||[];
   var bank = filterFoodBank(pathos);
   var currentCode = (SUGGESTED_OVERRIDES[bucketKey]||{}).code;
-  var alternatives = bank[bankCat].filter(function(f){ return f.code !== currentCode; });
+  var dislikes = (PROF && PROF.food_preferences && PROF.food_preferences.dislikes) || [];
+  var alternatives = bank[bankCat].filter(function(f){
+    return f.code !== currentCode && (!f.tc || dislikes.indexOf(f.tc)<0);
+  });
   renderSubstOptions(alternatives, 'Remplacer cet aliment suggéré');
 }
 
