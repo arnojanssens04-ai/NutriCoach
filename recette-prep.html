@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Recette</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --r:16px; --sh:0 4px 20px rgba(26,25,22,0.08);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; }
+
+.wrap { max-width:560px; margin:0 auto; padding:20px 18px 60px; }
+
+.rp-hero { margin-bottom:16px; }
+.rp-title { font-family:'Lora',serif; font-size:1.55rem; font-weight:700; line-height:1.25; margin-bottom:10px; }
+.rp-badges { display:flex; gap:8px; flex-wrap:wrap; }
+.rp-badge { font-size:.72rem; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--card2); color:var(--text2); display:flex; align-items:center; gap:4px; }
+.rp-badge.gold { background:var(--gold-l); color:var(--gold); }
+
+.rp-servings { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; margin:16px 0; box-shadow:var(--sh); }
+.rp-servings-lbl { font-size:.8rem; color:var(--text2); flex:1; }
+.rp-serv-btn { width:30px; height:30px; border-radius:50%; border:1px solid var(--border2); background:var(--card2); color:var(--text); font-size:1rem; cursor:pointer; }
+.rp-serv-val { font-weight:700; min-width:60px; text-align:center; font-family:'Lora',serif; }
+
+.rp-section { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:14px; box-shadow:var(--sh); }
+.rp-section h2 { font-family:'Lora',serif; font-size:1.02rem; margin-bottom:12px; }
+
+.rp-ing-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:.86rem; }
+.rp-ing-row:last-child { border-bottom:none; }
+.rp-ing-check { width:20px; height:20px; border-radius:6px; border:1.5px solid var(--border2); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.7rem; color:var(--sage); transition:all .15s; }
+.rp-ing-check.on { background:var(--sage-l); border-color:var(--sage); }
+.rp-ing-row.done .rp-ing-name { text-decoration:line-through; color:var(--text3); }
+.rp-ing-qty { color:var(--gold); font-weight:600; white-space:nowrap; margin-left:auto; }
+
+.rp-step { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+.rp-step:last-child { border-bottom:none; }
+.rp-step-num { width:28px; height:28px; border-radius:50%; background:var(--gold); color:#fff; font-family:'Lora',serif; font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rp-step-body { flex:1; }
+.rp-step-title { font-size:.78rem; font-weight:700; color:var(--gold); margin-bottom:4px; }
+.rp-step-content { font-size:.88rem; line-height:1.55; }
+.rp-timer-btn { margin-top:8px; font-size:.75rem; font-weight:600; color:var(--gold); background:var(--gold-l); border:1px solid var(--border2); border-radius:999px; padding:5px 12px; cursor:pointer; }
+
+.btn-cookmode { width:100%; padding:14px; background:var(--gold); color:#fff; border:none; border-radius:12px; font-size:.92rem; font-weight:700; cursor:pointer; margin-bottom:14px; box-shadow:var(--sh); }
+
+/* ── Mode cuisine plein écran ── */
+#cookmode { display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column; }
+#cookmode.on { display:flex; }
+.cm-top { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.cm-progress-txt { font-size:.78rem; color:var(--text2); font-weight:600; }
+.cm-close { font-size:1.3rem; background:none; border:none; color:var(--text2); cursor:pointer; padding:4px 8px; }
+.cm-track { height:5px; background:var(--bg2); }
+.cm-fill { height:100%; background:var(--gold); transition:width .3s; }
+.cm-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 26px; text-align:center; }
+.cm-step-title { font-size:.85rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
+.cm-step-content { font-family:'Lora',serif; font-size:1.5rem; line-height:1.4; margin-bottom:26px; }
+.cm-timer { font-family:'Lora',serif; font-size:2.6rem; font-weight:700; color:var(--gold); margin-bottom:14px; display:none; }
+.cm-timer.on { display:block; }
+.cm-timer-btn { padding:12px 26px; border-radius:999px; border:2px solid var(--gold); background:var(--gold-l); color:var(--gold); font-weight:700; font-size:.9rem; cursor:pointer; margin-bottom:10px; }
+.cm-nav { display:flex; gap:12px; padding:20px; }
+.cm-nav-btn { flex:1; padding:16px; border-radius:12px; border:none; font-size:1.4rem; font-weight:700; cursor:pointer; }
+.cm-prev { background:var(--card2); color:var(--text2); }
+.cm-next { background:var(--gold); color:#fff; }
+.cm-next:disabled, .cm-prev:disabled { opacity:.35; cursor:default; }
+
+.empty { text-align:center; padding:60px 20px; color:var(--text2); }
+.toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:#fff; padding:11px 20px; border-radius:10px; font-size:.82rem; opacity:0; pointer-events:none; transition:all .25s; z-index:999; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="dashboard.html" class="t-back">← Tableau de bord</a>
+</header>
+
+<div class="wrap" id="wrap-content">
+  <div class="empty">Chargement de la recette…</div>
+</div>
+
+<!-- MODE CUISINE PLEIN ÉCRAN -->
+<div id="cookmode">
+  <div class="cm-top">
+    <span class="cm-progress-txt" id="cm-progress-txt">Étape 1/1</span>
+    <button class="cm-close" onclick="closeCookMode()">✕</button>
+  </div>
+  <div class="cm-track"><div class="cm-fill" id="cm-fill"></div></div>
+  <div class="cm-body">
+    <div class="cm-step-title" id="cm-step-title"></div>
+    <div class="cm-step-content" id="cm-step-content"></div>
+    <div class="cm-timer" id="cm-timer">00:00</div>
+    <button class="cm-timer-btn" id="cm-timer-btn" style="display:none" onclick="toggleTimer()">▶ Démarrer le minuteur</button>
+  </div>
+  <div class="cm-nav">
+    <button class="cm-nav-btn cm-prev" id="cm-prev" onclick="cmNav(-1)">←</button>
+    <button class="cm-nav-btn cm-next" id="cm-next" onclick="cmNav(1)">→</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="recettes-data.js?v=1"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+var USER=null, RECIPE=null, GEN=null, MULT=1;
+var TICKING=null, TIMER_SECS_LEFT=0, TIMER_RUNNING=false;
+var CM_INDEX=0;
+
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2600);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  init();
+});
+
+function init(){
+  var id = new URLSearchParams(window.location.search).get('id');
+  RECIPE = (typeof RECIPES!=='undefined' ? RECIPES : []).find(function(r){ return r.id===id; });
+  if(!RECIPE){
+    document.getElementById('wrap-content').innerHTML = '<div class="empty">Cette recette est introuvable — elle a peut-être été mise à jour.<br><br><a href="dashboard.html" style="color:var(--gold);font-weight:600">← Retour au tableau de bord</a></div>';
+    return;
+  }
+  GEN = buildRecipeSteps(RECIPE);
+  render();
+}
+
+function totalKcal(){ return RECIPE.ing.reduce(function(s,i){ return s+i.kcal*i.qty/100; },0); }
+
+function render(){
+  var kcalBase = Math.round(totalKcal()*MULT);
+  var el = document.getElementById('wrap-content');
+  el.innerHTML =
+    '<div class="rp-hero">'
+      +'<div class="rp-title">'+esc(RECIPE.nom)+'</div>'
+      +'<div class="rp-badges">'
+        +'<span class="rp-badge gold">⏱ '+GEN.prepTime+' min</span>'
+        +'<span class="rp-badge">🎚 '+GEN.difficulty+'</span>'
+        +'<span class="rp-badge">🔥 '+kcalBase+' kcal</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="rp-servings">'
+      +'<div class="rp-servings-lbl">Portion</div>'
+      +'<button class="rp-serv-btn" onclick="changeMult(-0.5)">−</button>'
+      +'<div class="rp-serv-val" id="mult-val">'+fmtMult()+'</div>'
+      +'<button class="rp-serv-btn" onclick="changeMult(0.5)">+</button>'
+    +'</div>'
+    +'<button class="btn-cookmode" onclick="openCookMode()">👨‍🍳 Lancer le mode cuisine</button>'
+    +'<div class="rp-section"><h2>🛒 Ingrédients</h2><div id="ing-list"></div></div>'
+    +'<div class="rp-section"><h2>📋 Préparation</h2><div id="steps-list"></div></div>';
+
+  renderIngredients();
+  renderStepsList();
+}
+
+function fmtMult(){
+  return MULT===1 ? 'Base' : (MULT+'×');
+}
+function changeMult(d){
+  MULT = Math.max(0.5, Math.min(4, MULT+d));
+  render();
+}
+
+function renderIngredients(){
+  var el = document.getElementById('ing-list');
+  el.innerHTML = RECIPE.ing.map(function(ing,idx){
+    var qty = Math.round(ing.qty*MULT*10)/10;
+    return '<div class="rp-ing-row" id="ing-row-'+idx+'">'
+      +'<div class="rp-ing-check" onclick="toggleIng('+idx+')" id="ing-check-'+idx+'"></div>'
+      +'<div class="rp-ing-name">'+esc(ing.nom)+'</div>'
+      +'<div class="rp-ing-qty">'+qty+' '+(ing.unit==='g'?'g':ing.unit)+'</div>'
+      +'</div>';
+  }).join('');
+}
+function toggleIng(idx){
+  var row = document.getElementById('ing-row-'+idx);
+  var chk = document.getElementById('ing-check-'+idx);
+  var on = row.classList.toggle('done');
+  chk.classList.toggle('on', on);
+  chk.textContent = on ? '✓' : '';
+}
+
+function renderStepsList(){
+  var el = document.getElementById('steps-list');
+  el.innerHTML = GEN.steps.map(function(s,idx){
+    return '<div class="rp-step">'
+      +'<div class="rp-step-num">'+(idx+1)+'</div>'
+      +'<div class="rp-step-body">'
+        +'<div class="rp-step-title">'+esc(s.title)+'</div>'
+        +'<div class="rp-step-content">'+esc(s.content)+'</div>'
+        +(s.timerMin ? '<button class="rp-timer-btn" onclick="quickTimer('+s.timerMin+')">⏱ Minuteur '+s.timerMin+' min</button>' : '')
+      +'</div></div>';
+  }).join('');
+}
+
+// ── Minuteur rapide (hors mode cuisine) ──
+function quickTimer(min){
+  toast('⏱ Minuteur de '+min+' min lancé — l\'onglet vous alertera à la fin.');
+  setTimeout(function(){
+    toast('⏰ Minuteur terminé !');
+    beep();
+  }, min*60*1000);
+}
+
+function beep(){
+  try{
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    var o = ctx.createOscillator(); var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.value = 0.15;
+    o.start(); setTimeout(function(){ o.stop(); }, 350);
+  }catch(e){}
+}
+
+// ── MODE CUISINE PLEIN ÉCRAN ──
+function openCookMode(){
+  CM_INDEX = 0;
+  document.getElementById('cookmode').classList.add('on');
+  renderCookStep();
+}
+function closeCookMode(){
+  document.getElementById('cookmode').classList.remove('on');
+  stopTimer();
+}
+function cmNav(d){
+  stopTimer();
+  CM_INDEX = Math.max(0, Math.min(GEN.steps.length-1, CM_INDEX+d));
+  renderCookStep();
+}
+function renderCookStep(){
+  var s = GEN.steps[CM_INDEX];
+  document.getElementById('cm-progress-txt').textContent = 'Étape '+(CM_INDEX+1)+'/'+GEN.steps.length;
+  document.getElementById('cm-fill').style.width = ((CM_INDEX+1)/GEN.steps.length*100)+'%';
+  document.getElementById('cm-step-title').textContent = s.title;
+  document.getElementById('cm-step-content').textContent = s.content;
+  document.getElementById('cm-prev').disabled = CM_INDEX===0;
+  document.getElementById('cm-next').disabled = CM_INDEX===GEN.steps.length-1;
+  var timerBtn = document.getElementById('cm-timer-btn');
+  var timerDisp = document.getElementById('cm-timer');
+  timerDisp.classList.remove('on');
+  if(s.timerMin){
+    timerBtn.style.display='inline-block';
+    timerBtn.textContent = '▶ Démarrer le minuteur ('+s.timerMin+' min)';
+    TIMER_SECS_LEFT = s.timerMin*60;
+    TIMER_RUNNING = false;
+  } else {
+    timerBtn.style.display='none';
+  }
+}
+function toggleTimer(){
+  if(TIMER_RUNNING){ stopTimer(); return; }
+  TIMER_RUNNING = true;
+  document.getElementById('cm-timer').classList.add('on');
+  document.getElementById('cm-timer-btn').textContent = '⏸ En cours…';
+  updateTimerDisplay();
+  TICKING = setInterval(function(){
+    TIMER_SECS_LEFT--;
+    updateTimerDisplay();
+    if(TIMER_SECS_LEFT<=0){ stopTimer(); beep(); toast('⏰ Minuteur terminé !'); }
+  }, 1000);
+}
+function stopTimer(){
+  if(TICKING){ clearInterval(TICKING); TICKING=null; }
+  TIMER_RUNNING = false;
+  var btn = document.getElementById('cm-timer-btn');
+  if(btn) btn.textContent = '▶ Démarrer le minuteur';
+}
+function updateTimerDisplay(){
+  var m = Math.floor(TIMER_SECS_LEFT/60), s = TIMER_SECS_LEFT%60;
+  document.getElementById('cm-timer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+</script>
+</body>
+</html>
