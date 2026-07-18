@@ -99,6 +99,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .cm-next { background:var(--gold); color:#fff; }
 .cm-next:disabled, .cm-prev:disabled { opacity:.35; cursor:default; }
 
+/* ── Boussole compagnon — présente pendant tout le mode cuisine ── */
+.compass-companion { width:104px; height:104px; margin:0 auto 18px; }
+.cc-pulse-ring { transform-origin:60px 60px; }
+.compass-companion.timer-active .cc-pulse-ring { animation:ccPulse 2.4s ease-out infinite; }
+@keyframes ccPulse { 0%{ r:56; opacity:.45; } 100%{ r:76; opacity:0; } }
+.cc-step-rotate { transform-origin:60px 60px; transition:transform 1.4s cubic-bezier(.4,0,.2,1); }
+.cc-needle-drift { transform-origin:60px 60px; animation:ccDrift 10s ease-in-out infinite; }
+@keyframes ccDrift { 0%,100%{ transform:rotate(-7deg); } 50%{ transform:rotate(7deg); } }
+
 .btn { padding:11px 18px; border-radius:10px; border:none; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; transition:all .2s; }
 .btn-gold { background:var(--gold); color:#fff; flex:1; }
 .btn-gold:hover { transform:translateY(-1px); }
@@ -208,6 +217,36 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   </div>
   <div class="cm-track"><div class="cm-fill" id="cm-fill"></div></div>
   <div class="cm-body">
+    <div class="compass-companion" id="compass-companion">
+      <svg viewBox="0 0 120 120" width="104" height="104">
+        <defs>
+          <radialGradient id="cc-bg" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#3d6128"/>
+            <stop offset="100%" stop-color="#1e3a10"/>
+          </radialGradient>
+        </defs>
+        <circle class="cc-pulse-ring" cx="60" cy="60" r="58" fill="none" stroke="#4a7a3a" stroke-width="2" opacity="0"/>
+        <circle cx="60" cy="60" r="58" fill="url(#cc-bg)"/>
+        <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <line x1="60" y1="8" x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="8" y1="60" x2="18" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
+        <g class="cc-step-rotate" id="cc-step-rotate">
+          <g class="cc-needle-drift">
+            <rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>
+            <rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>
+            <path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>
+          </g>
+        </g>
+        <circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+        <circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>
+      </svg>
+    </div>
     <div class="cm-step-title" id="cm-step-title"></div>
     <div class="cm-step-content" id="cm-step-content"></div>
     <div class="cm-timer" id="cm-timer">00:00</div>
@@ -549,6 +588,7 @@ function renderCookStep(){
   document.getElementById('cm-step-content').textContent = s.content;
   document.getElementById('cm-prev').disabled = CM_INDEX===0;
   document.getElementById('cm-next').disabled = CM_INDEX===GEN_STEPS.length-1;
+  updateCompassOrientation(GEN_STEPS.length);
   var timerBtn = document.getElementById('cm-timer-btn');
   var timerDisp = document.getElementById('cm-timer');
   timerDisp.classList.remove('on');
@@ -561,11 +601,24 @@ function renderCookStep(){
     timerBtn.style.display='none';
   }
 }
+// Oriente doucement la boussole selon la progression dans la recette.
+function updateCompassOrientation(total){
+  var g = document.getElementById('cc-step-rotate');
+  if(!g) return;
+  var angle = total>1 ? Math.round((CM_INDEX/(total-1))*140-70) : 0;
+  g.style.transform = 'rotate('+angle+'deg)';
+}
+function setCompassTimerActive(on){
+  var el = document.getElementById('compass-companion');
+  if(el) el.classList.toggle('timer-active', on);
+}
+
 function toggleTimer(){
   if(TIMER_RUNNING){ stopTimer(); return; }
   TIMER_RUNNING = true;
   document.getElementById('cm-timer').classList.add('on');
   document.getElementById('cm-timer-btn').textContent = '⏸ En cours…';
+  setCompassTimerActive(true);
   updateTimerDisplay();
   TICKING = setInterval(function(){
     TIMER_SECS_LEFT--;
@@ -576,6 +629,7 @@ function toggleTimer(){
 function stopTimer(){
   if(TICKING){ clearInterval(TICKING); TICKING=null; }
   TIMER_RUNNING = false;
+  setCompassTimerActive(false);
   var btn = document.getElementById('cm-timer-btn');
   if(btn) btn.textContent = '▶ Démarrer le minuteur';
 }
