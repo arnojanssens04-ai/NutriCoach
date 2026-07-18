@@ -79,8 +79,10 @@ body {
 .hero-sub-cta { font-size: .78rem; color: var(--ink3); }
 
 /* ── CADRAN (élément signature) ── */
-.dial-wrap { display: flex; flex-direction: column; align-items: center; }
-.dial-card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); width: 100%; max-width: 320px; }
+.dial-wrap { display: flex; flex-direction: column; align-items: center; perspective: 1100px; }
+.dial-card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); width: 100%; max-width: 320px; position: relative; overflow: hidden; transform-style: preserve-3d; transition: transform .12s ease-out, box-shadow .12s ease-out; will-change: transform; }
+.dial-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.65), transparent 58%); opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+.dial-card.hovering::after { opacity: 1; }
 .dial-svg { width: 100%; height: auto; display: block; }
 .dial-needle { transform-origin: 120px 120px; transform: rotate(48deg); }
 .dial-readout { text-align: center; margin-top: 4px; }
@@ -104,7 +106,51 @@ body {
 .way h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
 .way p { font-size: .87rem; color: var(--ink2); line-height: 1.6; max-width: 480px; }
 
-/* ── AUTH SECTION ── */
+/* ── SECTION IA PHOTO ── */
+.ai-wrap { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 66px 24px; }
+.ai-inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1fr .85fr; gap: 54px; align-items: center; perspective: 1100px; }
+@media (max-width: 880px) { .ai-inner { grid-template-columns: 1fr; gap: 36px; } }
+.ai-text h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(1.5rem, 2.6vw, 2rem); letter-spacing: -.5px; line-height: 1.18; margin-bottom: 16px; }
+.ai-text > p { font-size: .93rem; color: var(--ink2); line-height: 1.65; max-width: 460px; margin-bottom: 22px; }
+.ai-points { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+.ai-points li { display: flex; gap: 11px; align-items: flex-start; font-size: .87rem; color: var(--ink2); line-height: 1.5; }
+.ai-points li b { color: var(--ink); }
+.ai-check { flex-shrink: 0; width: 19px; height: 19px; border-radius: 50%; background: var(--cap-l); color: var(--cap); display: flex; align-items: center; justify-content: center; font-size: .66rem; margin-top: 1px; }
+
+/* Mini-démo : carte imitant l'écran de scan de l'app */
+.scan-demo { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 0 10px 34px rgba(22,36,27,0.09); max-width: 340px; margin: 0 auto; position: relative; overflow: hidden; transform-style: preserve-3d; transition: transform .12s ease-out, box-shadow .12s ease-out; will-change: transform; }
+.scan-demo::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.55), transparent 58%); opacity: 0; transition: opacity .3s ease; pointer-events: none; z-index: 3; }
+.scan-demo.hovering::after { opacity: 1; }
+.scan-photo { position: relative; aspect-ratio: 4/3; border-radius: 14px; background: linear-gradient(135deg, #eef0e6, #e4e8da); overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.scan-photo svg { width: 58%; opacity: .85; }
+.scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--cap), transparent); box-shadow: 0 0 10px 1px rgba(45,79,28,0.5); top: 0; }
+@media (prefers-reduced-motion: no-preference) { .scan-line { animation: scanSweep 2.6s ease-in-out infinite; } }
+@keyframes scanSweep { 0%,100% { top: 6%; opacity: 0; } 8% { opacity: 1; } 50% { top: 92%; opacity: 1; } 58% { opacity: 0; } }
+.scan-badge { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.92); backdrop-filter: blur(4px); font-family: 'IBM Plex Mono', monospace; font-size: .64rem; padding: 4px 9px; border-radius: 999px; color: var(--cap); font-weight: 600; }
+.scan-results { display: flex; flex-direction: column; gap: 9px; }
+.scan-row { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; padding: 9px 12px; background: var(--bg2); border-radius: 10px; opacity: 0; }
+.scan-row span:first-child { color: var(--ink); font-weight: 500; }
+.scan-row span:last-child { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; color: var(--ink3); }
+@media (prefers-reduced-motion: no-preference) {
+  .scan-row { animation: scanRowIn .5s ease forwards; }
+  .scan-row.r1 { animation-delay: 1.5s; }
+  .scan-row.r2 { animation-delay: 1.85s; }
+  .scan-row.r3 { animation-delay: 2.2s; }
+}
+@media (prefers-reduced-motion: reduce) { .scan-row { opacity: 1; } }
+@keyframes scanRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── FAQ ── */
+.faq-wrap { max-width: 740px; margin: 0 auto; padding: 66px 24px 70px; }
+.faq-hdr { margin-bottom: 30px; }
+.faq-hdr h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.5rem; letter-spacing: -.4px; }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-q { width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 18px 4px; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: 'Space Grotesk', sans-serif; font-size: .95rem; font-weight: 600; color: var(--ink); }
+.faq-q .plus { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line2); display: flex; align-items: center; justify-content: center; font-size: .8rem; color: var(--ink3); transition: transform .25s; }
+.faq-item.on .faq-q .plus { transform: rotate(45deg); border-color: var(--cap); color: var(--cap); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.faq-item.on .faq-a { max-height: 220px; }
+.faq-a p { font-size: .87rem; color: var(--ink2); line-height: 1.65; padding: 0 4px 20px; max-width: 600px; }
 .auth-section { background: var(--card); border-top: 1px solid var(--line); padding: 56px 20px 50px; }
 .auth-wrap { max-width: 420px; margin: 0 auto; }
 .auth-hdr { text-align: center; margin-bottom: 26px; }
@@ -258,6 +304,39 @@ footer a { color: var(--ink3); text-decoration: underline; }
 </div>
 
 <script>
+// ── Effet 3D "tilt + spot lumineux" ── la carte s'incline légèrement vers
+// le curseur, un halo de lumière suit la souris, et l'ombre se déplace en
+// sens inverse pour simuler une vraie source de lumière. Désactivé si la
+// personne préfère moins de mouvement, ou sur un appareil tactile (pas de
+// souris = pas d'effet de survol pertinent).
+function initTilt(el){
+  if(!el) return;
+  var maxTilt = 8; // degrés — reste subtil, pas un gadget
+  el.addEventListener('mousemove', function(e){
+    var r = el.getBoundingClientRect();
+    var px = (e.clientX - r.left) / r.width;
+    var py = (e.clientY - r.top) / r.height;
+    var rx = (0.5 - py) * maxTilt * 2;
+    var ry = (px - 0.5) * maxTilt * 2;
+    el.style.transform = 'rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)';
+    el.style.setProperty('--mx', (px*100)+'%');
+    el.style.setProperty('--my', (py*100)+'%');
+    el.style.boxShadow = (-ry*2)+'px '+(rx*2+16)+'px 34px rgba(22,36,27,0.16)';
+    el.classList.add('hovering');
+  });
+  el.addEventListener('mouseleave', function(){
+    el.style.transform = '';
+    el.style.boxShadow = '';
+    el.classList.remove('hovering');
+  });
+}
+if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && window.matchMedia('(hover: hover)').matches) {
+  initTilt(document.querySelector('.dial-card'));
+  initTilt(document.querySelector('.scan-demo'));
+}
+</script>
+
+<script>
 // Le score affiché sur la vitrine change à chaque visite — donne une
 // impression de dynamisme tout en restant dans une plage plausible (65-95).
 (function(){
@@ -272,6 +351,39 @@ footer a { color: var(--ink3); text-decoration: underline; }
   if(needle) needle.style.transform = 'rotate('+(Math.round(-140 + score*2.8))+'deg)';
 })();
 </script>
+
+<div class="ai-wrap">
+  <div class="ai-inner">
+    <div class="ai-text">
+      <div class="eyebrow">Scan photo intelligent</div>
+      <h2>Une photo. Zéro recherche dans une base de données.</h2>
+      <p>Prenez votre assiette en photo, l'IA identifie chaque aliment et estime les quantités réelles — plus besoin de chercher "riz complet maison" dans une liste sans fin.</p>
+      <ul class="ai-points">
+        <li><span class="ai-check">✓</span><span><b>Gratuit</b> — le scan photo n'est pas verrouillé derrière un abonnement.</span></li>
+        <li><span class="ai-check">✓</span><span><b>Elle apprend de vous</b> — chaque quantité corrigée affine ses futures estimations, spécifiquement pour vous.</span></li>
+        <li><span class="ai-check">✓</span><span><b>Base Ciqual</b> — les valeurs nutritionnelles viennent d'une base de référence, pas d'une estimation générique.</span></li>
+      </ul>
+    </div>
+    <div class="scan-demo">
+      <div class="scan-photo">
+        <div class="scan-badge">🤖 IA Cap Santé</div>
+        <div class="scan-line"></div>
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="38" stroke="#2d4f1c" stroke-width="2" opacity="0.35"/>
+          <circle cx="50" cy="50" r="26" stroke="#4a7a3a" stroke-width="1.5" opacity="0.3"/>
+          <circle cx="38" cy="42" r="6" fill="#2d4f1c" opacity="0.55"/>
+          <rect x="52" y="36" width="16" height="10" rx="2" fill="#4a7a3a" opacity="0.5"/>
+          <circle cx="58" cy="60" r="7" fill="#2d4f1c" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="scan-results">
+        <div class="scan-row r1"><span>🍚 Riz complet</span><span>160g · 197 kcal</span></div>
+        <div class="scan-row r2"><span>🐟 Saumon</span><span>130g · 267 kcal</span></div>
+        <div class="scan-row r3"><span>🥦 Brocoli</span><span>130g · 41 kcal</span></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="journey-wrap">
   <div class="journey-hdr">
@@ -309,6 +421,33 @@ footer a { color: var(--ink3); text-decoration: underline; }
     <div class="way-tag">Sérieux</div>
     <h3>Des recommandations scientifiques, jamais de régime extrême</h3>
     <p>Calculs basés sur des données vérifiées (base Ciqual, formule de Mifflin-St Jeor), déficit calorique toujours mesuré, jamais agressif. Cap Santé complète un suivi médical, il ne le remplace pas.</p>
+  </div>
+</div>
+
+<div class="faq-wrap">
+  <div class="faq-hdr">
+    <div class="eyebrow">Questions fréquentes</div>
+    <h2>Avant de vous lancer</h2>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('on')">
+    <button class="faq-q">Cap Santé est-il gratuit ?<span class="plus">+</span></button>
+    <div class="faq-a"><p>Oui. L'essentiel de Cap Santé — le suivi nutritionnel, le score santé, le plan alimentaire et le scan photo IA — est accessible gratuitement.</p></div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('on')">
+    <button class="faq-q">Mes données sont-elles en sécurité ?<span class="plus">+</span></button>
+    <div class="faq-a"><p>Vos données sont chiffrées et hébergées au sein de l'Union européenne, conformément au RGPD. Elles ne sont ni vendues ni partagées avec des tiers à des fins publicitaires.</p></div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('on')">
+    <button class="faq-q">L'IA se trompe-t-elle parfois sur mes repas ?<span class="plus">+</span></button>
+    <div class="faq-a"><p>Ça peut arriver, surtout sur des plats mélangés ou faits maison. Vous pouvez corriger la quantité en un instant — et l'IA se souvient de vos corrections pour être plus précise la fois suivante, spécifiquement pour vos habitudes.</p></div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('on')">
+    <button class="faq-q">Cap Santé remplace-t-il un suivi médical ?<span class="plus">+</span></button>
+    <div class="faq-a"><p>Non. Cap Santé complète un suivi médical, il ne le remplace pas. Les recommandations restent mesurées et jamais agressives, mais toute pathologie doit rester suivie par un professionnel de santé.</p></div>
+  </div>
+  <div class="faq-item" onclick="this.classList.toggle('on')">
+    <button class="faq-q">Cap Santé fonctionne-t-il avec ma pathologie ?<span class="plus">+</span></button>
+    <div class="faq-a"><p>Le suivi s'adapte au diabète, à l'hypertension, au cholestérol, aux maladies cardiaques et à la ménopause. Le suivi de l'insuffisance rénale arrive bientôt.</p></div>
   </div>
 </div>
 
