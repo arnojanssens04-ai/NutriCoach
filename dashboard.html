@@ -3928,7 +3928,13 @@ function renderMealPlan(){
         var items = byMeal[mid]||[];
         if(!items.length) return;
         items.forEach(function(a){ var r=a.newQty/100; combinedT.kcal+=pN2(a.entry.food_kcal_100)*r; combinedT.prot+=pN2(a.entry.food_prot_100)*r; combinedT.gluc+=pN2(a.entry.food_gluc_100)*r; combinedT.lip+=pN2(a.entry.food_lip_100)*r; });
-        html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l+'</span></div><div class="card-body">';
+        // Si tous les aliments de ce repas proviennent de la même recette
+        // importée (recette.html), on propose d'y revenir en un clic.
+        var firstRecetteId = items[0].entry.recette_id;
+        var sameRecette = firstRecetteId && items.every(function(a){ return a.entry.recette_id===firstRecetteId; });
+        html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l+'</span>'
+          +(sameRecette ? '<a class="mp-recipe-link" href="recette.html?open='+firstRecetteId+'" title="Voir la recette pas à pas">👨‍🍳 Recette</a>' : '')
+          +'</div><div class="card-body">';
         items.forEach(function(a){
           var newKcal = Math.round(pN2(a.entry.food_kcal_100)*a.newQty/100);
           html += '<div class="mp-item"><div class="mp-item-info">'
