@@ -85,8 +85,6 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .cm-top { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
 .cm-progress-txt { font-size:.78rem; color:var(--text2); font-weight:600; }
 .cm-close { font-size:1.3rem; background:none; border:none; color:var(--text2); cursor:pointer; padding:4px 8px; }
-.cm-track { height:5px; background:var(--bg2); }
-.cm-fill { height:100%; background:var(--gold); transition:width .3s; }
 .cm-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 26px; text-align:center; }
 .cm-step-title { font-size:.85rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
 .cm-step-content { font-family:'Lora',serif; font-size:1.5rem; line-height:1.4; margin-bottom:26px; }
@@ -99,14 +97,17 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .cm-next { background:var(--gold); color:#fff; }
 .cm-next:disabled, .cm-prev:disabled { opacity:.35; cursor:default; }
 
-/* ── Boussole compagnon — présente pendant tout le mode cuisine ── */
-.compass-companion { width:104px; height:104px; margin:0 auto 18px; }
-.cc-pulse-ring { transform-origin:60px 60px; }
-.compass-companion.timer-active .cc-pulse-ring { animation:ccPulse 2.4s ease-out infinite; }
-@keyframes ccPulse { 0%{ r:56; opacity:.45; } 100%{ r:76; opacity:0; } }
-.cc-step-rotate { transform-origin:60px 60px; transition:transform 1.4s cubic-bezier(.4,0,.2,1); }
-.cc-needle-drift { transform-origin:60px 60px; animation:ccDrift 10s ease-in-out infinite; }
-@keyframes ccDrift { 0%,100%{ transform:rotate(-7deg); } 50%{ transform:rotate(7deg); } }
+/* ── Anneau de progression — sert à la fois de repère "étape X/Y" et de
+   minuteur de cuisson quand une étape en a un. ── */
+.ring-wrap { position:relative; width:176px; height:176px; margin:0 auto 22px; animation:ringBreathe 5.5s ease-in-out infinite; }
+.ring-wrap.timer-active { animation:ringBreathe 2.4s ease-in-out infinite; }
+@keyframes ringBreathe { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.022); } }
+.ring-svg { width:100%; height:100%; transform:rotate(-90deg); filter:drop-shadow(0 6px 18px rgba(45,79,28,0.16)); }
+.ring-track { fill:none; stroke:var(--bg2); stroke-width:7; }
+.ring-progress { fill:none; stroke:url(#ringGrad); stroke-width:7; stroke-linecap:round; transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+.ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-main { font-family:'Lora',serif; font-size:1.85rem; font-weight:700; color:var(--gold); font-variant-numeric:tabular-nums; letter-spacing:.3px; }
+.ring-sub { font-size:.68rem; color:var(--text2); text-transform:uppercase; letter-spacing:1.2px; margin-top:3px; }
 
 .btn { padding:11px 18px; border-radius:10px; border:none; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; transition:all .2s; }
 .btn-gold { background:var(--gold); color:#fff; flex:1; }
@@ -215,41 +216,25 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <span class="cm-progress-txt" id="cm-progress-txt">Étape 1/1</span>
     <button class="cm-close" onclick="closeCookMode()">✕</button>
   </div>
-  <div class="cm-track"><div class="cm-fill" id="cm-fill"></div></div>
   <div class="cm-body">
-    <div class="compass-companion" id="compass-companion">
-      <svg viewBox="0 0 120 120" width="104" height="104">
+    <div class="ring-wrap" id="compass-companion">
+      <svg class="ring-svg" viewBox="0 0 200 200">
         <defs>
-          <radialGradient id="cc-bg" cx="40%" cy="35%" r="65%">
-            <stop offset="0%" stop-color="#3d6128"/>
-            <stop offset="100%" stop-color="#1e3a10"/>
-          </radialGradient>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4a7a3a"/>
+            <stop offset="100%" stop-color="#2d4f1c"/>
+          </linearGradient>
         </defs>
-        <circle class="cc-pulse-ring" cx="60" cy="60" r="58" fill="none" stroke="#4a7a3a" stroke-width="2" opacity="0"/>
-        <circle cx="60" cy="60" r="58" fill="url(#cc-bg)"/>
-        <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-        <line x1="60" y1="8" x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
-        <line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="8" y1="60" x2="18" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/>
-        <g class="cc-step-rotate" id="cc-step-rotate">
-          <g class="cc-needle-drift">
-            <rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/>
-            <rect x="59" y="34" width="2" height="26" rx="1" fill="white"/>
-            <path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/>
-          </g>
-        </g>
-        <circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-        <circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/>
+        <circle class="ring-track" cx="100" cy="100" r="86"/>
+        <circle class="ring-progress" id="ring-progress" cx="100" cy="100" r="86"/>
       </svg>
+      <div class="ring-center">
+        <div class="ring-main" id="ring-main">1/5</div>
+        <div class="ring-sub" id="ring-sub">Étape</div>
+      </div>
     </div>
     <div class="cm-step-title" id="cm-step-title"></div>
     <div class="cm-step-content" id="cm-step-content"></div>
-    <div class="cm-timer" id="cm-timer">00:00</div>
     <button class="cm-timer-btn" id="cm-timer-btn" style="display:none" onclick="toggleTimer()">▶ Démarrer le minuteur</button>
   </div>
   <div class="cm-nav">
@@ -568,10 +553,14 @@ function beep(){
 }
 
 // ── MODE CUISINE PLEIN ÉCRAN ──
+var RING_CIRC = 2*Math.PI*86; // ≈ 540.35, doit correspondre à r="86" du SVG
+var TIMER_TOTAL_SECS = 0;
+
 function openCookMode(){
   if(!GEN_STEPS.length){ toast('Aucune étape à suivre pour cette recette.'); return; }
   CM_INDEX = 0;
   document.getElementById('cookmode').classList.add('on');
+  document.getElementById('ring-progress').style.strokeDasharray = RING_CIRC;
   renderCookStep();
 }
 function closeCookMode(){ document.getElementById('cookmode').classList.remove('on'); stopTimer(); }
@@ -582,31 +571,34 @@ function cmNav(d){
 }
 function renderCookStep(){
   var s = GEN_STEPS[CM_INDEX];
-  document.getElementById('cm-progress-txt').textContent = 'Étape '+(CM_INDEX+1)+'/'+GEN_STEPS.length;
-  document.getElementById('cm-fill').style.width = ((CM_INDEX+1)/GEN_STEPS.length*100)+'%';
+  var total = GEN_STEPS.length;
+  document.getElementById('cm-progress-txt').textContent = 'Étape '+(CM_INDEX+1)+'/'+total;
   document.getElementById('cm-step-title').textContent = SELECTED_RECIPE.nom;
   document.getElementById('cm-step-content').textContent = s.content;
   document.getElementById('cm-prev').disabled = CM_INDEX===0;
-  document.getElementById('cm-next').disabled = CM_INDEX===GEN_STEPS.length-1;
-  updateCompassOrientation(GEN_STEPS.length);
+  document.getElementById('cm-next').disabled = CM_INDEX===total-1;
+
+  setRingProgress((CM_INDEX+1)/total);
+  document.getElementById('ring-main').textContent = (CM_INDEX+1)+'/'+total;
+  document.getElementById('ring-sub').textContent = 'Étape';
+  setCompassTimerActive(false);
+
   var timerBtn = document.getElementById('cm-timer-btn');
-  var timerDisp = document.getElementById('cm-timer');
-  timerDisp.classList.remove('on');
   if(s.timerMin){
     timerBtn.style.display='inline-block';
     timerBtn.textContent = '▶ Démarrer le minuteur ('+s.timerMin+' min)';
     TIMER_SECS_LEFT = s.timerMin*60;
+    TIMER_TOTAL_SECS = s.timerMin*60;
     TIMER_RUNNING = false;
   } else {
     timerBtn.style.display='none';
   }
 }
-// Oriente doucement la boussole selon la progression dans la recette.
-function updateCompassOrientation(total){
-  var g = document.getElementById('cc-step-rotate');
-  if(!g) return;
-  var angle = total>1 ? Math.round((CM_INDEX/(total-1))*140-70) : 0;
-  g.style.transform = 'rotate('+angle+'deg)';
+
+// Remplit l'anneau selon une fraction 0→1 (0 = vide, 1 = plein).
+function setRingProgress(frac){
+  frac = Math.max(0, Math.min(1, frac));
+  document.getElementById('ring-progress').style.strokeDashoffset = RING_CIRC*(1-frac);
 }
 function setCompassTimerActive(on){
   var el = document.getElementById('compass-companion');
@@ -616,8 +608,8 @@ function setCompassTimerActive(on){
 function toggleTimer(){
   if(TIMER_RUNNING){ stopTimer(); return; }
   TIMER_RUNNING = true;
-  document.getElementById('cm-timer').classList.add('on');
   document.getElementById('cm-timer-btn').textContent = '⏸ En cours…';
+  document.getElementById('ring-sub').textContent = 'Cuisson';
   setCompassTimerActive(true);
   updateTimerDisplay();
   TICKING = setInterval(function(){
@@ -632,10 +624,15 @@ function stopTimer(){
   setCompassTimerActive(false);
   var btn = document.getElementById('cm-timer-btn');
   if(btn) btn.textContent = '▶ Démarrer le minuteur';
+  var total = GEN_STEPS.length;
+  document.getElementById('ring-main').textContent = (CM_INDEX+1)+'/'+total;
+  document.getElementById('ring-sub').textContent = 'Étape';
+  setRingProgress((CM_INDEX+1)/total);
 }
 function updateTimerDisplay(){
   var m = Math.floor(TIMER_SECS_LEFT/60), s = TIMER_SECS_LEFT%60;
-  document.getElementById('cm-timer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  document.getElementById('ring-main').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  setRingProgress(TIMER_TOTAL_SECS ? TIMER_SECS_LEFT/TIMER_TOTAL_SECS : 0);
 }
 
 function openMealPicker(){ document.getElementById('mealpick-ov').classList.add('on'); }
