@@ -56,10 +56,48 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .ov-body { padding:18px 20px; max-height:72vh; overflow-y:auto; }
 .ov-ftr { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:10px; }
 
-.ing-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
+.ing-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
 .ing-row:last-child { border-bottom:none; }
-.ing-qty { color:var(--gold); font-weight:600; }
+.ing-qty { color:var(--gold); font-weight:600; white-space:nowrap; margin-left:auto; }
+.ing-check { width:20px; height:20px; border-radius:6px; border:1.5px solid var(--border2); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.7rem; color:var(--sage); transition:all .15s; }
+.ing-check.on { background:var(--sage-l); border-color:var(--sage); }
+.ing-row.done .ing-name { text-decoration:line-through; color:var(--text3); }
 .instr-text { font-size:.86rem; line-height:1.7; color:var(--text); white-space:pre-line; margin-top:6px; }
+
+/* ── Design "mode cuisine" (cohérent avec recette-prep.html) ── */
+.rp-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.rp-badge { font-size:.72rem; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--card2); color:var(--text2); display:flex; align-items:center; gap:4px; }
+.rp-badge.gold { background:var(--gold-l); color:var(--gold); }
+.rp-servings { display:flex; align-items:center; gap:10px; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:9px 12px; margin-bottom:14px; }
+.rp-servings-lbl { font-size:.78rem; color:var(--text2); flex:1; }
+.rp-serv-btn { width:28px; height:28px; border-radius:50%; border:1px solid var(--border2); background:var(--card); color:var(--text); font-size:1rem; cursor:pointer; }
+.rp-serv-val { font-weight:700; min-width:54px; text-align:center; font-family:'Lora',serif; font-size:.88rem; }
+.btn-cookmode { width:100%; padding:13px; background:var(--gold); color:#fff; border:none; border-radius:10px; font-size:.88rem; font-weight:700; cursor:pointer; margin:4px 0 16px; }
+.rp-section-lbl { font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; }
+.rp-step { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.rp-step:last-child { border-bottom:none; }
+.rp-step-num { width:26px; height:26px; border-radius:50%; background:var(--gold); color:#fff; font-family:'Lora',serif; font-weight:700; font-size:.8rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rp-step-content { font-size:.86rem; line-height:1.55; flex:1; }
+.rp-timer-btn { margin-top:8px; font-size:.72rem; font-weight:600; color:var(--gold); background:var(--gold-l); border:1px solid var(--border2); border-radius:999px; padding:5px 12px; cursor:pointer; display:block; }
+
+#cookmode { display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column; }
+#cookmode.on { display:flex; }
+.cm-top { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.cm-progress-txt { font-size:.78rem; color:var(--text2); font-weight:600; }
+.cm-close { font-size:1.3rem; background:none; border:none; color:var(--text2); cursor:pointer; padding:4px 8px; }
+.cm-track { height:5px; background:var(--bg2); }
+.cm-fill { height:100%; background:var(--gold); transition:width .3s; }
+.cm-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 26px; text-align:center; }
+.cm-step-title { font-size:.85rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
+.cm-step-content { font-family:'Lora',serif; font-size:1.5rem; line-height:1.4; margin-bottom:26px; }
+.cm-timer { font-family:'Lora',serif; font-size:2.6rem; font-weight:700; color:var(--gold); margin-bottom:14px; display:none; }
+.cm-timer.on { display:block; }
+.cm-timer-btn { padding:12px 26px; border-radius:999px; border:2px solid var(--gold); background:var(--gold-l); color:var(--gold); font-weight:700; font-size:.9rem; cursor:pointer; margin-bottom:10px; }
+.cm-nav { display:flex; gap:12px; padding:20px; }
+.cm-nav-btn { flex:1; padding:16px; border-radius:12px; border:none; font-size:1.4rem; font-weight:700; cursor:pointer; }
+.cm-prev { background:var(--card2); color:var(--text2); }
+.cm-next { background:var(--gold); color:#fff; }
+.cm-next:disabled, .cm-prev:disabled { opacity:.35; cursor:default; }
 
 .btn { padding:11px 18px; border-radius:10px; border:none; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; transition:all .2s; }
 .btn-gold { background:var(--gold); color:#fff; flex:1; }
@@ -128,16 +166,42 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="ov-card">
     <div class="ov-hdr"><h3 id="detail-title">Recette</h3><button class="ov-close" onclick="closeDetail()">✕</button></div>
     <div class="ov-body">
-      <div class="recipe-meta" id="detail-tags" style="margin-bottom:14px"></div>
-      <div id="detail-ingredients"></div>
-      <div style="margin-top:16px">
-        <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Préparation</div>
-        <div class="instr-text" id="detail-instructions"></div>
+      <div class="recipe-meta" id="detail-tags" style="margin-bottom:12px"></div>
+      <div class="rp-badges" id="detail-badges"></div>
+      <div class="rp-servings">
+        <div class="rp-servings-lbl">Portion</div>
+        <button class="rp-serv-btn" onclick="changeMult(-0.5)">−</button>
+        <div class="rp-serv-val" id="mult-val">Base</div>
+        <button class="rp-serv-btn" onclick="changeMult(0.5)">+</button>
       </div>
+      <button class="btn-cookmode" onclick="openCookMode()">👨‍🍳 Lancer le mode cuisine</button>
+      <div class="rp-section-lbl">🛒 Ingrédients</div>
+      <div id="detail-ingredients" style="margin-bottom:16px"></div>
+      <div class="rp-section-lbl">📋 Préparation</div>
+      <div id="detail-instructions"></div>
     </div>
     <div class="ov-ftr">
       <button class="btn btn-gold" onclick="openMealPicker()">Ajouter à mon repas</button>
     </div>
+  </div>
+</div>
+
+<!-- MODE CUISINE PLEIN ÉCRAN -->
+<div id="cookmode">
+  <div class="cm-top">
+    <span class="cm-progress-txt" id="cm-progress-txt">Étape 1/1</span>
+    <button class="cm-close" onclick="closeCookMode()">✕</button>
+  </div>
+  <div class="cm-track"><div class="cm-fill" id="cm-fill"></div></div>
+  <div class="cm-body">
+    <div class="cm-step-title" id="cm-step-title"></div>
+    <div class="cm-step-content" id="cm-step-content"></div>
+    <div class="cm-timer" id="cm-timer">00:00</div>
+    <button class="cm-timer-btn" id="cm-timer-btn" style="display:none" onclick="toggleTimer()">▶ Démarrer le minuteur</button>
+  </div>
+  <div class="cm-nav">
+    <button class="cm-nav-btn cm-prev" id="cm-prev" onclick="cmNav(-1)">←</button>
+    <button class="cm-nav-btn cm-next" id="cm-next" onclick="cmNav(1)">→</button>
   </div>
 </div>
 
@@ -340,18 +404,156 @@ function renderList(){
 // regles-pathologies.js (fichier partagé inclus en haut de page).
 
 // ── DÉTAIL ──
+var MULT = 1;
+var GEN_STEPS = []; // étapes parsées pour la recette actuellement ouverte
+var CM_INDEX = 0;
+var TICKING=null, TIMER_SECS_LEFT=0, TIMER_RUNNING=false;
+
+// Détecte une durée ("10 min", "5-6 minutes"...) dans le texte d'une étape,
+// écrite librement par l'admin, pour proposer un minuteur automatiquement.
+function detectTimerMin(text){
+  var m = text.match(/(\d+)(?:\s*-\s*\d+)?\s*min/i);
+  return m ? parseInt(m[1],10) : null;
+}
+
+function parseInstructionSteps(text){
+  return (text||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){
+    // Retire une numérotation déjà présente ("1.", "1)", "Étape 1 :") pour éviter les doublons visuels
+    var clean = l.replace(/^(étape\s*\d+\s*[:.-]?|^\d+[.)]\s*)/i,'').trim();
+    return { content: clean, timerMin: detectTimerMin(l) };
+  });
+}
+
+function totalRecipeKcal(){
+  return (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+pN(i.kcal)*pN(i.qty)/100; },0);
+}
+
 function openDetail(id){
   SELECTED_RECIPE = ALL_RECIPES.find(function(r){ return r.id===id; });
   if(!SELECTED_RECIPE) return;
+  MULT = 1;
   document.getElementById('detail-title').textContent = SELECTED_RECIPE.nom;
   document.getElementById('detail-tags').innerHTML = (SELECTED_RECIPE.repas_types||[]).map(function(m){ return '<span class="recipe-tag">'+(MEAL_LABELS[m]||m)+'</span>'; }).join('');
-  document.getElementById('detail-ingredients').innerHTML = (SELECTED_RECIPE.ingredients||[]).map(function(i){
-    return '<div class="ing-row"><span>'+esc(i.nom)+glycemicBadge(i)+'</span><span class="ing-qty">'+Math.round(i.qty)+'g</span></div>';
-  }).join('');
-  document.getElementById('detail-instructions').textContent = SELECTED_RECIPE.instructions || 'Aucune instruction renseignée.';
+
+  GEN_STEPS = parseInstructionSteps(SELECTED_RECIPE.instructions);
+  renderDetailBody();
   document.getElementById('detail-ov').classList.add('on');
 }
 function closeDetail(){ document.getElementById('detail-ov').classList.remove('on'); }
+
+function renderDetailBody(){
+  var kcal = Math.round(totalRecipeKcal()*MULT);
+  var n = GEN_STEPS.length;
+  var difficulty = n<=3 ? 'Facile' : (n<=5 ? 'Moyen' : 'Un peu plus élaboré');
+  var timeSum = GEN_STEPS.reduce(function(s,st){ return s+(st.timerMin||2); },0);
+
+  document.getElementById('detail-badges').innerHTML =
+    '<span class="rp-badge gold">⏱ ~'+Math.max(5,timeSum)+' min</span>'
+    +'<span class="rp-badge">🎚 '+difficulty+'</span>'
+    +'<span class="rp-badge">🔥 '+kcal+' kcal</span>';
+
+  document.getElementById('mult-val').textContent = MULT===1 ? 'Base' : (MULT+'×');
+
+  document.getElementById('detail-ingredients').innerHTML = (SELECTED_RECIPE.ingredients||[]).map(function(i,idx){
+    var qty = Math.round(pN(i.qty)*MULT*10)/10;
+    return '<div class="ing-row" id="ing-row-'+idx+'">'
+      +'<div class="ing-check" onclick="toggleIng('+idx+')" id="ing-check-'+idx+'"></div>'
+      +'<span class="ing-name">'+esc(i.nom)+glycemicBadge(i)+'</span>'
+      +'<span class="ing-qty">'+qty+'g</span></div>';
+  }).join('');
+
+  document.getElementById('detail-instructions').innerHTML = GEN_STEPS.length
+    ? GEN_STEPS.map(function(s,idx){
+        return '<div class="rp-step"><div class="rp-step-num">'+(idx+1)+'</div><div>'
+          +'<div class="rp-step-content">'+esc(s.content)+'</div>'
+          +(s.timerMin ? '<button class="rp-timer-btn" onclick="quickTimer('+s.timerMin+')">⏱ Minuteur '+s.timerMin+' min</button>' : '')
+          +'</div></div>';
+      }).join('')
+    : '<div class="instr-text" style="color:var(--text3)">Aucune instruction renseignée.</div>';
+}
+
+function changeMult(d){
+  MULT = Math.max(0.5, Math.min(4, MULT+d));
+  renderDetailBody();
+}
+function toggleIng(idx){
+  var row = document.getElementById('ing-row-'+idx);
+  var chk = document.getElementById('ing-check-'+idx);
+  var on = row.classList.toggle('done');
+  chk.classList.toggle('on', on);
+  chk.textContent = on ? '✓' : '';
+}
+
+// ── Minuteur rapide (hors mode cuisine) ──
+function quickTimer(min){
+  toast('⏱ Minuteur de '+min+' min lancé — l\'onglet vous alertera à la fin.');
+  setTimeout(function(){ toast('⏰ Minuteur terminé !'); beep(); }, min*60*1000);
+}
+function beep(){
+  try{
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    var o = ctx.createOscillator(); var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.value = 0.15;
+    o.start(); setTimeout(function(){ o.stop(); }, 350);
+  }catch(e){}
+}
+
+// ── MODE CUISINE PLEIN ÉCRAN ──
+function openCookMode(){
+  if(!GEN_STEPS.length){ toast('Aucune étape à suivre pour cette recette.'); return; }
+  CM_INDEX = 0;
+  document.getElementById('cookmode').classList.add('on');
+  renderCookStep();
+}
+function closeCookMode(){ document.getElementById('cookmode').classList.remove('on'); stopTimer(); }
+function cmNav(d){
+  stopTimer();
+  CM_INDEX = Math.max(0, Math.min(GEN_STEPS.length-1, CM_INDEX+d));
+  renderCookStep();
+}
+function renderCookStep(){
+  var s = GEN_STEPS[CM_INDEX];
+  document.getElementById('cm-progress-txt').textContent = 'Étape '+(CM_INDEX+1)+'/'+GEN_STEPS.length;
+  document.getElementById('cm-fill').style.width = ((CM_INDEX+1)/GEN_STEPS.length*100)+'%';
+  document.getElementById('cm-step-title').textContent = SELECTED_RECIPE.nom;
+  document.getElementById('cm-step-content').textContent = s.content;
+  document.getElementById('cm-prev').disabled = CM_INDEX===0;
+  document.getElementById('cm-next').disabled = CM_INDEX===GEN_STEPS.length-1;
+  var timerBtn = document.getElementById('cm-timer-btn');
+  var timerDisp = document.getElementById('cm-timer');
+  timerDisp.classList.remove('on');
+  if(s.timerMin){
+    timerBtn.style.display='inline-block';
+    timerBtn.textContent = '▶ Démarrer le minuteur ('+s.timerMin+' min)';
+    TIMER_SECS_LEFT = s.timerMin*60;
+    TIMER_RUNNING = false;
+  } else {
+    timerBtn.style.display='none';
+  }
+}
+function toggleTimer(){
+  if(TIMER_RUNNING){ stopTimer(); return; }
+  TIMER_RUNNING = true;
+  document.getElementById('cm-timer').classList.add('on');
+  document.getElementById('cm-timer-btn').textContent = '⏸ En cours…';
+  updateTimerDisplay();
+  TICKING = setInterval(function(){
+    TIMER_SECS_LEFT--;
+    updateTimerDisplay();
+    if(TIMER_SECS_LEFT<=0){ stopTimer(); beep(); toast('⏰ Minuteur terminé !'); }
+  }, 1000);
+}
+function stopTimer(){
+  if(TICKING){ clearInterval(TICKING); TICKING=null; }
+  TIMER_RUNNING = false;
+  var btn = document.getElementById('cm-timer-btn');
+  if(btn) btn.textContent = '▶ Démarrer le minuteur';
+}
+function updateTimerDisplay(){
+  var m = Math.floor(TIMER_SECS_LEFT/60), s = TIMER_SECS_LEFT%60;
+  document.getElementById('cm-timer').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
 
 function openMealPicker(){ document.getElementById('mealpick-ov').classList.add('on'); }
 function closeMealPicker(){ document.getElementById('mealpick-ov').classList.remove('on'); }
