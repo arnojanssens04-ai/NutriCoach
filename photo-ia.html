@@ -38,6 +38,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .spinner{animation:spin 2s linear infinite;display:inline-block;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1916;color:#fff;padding:10px 20px;border-radius:999px;font-size:.82rem;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
 .toast.on{opacity:1;}
+
+/* ── Overlay de récapitulatif animé après validation d'un scan ── */
+#add-summary-ov{position:fixed;inset:0;background:rgba(245,243,238,0.97);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px}
+#add-summary-ov.on{display:flex}
+.as-card{background:var(--card);border-radius:20px;padding:30px 26px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(22,36,27,0.18);opacity:0;transform:scale(.92);transition:all .35s cubic-bezier(.34,1.56,.64,1)}
+#add-summary-ov.on .as-card{opacity:1;transform:scale(1)}
+.as-check{width:56px;height:56px;border-radius:50%;background:var(--sage-l);color:var(--sage);display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 14px;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1) .15s}
+#add-summary-ov.on .as-check{transform:scale(1)}
+.as-title{font-family:'Lora',serif;font-weight:700;font-size:1.15rem;margin-bottom:4px}
+.as-sub{font-size:.8rem;color:var(--text2);margin-bottom:20px}
+.as-macros{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.as-row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--bg);border-radius:10px;opacity:0;transform:translateX(-12px);transition:all .3s ease}
+#add-summary-ov.on .as-row{opacity:1;transform:translateX(0)}
+.as-row:nth-child(1){transition-delay:.25s}
+.as-row:nth-child(2){transition-delay:.35s}
+.as-row:nth-child(3){transition-delay:.45s}
+.as-row:nth-child(4){transition-delay:.55s}
+.as-row:nth-child(5){transition-delay:.65s}
+.as-row-lbl{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:7px}
+.as-row-val{font-family:'Lora',serif;font-weight:700;font-size:.92rem;color:var(--gold)}
+.as-kcal .as-row-val{color:var(--gold);font-size:1.05rem}
 </style>
 </head>
 <body>
@@ -109,6 +130,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div id="add-summary-ov">
+  <div class="as-card">
+    <div class="as-check">✓</div>
+    <div class="as-title" id="as-title">Ajouté !</div>
+    <div class="as-sub" id="as-sub"></div>
+    <div class="as-macros" id="as-macros"></div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="regles-pathologies.js?v=3"></script>
@@ -273,6 +303,36 @@ function selectMeal(meal, btn){
   btn.classList.add('selected');
 }
 
+// ── PLAN GRATUIT / CAP SANTÉ+ ──
+// Interrupteur global : phase bêta = limites désactivées pour tout le monde.
+// Repasser à true quand Cap Santé+ sera prêt à être lancé — aucune autre
+// modification nécessaire, tout le mécanisme est déjà en place.
+var LIMITS_ENABLED = false;
+
+// Limites d'usage par fonctionnalité, plan par plan. Pensé pour être étendu
+// facilement quand d'autres fonctionnalités seront limitées à leur tour —
+// il suffira d'ajouter une clé ici, pas de reconstruire le mécanisme.
+var PLAN_LIMITS = {
+  photo_scan: { free: 2 } // scans photo IA par jour sur le plan gratuit
+};
+
+// Vérifie côté serveur (jamais côté client seul, qui serait trivialement
+// contournable) si l'utilisateur a encore droit à un scan aujourd'hui.
+// Renvoie {allowed, used, limit} — limit=null signifie illimité (admin/premium/bêta).
+async function checkPhotoScanLimit(){
+  if(!LIMITS_ENABLED) return {allowed:true, used:0, limit:null};
+  var isAdmin = PROF && PROF.role==='admin';
+  var isPremium = PROF && PROF.plan==='premium';
+  if(isAdmin || isPremium) return {allowed:true, used:0, limit:null};
+
+  var limit = PLAN_LIMITS.photo_scan.free;
+  var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  var r = await sb.from('photo_scan_logs').select('id',{count:'exact', head:true})
+    .eq('user_id', USER.id).gte('created_at', todayStart.toISOString());
+  var used = r.count || 0;
+  return {allowed: used < limit, used: used, limit: limit};
+}
+
 function getScanCount(){
   var t = new Date().toISOString().slice(0,10);
   return parseInt(localStorage.getItem('photo_scans_'+t)||'0');
@@ -281,24 +341,35 @@ function incScanCount(){
   var t = new Date().toISOString().slice(0,10);
   localStorage.setItem('photo_scans_'+t, getScanCount()+1);
 }
-// Trace chaque scan réussi côté serveur (pour le suivi admin jour par jour).
-// N'affecte jamais l'utilisateur : purement informatif, aucune limite associée.
+// Trace chaque scan réussi côté serveur — sert au suivi admin jour par jour
+// ET fait foi pour la limite du plan gratuit (checkPhotoScanLimit).
 function logScanToServer(){
-  sb.from('photo_scan_logs').insert({user_id: USER.id}).then(function(r){
+  return sb.from('photo_scan_logs').insert({user_id: USER.id}).then(function(r){
     if(r.error) console.warn('[Cap Santé] Erreur log scan:', r.error);
   });
 }
-function updateCounter(){
+async function updateCounter(){
   var isAdmin = PROF && PROF.role==='admin';
+  var isPremium = PROF && PROF.plan==='premium';
   var el = document.getElementById('counter-lbl');
   if(!el) return;
-  var n = getScanCount();
-  el.textContent = isAdmin ? 'Admin — scans illimités'
-    : n+' scan'+(n>1?'s':'')+' aujourd\'hui';
+  if(!LIMITS_ENABLED){ el.textContent = 'Bêta — scans illimités'; return; }
+  if(isAdmin){ el.textContent = 'Admin — scans illimités'; return; }
+  if(isPremium){ el.textContent = 'Cap Santé+ — scans illimités'; return; }
+  var check = await checkPhotoScanLimit();
+  el.textContent = Math.min(check.used, check.limit)+' / '+check.limit+' scans gratuits aujourd\'hui';
 }
 
 async function onPhotoSelected(input){
   var file = input.files[0]; if(!file) return;
+
+  var limitCheck = await checkPhotoScanLimit();
+  if(!limitCheck.allowed){
+    showError('Vous avez utilisé vos '+limitCheck.limit+' scans gratuits aujourd\'hui. Revenez demain, ou passez à Cap Santé+ pour un accès illimité.');
+    input.value = '';
+    return;
+  }
+
   var reader = new FileReader();
   reader.onload = async function(e){
     var orig = e.target.result;
@@ -337,8 +408,8 @@ async function onPhotoSelected(input){
       var data = await res.json();
       if(!data.aliments||!data.aliments.length){ showError('Aucun aliment détecté. Essayez avec une image plus nette.'); resetCapture(); return; }
       incScanCount();
+      await logScanToServer();
       updateCounter();
-      logScanToServer();
       showResults(data.aliments);
     }catch(err){
       clearInterval(iv);
@@ -378,8 +449,13 @@ function showResults(aliments){
   // ai_qty = ce que l'IA a estimé (jamais modifié)
   // qty    = ce que l'utilisateur valide (peut être ajusté)
   // La différence entre les deux est la correction à apprendre.
+  // aiNutrition = estimation nutritionnelle par l'IA (pour 100g), gardée en
+  // repli au cas où l'aliment ne matche rien dans notre base Ciqual.
   detectedFoods = aliments.map(function(a,i){
-    return {id:i, nom:a.nom, ai_qty:a.qty, qty:a.qty, included:true};
+    return {id:i, nom:a.nom, ai_qty:a.qty, qty:a.qty, included:true, aiNutrition:{
+      kcal: a.kcal, prot: a.prot, gluc: a.gluc, lip: a.lip, fibres: a.fibres,
+      ags: a.ags, sucres: a.sucres, sodium: a.sodium, magnesium: a.magnesium, fer: a.fer
+    }};
   });
   renderResults();
   document.getElementById('results-section').style.display = 'block';
@@ -414,18 +490,58 @@ function pN(v){
   return parseFloat(String(v).replace(',','.'))||0;
 }
 
+// Quand un aliment détecté par la photo ne correspond à rien dans Ciqual,
+// on utilise l'estimation nutritionnelle que l'IA a déjà fournie (avec le
+// scan lui-même, pas un second appel) et on l'enregistre dans la base des
+// aliments personnalisés — la prochaine recherche le retrouvera directement.
+async function createCustomFoodFromAI(item){
+  var n = item.aiNutrition;
+  if(!n || !(n.kcal>0)) return null; // pas d'estimation exploitable, échec normal
+
+  var row = {
+    nom: item.nom,
+    kcal: n.kcal||0, prot: n.prot||0, gluc: n.gluc||0, lip: n.lip||0,
+    ags: n.ags||0, fibres: n.fibres||0, sucres: n.sucres||0,
+    na: n.sodium||0, mg: n.magnesium||0, fer: n.fer||0
+  };
+
+  var r = await sb.from('aliments_custom').insert(row).select().single();
+  if(r.error){
+    console.warn('[Cap Santé] Impossible de créer l\'aliment personnalisé:', r.error.message);
+    // Repli : même si l'insertion échoue, on utilise l'estimation pour
+    // cette fois-ci seulement, pour ne pas bloquer l'utilisateur.
+    return {code:null, nom:item.nom, kcal:row.kcal, prot:row.prot, gluc:row.gluc, lip:row.lip,
+      ags:row.ags, fibres:row.fibres, sucres:row.sucres, na:row.na, mg:row.mg, fer:row.fer, cal:0, pot:0, zn:0};
+  }
+
+  var c = r.data;
+  var food = {code:'custom_'+c.id, nom:c.nom, kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
+    ags:c.ags||0, fer:c.fer||0, cal:c.cal||0, pot:c.pot||0, fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0};
+  DB.push(food); // disponible immédiatement pour le reste de la session (et les prochains scans)
+  return food;
+}
+
 async function confirmFoods(){
   var toAdd = detectedFoods.filter(function(f){return f.included;});
   if(!toAdd.length){toast('Sélectionnez au moins un aliment');return;}
   if(!selectedMeal){toast('Choisissez un repas d\'abord');return;}
   var mealLabel = {breakfast:'petit-déjeuner',lunch:'déjeuner',snack:'collation',dinner:'souper',snack2:'collation 2'};
-  var added=0, errors=[], notFound=[];
+  var added=0, errors=[], notFound=[], autoCreated=[];
   var today = new Date().toISOString().slice(0,10);
+  var totals = {kcal:0, prot:0, gluc:0, lip:0, fibres:0};
 
   for(var i=0;i<toAdd.length;i++){
     var item = toAdd[i];
     var food = findFood(item.nom);
-    if(!food){ notFound.push(item.nom); continue; }
+
+    if(!food){
+      // Non trouvé dans Ciqual : on utilise l'estimation nutritionnelle que
+      // l'IA a déjà fournie avec le scan, et on l'ajoute à la base des
+      // aliments personnalisés pour que la prochaine recherche la retrouve.
+      food = await createCustomFoodFromAI(item);
+      if(!food){ notFound.push(item.nom); continue; }
+      autoCreated.push(item.nom);
+    }
 
     var qty = item.qty;
     var ins = {
@@ -459,10 +575,15 @@ async function confirmFoods(){
       errors.push(food.nom+' ('+r.error.message+')');
     } else {
       added++;
+      totals.kcal   += ins.kcal;
+      totals.prot   += ins.proteines;
+      totals.gluc   += ins.glucides;
+      totals.lip    += ins.lipides;
+      totals.fibres += pN(food.fibres)*qty/100;
     }
   }
 
-  if(added)   toast('✅ '+added+' aliment'+(added>1?'s':'')+' ajouté'+(added>1?'s':'')+' au '+(mealLabel[selectedMeal]||selectedMeal));
+  if(added) showAddSummary(mealLabel[selectedMeal]||selectedMeal, added, totals, autoCreated);
   if(errors.length)   showError('Erreurs d\'enregistrement :\n'+errors.join('\n'));
   if(notFound.length) toast('⚠️ Non trouvé dans la base : '+notFound.join(', '));
 
@@ -487,13 +608,35 @@ async function confirmFoods(){
     });
   }
 
-  if(added && !errors.length) setTimeout(function(){ window.location.href='dashboard.html'; }, 1800);
+  if(added && !errors.length) setTimeout(function(){ window.location.href='dashboard.html'; }, 3200);
+}
+
+// Affiche un récapitulatif animé (kcal, protéines, glucides, lipides,
+// fibres) de ce qui vient d'être ajouté, plutôt qu'un simple message.
+function showAddSummary(mealLabel, count, totals, autoCreated){
+  document.getElementById('as-title').textContent = count>1 ? count+' aliments ajoutés !' : 'Aliment ajouté !';
+  var sub = 'Au ' + mealLabel;
+  if(autoCreated && autoCreated.length) sub += ' · 🆕 '+autoCreated.length+' nouvel'+(autoCreated.length>1?'les':'le')+' aliment'+(autoCreated.length>1?'s':'')+' appris'+(autoCreated.length>1?'':'e');
+  document.getElementById('as-sub').textContent = sub;
+  document.getElementById('as-macros').innerHTML =
+    '<div class="as-row as-kcal"><span class="as-row-lbl">🔥 Calories</span><span class="as-row-val">'+Math.round(totals.kcal)+' kcal</span></div>'
+    +'<div class="as-row"><span class="as-row-lbl">🥩 Protéines</span><span class="as-row-val">'+Math.round(totals.prot)+' g</span></div>'
+    +'<div class="as-row"><span class="as-row-lbl">🍞 Glucides</span><span class="as-row-val">'+Math.round(totals.gluc)+' g</span></div>'
+    +'<div class="as-row"><span class="as-row-lbl">🥑 Lipides</span><span class="as-row-val">'+Math.round(totals.lip)+' g</span></div>'
+    +'<div class="as-row"><span class="as-row-lbl">🌿 Fibres</span><span class="as-row-val">'+Math.round(totals.fibres)+' g</span></div>';
+  document.getElementById('add-summary-ov').classList.add('on');
 }
 
 function tok(s){
   return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
 }
+
+// États de cuisson qui s'excluent mutuellement — jamais confondre "cru" et
+// "cuit" même si le reste du nom correspond bien, l'écart nutritionnel est
+// trop important (ex: 100g de semoule crue ≠ 100g de semoule cuite).
+var COOKED_WORDS = ['cuit','cuite','cuits','cuites','grille','grillee','grilles','grillees','poele','frit','frite','bouilli','bouillie','roti','rotie','vapeur'];
+var RAW_WORDS = ['cru','crue','crus','crues'];
 
 function scoreFn(qt, dt, dnom){
   var s = 0;
@@ -509,7 +652,16 @@ function scoreFn(qt, dt, dnom){
   if(dnorm.indexOf(qt.join(' ')) >= 0) s += 20;              // phrase entière
   // Pénalité longueur — un nom très long avec 1 seul mot en commun est moins bon
   var ratio = Math.min(1, qt.length / Math.max(1, dt.length));
-  return s * (0.5 + 0.5 * ratio);
+  s = s * (0.5 + 0.5 * ratio);
+
+  // Conflit cru/cuit — pénalité forte plutôt qu'un score qui reste compétitif.
+  var qHasCooked = qt.some(function(w){ return COOKED_WORDS.indexOf(w)>=0; });
+  var qHasRaw    = qt.some(function(w){ return RAW_WORDS.indexOf(w)>=0; });
+  var dHasCooked = dt.some(function(w){ return COOKED_WORDS.indexOf(w)>=0; });
+  var dHasRaw    = dt.some(function(w){ return RAW_WORDS.indexOf(w)>=0; });
+  if((qHasCooked && dHasRaw) || (qHasRaw && dHasCooked)) s *= 0.15;
+
+  return s;
 }
 
 function findFood(nom){
@@ -523,8 +675,15 @@ function findFood(nom){
     var aliasTokens = tok(aliasKey);
     var aliasResult = null, aliasScore = 0;
     DB.forEach(function(d){
-      var s = scoreFn(aliasTokens, tok(d.nom), d.nom);
-      if(s > aliasScore){ aliasScore = s; aliasResult = d; }
+      var dTok = tok(d.nom);
+      var s = scoreFn(aliasTokens, dTok, d.nom);
+      // Égalité de score : on préfère le nom le plus concis (le moins de mots
+      // "en trop" par rapport à la requête) plutôt que le premier trouvé —
+      // évite de retomber arbitrairement sur une variante peu pertinente
+      // (ex: "préemballée aux oignons" au lieu de "pour pizza").
+      if(s > aliasScore || (s === aliasScore && aliasResult && dTok.length < tok(aliasResult.nom).length)){
+        aliasScore = s; aliasResult = d;
+      }
     });
     if(aliasResult && aliasScore >= 3) return aliasResult;
   }
@@ -533,8 +692,11 @@ function findFood(nom){
   var qt = tok(nom);
   var best = null, bestScore = 0;
   DB.forEach(function(d){
-    var s = scoreFn(qt, tok(d.nom), d.nom);
-    if(s > bestScore){ bestScore = s; best = d; }
+    var dTok = tok(d.nom);
+    var s = scoreFn(qt, dTok, d.nom);
+    if(s > bestScore || (s === bestScore && best && dTok.length < tok(best.nom).length)){
+      bestScore = s; best = d;
+    }
   });
 
   // Seuil bas (3) car l'IA retourne des noms variés mais le mot-clé principal
