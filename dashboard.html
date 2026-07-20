@@ -1285,7 +1285,21 @@ function calcTargets(){
   };
 }
 
-function calcScore(T,tgt,pathos){
+// Détection des aliments ultra-transformés — PARTAGÉE entre Score Santé et
+// Qualité nutritionnelle, pour que les deux scores s'accordent sur ce qui
+// compte comme "ultra-transformé" plutôt que d'avoir chacun leur propre
+// logique (source d'incohérence entre les deux auparavant).
+function countUltraProcessed(entries){
+  var count = 0;
+  (entries||[]).forEach(function(e){
+    var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king/.test(n))
+      count++;
+  });
+  return count;
+}
+
+function calcScore(T,tgt,pathos,entries){
   if(T.kcal<100)return null;
 
   var rE = T.kcal/tgt.kcal;
@@ -1300,7 +1314,9 @@ function calcScore(T,tgt,pathos){
   if(T.lip>=15){ var pctAGS=T.ags/T.lip*100; penAGS=Math.pow(Math.max(0,pctAGS-20),2)*0.15; }
   var excesNa = Math.max(0,(T.na-6000)/1000);
   var penNa = excesNa*5;
-  var penaliteTotale = Math.min(penAGS+penNa, 35);
+  var ultraCount = countUltraProcessed(entries);
+  var penUltra = ultraCount*4; // 4 pts par aliment ultra-transformé détecté
+  var penaliteTotale = Math.min(penAGS+penNa+penUltra, 40);
   var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale)));
 
   // Détail par critère — utilisé par le panneau d'explication cliquable
@@ -1336,7 +1352,11 @@ function calcScore(T,tgt,pathos){
     { label:'Sodium', pts:Math.round(Math.max(0,15-penNa*3)), max:15,
       val: Math.round(T.na)+'mg / 6000mg',
       ok: T.na<=6000,
-      conseil: T.na>6000 ? 'Sodium élevé — limitez sel ajouté, plats préparés et charcuterie.' : null }
+      conseil: T.na>6000 ? 'Sodium élevé — limitez sel ajouté, plats préparés et charcuterie.' : null },
+    { label:'Aliments ultra-transformés', pts:Math.round(Math.max(0,-penUltra)), max:0,
+      val: ultraCount+' détecté'+(ultraCount>1?'s':'')+' aujourd\'hui',
+      ok: ultraCount===0,
+      conseil: ultraCount>0 ? 'Chips, sodas, plats industriels, charcuterie... privilégiez les aliments bruts pour préserver votre score.' : null }
   ];
 
   return {score:s, detail:detail};
@@ -1344,6 +1364,7 @@ function calcScore(T,tgt,pathos){
 
 // Variable globale pour stocker le dernier détail de score calculé
 var lastScoreDetail = null;
+var lastScoreUltraCount = 0;
 var lastScoreT = null;   // valeurs réelles de la journée
 var lastScoreTgt = null; // objectifs du profil
 
@@ -1400,7 +1421,14 @@ function openScoreDetail(){
         T.ags*9/Math.max(T.kcal,1)*100>10?'Au-dessus de 10% — limitez beurre, charcuterie, fromages gras.':null)
     + (T.na>0 ? bar(T.na, tgt.na||2300, 'mg', true,
         '🧂 Sodium',
-        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '');
+        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '')
+    + (lastScoreUltraCount>0 ? '<div style="margin-bottom:14px;padding:10px 12px;background:rgba(139,42,42,0.06);border-radius:9px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">'
+        +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">🍟 Aliments ultra-transformés</span>'
+        +'<span style="font-size:.82rem;font-weight:700;color:var(--rose)">-'+(lastScoreUltraCount*4)+' pts</span>'
+        +'</div>'
+        +'<div style="font-size:.72rem;color:var(--rose)">'+lastScoreUltraCount+' détecté'+(lastScoreUltraCount>1?'s':'')+' aujourd\'hui — privilégiez les aliments bruts pour préserver votre score.</div>'
+        +'</div>' : '');
 
   // Micronutriments — uniquement si des données sont disponibles
   var microRows = '';
@@ -1455,7 +1483,6 @@ function calcNutritionalQuality(entries, tgt){
   var T = {kcal:0, prot:0, gluc:0, lip:0, ags:0, fibres:0, sucres:0};
   var totalVegGrams = 0;
   var foodGroups = {};   // diversité alimentaire
-  var ultraCount  = 0;   // aliments ultra-transformés
   var alcoholKcal = 0;   // calories alcool
 
   entries.forEach(function(e){
@@ -1485,14 +1512,15 @@ function calcNutritionalQuality(entries, tgt){
     else if(/pomme|poire|banane|orange|kiwi|fraise|raisin|peche|abricot|cerise|framboise|myrtille|mangue|ananas/.test(n)) foodGroups['fruit']=1;
     else if(/huile|beurre|avocat|noix|amande|noisette/.test(n)) foodGroups['lipides']=1;
 
-    // ── Ultra-transformés ──
-    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king/.test(n))
-      ultraCount++;
+    // ── Ultra-transformés : détection déplacée dans countUltraProcessed()
+    // (fonction partagée avec Score Santé — voir plus bas) ──
 
     // ── Alcool ──
     if(/biere|vin |alcool|whisky|vodka|rhum|champagne|spiritueux|cidre|aperitif/.test(n))
       alcoholKcal += e.kcal||0;
   });
+
+  var ultraCount = countUltraProcessed(entries);
 
   if(T.kcal<100) return null;
 
@@ -1541,15 +1569,21 @@ function calcNutritionalQuality(entries, tgt){
   score += sucresPts;
   if(T.sucres>50) tips.push({priority:4, msg:'Sucres ajoutés élevés ('+Math.round(T.sucres)+'g / seuil 50g) — réduisez sodas, desserts sucrés et confiseries.'});
 
-  // 9. Ultra-transformés — 5 pts (pénalité si présents)
-  score += ultraCount===0 ? 5 : Math.max(0, 5-ultraCount*2);
-  if(ultraCount>0) tips.push({priority:5, msg:'Aliments ultra-transformés détectés — privilégiez les aliments bruts ou peu transformés.'});
+  // 9. Ultra-transformés — même poids que le Score Santé (4 pts/aliment),
+  // pour que les deux scores racontent la même histoire sur ce critère.
+  // Avant : perte plafonnée à 5 pts max, quasi sans effet sur un score sur
+  // 100 — désormais un vrai poids, tout en gardant 100/100 atteignable pour
+  // une journée réellement sans aliment ultra-transformé.
+  score += ultraCount===0 ? 5 : 0;
+  var penUltraQ = ultraCount*4;
+  if(ultraCount>0) tips.push({priority:5, msg:ultraCount+' aliment'+(ultraCount>1?'s':'')+' ultra-transformé'+(ultraCount>1?'s':'')+' détecté'+(ultraCount>1?'s':'')+' — privilégiez les aliments bruts ou peu transformés.'});
 
   // 10. Alcool — malus si présent (pas de pts, juste pénalité)
   if(alcoholKcal>0){
     score = Math.max(0, score-5);
     tips.push({priority:3, msg:'Alcool détecté ('+Math.round(alcoholKcal)+' kcal) — l\'alcool apporte des calories vides et perturbe le métabolisme.'});
   }
+  score = Math.max(0, score-penUltraQ);
 
   // Conseil rotatif — on affiche le plus prioritaire + un second conseil différent.
   // La clé localStorage évite de toujours montrer le même message.
@@ -1637,7 +1671,8 @@ function genAlerts(T,tgt,pathos){
   var p=PROF||{};
   var r=T.kcal/tgt.kcal;
   if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
-  else if(r>0.85)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
+  else if(r>0.95)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
+  else if(r>0.85)al.push({t:'good',i:'🔜',ttl:'Vous vous approchez de l\'objectif',txt:Math.round(T.kcal)+' / '+tgt.kcal+' kcal — encore un peu de marge si un repas reste à venir.'});
   // Alerte protéines faibles — seuil minimal de 0.83g/kg (recommandation OMS)
   // affiché uniquement en fin de journée quand il reste peu à manger (>60% kcal atteints)
   var w = p.poids||70;
@@ -2102,9 +2137,10 @@ async function refreshDash(){
   var nbMainMeals = Object.keys(mainMealsEntered).length;
   var scoreUnlocked = nbMainMeals >= 2;
 
-  var scoreResult = scoreUnlocked ? calcScore(T,tgt,pathos) : null;
+  var scoreResult = scoreUnlocked ? calcScore(T,tgt,pathos,entries) : null;
   var score = scoreResult ? scoreResult.score : null;
   lastScoreDetail = scoreResult ? scoreResult.detail : null;
+  lastScoreUltraCount = scoreUnlocked ? countUltraProcessed(entries) : 0;
   // Stocker les valeurs brutes pour le modal de détail (sans points)
   if(scoreUnlocked){
     lastScoreT   = Object.assign({}, T, {protGperKg: tgt.protGperKg});
@@ -3120,6 +3156,18 @@ var PORTION_CATEGORIES = [
       {label:'Une portion', sub:'~15g', grams:15, icon:'🧈'},
       {label:'Grosse noix', sub:'~25g', grams:25, icon:'🧈'}
     ]},
+  { id:'cereales', keywords:['muesli','cornflakes','corn flakes','céréales','cereales','granola','porridge','flocons d\'avoine','flocons','müesli','crunchy','pétales','petales','chocapic','miel pops','frosties','special k'],
+    options:[
+      {label:'Quart de bol', sub:'~20g', grams:20, icon:'🥣'},
+      {label:'Moitié de bol', sub:'~40g', grams:40, icon:'🥣'},
+      {label:'Bol plein', sub:'~60g', grams:60, icon:'🥣'}
+    ]},
+  { id:'pain', keywords:['pain au chocolat','pain chocolat','pain','baguette','tartine'],
+    options:[
+      {label:'1 tranche', sub:'~30g', grams:30, icon:'🍞'},
+      {label:'2 tranches', sub:'~60g', grams:60, icon:'🍞'},
+      {label:'3 tranches', sub:'~90g', grams:90, icon:'🍞'}
+    ]},
   { id:'chocolat', keywords:['chocolat','tablette','praline','praliné','truffe','ganache'],
     options:[
       {label:'1 carré', sub:'~5g', grams:5, icon:'🍫'},
@@ -3138,12 +3186,6 @@ var PORTION_CATEGORIES = [
       {label:'3 biscuits', sub:'~30g', grams:30, icon:'🍪'},
       {label:'5 biscuits', sub:'~50g', grams:50, icon:'🍪'}
     ]},
-  { id:'pain', keywords:['pain','baguette','tartine'],
-    options:[
-      {label:'1 tranche', sub:'~30g', grams:30, icon:'🍞'},
-      {label:'2 tranches', sub:'~60g', grams:60, icon:'🍞'},
-      {label:'3 tranches', sub:'~90g', grams:90, icon:'🍞'}
-    ]},
   { id:'fromage', keywords:['fromage','emmental','comte','comté','gruyere','gruyère','cheddar','edam','cantal'],
     options:[
       {label:'1 tranche', sub:'~20g', grams:20, icon:'🧀'},
@@ -3156,11 +3198,11 @@ var PORTION_CATEGORIES = [
       {label:'2 tranches', sub:'~30g', grams:30, icon:'🥓'},
       {label:'3 tranches', sub:'~45g', grams:45, icon:'🥓'}
     ]},
-  { id:'chocolat', keywords:['chocolat','tablette'],
+  { id:'alcool', keywords:['vin','biere','bière','champagne','alcool','whisky','vodka','rhum','gin','apero','apéro','cocktail','porto','pastis','liqueur','mousseux','cava','prosecco'],
     options:[
-      {label:'2 carrés', sub:'~10g', grams:10, icon:'🍫'},
-      {label:'4 carrés', sub:'~20g', grams:20, icon:'🍫'},
-      {label:'1/2 tablette', sub:'~50g', grams:50, icon:'🍫'}
+      {label:'Petit verre', sub:'~100ml', grams:100, icon:'🍷'},
+      {label:'Un verre', sub:'~125ml', grams:125, icon:'🍷'},
+      {label:'Grand verre', sub:'~175ml', grams:175, icon:'🍷'}
     ]},
   { id:'fruit_unite', keywords:['pomme','banane','orange','poire','peche','pêche','abricot','kiwi','mandarine','clementine','clémentine','nectarine','prune'],
     options:[
