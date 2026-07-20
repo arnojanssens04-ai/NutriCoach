@@ -49,6 +49,17 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .input-bar textarea { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:14px; color:var(--text); padding:11px 14px; font-family:'Inter',sans-serif; font-size:.88rem; resize:none; outline:none; max-height:90px; }
 .send-btn { width:44px; height:44px; border-radius:50%; background:var(--gold); border:none; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
 .denied { display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text2); }
+
+.thread-back { display:none; background:none; border:none; font-size:1.2rem; color:var(--text2); cursor:pointer; padding:4px 10px 4px 0; }
+
+/* ── Mobile : un seul panneau visible à la fois (liste OU conversation) ── */
+@media (max-width: 720px) {
+  .conv-list { width:100%; }
+  .thread-panel { display:none; }
+  .main.show-thread .conv-list { display:none; }
+  .main.show-thread .thread-panel { display:flex; }
+  .thread-back { display:inline-block; }
+}
 </style>
 </head>
 <body>
@@ -61,7 +72,7 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <div class="main" id="main" style="display:none">
   <div class="conv-list" id="conv-list"></div>
   <div class="thread-panel">
-    <div class="thread-hdr" id="thread-hdr">Sélectionnez une conversation</div>
+    <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">←</button><span id="thread-hdr-txt">Sélectionnez une conversation</span></div>
     <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation à gauche</div></div>
     <div class="input-bar" id="input-bar" style="display:none">
       <textarea id="msg-input" placeholder="Répondre..." rows="1" onkeydown="handleKey(event)"></textarea>
@@ -144,12 +155,16 @@ function renderConvList(){
 
 async function openConv(uid){
   CURRENT_CONV = uid;
-  document.getElementById('thread-hdr').textContent = userLabel(uid);
+  document.getElementById('thread-hdr-txt').textContent = userLabel(uid);
   document.getElementById('input-bar').style.display = 'flex';
+  document.getElementById('main').classList.add('show-thread'); // mobile : bascule en plein écran
   renderThread(uid);
   renderConvList();
   await sb.from('messages').update({read_by_admin:true}).eq('user_id',uid).eq('is_admin_sender',false).eq('read_by_admin',false);
   loadAllMessages();
+}
+function backToList(){
+  document.getElementById('main').classList.remove('show-thread');
 }
 
 function renderThread(uid){
