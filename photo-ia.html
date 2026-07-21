@@ -227,30 +227,49 @@ async function loadCorrections(){
     .select('food_name, ai_qty, user_qty, correction_factor')
     .eq('user_id', USER.id)
     .order('created_at', {ascending: false})
-    .limit(20);
+    .limit(40);
   if(r.data && r.data.length) userCorrections = r.data;
 }
 
 // Transforme les corrections en texte compact pour le prompt IA.
-// Exemple : "Pâtes cuites : estimé 280g → corrigé 180g (×0.64)"
+// Deux niveaux : un facteur par aliment (quand on a déjà vu ce plat), et un
+// facteur GLOBAL de repli — car la plupart des aliments changent chaque
+// jour et ne bénéficient jamais d'un historique spécifique. Sans ce biais
+// global, seuls les plats répétés (riz, pâtes...) profitaient de
+// l'apprentissage ; un nouvel aliment repartait toujours de zéro.
 function buildCorrectionContext(){
   if(!userCorrections.length) return '';
-  // Groupe par aliment, calcule facteur moyen
+
+  // Regroupement par nom NORMALISÉ (pas la chaîne brute) — évite que
+  // "Riz blanc cuit" et "Riz cuit" fragmentent l'apprentissage en deux
+  // groupes séparés alors qu'il s'agit clairement du même aliment.
   var byFood = {};
+  var globalAiTotal = 0, globalUserTotal = 0;
   userCorrections.forEach(function(c){
-    var key = c.food_name.toLowerCase();
+    var key = tok(c.food_name).sort().join(' ');
     if(!byFood[key]) byFood[key] = {nom:c.food_name, ai_total:0, user_total:0, count:0};
     byFood[key].ai_total   += c.ai_qty;
     byFood[key].user_total += c.user_qty;
     byFood[key].count++;
+    globalAiTotal   += c.ai_qty;
+    globalUserTotal += c.user_qty;
   });
+
   var lines = Object.values(byFood).map(function(g){
     var avg_ai   = Math.round(g.ai_total / g.count);
     var avg_user = Math.round(g.user_total / g.count);
     var factor   = (g.user_total / g.ai_total).toFixed(2);
     return '- '+g.nom+' : tu estimais ~'+avg_ai+'g → corrigé à '+avg_user+'g (×'+factor+')';
   });
-  return '\n\nCORRECTIONS PASSÉES de cet utilisateur (adapte tes estimations en conséquence) :\n'+lines.join('\n');
+
+  var globalFactor = (globalUserTotal / globalAiTotal).toFixed(2);
+  var globalNote = Math.abs(globalFactor-1) >= 0.08
+    ? '\n\nTENDANCE GÉNÉRALE de cet utilisateur (à appliquer par défaut sur '
+      +'tout aliment SANS historique spécifique ci-dessus) : ses portions réelles '
+      +'sont en moyenne ×'+globalFactor+' par rapport à tes estimations habituelles.'
+    : '';
+
+  return '\n\nCORRECTIONS PASSÉES de cet utilisateur (adapte tes estimations en conséquence) :\n'+lines.join('\n')+globalNote;
 }
 
 function loadDB(){
