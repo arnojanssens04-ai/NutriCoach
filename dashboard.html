@@ -111,6 +111,21 @@ body {
   display: flex; align-items: center; gap: 22px;
   box-shadow: var(--sh);
 }
+
+/* ── Détail du score (chiffres bruts, sans couleur de jugement) ── */
+.sd-sheet { background:var(--card); border-radius:20px 20px 0 0; padding:22px 20px 32px; width:100%; max-width:480px; max-height:88vh; overflow-y:auto; overflow-x:hidden; box-shadow:0 -8px 40px rgba(0,0,0,.2); position:relative; }
+.sd-shimmer { position:absolute; top:0; left:-60%; width:55%; height:100%; background:linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform:skewX(-15deg); animation:sdShimmer 1.1s ease-out; pointer-events:none; z-index:0; }
+@keyframes sdShimmer { from{ left:-60%; } to{ left:135%; } }
+.sd-row { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--border); opacity:0; transform:scale(.5) translateY(10px); animation:sdPop .55s cubic-bezier(.34,1.56,.64,1) forwards; }
+.sd-row:last-child { border-bottom:none; }
+@keyframes sdPop { to{ opacity:1; transform:scale(1) translateY(0); } }
+.sd-ico { font-size:1.4rem; width:36px; text-align:center; flex-shrink:0; }
+.sd-body { flex:1; min-width:0; }
+.sd-lbl { font-size:.78rem; color:var(--text2); margin-bottom:3px; }
+.sd-val { font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.sd-val .sd-target { font-size:.82rem; font-weight:500; color:var(--text3); font-family:'Inter',sans-serif; }
+.sd-track { height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-top:6px; }
+.sd-fill { height:100%; background:var(--gold); border-radius:999px; width:0; transition:width 1s cubic-bezier(.4,0,.2,1) .1s; }
 .ring-wrap { flex-shrink: 0; position: relative; width: 96px; height: 96px; }
 .ring-wrap svg { width: 96px; height: 96px; transform: rotate(-90deg); }
 .ring-bg   { fill: none; stroke: rgba(0,0,0,.07); stroke-width: 8; }
@@ -562,8 +577,8 @@ body {
     </div>
   </div>
 
-  <!-- SCORE SANTÉ + description ensemble — le détail reste volontairement masqué -->
-  <div class="score-hero" id="score-hero">
+  <!-- SCORE SANTÉ + description ensemble — cliquable partout -->
+  <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir le détail du score">
     <div class="ring-wrap">
       <svg viewBox="0 0 96 96">
         <circle class="ring-bg" cx="48" cy="48" r="40"/>
@@ -628,32 +643,22 @@ body {
 
   <div class="macros-row">
     <div class="macro-card">
-      <div class="macro-val" id="d-kcal2">0</div>
-      <div class="macro-lbl">Kcal</div>
-    </div>
-    <div class="macro-card">
-      <div class="macro-val" id="d-prot">0g</div>
+      <div class="macro-ico"> </div>
+      <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
       <div class="macro-lbl">Protéines</div>
+      <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-val" id="d-gluc">0g</div>
+      <div class="macro-ico"> </div>
+      <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
       <div class="macro-lbl">Glucides</div>
+      <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-val" id="d-lip">0g</div>
+      <div class="macro-ico"> </div>
+      <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
       <div class="macro-lbl">Lipides</div>
-    </div>
-    <div class="macro-card">
-      <div class="macro-val" id="d-fibres">0g</div>
-      <div class="macro-lbl">Fibres</div>
-    </div>
-    <div class="macro-card">
-      <div class="macro-val" id="d-fer">0mg</div>
-      <div class="macro-lbl">Fer</div>
-    </div>
-    <div class="macro-card">
-      <div class="macro-val" id="d-calcium">0mg</div>
-      <div class="macro-lbl">Calcium</div>
+      <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
     </div>
   </div>
 
@@ -673,7 +678,6 @@ body {
 
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
-  <div id="weekly-alcool-box" style="display:none;margin-top:8px"></div>
 </div>
 
 <!-- MEAL PLAN -->
@@ -1361,11 +1365,7 @@ var ULTRA_PROCESSED_PATTERNS = [
   // Pains et biscottes industriels emballés
   'pain de mie.*industri','pain.*burger','biscotte',
   // Plats express / instantanés
-  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b',
-  // Alcool et boissons sucrées (renforcement — voir aussi ALCOHOL_REGEX
-  // dédiée pour le suivi verres/semaine et la pénalité sévère du score)
-  'biere','vin\\b','alcool','whisky','vodka','rhum','champagne','cidre','aperitif','porto','pastis','liqueur','mousseux',
-  'jus.*(sucre|industri)','boisson.*sucre','the glace.*(sucre|industri)'
+  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b'
 ];
 var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
 
@@ -1382,25 +1382,6 @@ function countUltraProcessed(entries){
     if(ULTRA_PROCESSED_REGEX.test(n)) count++;
   });
   return count;
-}
-
-// Détection d'alcool — partagée entre le Score Santé (pénalité sévère dès 3
-// verres), les alertes du jour et le suivi hebdomadaire (10 verres max,
-// 2 jours sans alcool minimum, recommandations OMS/santé publique Belgique).
-var ALCOHOL_REGEX = /biere|vin |vin,|vin\b|alcool|whisky|vodka|rhum|champagne|spiritueux|cidre|aperitif|porto|pastis|liqueur|mousseux|cava|prosecco|gin\b/;
-function isAlcohol(nom){
-  var n = (nom||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  return ALCOHOL_REGEX.test(n);
-}
-// Estime le nombre de "verres standards" (~125ml, l'unité utilisée pour le
-// préréglage "Un verre" du sélecteur de portions) consommés dans une liste
-// d'entrées — pour une journée ou une semaine selon ce qui est passé.
-function countAlcoholUnits(entries){
-  var units = 0;
-  (entries||[]).forEach(function(e){
-    if(isAlcohol(e.aliment)) units += Math.max(0.4, (e.quantite||125)/125);
-  });
-  return units;
 }
 
 function calcScore(T,tgt,pathos,entries){
@@ -1430,15 +1411,7 @@ function calcScore(T,tgt,pathos,entries){
   var excesNa = Math.max(0,(T.na-6000)/1000);
   var penNa = excesNa*5;
   var penaliteTotale = Math.min(penAGS+penNa, 20);
-
-  // Alcool — à partir de 3 verres dans la même journée, pénalité volontairement
-  // sévère et INDÉPENDANTE du plafond habituel (pas de "protection" à 20 pts
-  // ici) : c'est un seuil jugé à risque, le score doit le refléter sans
-  // complaisance plutôt que d'être noyé parmi les autres petites pénalités.
-  var alcoholUnitsToday = countAlcoholUnits(entries);
-  var penAlcohol = alcoholUnitsToday>=3 ? 25 + (alcoholUnitsToday-3)*10 : 0;
-
-  var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale-penAlcohol)));
+  var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale)));
 
   // Détail par critère — utilisé par le panneau d'explication cliquable
   var detail = [
@@ -1482,14 +1455,7 @@ var lastScoreUltraCount = 0;
 var lastScoreT = null;   // valeurs réelles de la journée
 var lastScoreTgt = null; // objectifs du profil
 
-// Le détail du calcul du score est volontairement masqué (aucun accès UI ne
-// pointe plus vers cette fonction) — pour ne pas laisser deviner la formule
-// exacte, en prévision de futures fonctionnalités type défis/récompenses où
-// ça deviendrait un moyen de "tricher" le score en connaissant ses règles.
 function openScoreDetail(){
-  return;
-}
-function openScoreDetail_DISABLED(){
   if(!lastScoreT || !lastScoreTgt) return;
   var existing = document.getElementById('score-detail-ov');
   if(existing) existing.remove();
@@ -1497,94 +1463,71 @@ function openScoreDetail_DISABLED(){
   var T   = lastScoreT;
   var tgt = lastScoreTgt;
   var score = document.getElementById('ring-num').textContent;
-  var p = PROF || {};
-  var isAthlete = p.activite==='active'||p.activite==='sportif'||(p.activite_met_kcal&&p.activite_met_kcal>0);
 
-  function bar(val, tgt_val, unit, reverse){
-    var pct = tgt_val>0 ? Math.min(100, val/tgt_val*100) : 0;
-    var ok  = reverse ? val<=tgt_val*1.1 : val>=tgt_val*0.85;
-    var color = ok ? 'var(--sage)' : pct>=60 ? 'var(--amber)' : 'var(--rose)';
-    var valFmt = Math.round(val)+(unit==='kcal'?'':unit==='%'?'%':'');
-    var tgtFmt = Math.round(tgt_val)+(unit==='kcal'?'':unit==='%'?'%':'');
-    return '<div style="margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
-      +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">'+arguments[4]+'</span>'
-      +'<span style="font-size:.82rem;font-weight:700;color:'+color+'">'+valFmt+' / '+tgtFmt+' '+unit+'</span>'
-      +'</div>'
-      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden">'
-      +'<div style="height:100%;width:'+Math.round(pct)+'%;background:'+color+';border-radius:999px;transition:width .4s"></div>'
-      +'</div>'
-      +(arguments[5]?'<div style="font-size:.72rem;color:'+color+';margin-top:3px">💡 '+arguments[5]+'</div>':'')
-      +'</div>';
-  }
+  // Volontairement limité à ces 7 valeurs brutes (atteint / objectif), sans
+  // aucune couleur de jugement (pas de vert/orange/rouge ici) et sans le
+  // détail des points par critère — pour ne pas laisser deviner la formule
+  // exacte du score, en prévision de futures fonctionnalités type défis.
+  var rowsData = [
+    {ico:'🔥', lbl:'Calories', val:T.kcal, tgt:tgt.kcal, unit:'kcal', dec:0},
+    {ico:'🥩', lbl:'Protéines', val:T.prot, tgt:tgt.prot, unit:'g', dec:1},
+    {ico:'🍞', lbl:'Glucides', val:T.gluc, tgt:tgt.gluc, unit:'g', dec:0},
+    {ico:'🥑', lbl:'Lipides', val:T.lip, tgt:tgt.lip, unit:'g', dec:1},
+    {ico:'🌿', lbl:'Fibres', val:T.fibres, tgt:tgt.fibres||27, unit:'g', dec:1},
+    {ico:'🩸', lbl:'Fer', val:T.fer, tgt:tgt.fer||9, unit:'mg', dec:1},
+    {ico:'🦴', lbl:'Calcium', val:T.cal, tgt:tgt.cal||1000, unit:'mg', dec:0}
+  ];
 
-  // Micro disponibles uniquement si données renseignées dans Ciqual
-  var hasMicro = T.fer>0.1 || T.cal>10 || T.mg>5;
-
-  var qualitePts = Math.max(0, 45 - lastScoreUltraCount*7);
-  var qualiteColor = qualitePts>=38 ? 'var(--sage)' : qualitePts>=20 ? 'var(--amber)' : 'var(--rose)';
-
-  var rows = ''
-    + '<div style="margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
-      +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">🥗 Qualité alimentaire — pilier principal</span>'
-      +'<span style="font-size:.82rem;font-weight:700;color:'+qualiteColor+'">'+qualitePts+' / 45 pts</span>'
-      +'</div>'
-      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden">'
-      +'<div style="height:100%;width:'+Math.round(qualitePts/45*100)+'%;background:'+qualiteColor+';border-radius:999px;transition:width .4s"></div>'
-      +'</div>'
-      +(lastScoreUltraCount>0 ? '<div style="font-size:.72rem;color:'+qualiteColor+';margin-top:3px">💡 '+lastScoreUltraCount+' aliment'+(lastScoreUltraCount>1?'s':'')+' ultra-transformé'+(lastScoreUltraCount>1?'s':'')+' détecté'+(lastScoreUltraCount>1?'s':'')+' (-7 pts chacun) — chips, frites, glaces, plats industriels... privilégiez le brut.</div>' : '<div style="font-size:.72rem;color:var(--sage);margin-top:3px">💡 Aucun aliment ultra-transformé détecté aujourd\'hui, bravo.</div>')
-      +'</div>'
-    + bar(T.prot, tgt.prot, 'g', false,
-        '🥩 Protéines — objectif '+tgt.protGperKg+'g/kg',
-        T.prot<tgt.prot*0.85?'Ajoutez une source maigre : œuf, poulet, poisson, légumineuses.':null)
-    + bar(T.gluc, tgt.gluc, 'g', false,
-        '🍞 Glucides',
-        T.gluc<tgt.gluc*0.75?'Insuffisant — ajoutez féculents ou fruits.':T.gluc>tgt.gluc*1.3?'Élevé — privilégiez les versions complètes.':null)
-    + bar(T.lip, tgt.lip, 'g', false,
-        '🥑 Lipides',
-        T.lip>tgt.lip*1.3?'Élevé — vérifiez sauces et matières grasses.':null)
-    + bar(T.fibres, tgt.fibres||27, 'g', false,
-        '🌿 Fibres',
-        T.fibres<(tgt.fibres||27)*0.5?'Insuffisant — ajoutez légumes, légumineuses, céréales complètes.':null)
-    + bar(T.ags*9/Math.max(T.kcal,1)*100, 10, '%', true,
-        '❤️ Graisses saturées (% kcal)',
-        T.ags*9/Math.max(T.kcal,1)*100>10?'Au-dessus de 10% — limitez beurre, charcuterie, fromages gras.':null)
-    + (T.na>0 ? bar(T.na, tgt.na||2300, 'mg', true,
-        '🧂 Sodium',
-        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '');
-
-  // Micronutriments — uniquement si des données sont disponibles
-  var microRows = '';
-  if(hasMicro){
-    microRows += '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:16px 0 10px">Micronutriments</div>';
-    if(T.fer>0.1)  microRows += bar(T.fer, tgt.fer||9, 'mg', false, '🩸 Fer', T.fer<(tgt.fer||9)*0.7?'Insuffisant — viandes rouges, lentilles, épinards.':null);
-    if(T.cal>10)   microRows += bar(T.cal, tgt.cal||1000, 'mg', false, '🦴 Calcium', T.cal<(tgt.cal||1000)*0.7?'Insuffisant — laitages, sardines, légumes verts.':null);
-    if(isAthlete && T.mg>5) microRows += bar(T.mg, tgt.mg||300, 'mg', false, '⚡ Magnésium', T.mg<(tgt.mg||300)*0.7?'Insuffisant pour votre activité — noix, graines, légumineuses.':null);
-  }
-
-  var sourceNote = '<div style="margin-top:16px;padding:10px 12px;background:var(--bg2);border-radius:9px;font-size:.72rem;color:var(--text3);line-height:1.55">'
-    +'ℹ️ <strong>Sources :</strong> Ciqual (ANSES), valeurs nutritionnelles pour 100g. '
-    +'Les données fer, calcium et magnésium ne sont pas disponibles pour tous les aliments enregistrés — les valeurs affichées peuvent être sous-estimées.</div>';
+  var rowsHtml = rowsData.map(function(r,idx){
+    var pct = r.tgt>0 ? Math.min(100, r.val/r.tgt*100) : 0;
+    return '<div class="sd-row" style="animation-delay:'+(idx*90)+'ms">'
+      +'<div class="sd-ico">'+r.ico+'</div>'
+      +'<div class="sd-body">'
+        +'<div class="sd-lbl">'+r.lbl+'</div>'
+        +'<div class="sd-val"><span class="sd-num" id="sd-num-'+idx+'">0</span><span class="sd-target"> / '+r.tgt.toFixed(r.dec)+r.unit+'</span></div>'
+        +'<div class="sd-track"><div class="sd-fill" id="sd-fill-'+idx+'" style="width:0%"></div></div>'
+      +'</div></div>';
+  }).join('');
 
   var ov = document.createElement('div');
   ov.id = 'score-detail-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.5);z-index:998;display:flex;align-items:flex-end;justify-content:center;padding:0';
-  ov.innerHTML = '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:22px 20px 32px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.2)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.55);z-index:998;display:flex;align-items:flex-end;justify-content:center;padding:0';
+  ov.innerHTML = '<div class="sd-sheet">'
+    +'<div class="sd-shimmer"></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;position:relative;z-index:1">'
     +'<div>'
     +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700">Score Santé : '+score+'/100</div>'
-    +'<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Détail de vos apports du jour vs objectifs</div>'
+    +'<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Vos apports du jour</div>'
     +'</div>'
     +'<button onclick="document.getElementById(\'score-detail-ov\').remove()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem">✕</button>'
     +'</div>'
-    + rows
-    + microRows
-    + sourceNote
+    +'<div style="position:relative;z-index:1">'+rowsHtml+'</div>'
     +'</div>';
 
   ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
+
+  // Chiffres qui défilent de 0 jusqu'à leur valeur réelle, en cascade —
+  // se déclenche juste après l'apparition en cascade des lignes (effet
+  // "wow" plutôt qu'un simple fondu classique).
+  rowsData.forEach(function(r,idx){
+    setTimeout(function(){
+      var numEl = document.getElementById('sd-num-'+idx);
+      var fillEl = document.getElementById('sd-fill-'+idx);
+      if(!numEl) return;
+      var pct = r.tgt>0 ? Math.min(100, r.val/r.tgt*100) : 0;
+      if(fillEl) fillEl.style.width = pct+'%';
+      var start = performance.now(), dur = 900;
+      function tick(now){
+        var t = Math.min(1, (now-start)/dur);
+        var eased = 1-Math.pow(1-t,3);
+        numEl.textContent = (r.val*eased).toFixed(r.dec);
+        if(t<1) requestAnimationFrame(tick);
+        else numEl.textContent = r.val.toFixed(r.dec);
+      }
+      requestAnimationFrame(tick);
+    }, idx*90+120);
+  });
 }
 
 // ── QUALITÉ NUTRITIONNELLE (0-100) ────────────────────────────────────────
@@ -1790,7 +1733,7 @@ function calcDayDistribution(entries, activeMealIds){
   return {score:Math.min(100,score), tip:tip};
 }
 
-function genAlerts(T,tgt,pathos,entries){
+function genAlerts(T,tgt,pathos){
   var al=[];if(T.kcal<100)return al;
   var p=PROF||{};
   var r=T.kcal/tgt.kcal;
@@ -1800,13 +1743,6 @@ function genAlerts(T,tgt,pathos,entries){
   else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
   else if(r>0.95)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
   else if(r>0.85)al.push({t:'good',i:'🔜',ttl:'Vous vous approchez de l\'objectif',txt:Math.round(T.kcal)+' / '+tgt.kcal+' kcal — encore un peu de marge si un repas reste à venir.'});
-  // Alcool — seuil santé publique (au-delà de 2-3 verres en une occasion,
-  // le risque augmente nettement) : message factuel, sans lien avec le score.
-  var alcoholUnitsToday = countAlcoholUnits(entries);
-  if(alcoholUnitsToday>=3){
-    al.push({t:'warn',i:'🍷',ttl:'Consommation d\'alcool élevée aujourd\'hui',
-      txt:'Environ '+Math.round(alcoholUnitsToday)+' verres consommés aujourd\'hui — au-delà de 2-3 verres en une occasion, les risques pour la santé augmentent nettement. Pensez à alterner avec de l\'eau, et à prévoir des jours sans alcool cette semaine.'});
-  }
   // Alerte protéines faibles — seuil minimal de 0.83g/kg (recommandation OMS)
   // affiché uniquement en fin de journée quand il reste peu à manger (>60% kcal atteints)
   var w = p.poids||70;
@@ -2257,13 +2193,12 @@ async function refreshDash(){
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
-  document.getElementById('d-kcal2').textContent=Math.round(T.kcal);
   document.getElementById('d-prot').textContent=T.prot.toFixed(1)+'g';
   document.getElementById('d-gluc').textContent=T.gluc.toFixed(1)+'g';
   document.getElementById('d-lip').textContent=T.lip.toFixed(1)+'g';
-  document.getElementById('d-fibres').textContent=T.fibres.toFixed(1)+'g';
-  document.getElementById('d-fer').textContent=T.fer.toFixed(1)+'mg';
-  document.getElementById('d-calcium').textContent=Math.round(T.cal)+'mg';
+  document.getElementById('mp-prot').style.width=Math.min(100,tgt.prot>0?T.prot/tgt.prot*100:0)+'%';
+  document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?T.gluc/tgt.gluc*100:0)+'%';
+  document.getElementById('mp-lip').style.width=Math.min(100,tgt.lip>0?T.lip/tgt.lip*100:0)+'%';
   // Score — affiché uniquement quand au moins 2 repas principaux sont enregistrés.
   // Avant ça, un score de 15/100 à 9h du matin est décourageant et non représentatif.
   var mainMealsEntered = {};
@@ -2306,13 +2241,25 @@ async function refreshDash(){
     rn.textContent=score!==null?score:'—';
     if(score!==null){
       rf.style.strokeDashoffset=251.3-(251.3*score/100);
-      // Le score reste volontairement neutre : aucune couleur ni palier
-      // ("Excellent"/"Correct"/...) qui laisserait deviner comment il est
-      // calculé — l'explication détaillée reste masquée pour la même raison.
-      rf.style.stroke='var(--gold)';
+      var niveau;
+      if(score>=85) niveau={cls:'pill-good',  color:'#2d4f1c', lbl:'Excellent'};
+      else if(score>=70) niveau={cls:'pill-good2', color:'#6b9b47', lbl:'Bon'};
+      else if(score>=50) niveau={cls:'pill-warn',  color:'#b8890f', lbl:'Correct'};
+      else if(score>=30) niveau={cls:'pill-warn2', color:'#c2660a', lbl:'À surveiller'};
+      else niveau={cls:'pill-bad', color:'#8b2a2a', lbl:'Insuffisant'};
+      rf.style.stroke=niveau.color;
       document.getElementById('score-ttl').textContent='Score Santé du jour';
-      document.getElementById('score-desc').textContent = 'Basé sur vos repas enregistrés aujourd\'hui.';
-      document.getElementById('score-pill').innerHTML='';
+      document.getElementById('score-desc').textContent =
+          score>=85?'Vos apports sont parfaitement équilibrés pour votre profil.'
+        :score>=70?'Vos apports sont globalement bien équilibrés.'
+        :score>=50?'Quelques ajustements amélioreraient votre équilibre.'
+        :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
+        :'Votre équilibre nutritionnel du jour est insuffisant.';
+      document.getElementById('score-pill').innerHTML=
+        '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
+        +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
+        +niveau.lbl+'</div>'
+        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir le détail →</div>';
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
@@ -2331,7 +2278,7 @@ async function refreshDash(){
     return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+' · <span>'+mk.toFixed(0)+' kcal</span></div><div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div></div>';
   }).join('');
   // Alerts
-  var alerts=genAlerts(T,tgt,pathos,entries);
+  var alerts=genAlerts(T,tgt,pathos);
   var az=document.getElementById('alerts-zone');
   if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';}
   else { az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
@@ -2363,45 +2310,6 @@ async function refreshDash(){
   } else {
     extraRow.style.display='none';
   }
-
-  checkWeeklyAlcohol();
-}
-
-// Suivi hebdomadaire de l'alcool — recommandation santé publique : pas plus
-// de 10 verres par semaine, avec au moins 2 jours sans consommation. Vérifié
-// séparément du score du jour (qui, lui, sanctionne un excès en une seule
-// journée) — ici on regarde l'équilibre sur les 7 derniers jours glissants.
-async function checkWeeklyAlcohol(){
-  var box = document.getElementById('weekly-alcool-box');
-  if(!box) return;
-  var since = new Date(); since.setDate(since.getDate()-6); since.setHours(0,0,0,0);
-  var r = await sb.from('journal').select('date,aliment,quantite')
-    .eq('user_id',USER.id).gte('date', since.toISOString().slice(0,10));
-  var entries = r.data || [];
-  var byDate = {};
-  entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
-
-  var totalUnits = 0;
-  var alcoholFreeDays = 0;
-  var daysWithData = Object.keys(byDate).length;
-  Object.keys(byDate).forEach(function(d){
-    var u = countAlcoholUnits(byDate[d]);
-    totalUnits += u;
-    if(u===0) alcoholFreeDays++;
-  });
-
-  if(daysWithData===0 || totalUnits===0){ box.style.display='none'; return; }
-
-  var overLimit = totalUnits > 10;
-  var notEnoughFreeDays = daysWithData>=5 && alcoholFreeDays < 2; // laisse le temps d'accumuler les données avant de juger
-
-  if(!overLimit && !notEnoughFreeDays){ box.style.display='none'; return; }
-
-  box.style.display='block';
-  var msg = overLimit
-    ? 'Vous êtes à environ '+Math.round(totalUnits)+' verres cette semaine — au-delà de la limite recommandée de 10 verres par semaine.'
-    : 'Environ '+Math.round(totalUnits)+' verres cette semaine, mais seulement '+alcoholFreeDays+' jour'+(alcoholFreeDays>1?'s':'')+' sans alcool — l\'idéal est d\'en prévoir au moins 2.';
-  box.innerHTML = '<div class="alert-item alert-warn"><span class="alert-ico">🍷</span><div><div class="alert-ttl">Repère hebdomadaire alcool</div>'+msg+'</div></div>';
 }
 
 // ── JOURNAL PAGE ──
