@@ -369,15 +369,19 @@ body {
 .prof-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 10px; box-shadow: var(--sh); }
 
 /* ── Graphique d'évolution du poids (profil) — animé à l'affichage ── */
-.pw-chart { display:flex; align-items:flex-end; gap:7px; height:100px; padding-top:8px; }
-.pw-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; justify-content:flex-end; min-width:0; }
-.pw-val { font-size:.68rem; font-weight:700; color:var(--gold); white-space:nowrap; }
-.pw-track { width:100%; max-width:30px; background:var(--bg2); border-radius:5px; flex:1; display:flex; align-items:flex-end; overflow:hidden; }
-.pw-fill { width:100%; background:var(--sage); border-radius:5px 5px 0 0; height:0; transition:height .7s cubic-bezier(.34,1.4,.64,1); }
-.pw-fill.start { background:var(--gold); }
-.pw-col.on .pw-fill { height:var(--pw-h); }
-.pw-lbl { font-size:.62rem; color:var(--text3); white-space:nowrap; }
-.pw-col.start .pw-lbl { color:var(--gold); font-weight:600; }
+/* ── Graphique d'évolution du poids (profil) — courbe animée ── */
+.pw-chart { width:100%; }
+.pw-svg { width:100%; height:auto; overflow:visible; }
+.pw-line { fill:none; stroke:var(--sage); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.pw-area { fill:url(#pwAreaGrad); opacity:0; transition:opacity .6s ease .8s; }
+.pw-area.on { opacity:1; }
+.pw-dot { fill:var(--sage); stroke:var(--card); stroke-width:2; opacity:0; transform:scale(0); transform-box:fill-box; transform-origin:center; transition:opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+.pw-dot.start { fill:var(--gold); }
+.pw-dot.on { opacity:1; transform:scale(1); }
+.pw-val-txt { font-size:9px; font-weight:700; fill:var(--gold); opacity:0; transition:opacity .3s ease; font-family:'Inter',sans-serif; }
+.pw-val-txt.on { opacity:1; }
+.pw-lbl-txt { font-size:7.5px; fill:var(--text3); font-family:'Inter',sans-serif; }
+.pw-lbl-txt.start { fill:var(--gold); font-weight:600; }
 .prof-card-hdr { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .prof-card-hdr span { font-family: 'Lora', serif; font-size: .9rem; }
 .prof-card-body { padding: 14px 16px; }
@@ -4322,22 +4326,58 @@ async function renderWeightEvolution(){
   var maxW = Math.max.apply(null, weights), minW = Math.min.apply(null, weights);
   var range = Math.max(1, maxW-minW);
 
-  var chartEl = document.getElementById('pw-chart');
-  chartEl.innerHTML = series.map(function(s,idx){
-    var h = 15 + ((s.poids-minW)/range)*85;
+  var W=340, H=110, padL=10, padR=10, plotTop=22, plotBottom=H-16;
+  var n = series.length;
+  var pts = series.map(function(s,i){
+    var x = n>1 ? padL + i*((W-padL-padR)/(n-1)) : padL+(W-padL-padR)/2;
+    var y = plotTop + (1 - (s.poids-minW)/range) * (plotBottom-plotTop);
+    return {x:x, y:y, s:s};
+  });
+
+  var lineD = pts.map(function(p,i){ return (i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1); }).join(' ');
+  var areaD = lineD+' L'+pts[pts.length-1].x.toFixed(1)+','+plotBottom+' L'+pts[0].x.toFixed(1)+','+plotBottom+' Z';
+
+  var dotsSvg = pts.map(function(p,idx){
+    var s = p.s;
     var lbl = s.isStart ? 'Départ' : (s.isCurrent ? 'Actuel' : (function(){var d=new Date(s.date); return d.getDate()+'/'+(d.getMonth()+1);})());
-    return '<div class="pw-col'+(s.isStart?' start':'')+'" id="pw-col-'+idx+'" style="--pw-h:'+h+'%">'
-      +'<div class="pw-val">'+s.poids+'</div>'
-      +'<div class="pw-track"><div class="pw-fill'+(s.isStart?' start':'')+'"></div></div>'
-      +'<div class="pw-lbl">'+lbl+'</div></div>';
+    return '<circle class="pw-dot'+(s.isStart?' start':'')+'" id="pw-dot-'+idx+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4"></circle>'
+      +'<text class="pw-val-txt" id="pw-val-'+idx+'" x="'+p.x.toFixed(1)+'" y="'+(p.y-9).toFixed(1)+'" text-anchor="middle">'+s.poids+'</text>'
+      +'<text class="pw-lbl-txt'+(s.isStart?' start':'')+'" x="'+p.x.toFixed(1)+'" y="'+(plotBottom+11).toFixed(1)+'" text-anchor="middle">'+lbl+'</text>';
   }).join('');
 
-  // Apparition en cascade, une barre après l'autre
-  series.forEach(function(s,idx){
+  var chartEl = document.getElementById('pw-chart');
+  chartEl.innerHTML = '<svg class="pw-svg" viewBox="0 0 '+W+' '+H+'">'
+    +'<defs><linearGradient id="pwAreaGrad" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" style="stop-color:var(--sage);stop-opacity:0.25"/>'
+      +'<stop offset="100%" style="stop-color:var(--sage);stop-opacity:0"/>'
+    +'</linearGradient></defs>'
+    +'<path class="pw-area" id="pw-area" d="'+areaD+'"></path>'
+    +'<path class="pw-line" id="pw-line" d="'+lineD+'"></path>'
+    +dotsSvg
+    +'</svg>';
+
+  // Anime le tracé de la courbe (dessin progressif, façon "la ligne se dessine")
+  var linePath = document.getElementById('pw-line');
+  var len = linePath.getTotalLength();
+  linePath.style.strokeDasharray = len;
+  linePath.style.strokeDashoffset = len;
+  linePath.getBoundingClientRect(); // force le reflow avant d'animer
+  requestAnimationFrame(function(){
+    linePath.style.transition = 'stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)';
+    linePath.style.strokeDashoffset = '0';
+  });
+
+  // La surface sous la courbe apparaît une fois le tracé terminé
+  setTimeout(function(){ document.getElementById('pw-area').classList.add('on'); }, 900);
+
+  // Points et valeurs apparaissent en cascade, au rythme du tracé de la ligne
+  pts.forEach(function(p,idx){
     setTimeout(function(){
-      var col = document.getElementById('pw-col-'+idx);
-      if(col) col.classList.add('on');
-    }, 80*idx);
+      var dot = document.getElementById('pw-dot-'+idx);
+      var val = document.getElementById('pw-val-'+idx);
+      if(dot) dot.classList.add('on');
+      if(val) val.classList.add('on');
+    }, 150 + (idx/Math.max(1,n-1))*1100);
   });
 }
 
