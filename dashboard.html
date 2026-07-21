@@ -2880,11 +2880,22 @@ var zxingReader = null;
 var scanLock = false;
 var nativeStream = null;
 var nativeLoopActive = false;
+var scannerTimeoutId = null;
 
 function openScanner(){
   document.getElementById('scanner-ov').style.display='flex';
   document.getElementById('scanner-status').textContent='Visez le code-barres du produit…';
   scanLock = false;
+
+  // Si rien n'est détecté après 10s, on ne laisse plus la personne face à
+  // un texte figé sans explication — on propose une alternative concrète.
+  clearTimeout(scannerTimeoutId);
+  scannerTimeoutId = setTimeout(function(){
+    if(scanLock) return;
+    var statusEl = document.getElementById('scanner-status');
+    if(statusEl) statusEl.innerHTML = 'Toujours rien détecté après 10 secondes. Rapprochez-vous, stabilisez l\'appareil et évitez les reflets — ou <a href="#" onclick="closeScanner();return false;" style="color:#fff;text-decoration:underline;font-weight:600">cherchez le produit manuellement</a>.';
+  }, 10000);
+
   // L'API native du navigateur (BarcodeDetector) s'appuie directement sur
   // les outils de reconnaissance du système (ex: Google Play Services sur
   // Android) — plus fiable qu'une bibliothèque JS tierce, mais uniquement
@@ -2952,6 +2963,7 @@ function startFallbackScanner(){
 }
 
 function closeScanner(){
+  clearTimeout(scannerTimeoutId);
   nativeLoopActive = false;
   if(nativeStream){
     nativeStream.getTracks().forEach(function(t){ t.stop(); });
@@ -2986,6 +2998,7 @@ function onBarcodeScanned(code){
   }
   if(lastScanCount < 2) return;
 
+  clearTimeout(scannerTimeoutId);
   scanLock = true;
   lastScanCode = null; lastScanCount = 0;
   document.getElementById('scanner-status').textContent='Recherche du produit…';
