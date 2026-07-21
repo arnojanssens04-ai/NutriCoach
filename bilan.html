@@ -450,13 +450,13 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     commentaire_libre: document.getElementById('b-commentaire').value.trim()||null
   };
 
-  var r = await sb.from('bilans').insert(data);
+  var r = await sb.from('bilans').insert(data).select().single();
   if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
 
   // Met aussi à jour le poids courant du profil
   await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
 
-  await checkAndAdjustKcal(poids);
+  await checkAndAdjustKcal(poids, r.data.id);
   showThankYouScreen();
 });
 
@@ -485,7 +485,7 @@ function showThankYouScreen(){
 // 2. Le sens de l'ajustement dépend de l'objectif : perte/prise poussent
 //    plus fort si la tendance est stagnante ; le maintien corrige dans le
 //    sens opposé si le poids a dévié de façon notable.
-var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,non:0,'élevée':0,elevee:0};
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'élevée':0,elevee:0};
 
 function qualiteBilanScore(){
   var champs = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
@@ -497,22 +497,63 @@ function qualiteBilanScore(){
   return compte>0 ? total : null; // null si rien n'a été rempli (ne devrait pas arriver)
 }
 
-async function checkAndAdjustKcal(newWeight){
+// Reproduit la portion "kcal" de calcTargets() (dashboard.html) pour pouvoir
+// calculer, ici aussi, la cible calorique résultante après un ajustement.
+// ⚠️ Si la formule de calcTargets() change côté dashboard, la répercuter ici.
+function computeKcalCible(prof, adj){
+  var p = prof || {};
+  if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target) return Math.round(p.kcal_target);
+  var w=p.poids||70,h=p.taille||170,a=p.age||35,g=p.sexe||'F';
+  var act=p.activite||'sedentary',pathos=p.pathologies||[];
+  var bmr=g==='M'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
+  var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,sportif:1.9};
+  var hasMetData = p.activite_met_kcal && p.activite_met_kcal > 0;
+  var tdee = hasMetData ? bmr*1.2 + p.activite_met_kcal : bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal=tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  kcal += (adj||0);
+  return Math.max(1200, Math.min(5000, Math.round(kcal)));
+}
+
+// Sauvegarde la décision de la semaine directement sur la ligne du bilan,
+// pour que l'admin (bilan_recap.html) puisse voir jour par jour ce que le
+// programme a fait : rien, -200, +200, et où se situe la cible résultante.
+async function logKcalDecision(bilanId, delta, raison, kcalCible){
+  if(!bilanId){
+    console.warn('[Cap Santé] logKcalDecision : bilanId manquant — l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistré pour ce bilan.');
+    return;
+  }
+  var r = await sb.from('bilans').update({
+    kcal_ajustement_delta: delta,
+    kcal_ajustement_raison: raison,
+    kcal_cible_apres: kcalCible
+  }).eq('id', bilanId).select();
+  if(r.error){
+    console.warn('[Cap Santé] logKcalDecision : échec de la mise à jour —', r.error.message);
+  } else if(!r.data || !r.data.length){
+    console.warn('[Cap Santé] logKcalDecision : la mise à jour n\'a touché aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId);
+  }
+}
+
+async function checkAndAdjustKcal(newWeight, bilanId){
   var objectif = PROF.objectif;
   var banner = document.getElementById('adj-banner');
+  var currentAdj = PROF.kcal_adjustment || 0;
+  var profNow = Object.assign({}, PROF, {poids:newWeight}); // profil avec le poids fraîchement saisi
 
   // Garde-fou n°1 : le ressenti général de la semaine.
-  var score = qualiteBilanScore(); // sur 12 (6 champs × 2 pts max)
-  if(score !== null && score < 6){
+  var score = qualiteBilanScore(); // sur 14 (7 champs × 2 pts max)
+  if(score !== null && score < 7){
     banner.className = 'adj-banner show adj-down';
     banner.innerHTML = '<strong>💛 Un mot avant tout</strong><br>'
       + 'Cette semaine semble avoir été difficile sur plusieurs points. Plutôt que de changer encore les chiffres, '
       + 'si vous désirez atteindre votre objectif, reprenez-vous en main — vous en êtes capable. '
       + 'Le plan reste inchangé cette semaine ; concentrons-nous sur la régularité avant d\'ajuster quoi que ce soit.';
+    await logKcalDecision(bilanId, 0, 'Semaine difficile (ressenti) — plan maintenu inchangé', computeKcalCible(profNow, currentAdj));
     return;
   }
-
-  var currentAdj = PROF.kcal_adjustment || 0;
 
   if(objectif==='perte' || objectif==='prise'){
     var d1 = new Date(); d1.setDate(d1.getDate()-16);
@@ -520,7 +561,10 @@ async function checkAndAdjustKcal(newWeight){
     var res = await sb.from('bilans').select('*').eq('user_id',USER.id)
       .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
       .order('date',{ascending:true}).limit(1);
-    if(!res.data || !res.data.length || !res.data[0].poids) return;
+    if(!res.data || !res.data.length || !res.data[0].poids){
+      await logKcalDecision(bilanId, 0, 'Historique insuffisant (moins de 2 semaines de bilans) — aucun ajustement possible', computeKcalCible(profNow, currentAdj));
+      return;
+    }
 
     var oldWeight = res.data[0].poids;
     var delta = newWeight - oldWeight; // positif = prise, négatif = perte
@@ -534,10 +578,14 @@ async function checkAndAdjustKcal(newWeight){
     var stalled     = Math.abs(delta) < 0.3;
     var wrongWay    = (objectif==='perte' && delta > 0.5) || (objectif==='prise' && delta < -0.5);
 
-    if(goodProgress) return; // tout va bien, on ne touche à rien
+    if(goodProgress){
+      await logKcalDecision(bilanId, 0, 'Bonne progression du poids — aucun ajustement nécessaire', computeKcalCible(profNow, currentAdj));
+      return;
+    }
 
     var newAdj = currentAdj;
     var msgContext = '';
+    var raison = '';
 
     if(wrongWay){
       // Poids part dans la mauvaise direction — même ajustement de 200 kcal que
@@ -547,16 +595,19 @@ async function checkAndAdjustKcal(newWeight){
       msgContext = objectif==='perte'
         ? 'Votre poids a augmenté cette semaine alors que votre objectif est la perte. On ajuste votre objectif calorique de −200 kcal/jour pour corriger progressivement la trajectoire.'
         : 'Votre poids a diminué cette semaine alors que votre objectif est la prise. On ajuste votre objectif calorique de +200 kcal/jour pour corriger progressivement la trajectoire.';
+      raison = 'Poids en sens inverse de l\'objectif (' + (delta>0?'+':'') + delta.toFixed(1) + 'kg)';
     } else if(stalled){
       // Poids stable depuis 2 semaines → nudge de 200 kcal
       newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
       msgContext = objectif==='perte'
         ? 'Votre poids n\'a pas bougé depuis 2 semaines. On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
         : 'Votre poids n\'a pas bougé depuis 2 semaines. On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.';
+      raison = 'Stagnation du poids depuis 2 semaines';
     }
 
     newAdj = Math.max(-1200, Math.min(2500, newAdj));
     await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
+    await logKcalDecision(bilanId, newAdj-currentAdj, raison, computeKcalCible(profNow, newAdj));
 
     banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
     banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>' + msgContext + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
@@ -569,16 +620,23 @@ async function checkAndAdjustKcal(newWeight){
     var resM = await sb.from('bilans').select('*').eq('user_id',USER.id)
       .gte('date', d1m.toISOString().slice(0,10)).lte('date', d2m.toISOString().slice(0,10))
       .order('date',{ascending:true}).limit(1);
-    if(!resM.data || !resM.data.length || !resM.data[0].poids) return;
+    if(!resM.data || !resM.data.length || !resM.data[0].poids){
+      await logKcalDecision(bilanId, 0, 'Historique insuffisant — aucun ajustement possible', computeKcalCible(profNow, currentAdj));
+      return;
+    }
 
     var oldWeightM = resM.data[0].poids;
     var deltaM = newWeight - oldWeightM;
-    if(Math.abs(deltaM) < 0.5) return; // dérive normale, rien à corriger
+    if(Math.abs(deltaM) < 0.5){
+      await logKcalDecision(bilanId, 0, 'Poids stable — cohérent avec l\'objectif maintien', computeKcalCible(profNow, currentAdj));
+      return; // dérive normale, rien à corriger
+    }
 
     var sensPerte = deltaM > 0; // poids monté -> on réduit ; poids descendu -> on augmente
     var newAdjM = currentAdj + (sensPerte ? -200 : 200);
     newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
     await sb.from('profiles').update({kcal_adjustment:newAdjM}).eq('id',USER.id);
+    await logKcalDecision(bilanId, newAdjM-currentAdj, 'Dérive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', computeKcalCible(profNow, newAdjM));
 
     banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
     banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids a '
