@@ -562,8 +562,8 @@ body {
     </div>
   </div>
 
-  <!-- SCORE SANTÉ + description ensemble — cliquable partout -->
-  <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir le détail du score">
+  <!-- SCORE SANTÉ + description ensemble — le détail reste volontairement masqué -->
+  <div class="score-hero" id="score-hero">
     <div class="ring-wrap">
       <svg viewBox="0 0 96 96">
         <circle class="ring-bg" cx="48" cy="48" r="40"/>
@@ -576,7 +576,7 @@ body {
     </div>
     <div class="score-info">
       <div class="score-ttl" id="score-ttl">Score Santé</div>
-      <div style="font-size:.66rem;color:var(--text3);margin-top:1px;margin-bottom:4px">Équilibre calories · protéines · glucides · lipides</div>
+      <div style="font-size:.66rem;color:var(--text3);margin-top:1px;margin-bottom:4px">Qualité alimentaire · fibres · protéines · glucides · lipides</div>
       <div class="score-desc" id="score-desc">Ajoutez vos repas pour calculer votre score personnalisé.</div>
       <div id="score-pill"></div>
     </div>
@@ -628,22 +628,32 @@ body {
 
   <div class="macros-row">
     <div class="macro-card">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
+      <div class="macro-val" id="d-kcal2">0</div>
+      <div class="macro-lbl">Kcal</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val" id="d-prot">0g</div>
       <div class="macro-lbl">Protéines</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
+      <div class="macro-val" id="d-gluc">0g</div>
       <div class="macro-lbl">Glucides</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
     </div>
     <div class="macro-card">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
+      <div class="macro-val" id="d-lip">0g</div>
       <div class="macro-lbl">Lipides</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val" id="d-fibres">0g</div>
+      <div class="macro-lbl">Fibres</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val" id="d-fer">0mg</div>
+      <div class="macro-lbl">Fer</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val" id="d-calcium">0mg</div>
+      <div class="macro-lbl">Calcium</div>
     </div>
   </div>
 
@@ -663,6 +673,7 @@ body {
 
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
+  <div id="weekly-alcool-box" style="display:none;margin-top:8px"></div>
 </div>
 
 <!-- MEAL PLAN -->
@@ -1318,6 +1329,9 @@ function calcTargets(){
 // est TOUJOURS prioritaire quand il existe — cette liste ne sert que de
 // repli quand aucun signal fiable n'est disponible pour cet aliment.
 var ULTRA_PROCESSED_PATTERNS = [
+  // Signal fort et universel : "préemballé"/"industriel" sur une étiquette
+  // Ciqual ou OFF signifie quasi toujours un produit transformé en usine.
+  'preemball','industriel\\b',
   // Boissons sucrées / industrielles
   'soda','coca','cola','pepsi','fanta','sprite','oasis','ice tea','schweppes',
   'boisson energisante|energy drink|redbull|red bull|monster energy','sirop.*(grenadine|menthe)',
@@ -1328,13 +1342,14 @@ var ULTRA_PROCESSED_PATTERNS = [
   // Chocolat / barres / pâtisseries industrielles
   'barre.*chocolat','kinder','snickers|twix|kitkat|mars\\b|bounty|milka|lion\\b','nutella','pate a tartiner',
   'biscuit','cake\\b','gateau.*industri','viennoiserie','donut|beignet','pain au chocolat industri','patisserie.*industri','frites?\\b',
+  'muesli.*chocolat|cereales?.*chocolat|corn ?flakes.*chocolat',
   // Plats préparés / surgelés / panés
   'plat.*(cuisine|prepare)','surgele.*(pane|pret)','cordon bleu','nugget','panne\\b','quenelle',
   'lasagne.*industri','pizza.*surgel','quiche.*industri','soupe.*(brique|deshydrat|instantan)',
   // Charcuterie transformée
   'charcuterie','saucisse','merguez','jambon.*reconstit','bacon','lardons?.*fume','knacki','chorizo.*industri','mortadelle','surimi',
   // Fast-food / restauration rapide
-  'mcdo|burger king|kfc|quick\\b','hamburger','hot.?dog','kebab','tacos.*(fast|frit)',
+  'mcdo|burger king|kfc|quick\\b','burger\\b','hot.?dog','kebab','tacos.*(fast|frit)',
   // Céréales du petit-déjeuner sucrées
   'cereales?.*sucre','chocapic','frosties','miel pops','granola.*industri','barre.*cereale',
   // Sauces et condiments industriels
@@ -1346,7 +1361,11 @@ var ULTRA_PROCESSED_PATTERNS = [
   // Pains et biscottes industriels emballés
   'pain de mie.*industri','pain.*burger','biscotte',
   // Plats express / instantanés
-  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b'
+  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b',
+  // Alcool et boissons sucrées (renforcement — voir aussi ALCOHOL_REGEX
+  // dédiée pour le suivi verres/semaine et la pénalité sévère du score)
+  'biere','vin\\b','alcool','whisky','vodka','rhum','champagne','cidre','aperitif','porto','pastis','liqueur','mousseux',
+  'jus.*(sucre|industri)','boisson.*sucre','the glace.*(sucre|industri)'
 ];
 var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
 
@@ -1363,6 +1382,25 @@ function countUltraProcessed(entries){
     if(ULTRA_PROCESSED_REGEX.test(n)) count++;
   });
   return count;
+}
+
+// Détection d'alcool — partagée entre le Score Santé (pénalité sévère dès 3
+// verres), les alertes du jour et le suivi hebdomadaire (10 verres max,
+// 2 jours sans alcool minimum, recommandations OMS/santé publique Belgique).
+var ALCOHOL_REGEX = /biere|vin |vin,|vin\b|alcool|whisky|vodka|rhum|champagne|spiritueux|cidre|aperitif|porto|pastis|liqueur|mousseux|cava|prosecco|gin\b/;
+function isAlcohol(nom){
+  var n = (nom||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return ALCOHOL_REGEX.test(n);
+}
+// Estime le nombre de "verres standards" (~125ml, l'unité utilisée pour le
+// préréglage "Un verre" du sélecteur de portions) consommés dans une liste
+// d'entrées — pour une journée ou une semaine selon ce qui est passé.
+function countAlcoholUnits(entries){
+  var units = 0;
+  (entries||[]).forEach(function(e){
+    if(isAlcohol(e.aliment)) units += Math.max(0.4, (e.quantite||125)/125);
+  });
+  return units;
 }
 
 function calcScore(T,tgt,pathos,entries){
@@ -1392,7 +1430,15 @@ function calcScore(T,tgt,pathos,entries){
   var excesNa = Math.max(0,(T.na-6000)/1000);
   var penNa = excesNa*5;
   var penaliteTotale = Math.min(penAGS+penNa, 20);
-  var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale)));
+
+  // Alcool — à partir de 3 verres dans la même journée, pénalité volontairement
+  // sévère et INDÉPENDANTE du plafond habituel (pas de "protection" à 20 pts
+  // ici) : c'est un seuil jugé à risque, le score doit le refléter sans
+  // complaisance plutôt que d'être noyé parmi les autres petites pénalités.
+  var alcoholUnitsToday = countAlcoholUnits(entries);
+  var penAlcohol = alcoholUnitsToday>=3 ? 25 + (alcoholUnitsToday-3)*10 : 0;
+
+  var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale-penAlcohol)));
 
   // Détail par critère — utilisé par le panneau d'explication cliquable
   var detail = [
@@ -1436,7 +1482,14 @@ var lastScoreUltraCount = 0;
 var lastScoreT = null;   // valeurs réelles de la journée
 var lastScoreTgt = null; // objectifs du profil
 
+// Le détail du calcul du score est volontairement masqué (aucun accès UI ne
+// pointe plus vers cette fonction) — pour ne pas laisser deviner la formule
+// exacte, en prévision de futures fonctionnalités type défis/récompenses où
+// ça deviendrait un moyen de "tricher" le score en connaissant ses règles.
 function openScoreDetail(){
+  return;
+}
+function openScoreDetail_DISABLED(){
   if(!lastScoreT || !lastScoreTgt) return;
   var existing = document.getElementById('score-detail-ov');
   if(existing) existing.remove();
@@ -1737,7 +1790,7 @@ function calcDayDistribution(entries, activeMealIds){
   return {score:Math.min(100,score), tip:tip};
 }
 
-function genAlerts(T,tgt,pathos){
+function genAlerts(T,tgt,pathos,entries){
   var al=[];if(T.kcal<100)return al;
   var p=PROF||{};
   var r=T.kcal/tgt.kcal;
@@ -1747,6 +1800,13 @@ function genAlerts(T,tgt,pathos){
   else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
   else if(r>0.95)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
   else if(r>0.85)al.push({t:'good',i:'🔜',ttl:'Vous vous approchez de l\'objectif',txt:Math.round(T.kcal)+' / '+tgt.kcal+' kcal — encore un peu de marge si un repas reste à venir.'});
+  // Alcool — seuil santé publique (au-delà de 2-3 verres en une occasion,
+  // le risque augmente nettement) : message factuel, sans lien avec le score.
+  var alcoholUnitsToday = countAlcoholUnits(entries);
+  if(alcoholUnitsToday>=3){
+    al.push({t:'warn',i:'🍷',ttl:'Consommation d\'alcool élevée aujourd\'hui',
+      txt:'Environ '+Math.round(alcoholUnitsToday)+' verres consommés aujourd\'hui — au-delà de 2-3 verres en une occasion, les risques pour la santé augmentent nettement. Pensez à alterner avec de l\'eau, et à prévoir des jours sans alcool cette semaine.'});
+  }
   // Alerte protéines faibles — seuil minimal de 0.83g/kg (recommandation OMS)
   // affiché uniquement en fin de journée quand il reste peu à manger (>60% kcal atteints)
   var w = p.poids||70;
@@ -2197,12 +2257,13 @@ async function refreshDash(){
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
+  document.getElementById('d-kcal2').textContent=Math.round(T.kcal);
   document.getElementById('d-prot').textContent=T.prot.toFixed(1)+'g';
   document.getElementById('d-gluc').textContent=T.gluc.toFixed(1)+'g';
   document.getElementById('d-lip').textContent=T.lip.toFixed(1)+'g';
-  document.getElementById('mp-prot').style.width=Math.min(100,tgt.prot>0?T.prot/tgt.prot*100:0)+'%';
-  document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?T.gluc/tgt.gluc*100:0)+'%';
-  document.getElementById('mp-lip').style.width=Math.min(100,tgt.lip>0?T.lip/tgt.lip*100:0)+'%';
+  document.getElementById('d-fibres').textContent=T.fibres.toFixed(1)+'g';
+  document.getElementById('d-fer').textContent=T.fer.toFixed(1)+'mg';
+  document.getElementById('d-calcium').textContent=Math.round(T.cal)+'mg';
   // Score — affiché uniquement quand au moins 2 repas principaux sont enregistrés.
   // Avant ça, un score de 15/100 à 9h du matin est décourageant et non représentatif.
   var mainMealsEntered = {};
@@ -2245,25 +2306,13 @@ async function refreshDash(){
     rn.textContent=score!==null?score:'—';
     if(score!==null){
       rf.style.strokeDashoffset=251.3-(251.3*score/100);
-      var niveau;
-      if(score>=85) niveau={cls:'pill-good',  color:'#2d4f1c', lbl:'Excellent'};
-      else if(score>=70) niveau={cls:'pill-good2', color:'#6b9b47', lbl:'Bon'};
-      else if(score>=50) niveau={cls:'pill-warn',  color:'#b8890f', lbl:'Correct'};
-      else if(score>=30) niveau={cls:'pill-warn2', color:'#c2660a', lbl:'À surveiller'};
-      else niveau={cls:'pill-bad', color:'#8b2a2a', lbl:'Insuffisant'};
-      rf.style.stroke=niveau.color;
+      // Le score reste volontairement neutre : aucune couleur ni palier
+      // ("Excellent"/"Correct"/...) qui laisserait deviner comment il est
+      // calculé — l'explication détaillée reste masquée pour la même raison.
+      rf.style.stroke='var(--gold)';
       document.getElementById('score-ttl').textContent='Score Santé du jour';
-      document.getElementById('score-desc').textContent =
-          score>=85?'Vos apports sont parfaitement équilibrés pour votre profil.'
-        :score>=70?'Vos apports sont globalement bien équilibrés.'
-        :score>=50?'Quelques ajustements amélioreraient votre équilibre.'
-        :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
-        :'Votre équilibre nutritionnel du jour est insuffisant.';
-      document.getElementById('score-pill').innerHTML=
-        '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
-        +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
-        +niveau.lbl+'</div>'
-        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir le détail →</div>';
+      document.getElementById('score-desc').textContent = 'Basé sur vos repas enregistrés aujourd\'hui.';
+      document.getElementById('score-pill').innerHTML='';
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
@@ -2282,7 +2331,7 @@ async function refreshDash(){
     return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+' · <span>'+mk.toFixed(0)+' kcal</span></div><div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div></div>';
   }).join('');
   // Alerts
-  var alerts=genAlerts(T,tgt,pathos);
+  var alerts=genAlerts(T,tgt,pathos,entries);
   var az=document.getElementById('alerts-zone');
   if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';}
   else { az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
@@ -2314,6 +2363,45 @@ async function refreshDash(){
   } else {
     extraRow.style.display='none';
   }
+
+  checkWeeklyAlcohol();
+}
+
+// Suivi hebdomadaire de l'alcool — recommandation santé publique : pas plus
+// de 10 verres par semaine, avec au moins 2 jours sans consommation. Vérifié
+// séparément du score du jour (qui, lui, sanctionne un excès en une seule
+// journée) — ici on regarde l'équilibre sur les 7 derniers jours glissants.
+async function checkWeeklyAlcohol(){
+  var box = document.getElementById('weekly-alcool-box');
+  if(!box) return;
+  var since = new Date(); since.setDate(since.getDate()-6); since.setHours(0,0,0,0);
+  var r = await sb.from('journal').select('date,aliment,quantite')
+    .eq('user_id',USER.id).gte('date', since.toISOString().slice(0,10));
+  var entries = r.data || [];
+  var byDate = {};
+  entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+
+  var totalUnits = 0;
+  var alcoholFreeDays = 0;
+  var daysWithData = Object.keys(byDate).length;
+  Object.keys(byDate).forEach(function(d){
+    var u = countAlcoholUnits(byDate[d]);
+    totalUnits += u;
+    if(u===0) alcoholFreeDays++;
+  });
+
+  if(daysWithData===0 || totalUnits===0){ box.style.display='none'; return; }
+
+  var overLimit = totalUnits > 10;
+  var notEnoughFreeDays = daysWithData>=5 && alcoholFreeDays < 2; // laisse le temps d'accumuler les données avant de juger
+
+  if(!overLimit && !notEnoughFreeDays){ box.style.display='none'; return; }
+
+  box.style.display='block';
+  var msg = overLimit
+    ? 'Vous êtes à environ '+Math.round(totalUnits)+' verres cette semaine — au-delà de la limite recommandée de 10 verres par semaine.'
+    : 'Environ '+Math.round(totalUnits)+' verres cette semaine, mais seulement '+alcoholFreeDays+' jour'+(alcoholFreeDays>1?'s':'')+' sans alcool — l\'idéal est d\'en prévoir au moins 2.';
+  box.innerHTML = '<div class="alert-item alert-warn"><span class="alert-ico">🍷</span><div><div class="alert-ttl">Repère hebdomadaire alcool</div>'+msg+'</div></div>';
 }
 
 // ── JOURNAL PAGE ──
