@@ -471,7 +471,9 @@ function showResults(aliments){
   // aiNutrition = estimation nutritionnelle par l'IA (pour 100g), gardée en
   // repli au cas où l'aliment ne matche rien dans notre base Ciqual.
   detectedFoods = aliments.map(function(a,i){
-    return {id:i, nom:a.nom, ai_qty:a.qty, qty:a.qty, included:true, aiNutrition:{
+    return {id:i, nom:a.nom, ai_qty:a.qty, qty:a.qty, included:true,
+      isUltraProcessed: (typeof a.ultra_transforme==='boolean') ? a.ultra_transforme : null,
+      aiNutrition:{
       kcal: a.kcal, prot: a.prot, gluc: a.gluc, lip: a.lip, fibres: a.fibres,
       ags: a.ags, sucres: a.sucres, sodium: a.sodium, magnesium: a.magnesium, fer: a.fer
     }};
@@ -585,7 +587,8 @@ async function confirmFoods(){
       food_pot_100:    pN(food.pot),
       food_mg_100:     pN(food.mg),
       food_na_100:     pN(food.na),
-      food_zn_100:     pN(food.zn)
+      food_zn_100:     pN(food.zn),
+      is_ultra_processed: (typeof item.isUltraProcessed==='boolean') ? item.isUltraProcessed : null
     };
 
     var r = await sb.from('journal').insert(ins);
