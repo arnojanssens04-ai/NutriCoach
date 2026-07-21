@@ -1310,12 +1310,57 @@ function calcTargets(){
 // Qualité nutritionnelle, pour que les deux scores s'accordent sur ce qui
 // compte comme "ultra-transformé" plutôt que d'avoir chacun leur propre
 // logique (source d'incohérence entre les deux auparavant).
+// Liste de mots-clés bien plus large qu'avant, organisée par catégorie —
+// c'est le filet de sécurité UNIVERSEL (fonctionne pour tout aliment, quelle
+// que soit sa source : recherche manuelle, scan photo, code-barres). Un
+// signal explicite (is_ultra_processed, posé par l'IA lors du scan photo ou
+// par le vrai classement NOVA d'Open Food Facts lors d'un scan code-barres)
+// est TOUJOURS prioritaire quand il existe — cette liste ne sert que de
+// repli quand aucun signal fiable n'est disponible pour cet aliment.
+var ULTRA_PROCESSED_PATTERNS = [
+  // Boissons sucrées / industrielles
+  'soda','coca','cola','pepsi','fanta','sprite','oasis','ice tea','schweppes',
+  'boisson energisante|energy drink|redbull|red bull|monster energy','sirop.*(grenadine|menthe)',
+  // Snacks salés industriels
+  'chips','tuc\\b','crackers?','biscuits? aperitif','pringles','cacahuetes? (grillees?|salees?|aromatisees?)',
+  // Confiseries
+  'bonbon','confiserie','chewing.?gum','guimauve','reglisse','dragee','caramel.*industri',
+  // Chocolat / barres / pâtisseries industrielles
+  'barre.*chocolat','kinder','snickers|twix|kitkat|mars\\b|bounty|milka|lion\\b','nutella','pate a tartiner',
+  'biscuit','cake\\b','gateau.*industri','viennoiserie','donut|beignet','pain au chocolat industri','patisserie.*industri','frites?\\b',
+  // Plats préparés / surgelés / panés
+  'plat.*(cuisine|prepare)','surgele.*(pane|pret)','cordon bleu','nugget','panne\\b','quenelle',
+  'lasagne.*industri','pizza.*surgel','quiche.*industri','soupe.*(brique|deshydrat|instantan)',
+  // Charcuterie transformée
+  'charcuterie','saucisse','merguez','jambon.*reconstit','bacon','lardons?.*fume','knacki','chorizo.*industri','mortadelle','surimi',
+  // Fast-food / restauration rapide
+  'mcdo|burger king|kfc|quick\\b','hamburger','hot.?dog','kebab','tacos.*(fast|frit)',
+  // Céréales du petit-déjeuner sucrées
+  'cereales?.*sucre','chocapic','frosties','miel pops','granola.*industri','barre.*cereale',
+  // Sauces et condiments industriels
+  'mayonnaise.*industri','ketchup','sauce.*(industri|bouteille|preemball)',
+  // Produits laitiers ultra-transformés
+  'yaourt.*(aromatise|sucre)','dessert lacte','flan.*industri','mousse.*chocolat.*industri','creme dessert','danette','petit suisse.*aromatise',
+  // Glaces industrielles
+  'glace\\b','sorbet','esquimau','magnum\\b','cornetto',
+  // Pains et biscottes industriels emballés
+  'pain de mie.*industri','pain.*burger','biscotte',
+  // Plats express / instantanés
+  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b'
+];
+var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
+
 function countUltraProcessed(entries){
   var count = 0;
   (entries||[]).forEach(function(e){
+    // Signal explicite prioritaire : posé par l'IA (scan photo) ou déduit
+    // du vrai classement NOVA d'Open Food Facts (scan code-barres).
+    if(e.is_ultra_processed === true){ count++; return; }
+    if(e.is_ultra_processed === false){ return; }
+    // Repli universel : mots-clés, pour tout ce qui n'a pas de signal fiable
+    // (recherche manuelle dans Ciqual, anciennes entrées, IA indisponible...)
     var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king|frite|glace|sorbet|patisserie|donut|beignet|kebab|nutella|pate a tartiner|cereales?.*sucre|barre.*cereale|snack|chicken nugget|panne|surimi|cordon bleu/.test(n))
-      count++;
+    if(ULTRA_PROCESSED_REGEX.test(n)) count++;
   });
   return count;
 }
@@ -1744,7 +1789,8 @@ async function addEntry(food,qty){
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
     food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot),
     food_fibres_100:pN(food.fibres),food_mg_100:pN(food.mg),
-    food_na_100:pN(food.na),food_zn_100:pN(food.zn)
+    food_na_100:pN(food.na),food_zn_100:pN(food.zn),
+    is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4) : null
   });
   if(r.error){ toast('❌ Erreur : '+r.error.message); console.error(r.error); return; }
   toast('✅ '+food.nom.slice(0,28)+' ajouté');
@@ -3029,7 +3075,8 @@ function alimentCustomToFood(c){
     nom_fr: c.nom_fr||null,
     kcal: c.kcal, prot: c.prot, gluc: c.gluc, lip: c.lip,
     ags: c.ags||0, fibres: c.fibres||0, fer: c.fer||0, cal: c.cal||0,
-    pot: c.pot||0, mg: c.mg||0, na: c.na||0, zn: c.zn||0
+    pot: c.pot||0, mg: c.mg||0, na: c.na||0, zn: c.zn||0,
+    nova_group: (typeof c.nova_group==='number') ? c.nova_group : null
   };
 }
 
@@ -3042,7 +3089,7 @@ async function lookupBarcode(code){
   try{
     var ctrl = new AbortController();
     var timer = setTimeout(function(){ ctrl.abort(); }, 6000);
-    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,generic_name,quantity,nutriments,brands,product_name_fr', {signal:ctrl.signal});
+    var r = await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,generic_name,quantity,nutriments,brands,product_name_fr,nova_group', {signal:ctrl.signal});
     clearTimeout(timer);
     var d = await r.json();
     if(d.status!==1 || !d.product) return null;
@@ -3066,6 +3113,7 @@ async function lookupBarcode(code){
       fibres: nv(n['fiber_100g']), ags: nv(n['saturated-fat_100g']),
       fer: nv(n['iron_100g'])*1000, cal: nv(n['calcium_100g'])*1000, pot: nv(n['potassium_100g'])*1000,
       mg: nv(n['magnesium_100g'])*1000, na: nv(n['sodium_100g'])*1000, zn: nv(n['zinc_100g'])*1000,
+      nova_group: (typeof p.nova_group==='number') ? p.nova_group : null,
       code_barres: code
     };
 
