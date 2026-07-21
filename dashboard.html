@@ -367,6 +367,17 @@ body {
 .pstat-l { font-size: .64rem; color: var(--text2); margin-top: 2px; }
 
 .prof-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 10px; box-shadow: var(--sh); }
+
+/* ── Graphique d'évolution du poids (profil) — animé à l'affichage ── */
+.pw-chart { display:flex; align-items:flex-end; gap:7px; height:100px; padding-top:8px; }
+.pw-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; justify-content:flex-end; min-width:0; }
+.pw-val { font-size:.68rem; font-weight:700; color:var(--gold); white-space:nowrap; }
+.pw-track { width:100%; max-width:30px; background:var(--bg2); border-radius:5px; flex:1; display:flex; align-items:flex-end; overflow:hidden; }
+.pw-fill { width:100%; background:var(--sage); border-radius:5px 5px 0 0; height:0; transition:height .7s cubic-bezier(.34,1.4,.64,1); }
+.pw-fill.start { background:var(--gold); }
+.pw-col.on .pw-fill { height:var(--pw-h); }
+.pw-lbl { font-size:.62rem; color:var(--text3); white-space:nowrap; }
+.pw-col.start .pw-lbl { color:var(--gold); font-weight:600; }
 .prof-card-hdr { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .prof-card-hdr span { font-family: 'Lora', serif; font-size: .9rem; }
 .prof-card-body { padding: 14px 16px; }
@@ -732,6 +743,12 @@ body {
       <button class="btn-outline" onclick="openSetup()">Modifier</button>
     </div>
     <div class="prof-card-body" id="p-pathos"></div>
+  </div>
+  <div class="prof-card" id="p-weight-card" style="display:none">
+    <div class="prof-card-hdr"><span>⚖️ Évolution du poids</span></div>
+    <div class="prof-card-body">
+      <div class="pw-chart" id="pw-chart"></div>
+    </div>
   </div>
   <a href="met.html" style="text-decoration:none;color:inherit;display:block">
     <div class="prof-card" style="cursor:pointer">
@@ -1293,7 +1310,7 @@ function countUltraProcessed(entries){
   var count = 0;
   (entries||[]).forEach(function(e){
     var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king/.test(n))
+    if(/chips|crackers|soda|coca|pepsi|fanta|sprite|jus.*sucre|charcuterie|saucisse|nugget|pizza.*surgel|plat.*cuisine|soupe.*brique|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king|frite|glace|sorbet|patisserie|donut|beignet|kebab|nutella|pate a tartiner|cereales?.*sucre|barre.*cereale|snack|chicken nugget|panne|surimi|cordon bleu/.test(n))
       count++;
   });
   return count;
@@ -1302,61 +1319,63 @@ function countUltraProcessed(entries){
 function calcScore(T,tgt,pathos,entries){
   if(T.kcal<100)return null;
 
-  var rE = T.kcal/tgt.kcal;
-  var ptsEnergie = rE<=1 ? rE*40 : Math.max(0, 40*(1-(rE-1)*2));
+  // Les calories sont volontairement ABSENTES de ce score. Un objectif de
+  // 2200 ou 3100 kcal ne doit rien changer à la qualité réelle de
+  // l'alimentation — le suivi calorique existe ailleurs dans l'app (plan
+  // alimentaire, alertes), Score Santé se concentre uniquement sur CE que
+  // vous mangez, pas sur COMBIEN.
   function proximite(val,obj){ return obj>0 ? Math.max(0, 1-Math.abs(val-obj)/obj) : 0; }
   var ptsProt  = proximite(T.prot, tgt.prot) * 15;
-  var ptsGluc  = proximite(T.gluc, tgt.gluc) * 15;
-  var ptsLip   = proximite(T.lip,  tgt.lip)  * 15;
-  var ptsFibres= Math.min(1, T.fibres/(tgt.fibres||27)) * 15;
-  var base = ptsEnergie + ptsProt + ptsGluc + ptsLip + ptsFibres;
+  var ptsGluc  = proximite(T.gluc, tgt.gluc) * 10;
+  var ptsLip   = proximite(T.lip,  tgt.lip)  * 10;
+  var ptsFibres= Math.min(1, T.fibres/(tgt.fibres||27)) * 20;
+
+  // Qualité alimentaire — pilier principal du score (45 pts, presque la
+  // moitié du total). Part de 45 et perd 7 pts par aliment ultra-transformé
+  // détecté (chips, frites, glace, plats industriels...) jusqu'à 0.
+  var ultraCount = countUltraProcessed(entries);
+  var ptsQualite = Math.max(0, 45 - ultraCount*7);
+
+  var base = ptsProt + ptsGluc + ptsLip + ptsFibres + ptsQualite;
+
   var penAGS = 0;
   if(T.lip>=15){ var pctAGS=T.ags/T.lip*100; penAGS=Math.pow(Math.max(0,pctAGS-20),2)*0.15; }
   var excesNa = Math.max(0,(T.na-6000)/1000);
   var penNa = excesNa*5;
-  var ultraCount = countUltraProcessed(entries);
-  var penUltra = ultraCount*4; // 4 pts par aliment ultra-transformé détecté
-  var penaliteTotale = Math.min(penAGS+penNa+penUltra, 40);
+  var penaliteTotale = Math.min(penAGS+penNa, 20);
   var s = Math.max(0,Math.min(100,Math.round(base-penaliteTotale)));
 
   // Détail par critère — utilisé par le panneau d'explication cliquable
-  function pct(val,max){ return Math.min(100,Math.round(val/max*100)); }
   var detail = [
-    { label:'Énergie', pts:Math.round(ptsEnergie), max:40,
-      val:Math.round(T.kcal)+'kcal / '+Math.round(tgt.kcal)+'kcal',
-      ok: rE>=0.85 && rE<=1.05,
-      conseil: rE<0.85 ? 'Vous êtes en dessous de votre objectif calorique — mangez davantage.'
-              : rE>1.05 ? 'Vous dépassez votre objectif calorique de '+Math.round((rE-1)*100)+'%.'
-              : null },
+    { label:'Qualité alimentaire', pts:Math.round(ptsQualite), max:45,
+      val: ultraCount+' aliment'+(ultraCount>1?'s':'')+' ultra-transformé'+(ultraCount>1?'s':'')+' aujourd\'hui',
+      ok: ultraCount===0,
+      conseil: ultraCount>0 ? 'Chips, frites, glaces, plats industriels... chaque aliment ultra-transformé coûte 7 pts. Privilégiez les aliments bruts.' : null },
+    { label:'Fibres', pts:Math.round(ptsFibres), max:20,
+      val:Math.round(T.fibres)+'g / '+(tgt.fibres||27)+'g',
+      ok: T.fibres>=(tgt.fibres||27)*0.85,
+      conseil: T.fibres<(tgt.fibres||27)*0.5 ? 'Fibres insuffisantes — privilégiez légumes, légumineuses et céréales complètes.' : null },
     { label:'Protéines', pts:Math.round(ptsProt), max:15,
       val:Math.round(T.prot)+'g / '+Math.round(tgt.prot)+'g',
       ok: proximite(T.prot,tgt.prot)>=0.85,
       conseil: T.prot<tgt.prot*0.85 ? 'Ajoutez une source de protéines maigres : œuf, poulet, poisson, légumineuses.' : null },
-    { label:'Glucides', pts:Math.round(ptsGluc), max:15,
+    { label:'Glucides', pts:Math.round(ptsGluc), max:10,
       val:Math.round(T.gluc)+'g / '+Math.round(tgt.gluc)+'g',
       ok: proximite(T.gluc,tgt.gluc)>=0.85,
       conseil: T.gluc<tgt.gluc*0.8 ? 'Apport en glucides insuffisant — ajoutez féculents ou fruits.'
               : T.gluc>tgt.gluc*1.2 ? 'Glucides élevés — réduisez pain blanc, riz blanc, sucreries.' : null },
-    { label:'Lipides', pts:Math.round(ptsLip), max:15,
+    { label:'Lipides', pts:Math.round(ptsLip), max:10,
       val:Math.round(T.lip)+'g / '+Math.round(tgt.lip)+'g',
       ok: proximite(T.lip,tgt.lip)>=0.85,
       conseil: T.lip>tgt.lip*1.2 ? 'Lipides élevés — surveillez sauces, charcuteries, fromages.' : null },
-    { label:'Fibres', pts:Math.round(ptsFibres), max:15,
-      val:Math.round(T.fibres)+'g / '+(tgt.fibres||27)+'g',
-      ok: T.fibres>=(tgt.fibres||27)*0.85,
-      conseil: T.fibres<(tgt.fibres||27)*0.5 ? 'Fibres insuffisantes — privilégiez légumes, légumineuses et céréales complètes.' : null },
-    { label:'Graisses saturées', pts:Math.round(Math.max(0,15-penAGS)), max:15,
+    { label:'Graisses saturées', pts:Math.round(Math.max(0,10-penAGS)), max:10,
       val: T.lip>0 ? Math.round(T.ags/T.lip*100)+'% des lipides (seuil 20%)' : '—',
       ok: penAGS<2,
       conseil: penAGS>=2 ? 'AGS élevées — limitez beurre, charcuterie, fromages gras, viandes grasses.' : null },
-    { label:'Sodium', pts:Math.round(Math.max(0,15-penNa*3)), max:15,
+    { label:'Sodium', pts:Math.round(Math.max(0,10-penNa*2)), max:10,
       val: Math.round(T.na)+'mg / 6000mg',
       ok: T.na<=6000,
-      conseil: T.na>6000 ? 'Sodium élevé — limitez sel ajouté, plats préparés et charcuterie.' : null },
-    { label:'Aliments ultra-transformés', pts:Math.round(Math.max(0,-penUltra)), max:0,
-      val: ultraCount+' détecté'+(ultraCount>1?'s':'')+' aujourd\'hui',
-      ok: ultraCount===0,
-      conseil: ultraCount>0 ? 'Chips, sodas, plats industriels, charcuterie... privilégiez les aliments bruts pour préserver votre score.' : null }
+      conseil: T.na>6000 ? 'Sodium élevé — limitez sel ajouté, plats préparés et charcuterie.' : null }
   ];
 
   return {score:s, detail:detail};
@@ -1400,10 +1419,20 @@ function openScoreDetail(){
   // Micro disponibles uniquement si données renseignées dans Ciqual
   var hasMicro = T.fer>0.1 || T.cal>10 || T.mg>5;
 
+  var qualitePts = Math.max(0, 45 - lastScoreUltraCount*7);
+  var qualiteColor = qualitePts>=38 ? 'var(--sage)' : qualitePts>=20 ? 'var(--amber)' : 'var(--rose)';
+
   var rows = ''
-    + bar(T.kcal, tgt.kcal, 'kcal', false,
-        '⚡ Énergie',
-        T.kcal<tgt.kcal*0.85?'En dessous de l\'objectif — mangez davantage.':T.kcal>tgt.kcal*1.1?'Au-dessus de l\'objectif de '+Math.round((T.kcal/tgt.kcal-1)*100)+'%.':null)
+    + '<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+      +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">🥗 Qualité alimentaire — pilier principal</span>'
+      +'<span style="font-size:.82rem;font-weight:700;color:'+qualiteColor+'">'+qualitePts+' / 45 pts</span>'
+      +'</div>'
+      +'<div style="height:5px;background:var(--bg2);border-radius:999px;overflow:hidden">'
+      +'<div style="height:100%;width:'+Math.round(qualitePts/45*100)+'%;background:'+qualiteColor+';border-radius:999px;transition:width .4s"></div>'
+      +'</div>'
+      +(lastScoreUltraCount>0 ? '<div style="font-size:.72rem;color:'+qualiteColor+';margin-top:3px">💡 '+lastScoreUltraCount+' aliment'+(lastScoreUltraCount>1?'s':'')+' ultra-transformé'+(lastScoreUltraCount>1?'s':'')+' détecté'+(lastScoreUltraCount>1?'s':'')+' (-7 pts chacun) — chips, frites, glaces, plats industriels... privilégiez le brut.</div>' : '<div style="font-size:.72rem;color:var(--sage);margin-top:3px">💡 Aucun aliment ultra-transformé détecté aujourd\'hui, bravo.</div>')
+      +'</div>'
     + bar(T.prot, tgt.prot, 'g', false,
         '🥩 Protéines — objectif '+tgt.protGperKg+'g/kg',
         T.prot<tgt.prot*0.85?'Ajoutez une source maigre : œuf, poulet, poisson, légumineuses.':null)
@@ -1421,14 +1450,7 @@ function openScoreDetail(){
         T.ags*9/Math.max(T.kcal,1)*100>10?'Au-dessus de 10% — limitez beurre, charcuterie, fromages gras.':null)
     + (T.na>0 ? bar(T.na, tgt.na||2300, 'mg', true,
         '🧂 Sodium',
-        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '')
-    + (lastScoreUltraCount>0 ? '<div style="margin-bottom:14px;padding:10px 12px;background:rgba(139,42,42,0.06);border-radius:9px">'
-        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">'
-        +'<span style="font-size:.78rem;font-weight:600;color:var(--text)">🍟 Aliments ultra-transformés</span>'
-        +'<span style="font-size:.82rem;font-weight:700;color:var(--rose)">-'+(lastScoreUltraCount*4)+' pts</span>'
-        +'</div>'
-        +'<div style="font-size:.72rem;color:var(--rose)">'+lastScoreUltraCount+' détecté'+(lastScoreUltraCount>1?'s':'')+' aujourd\'hui — privilégiez les aliments bruts pour préserver votre score.</div>'
-        +'</div>' : '');
+        T.na>2300?'Élevé — réduisez sel ajouté et plats préparés.':null) : '');
 
   // Micronutriments — uniquement si des données sont disponibles
   var microRows = '';
@@ -1670,7 +1692,10 @@ function genAlerts(T,tgt,pathos){
   var al=[];if(T.kcal<100)return al;
   var p=PROF||{};
   var r=T.kcal/tgt.kcal;
+  var excess=T.kcal-tgt.kcal; // positif = dépassement réel en kcal, négatif = en dessous
   if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
+  else if(excess>100)al.push({t:'warn',i:'⚠️',ttl:'Quota dépassé',txt:'Vous avez largement dépassé votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — si vous voulez atteindre vos objectifs, chaque journée compte.'});
+  else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
   else if(r>0.95)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
   else if(r>0.85)al.push({t:'good',i:'🔜',ttl:'Vous vous approchez de l\'objectif',txt:Math.round(T.kcal)+' / '+tgt.kcal+' kcal — encore un peu de marge si un repas reste à venir.'});
   // Alerte protéines faibles — seuil minimal de 0.83g/kg (recommandation OMS)
@@ -4265,8 +4290,55 @@ function renderProfile(){
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
-  if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';return;}
-  pEl.innerHTML=pathos.map(function(pp){var m=PATHO_META[pp];return m?'<span class="ptag">'+m.i+' '+m.l+'</span>':'';}).join('');
+  if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';}
+  else pEl.innerHTML=pathos.map(function(pp){var m=PATHO_META[pp];return m?'<span class="ptag">'+m.i+' '+m.l+'</span>':'';}).join('');
+
+  renderWeightEvolution();
+}
+
+// Graphique d'évolution du poids — part TOUJOURS du poids initial (jamais
+// modifié après coup), puis chaque bilan hebdomadaire, puis le poids actuel
+// s'il diffère du dernier point connu. Barres animées à l'apparition.
+async function renderWeightEvolution(){
+  var p = PROF||{};
+  var card = document.getElementById('p-weight-card');
+  if(!p.poids_initial){ card.style.display='none'; return; }
+
+  var r = await sb.from('bilans').select('date,poids').eq('user_id',USER.id).not('poids','is',null).order('date',{ascending:true});
+  var bilansData = r.data || [];
+
+  var series = [{date:null, poids:p.poids_initial, isStart:true}];
+  bilansData.forEach(function(b){ series.push({date:b.date, poids:b.poids, isStart:false}); });
+
+  // Si le poids actuel diffère du dernier point connu (pas encore de bilan
+  // cette semaine), on l'ajoute comme point le plus récent.
+  var last = series[series.length-1];
+  if(p.poids && Math.abs(p.poids-last.poids)>0.05) series.push({date:null, poids:p.poids, isStart:false, isCurrent:true});
+
+  if(series.length<2){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  var weights = series.map(function(s){return s.poids;});
+  var maxW = Math.max.apply(null, weights), minW = Math.min.apply(null, weights);
+  var range = Math.max(1, maxW-minW);
+
+  var chartEl = document.getElementById('pw-chart');
+  chartEl.innerHTML = series.map(function(s,idx){
+    var h = 15 + ((s.poids-minW)/range)*85;
+    var lbl = s.isStart ? 'Départ' : (s.isCurrent ? 'Actuel' : (function(){var d=new Date(s.date); return d.getDate()+'/'+(d.getMonth()+1);})());
+    return '<div class="pw-col'+(s.isStart?' start':'')+'" id="pw-col-'+idx+'" style="--pw-h:'+h+'%">'
+      +'<div class="pw-val">'+s.poids+'</div>'
+      +'<div class="pw-track"><div class="pw-fill'+(s.isStart?' start':'')+'"></div></div>'
+      +'<div class="pw-lbl">'+lbl+'</div></div>';
+  }).join('');
+
+  // Apparition en cascade, une barre après l'autre
+  series.forEach(function(s,idx){
+    setTimeout(function(){
+      var col = document.getElementById('pw-col-'+idx);
+      if(col) col.classList.add('on');
+    }, 80*idx);
+  });
 }
 
 // ── SETUP ──
