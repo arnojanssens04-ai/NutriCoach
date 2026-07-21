@@ -657,6 +657,24 @@ function tok(s){
 var COOKED_WORDS = ['cuit','cuite','cuits','cuites','grille','grillee','grilles','grillees','poele','frit','frite','bouilli','bouillie','roti','rotie','vapeur'];
 var RAW_WORDS = ['cru','crue','crus','crues'];
 
+// Mots trop génériques pour, à eux seuls, justifier une correspondance —
+// "cuit" ou "de" apparaissent dans des centaines d'aliments Ciqual sans rien
+// dire sur LEQUEL. Sans ce garde-fou, un mot absent de Ciqual (ex: "pennes",
+// "brocolis" au pluriel) laisse le score reposer uniquement sur ces mots
+// génériques, et le système "trouve" alors un aliment sans rapport.
+var GENERIC_WORDS = ['cuit','cuite','cuits','cuites','cru','crue','crus','crues','grille','grillee','grilles','grillees','poele','frit','frite','bouilli','bouillie','roti','rotie','vapeur','nature','natures','frais','fraiche','fraiches','sans','sel','ajoute','ajoutee','sucre','sucree','sale','salee','de','du','des','la','le','les','au','aux','a','et','ou','sur','en','pour'];
+
+function hasMeaningfulMatch(qt, dnormRaw){
+  var dnorm = dnormRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var dTokens = dnorm.split(/[^a-z0-9]+/).filter(Boolean);
+  return qt.some(function(q){
+    if(q.length<3 || GENERIC_WORDS.indexOf(q)>=0) return false;
+    return dTokens.some(function(d){
+      return d.length>=3 && (d.indexOf(q)>=0 || q.indexOf(d)>=0);
+    });
+  });
+}
+
 function scoreFn(qt, dt, dnom){
   var s = 0;
   var dnorm = dnom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -664,8 +682,9 @@ function scoreFn(qt, dt, dnom){
     if(q.length < 2) return;
     if(dt.indexOf(q) >= 0) s += 10;                          // mot exact
     dt.forEach(function(d){
-      if(d.startsWith(q) && d !== q) s += 5;                 // préfixe
-      if(d.indexOf(q) >= 0 && d !== q) s += 2;               // contenu
+      if(d===q) return;
+      if(d.startsWith(q) || q.startsWith(d)) s += 5;         // préfixe (dans les 2 sens — gère pluriel/singulier)
+      else if(d.indexOf(q) >= 0 || q.indexOf(d) >= 0) s += 2; // contenu (dans les 2 sens)
     });
   });
   if(dnorm.indexOf(qt.join(' ')) >= 0) s += 20;              // phrase entière
@@ -704,7 +723,7 @@ function findFood(nom){
         aliasScore = s; aliasResult = d;
       }
     });
-    if(aliasResult && aliasScore >= 3) return aliasResult;
+    if(aliasResult && aliasScore >= 3 && hasMeaningfulMatch(aliasTokens, aliasResult.nom)) return aliasResult;
   }
 
   // 2. Recherche normale sur le nom original
@@ -718,9 +737,11 @@ function findFood(nom){
     }
   });
 
-  // Seuil bas (3) car l'IA retourne des noms variés mais le mot-clé principal
-  // est presque toujours présent (ex: "Brocoli grillé" → "Brocoli, cuit à l'eau")
-  return (bestScore >= 3) ? best : null;
+  // Seuil bas (3) car l'IA retourne des noms variés, MAIS on exige en plus
+  // qu'un mot significatif (pas juste "cuit" ou "de") corresponde vraiment —
+  // sinon mieux vaut ne rien trouver que de renvoyer un aliment sans rapport.
+  if(best && !hasMeaningfulMatch(qt, best.nom)) best = null;
+  return (best && bestScore >= 3) ? best : null;
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
