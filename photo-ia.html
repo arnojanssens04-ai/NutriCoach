@@ -21,11 +21,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .meal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .preview-zone{width:100%;border-radius:12px;overflow:hidden;background:#1a1916;min-height:180px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .preview-placeholder{text-align:center;color:rgba(255,255,255,0.5);padding:24px;}
-.capture-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.capture-btn{padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:.88rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+.capture-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.capture-btn{padding:12px 6px;border-radius:11px;border:none;cursor:pointer;font-size:.82rem;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
 .capture-btn-primary{background:var(--gold);color:#fff;}
 .capture-btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border2);}
 .loading{display:none;text-align:center;padding:24px;}
+
+/* ── Mode vocal / texte libre ── */
+.voice-zone{display:none;}
+.voice-zone.on{display:block;}
+.voice-textarea{width:100%;min-height:110px;padding:14px;border-radius:12px;border:1px solid var(--border2);background:var(--card);font-family:'Inter',sans-serif;font-size:.92rem;color:var(--text);resize:vertical;outline:none;line-height:1.5;}
+.voice-textarea:focus{border-color:var(--gold);}
+.voice-controls{display:flex;gap:10px;margin-top:12px;}
+.voice-mic-btn{flex-shrink:0;width:52px;height:52px;border-radius:50%;border:none;background:var(--card2);color:var(--gold);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.voice-mic-btn.listening{background:var(--rose);color:#fff;animation:voicePulse 1.3s ease-in-out infinite;}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(139,42,42,0.35);}50%{box-shadow:0 0 0 12px rgba(139,42,42,0);}}
+.voice-submit-btn{flex:1;background:var(--gold);color:#fff;border:none;border-radius:11px;font-weight:700;font-size:.9rem;cursor:pointer;}
+.voice-hint{font-size:.76rem;color:var(--text3);margin-top:8px;line-height:1.5;}
 .result-item{background:rgba(45,79,28,0.04);border:1px solid rgba(45,79,28,0.12);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .result-item.excluded{opacity:.4;}
 .toggle-btn{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;font-size:.75rem;font-weight:700;}
@@ -108,6 +120,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       Galerie
       <input type="file" accept="image/*" style="display:none" onchange="onPhotoSelected(this)">
     </label>
+    <button class="capture-btn capture-btn-secondary" id="voice-btn" style="display:none" onclick="openVoiceZone()" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
+      Voix
+    </button>
+  </div>
+
+  <!-- Mode vocal / texte libre -->
+  <div class="voice-zone" id="voice-zone">
+    <textarea class="voice-textarea" id="voice-textarea" placeholder="Ex : j'ai mangé 120g de cabillaud avec 150g de patate douce et 100g de brocoli, et j'ai ajouté du beurre pour la cuisson."></textarea>
+    <div class="voice-controls">
+      <button class="voice-mic-btn" id="voice-mic-btn" onclick="toggleVoiceRecognition()" type="button" title="Parler">🎤</button>
+      <button class="voice-submit-btn" onclick="submitVoiceLog()" type="button">Analyser</button>
+    </div>
+    <div class="voice-hint" id="voice-hint">Appuyez sur le micro et décrivez votre repas à voix haute, ou écrivez-le directement dans le champ ci-dessus.</div>
   </div>
 
   <!-- Chargement -->
@@ -212,6 +238,13 @@ sb.auth.getSession().then(function(r){
   USER = r.data.session.user;
   sb.from('profiles').select('*').eq('id',USER.id).single().then(function(pr){
     PROF = pr.data||{};
+    // Log vocal réservé à l'admin pour l'instant (fonctionnalité en test)
+    var voiceBtn = document.getElementById('voice-btn');
+    if(PROF.role==='admin'){
+      voiceBtn.style.display = 'flex';
+    } else {
+      document.getElementById('capture-btns').style.gridTemplateColumns = '1fr 1fr';
+    }
     initMealPreselect();
     updateCounter();
   });
@@ -307,13 +340,16 @@ function initMealPreselect(){
   var urlMeal = new URLSearchParams(window.location.search).get('meal');
   if(urlMeal){
     var btn = document.querySelector('.photo-meal-btn[onclick*="\''+urlMeal+'\'"]');
-    if(btn){ selectMeal(urlMeal, btn); return; }
+    if(btn){ selectMeal(urlMeal, btn); }
+  } else {
+    // Priorité 2 : heure actuelle
+    var h = new Date().getHours();
+    var m = h<10?'breakfast':h<14?'lunch':h<17?'snack':'dinner';
+    var btn2 = document.querySelector('.photo-meal-btn[onclick*="\''+m+'\'"]');
+    if(btn2) selectMeal(m, btn2);
   }
-  // Priorité 2 : heure actuelle
-  var h = new Date().getHours();
-  var m = h<10?'breakfast':h<14?'lunch':h<17?'snack':'dinner';
-  var btn2 = document.querySelector('.photo-meal-btn[onclick*="\''+m+'\'"]');
-  if(btn2) selectMeal(m, btn2);
+  // Ouvre directement le mode vocal si on arrive via le bouton micro du journal
+  if(new URLSearchParams(window.location.search).get('mode')==='voice' && PROF.role==='admin') openVoiceZone();
 }
 
 function selectMeal(meal, btn){
@@ -443,6 +479,115 @@ async function onPhotoSelected(input){
 
 function resetCapture(){
   document.getElementById('capture-btns').style.display = 'grid';
+}
+
+// ── MODE VOIX / TEXTE LIBRE ──
+// Repose sur les MÊMES fonctions que le scan photo (limite, showResults,
+// confirmFoods, findFood...) — seule la façon de produire "aliments"
+// change. Se dégrade proprement en simple saisie texte si la
+// reconnaissance vocale n'est pas disponible sur l'appareil (Safari iOS
+// a un support inégal selon les versions).
+function openVoiceZone(){
+  if(!PROF || PROF.role!=='admin') return; // fonctionnalité en test, réservée pour l'instant
+  document.getElementById('voice-zone').classList.add('on');
+  document.getElementById('capture-btns').style.display = 'none';
+  document.getElementById('voice-textarea').focus();
+}
+
+var voiceRecognition = null;
+var voiceListening = false;
+
+function toggleVoiceRecognition(){
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var hint = document.getElementById('voice-hint');
+  if(!SpeechRec){
+    hint.textContent = 'La reconnaissance vocale n\'est pas disponible sur cet appareil ou ce navigateur — écrivez votre repas directement dans le champ ci-dessus.';
+    document.getElementById('voice-textarea').focus();
+    return;
+  }
+  var btn = document.getElementById('voice-mic-btn');
+  if(voiceListening){
+    if(voiceRecognition) voiceRecognition.stop();
+    return;
+  }
+
+  voiceRecognition = new SpeechRec();
+  voiceRecognition.lang = 'fr-FR';
+  voiceRecognition.interimResults = true;
+  voiceRecognition.continuous = false;
+
+  var baseText = document.getElementById('voice-textarea').value.trim();
+  var startedWithText = baseText.length > 0;
+
+  voiceRecognition.onstart = function(){
+    voiceListening = true;
+    btn.classList.add('listening');
+    hint.textContent = '🎤 Écoute en cours — décrivez votre repas normalement...';
+  };
+  voiceRecognition.onresult = function(e){
+    var transcript = '';
+    for(var i=0;i<e.results.length;i++) transcript += e.results[i][0].transcript;
+    document.getElementById('voice-textarea').value = (startedWithText ? baseText+' ' : '') + transcript;
+  };
+  voiceRecognition.onerror = function(e){
+    hint.textContent = e.error==='not-allowed'
+      ? 'Micro refusé — autorisez l\'accès au micro dans les réglages, ou écrivez directement dans le champ.'
+      : 'Petit souci avec la reconnaissance vocale — vous pouvez aussi écrire directement.';
+  };
+  voiceRecognition.onend = function(){
+    voiceListening = false;
+    btn.classList.remove('listening');
+    hint.textContent = 'Vérifiez le texte ci-dessus, corrigez si besoin, puis appuyez sur "Analyser".';
+  };
+  voiceRecognition.start();
+}
+
+async function submitVoiceLog(){
+  var text = document.getElementById('voice-textarea').value.trim();
+  var hint = document.getElementById('voice-hint');
+  if(!text){ hint.textContent = 'Décrivez ou dictez d\'abord votre repas avant d\'analyser.'; return; }
+
+  var limitCheck = await checkPhotoScanLimit();
+  if(!limitCheck.allowed){
+    showError('Vous avez utilisé vos '+limitCheck.limit+' scans gratuits aujourd\'hui. Revenez demain, ou passez à Cap Santé+ pour un accès illimité.');
+    return;
+  }
+
+  document.getElementById('voice-zone').classList.remove('on');
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  var steps = ['Analyse de votre description...','Identification des aliments...','Estimation des quantités...','Presque prêt...'];
+  var si = 0;
+  var iv = setInterval(function(){
+    si = Math.min(si+1, steps.length-1);
+    var el = document.getElementById('loading-step');
+    if(el) el.textContent = steps[si];
+  }, 1800);
+
+  try{
+    var session = await sb.auth.getSession();
+    var token = session.data.session.access_token;
+    var res = await fetch(SURL+'/functions/v1/dynamic-endpoint',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({ voice_text: text })
+    });
+    clearInterval(iv);
+    document.getElementById('loading').style.display = 'none';
+    if(!res.ok){ showError('Erreur serveur ('+res.status+') — réessayez.'); resetCapture(); return; }
+    var data = await res.json();
+    if(!data.aliments||!data.aliments.length){ showError('Aucun aliment identifié dans votre description. Essayez d\'être plus précis (ex: des quantités en grammes).'); resetCapture(); return; }
+    incScanCount();
+    await logScanToServer();
+    updateCounter();
+    showResults(data.aliments);
+  }catch(err){
+    clearInterval(iv);
+    document.getElementById('loading').style.display = 'none';
+    showError('Erreur : '+err.message);
+    resetCapture();
+  }
 }
 
 function compressImage(dataUrl, maxPx, quality){
