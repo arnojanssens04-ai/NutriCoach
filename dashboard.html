@@ -311,6 +311,15 @@ body {
 .src-c { background: var(--cyan-l); color: var(--cyan); }
 .src-o { background: rgba(45,79,28,0.08); color: var(--gold); }
 
+/* ── Repas récents / habituels — repli rapide en un tap ── */
+.recent-meals-strip { display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px; margin-top:8px; -webkit-overflow-scrolling:touch; }
+.recent-meal-card { flex-shrink:0; width:172px; background:var(--card2); border:1px solid var(--border2); border-radius:12px; padding:11px; }
+.recent-meal-date { font-size:.64rem; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:6px; }
+.recent-meal-freq { background:var(--gold-l); color:var(--gold); font-size:.6rem; font-weight:700; padding:1px 7px; border-radius:999px; white-space:nowrap; }
+.recent-meal-foods { font-size:.75rem; color:var(--text); line-height:1.4; margin-bottom:8px; }
+.recent-meal-kcal { font-size:.68rem; color:var(--text2); margin-bottom:8px; }
+.recent-meal-add { width:100%; padding:7px; background:var(--gold); color:#fff; border:none; border-radius:8px; font-size:.74rem; font-weight:700; cursor:pointer; }
+
 .added-item {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 12px; background: var(--card2);
@@ -578,7 +587,7 @@ body {
   </div>
 
   <!-- SCORE SANTÉ + description ensemble — cliquable partout -->
-  <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir le détail du score">
+  <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir vos valeurs nutritionnelles du jour">
     <div class="ring-wrap">
       <svg viewBox="0 0 96 96">
         <circle class="ring-bg" cx="48" cy="48" r="40"/>
@@ -724,8 +733,12 @@ body {
     <button onclick="goToPhotoIA()" title="Scanner un plat en photo" style="flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     </button>
+    <button id="voice-log-btn" onclick="goToVoiceLog()" title="Dicter ou décrire votre repas (admin)" style="display:none;flex-shrink:0;width:44px;border-radius:11px;border:1px solid var(--border2);background:var(--card2);color:var(--gold);cursor:pointer;align-items:center;justify-content:center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
+    </button>
   </div>
   <div id="srch-zone"></div>
+  <div id="recent-meals-zone"></div>
   <div class="div-line"></div>
   <div class="stitle" id="added-ttl">Aliments ajoutés</div>
   <div id="added-zone"></div>
@@ -1205,6 +1218,9 @@ function initGreeting(){
   applyAvatar(document.getElementById('pav'), initial, seed);
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
+  // Log vocal réservé à l'admin pour l'instant (fonctionnalité en test)
+  var voiceBtn=document.getElementById('voice-log-btn');
+  if(voiceBtn) voiceBtn.style.display = (p.role==='admin') ? 'flex' : 'none';
 }
 
 // ── TARGETS ──
@@ -1369,19 +1385,26 @@ var ULTRA_PROCESSED_PATTERNS = [
 ];
 var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
 
-function countUltraProcessed(entries){
-  var count = 0;
+// Renvoie la LISTE complète des entrées ultra-transformées (pas juste un
+// compte) — nécessaire pour calculer un barème progressif dans Score Santé
+// (quantité, rang du premier aliment...) tout en gardant countUltraProcessed
+// disponible partout ailleurs où seul le nombre importe.
+function getUltraProcessedList(entries){
+  var list = [];
   (entries||[]).forEach(function(e){
     // Signal explicite prioritaire : posé par l'IA (scan photo) ou déduit
     // du vrai classement NOVA d'Open Food Facts (scan code-barres).
-    if(e.is_ultra_processed === true){ count++; return; }
+    if(e.is_ultra_processed === true){ list.push(e); return; }
     if(e.is_ultra_processed === false){ return; }
     // Repli universel : mots-clés, pour tout ce qui n'a pas de signal fiable
     // (recherche manuelle dans Ciqual, anciennes entrées, IA indisponible...)
     var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    if(ULTRA_PROCESSED_REGEX.test(n)) count++;
+    if(ULTRA_PROCESSED_REGEX.test(n)) list.push(e);
   });
-  return count;
+  return list;
+}
+function countUltraProcessed(entries){
+  return getUltraProcessedList(entries).length;
 }
 
 function calcScore(T,tgt,pathos,entries){
@@ -1399,10 +1422,24 @@ function calcScore(T,tgt,pathos,entries){
   var ptsFibres= Math.min(1, T.fibres/(tgt.fibres||27)) * 20;
 
   // Qualité alimentaire — pilier principal du score (45 pts, presque la
-  // moitié du total). Part de 45 et perd 7 pts par aliment ultra-transformé
-  // détecté (chips, frites, glace, plats industriels...) jusqu'à 0.
-  var ultraCount = countUltraProcessed(entries);
-  var ptsQualite = Math.max(0, 45 - ultraCount*7);
+  // moitié du total). Part de 45 et perd des points par aliment
+  // ultra-transformé détecté, selon un barème progressif plutôt qu'un
+  // forfait unique :
+  //  - moins de 20g de l'aliment concerné → -1 pt seulement (une toute
+  //    petite quantité ne mérite pas la même sanction qu'une vraie portion)
+  //  - le PREMIER aliment ultra-transformé de la journée → -3 pts (un
+  //    écart isolé reste toléré)
+  //  - chaque aliment suivant → -7 pts (la sanction pleine, comme avant)
+  var ultraList = getUltraProcessedList(entries);
+  var ultraCount = ultraList.length;
+  var ultraPenalty = 0;
+  ultraList.forEach(function(e, idx){
+    var qty = e.quantite || 0;
+    if(qty < 20) ultraPenalty += 1;
+    else if(idx === 0) ultraPenalty += 3;
+    else ultraPenalty += 7;
+  });
+  var ptsQualite = Math.max(0, 45 - ultraPenalty);
 
   var base = ptsProt + ptsGluc + ptsLip + ptsFibres + ptsQualite;
 
@@ -1418,7 +1455,7 @@ function calcScore(T,tgt,pathos,entries){
     { label:'Qualité alimentaire', pts:Math.round(ptsQualite), max:45,
       val: ultraCount+' aliment'+(ultraCount>1?'s':'')+' ultra-transformé'+(ultraCount>1?'s':'')+' aujourd\'hui',
       ok: ultraCount===0,
-      conseil: ultraCount>0 ? 'Chips, frites, glaces, plats industriels... chaque aliment ultra-transformé coûte 7 pts. Privilégiez les aliments bruts.' : null },
+      conseil: ultraCount>0 ? 'Chips, frites, glaces, plats industriels... les aliments ultra-transformés pèsent sur ce score, surtout en grande quantité. Privilégiez les aliments bruts.' : null },
     { label:'Fibres', pts:Math.round(ptsFibres), max:20,
       val:Math.round(T.fibres)+'g / '+(tgt.fibres||27)+'g',
       ok: T.fibres>=(tgt.fibres||27)*0.85,
@@ -1496,8 +1533,8 @@ function openScoreDetail(){
     +'<div class="sd-shimmer"></div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;position:relative;z-index:1">'
     +'<div>'
-    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700">Score Santé : '+score+'/100</div>'
-    +'<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Vos apports du jour</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.1rem;font-weight:700">Vos valeurs nutritionnelles</div>'
+    +'<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Ce que vous avez mangé aujourd\'hui — Score Santé : '+score+'/100</div>'
     +'</div>'
     +'<button onclick="document.getElementById(\'score-detail-ov\').remove()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem">✕</button>'
     +'</div>'
@@ -1587,7 +1624,8 @@ function calcNutritionalQuality(entries, tgt){
       alcoholKcal += e.kcal||0;
   });
 
-  var ultraCount = countUltraProcessed(entries);
+  var ultraList = getUltraProcessedList(entries);
+  var ultraCount = ultraList.length;
 
   if(T.kcal<100) return null;
 
@@ -1643,7 +1681,10 @@ function calcNutritionalQuality(entries, tgt){
   // une journée réellement sans aliment ultra-transformé.
   score += ultraCount===0 ? 5 : 0;
   var penUltraQ = ultraCount*4;
-  if(ultraCount>0) tips.push({priority:5, msg:ultraCount+' aliment'+(ultraCount>1?'s':'')+' ultra-transformé'+(ultraCount>1?'s':'')+' détecté'+(ultraCount>1?'s':'')+' — privilégiez les aliments bruts ou peu transformés.'});
+  if(ultraCount>0){
+    var ultraNoms = ultraList.map(function(e){ return e.aliment; }).join(', ');
+    tips.push({priority:5, msg:ultraCount+' aliment'+(ultraCount>1?'s':'')+' ultra-transformé'+(ultraCount>1?'s':'')+' détecté'+(ultraCount>1?'s':'')+' : '+ultraNoms+' — privilégiez les aliments bruts ou peu transformés.'});
+  }
 
   // 10. Alcool — malus si présent (pas de pts, juste pénalité)
   if(alcoholKcal>0){
@@ -2259,7 +2300,7 @@ async function refreshDash(){
         '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
         +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
         +niveau.lbl+'</div>'
-        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir le détail →</div>';
+        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir vos valeurs nutritionnelles →</div>';
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
@@ -2403,10 +2444,92 @@ async function refreshJournal(){
   var entries=await getEntries();
   var mine=entries.filter(function(e){return e.repas===activeMeal;});
   var az=document.getElementById('added-zone');
-  if(!mine.length){az.innerHTML='<div class="empty"><p>Aucun aliment — recherchez ci-dessus</p></div>';return;}
-  az.innerHTML=mine.map(function(e){
+  if(!mine.length){az.innerHTML='<div class="empty"><p>Aucun aliment — recherchez ci-dessus</p></div>';}
+  else az.innerHTML=mine.map(function(e){
     return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQty(\''+e.id+'\',parseFloat(this.value),'+JSON.stringify(e).replace(/"/g,"'")+')" /><span style="font-size:.67rem;color:var(--text3)">g</span><span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span><button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
   }).join('');
+  loadRecentMeals();
+}
+
+// ── Repas récents / habituels ──
+// Dès qu'il existe ne serait-ce que 2 jours d'historique pour ce repas, on
+// propose de le "réutiliser" en un tap plutôt que de tout ressaisir — pas
+// besoin d'attendre des semaines pour qu'un repas répété soit reconnu comme
+// une habitude. Les repas identiques sur plusieurs jours remontent en premier.
+var recentMealGroups = [];
+async function loadRecentMeals(){
+  var zone = document.getElementById('recent-meals-zone');
+  if(!zone) return;
+  var since = new Date(); since.setDate(since.getDate()-13); since.setHours(0,0,0,0);
+  var r = await sb.from('journal').select('*')
+    .eq('user_id', USER.id).eq('repas', activeMeal)
+    .gte('date', since.toISOString().slice(0,10))
+    .neq('date', today());
+
+  var entries = r.data || [];
+  if(!entries.length){ zone.innerHTML=''; recentMealGroups=[]; return; }
+
+  var byDate = {};
+  entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+  var dates = Object.keys(byDate).sort().reverse();
+
+  // Repère les jours partageant EXACTEMENT le même ensemble d'aliments
+  // (même nom + quantité arrondie) — un vrai repas répété, pas juste
+  // "il a mangé du riz deux fois cette semaine parmi autre chose".
+  function signature(dayEntries){
+    return dayEntries.map(function(e){ return e.aliment+'|'+Math.round(e.quantite); }).sort().join('||');
+  }
+  var groups = {};
+  dates.forEach(function(d){
+    var sig = signature(byDate[d]);
+    if(!groups[sig]) groups[sig] = { entries: byDate[d], dates: [] };
+    groups[sig].dates.push(d);
+  });
+
+  recentMealGroups = Object.keys(groups).map(function(k){ return groups[k]; }).sort(function(a,b){
+    if(b.dates.length !== a.dates.length) return b.dates.length - a.dates.length;
+    return b.dates[0] < a.dates[0] ? 1 : -1;
+  }).slice(0, 6);
+
+  if(!recentMealGroups.length){ zone.innerHTML=''; return; }
+
+  zone.innerHTML = '<div class="stitle" style="margin-top:2px">Vos repas récents</div>'
+    + '<div class="recent-meals-strip">'
+    + recentMealGroups.map(function(g,idx){
+        var totalKcal = g.entries.reduce(function(s,e){ return s+(e.kcal||0); },0);
+        var foodNames = g.entries.map(function(e){ return e.aliment; }).join(', ');
+        var lastDate = new Date(g.dates[0]+'T00:00:00');
+        var dateLbl = lastDate.getDate()+'/'+(lastDate.getMonth()+1);
+        return '<div class="recent-meal-card">'
+          + '<div class="recent-meal-date"><span>'+(g.dates.length>1?'Habituel':'Récent')+'</span>'
+          + (g.dates.length>1 ? '<span class="recent-meal-freq">'+g.dates.length+'x cette période</span>' : '<span>'+dateLbl+'</span>')
+          + '</div>'
+          + '<div class="recent-meal-foods">'+esc(foodNames.length>62?foodNames.slice(0,62)+'…':foodNames)+'</div>'
+          + '<div class="recent-meal-kcal">'+Math.round(totalKcal)+' kcal</div>'
+          + '<button class="recent-meal-add" onclick="repeatRecentMeal('+idx+')">+ Ajouter à nouveau</button>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+async function repeatRecentMeal(idx){
+  var g = recentMealGroups[idx];
+  if(!g) return;
+  var todayStr = today();
+  var inserts = g.entries.map(function(e){
+    var copy = Object.assign({}, e);
+    delete copy.id;
+    delete copy.created_at;
+    copy.user_id = USER.id;
+    copy.date = todayStr;
+    copy.repas = activeMeal;
+    return copy;
+  });
+  var r = await sb.from('journal').insert(inserts);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Repas ajouté à nouveau');
+  refreshJournal();
+  refreshDash();
 }
 
 // ── SEARCH (Ciqual inline minimal + OFF) ──
@@ -2909,6 +3032,11 @@ function findFoodByName(nom){
 function goToPhotoIA(){
   var meal = activeMeal || 'lunch';
   window.location.href = 'photo-ia.html?meal='+encodeURIComponent(meal);
+}
+function goToVoiceLog(){
+  if(!PROF || PROF.role!=='admin'){ toast('🔒 Fonctionnalité en test, réservée pour l\'instant'); return; }
+  var meal = activeMeal || 'lunch';
+  window.location.href = 'photo-ia.html?meal='+encodeURIComponent(meal)+'&mode=voice';
 }
 function openPhotoScannerFromNav(){
   window.location.href = 'photo-ia.html';
