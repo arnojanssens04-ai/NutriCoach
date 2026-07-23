@@ -823,6 +823,53 @@ function hasMeaningfulMatch(qt, dnormRaw){
   });
 }
 
+// Garde-fou principal : un candidat n'est retenu QUE si (1) tous les mots
+// significatifs de la requête y sont présents, ET (2) le candidat ne
+// contient pas plus de 2 mots significatifs "en trop", sans lien avec la
+// requête. Sans ça, une requête courte et générique comme "huile" matche
+// aussi bien "Huile d'olive" que "Sardine, à l'huile, appertisée" — les deux
+// ne contiennent qu'un seul mot en commun, donc un score équivalent, et le
+// résultat devient arbitraire. Ce filtre élimine purement et simplement les
+// candidats trop "chargés" en mots étrangers à la requête plutôt que
+// d'espérer qu'un système de points les départage correctement après coup.
+function meaningfulTokens(qt){
+  return qt.filter(function(w){ return w.length>=2 && GENERIC_WORDS.indexOf(w)<0; });
+}
+function tokenMatches(a, b){ return a===b || a.startsWith(b) || b.startsWith(a); }
+function allMeaningfulPresent(meaningfulQt, dTok){
+  if(!meaningfulQt.length) return false;
+  return meaningfulQt.every(function(q){ return dTok.some(function(d){ return tokenMatches(d,q); }); });
+}
+function extraTokenCount(meaningfulQt, dTok){
+  return dTok.filter(function(d){
+    return d.length>=2 && GENERIC_WORDS.indexOf(d)<0 && !meaningfulQt.some(function(q){ return tokenMatches(d,q); });
+  }).length;
+}
+var MAX_EXTRA_TOKENS = 2; // tolère 1-2 mots en plus (ex: "vierge", "extra"), pas un plat entier différent
+
+function bestStrictMatch(queryTok){
+  var meaningfulQt = meaningfulTokens(queryTok);
+  if(!meaningfulQt.length) return null;
+
+  var candidates = [];
+  DB.forEach(function(d){
+    var dTok = tok(d.nom);
+    if(allMeaningfulPresent(meaningfulQt, dTok) && extraTokenCount(meaningfulQt, dTok) <= MAX_EXTRA_TOKENS){
+      candidates.push(d);
+    }
+  });
+  if(!candidates.length) return null;
+
+  var best = null, bestScore = -1;
+  candidates.forEach(function(d){
+    var s = scoreFn(queryTok, tok(d.nom), d.nom);
+    if(s > bestScore || (s === bestScore && best && tok(d.nom).length < tok(best.nom).length)){
+      bestScore = s; best = d;
+    }
+  });
+  return best;
+}
+
 function scoreFn(qt, dt, dnom){
   var s = 0;
   var dnorm = dnom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -858,38 +905,18 @@ function findFood(nom){
   // 1. Alias direct — cas connus où l'IA retourne un nom qui diffère de Ciqual
   var aliasKey = FOOD_ALIASES[nomNorm];
   if(aliasKey){
-    var aliasTokens = tok(aliasKey);
-    var aliasResult = null, aliasScore = 0;
-    DB.forEach(function(d){
-      var dTok = tok(d.nom);
-      var s = scoreFn(aliasTokens, dTok, d.nom);
-      // Égalité de score : on préfère le nom le plus concis (le moins de mots
-      // "en trop" par rapport à la requête) plutôt que le premier trouvé —
-      // évite de retomber arbitrairement sur une variante peu pertinente
-      // (ex: "préemballée aux oignons" au lieu de "pour pizza").
-      if(s > aliasScore || (s === aliasScore && aliasResult && dTok.length < tok(aliasResult.nom).length)){
-        aliasScore = s; aliasResult = d;
-      }
-    });
-    if(aliasResult && aliasScore >= 3 && hasMeaningfulMatch(aliasTokens, aliasResult.nom)) return aliasResult;
+    var aliasResult = bestStrictMatch(tok(aliasKey));
+    if(aliasResult) return aliasResult;
   }
 
-  // 2. Recherche normale sur le nom original
-  var qt = tok(nom);
-  var best = null, bestScore = 0;
-  DB.forEach(function(d){
-    var dTok = tok(d.nom);
-    var s = scoreFn(qt, dTok, d.nom);
-    if(s > bestScore || (s === bestScore && best && dTok.length < tok(best.nom).length)){
-      bestScore = s; best = d;
-    }
-  });
-
-  // Seuil bas (3) car l'IA retourne des noms variés, MAIS on exige en plus
-  // qu'un mot significatif (pas juste "cuit" ou "de") corresponde vraiment —
-  // sinon mieux vaut ne rien trouver que de renvoyer un aliment sans rapport.
-  if(best && !hasMeaningfulMatch(qt, best.nom)) best = null;
-  return (best && bestScore >= 3) ? best : null;
+  // 2. Recherche normale, avec le même garde-fou strict — si rien ne passe
+  // le filtre (aucun aliment Ciqual suffisamment précis ne correspond), on
+  // renvoie null plutôt qu'un résultat approximatif : le reste du programme
+  // se charge alors de faire estimer et créer l'aliment par l'IA elle-même
+  // (voir createCustomFoodFromAI), qui sert aussi de vérification anti-doublon
+  // puisque les aliments personnalisés déjà créés font partie de cette même
+  // recherche — un futur "huile" retrouvera directement celui déjà créé.
+  return bestStrictMatch(tok(nom));
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
