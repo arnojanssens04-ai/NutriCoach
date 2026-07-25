@@ -110,7 +110,25 @@ body {
   margin-bottom: 14px;
   display: flex; align-items: center; gap: 22px;
   box-shadow: var(--sh);
+  position: relative;
 }
+.card-chevron { position:absolute; top:18px; right:16px; width:16px; height:16px; color:var(--text3); }
+
+.accomp-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--sh);
+  position: relative;
+}
+.accomp-ico { font-size: 1.5rem; flex-shrink: 0; }
+.accomp-body { flex: 1; min-width: 0; }
+.accomp-ttl { font-family:'Lora',serif; font-weight: 700; font-size: .92rem; color: var(--text); margin-bottom: 2px; }
+.accomp-sub { font-size: .78rem; color: var(--text2); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.accomp-card.is-message { border-color: rgba(45,79,28,0.3); background: var(--sage-l); }
 
 /* ── Détail du score (chiffres bruts, sans couleur de jugement) ── */
 .sd-sheet { background:var(--card); border-radius:20px 20px 0 0; padding:22px 20px 32px; width:100%; max-width:480px; max-height:88vh; overflow-y:auto; overflow-x:hidden; box-shadow:0 -8px 40px rgba(0,0,0,.2); position:relative; }
@@ -126,6 +144,10 @@ body {
 .sd-val .sd-target { font-size:.82rem; font-weight:500; color:var(--text3); font-family:'Inter',sans-serif; }
 .sd-track { height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-top:6px; }
 .sd-fill { height:100%; background:var(--gold); border-radius:999px; width:0; transition:width 1s cubic-bezier(.4,0,.2,1) .1s; }
+.add-sheet-opt { width:100%; display:flex; align-items:center; gap:14px; padding:14px 12px; background:var(--card2); border:1px solid var(--border2); border-radius:14px; cursor:pointer; text-align:left; margin-bottom:10px; }
+.add-sheet-opt svg { width:24px; height:24px; flex-shrink:0; color:var(--gold); }
+.add-sheet-opt-ttl { font-size:.92rem; font-weight:700; color:var(--text); }
+.add-sheet-opt-sub { font-size:.76rem; color:var(--text2); margin-top:1px; }
 .ring-wrap { flex-shrink: 0; position: relative; width: 96px; height: 96px; }
 .ring-wrap svg { width: 96px; height: 96px; transform: rotate(-90deg); }
 .ring-bg   { fill: none; stroke: rgba(0,0,0,.07); stroke-width: 8; }
@@ -157,7 +179,8 @@ body {
 
 /* ── MOTIV ROW ── */
 .motiv-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-.motiv-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:var(--sh); }
+.motiv-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; box-shadow:var(--sh); position:relative; }
+.motiv-ico-svg { width:22px; height:22px; margin-bottom:5px; color:var(--gold); }
 .motiv-ico { font-size:1.3rem; margin-bottom:4px; }
 .motiv-val { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; color:var(--gold); line-height:1; }
 .motiv-lbl { font-size:.66rem; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
@@ -171,6 +194,16 @@ body {
 .extra-score-bar { height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-bottom:7px; }
 .extra-score-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .5s ease; }
 .extra-score-tip { font-size:.78rem; color:var(--text2); line-height:1.5; }
+
+.qn-compact-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh); }
+.qn-compact-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; }
+.qn-compact-status { font-size:.72rem; font-weight:600; color:var(--text2); }
+.qn-mini-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px; }
+.qn-mini-item { display:flex; flex-direction:column; align-items:center; gap:5px; font-size:.62rem; color:var(--text2); text-align:center; line-height:1.25; }
+.qn-mini-dot { width:9px; height:9px; border-radius:50%; background:var(--border2); }
+.qn-mini-item.ok .qn-mini-dot { background:var(--sage); }
+.qn-mini-item.warn .qn-mini-dot { background:var(--amber); }
+.qn-mini-item.ok { color:var(--sage); }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 .photo-meal-btn { padding:9px 6px; border-radius:9px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:#fff; font-size:.8rem; cursor:pointer; transition:all .15s; }
 .photo-meal-btn.selected { background:var(--gold); border-color:var(--gold); font-weight:700; }
@@ -211,8 +244,9 @@ body {
 .kcal-obj span { color:var(--text); font-weight:600; }
 .kcal-rest { font-family:'Lora',serif; font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:10px; }
 .kcal-rest-lbl { font-size:.7rem; color:var(--text2); }
+.kcal-done-badge { display:inline-flex; align-items:center; gap:5px; font-size:.82rem; font-weight:700; color:var(--sage); background:var(--sage-l); padding:5px 12px; border-radius:999px; margin-bottom:10px; }
 .prog-track { height:5px; background:rgba(0,0,0,.07); border-radius:99px; overflow:hidden; }
-.prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1); }
+.prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1), background .4s ease; }
 
 /* ── MACROS ── */
 .macros-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
@@ -586,6 +620,20 @@ body {
     </div>
   </div>
 
+  <!-- VOTRE ACCOMPAGNEMENT — rend tangible la présence humaine promise sur
+       la vitrine. Priorité à un message récent non lu du diététicien ; à
+       défaut, le statut du bilan hebdomadaire. -->
+  <a href="chat.html" id="accomp-link" style="text-decoration:none;color:inherit;display:none">
+    <div class="accomp-card" id="accomp-card">
+      <span class="accomp-ico" id="accomp-ico">💬</span>
+      <div class="accomp-body">
+        <div class="accomp-ttl" id="accomp-ttl">Message de votre diététicien</div>
+        <div class="accomp-sub" id="accomp-sub">—</div>
+      </div>
+      <svg class="card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </a>
+
   <!-- SCORE SANTÉ + description ensemble — cliquable partout -->
   <div class="score-hero" id="score-hero" onclick="openScoreDetail()" style="cursor:pointer" title="Voir vos valeurs nutritionnelles du jour">
     <div class="ring-wrap">
@@ -600,20 +648,20 @@ body {
     </div>
     <div class="score-info">
       <div class="score-ttl" id="score-ttl">Score Santé</div>
-      <div style="font-size:.66rem;color:var(--text3);margin-top:1px;margin-bottom:4px">Qualité alimentaire · fibres · protéines · glucides · lipides</div>
       <div class="score-desc" id="score-desc">Ajoutez vos repas pour calculer votre score personnalisé.</div>
       <div id="score-pill"></div>
     </div>
+    <svg class="card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
   </div>
 
   <div class="motiv-row" id="motiv-row" style="display:none">
     <div class="motiv-card">
-      <div class="motiv-ico">🔥</div>
+      <svg class="motiv-ico-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>
       <div class="motiv-val" id="streak-val">0</div>
       <div class="motiv-lbl" id="streak-lbl">jours de suite</div>
     </div>
-    <div class="motiv-card">
-      <div class="motiv-ico" id="path-ico">📉</div>
+    <div class="motiv-card" id="weight-motiv-card" onclick="goPage('profile')" style="cursor:pointer" title="Voir l'évolution du poids">
+      <svg class="motiv-ico-svg" id="path-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
       <div class="motiv-val" id="path-val">—</div>
       <div class="motiv-lbl">depuis le début</div>
     </div>
@@ -626,15 +674,17 @@ body {
 
   <!-- Qualité nutritionnelle + Répartition journée -->
   <div id="extra-scores-row" style="display:none;flex-direction:column;gap:10px;margin-bottom:14px">
-    <div class="extra-score-card">
-      <div class="extra-score-hdr">
-        <div>
-          <span class="extra-score-ttl">Qualité nutritionnelle</span>
-          <div style="font-size:.68rem;color:var(--text3);margin-top:1px">Diversité · fibres · légumes · ultra-transformés</div>
-        </div>
-        <span class="extra-score-num" id="qn-num">—</span>
+    <div class="qn-compact-card">
+      <div class="qn-compact-hdr">
+        <span class="extra-score-ttl">Qualité nutritionnelle</span>
+        <span class="qn-compact-status" id="qn-status">—</span>
       </div>
-      <div class="extra-score-bar"><div class="extra-score-fill" id="qn-bar" style="width:0%"></div></div>
+      <div class="qn-mini-row" id="qn-mini-row">
+        <div class="qn-mini-item" id="qn-mini-diversite"><span class="qn-mini-dot"></span>Diversité</div>
+        <div class="qn-mini-item" id="qn-mini-fibres"><span class="qn-mini-dot"></span>Fibres</div>
+        <div class="qn-mini-item" id="qn-mini-legumes"><span class="qn-mini-dot"></span>Légumes</div>
+        <div class="qn-mini-item" id="qn-mini-ultra"><span class="qn-mini-dot"></span>Peu transformé</div>
+      </div>
       <div class="extra-score-tip" id="qn-tip">Commencez à remplir votre journal pour voir votre score.</div>
     </div>
     <div class="extra-score-card">
@@ -837,13 +887,9 @@ body {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2a7 7 0 0 1 7 7c0 3.5-2.5 6.4-6 7.4V20h-2v-3.6C7.5 15.4 5 12.5 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
     Recettes
   </a>
-  <button class="bnav-btn" id="nav-scan" onclick="handleScanNav()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
-    Scan
-  </button>
-  <button class="bnav-btn" onclick="openPhotoScannerFromNav()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    Photo IA
+  <button class="bnav-btn" id="nav-add" onclick="openAddSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 9h6M9 13h6"/><circle cx="17" cy="16" r="4" fill="var(--bg)" stroke-width="1.4"/><path d="M17 14.5v3M15.5 16h3"/></svg>
+    Ajouter
   </button>
   <a class="bnav-btn" href="chat.html" id="nav-coach">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -855,6 +901,26 @@ body {
     <span id="annonces-badge" style="display:none;position:absolute;top:-2px;right:10px;font-size:.62rem;background:var(--rose);color:#fff;min-width:16px;height:16px;padding:0 4px;border-radius:999px;line-height:16px;font-weight:700;text-align:center">+0</span>
   </a>
 </nav>
+
+<!-- Feuille "Ajouter" — fusionne Scan et Photo IA, deux points d'entrée
+     quasi identiques (ajouter un aliment) qui n'avaient pas besoin de deux
+     onglets séparés dans la navigation. -->
+<div id="add-sheet-ov" style="display:none;position:fixed;inset:0;background:rgba(22,36,27,0.5);z-index:250;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddSheet()">
+  <div class="sd-sheet" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700">Ajouter un aliment</div>
+      <button onclick="closeAddSheet()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <button class="add-sheet-opt" onclick="closeAddSheet();handleScanNav()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="8" x2="11" y2="16"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg>
+      <div><div class="add-sheet-opt-ttl">Scanner un code-barres</div><div class="add-sheet-opt-sub">Pour un produit emballé, avec étiquette</div></div>
+    </button>
+    <button class="add-sheet-opt" onclick="closeAddSheet();openPhotoScannerFromNav()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div><div class="add-sheet-opt-ttl">Photo IA</div><div class="add-sheet-opt-sub">Pour un plat préparé, une assiette</div></div>
+    </button>
+  </div>
+</div>
 
 <!-- SETUP OVERLAY -->
 <div class="ov" id="ov">
@@ -1779,7 +1845,12 @@ function calcNutritionalQuality(entries, tgt){
   var tipHtml = tip;
   if(secondary) tipHtml += ' · <em style="opacity:.7">' + secondary.msg + '</em>';
 
-  return {score:Math.min(100,score), tip:tip, tipHtml:tipHtml};
+  return {score:Math.min(100,score), tip:tip, tipHtml:tipHtml, criteria:{
+    diversite: groupCount>=4,
+    fibres: fibreRatio>=0.8,
+    legumes: vegRatio>=0.75,
+    ultraTransformes: ultraCount===0
+  }};
 }
 
 // ── RÉPARTITION DE LA JOURNÉE (0-100) ─────────────────────────────────────
@@ -2225,6 +2296,55 @@ async function checkUnreadMessages(){
   }
 }
 
+// Widget "Votre accompagnement" — rend tangible la présence humaine promise
+// sur la vitrine. Priorité à un message récent non lu du diététicien
+// (contenu réel, pas juste "vous avez un message") ; à défaut, reprend le
+// statut du bilan hebdomadaire déjà calculé juste avant cet appel.
+async function renderAccompagnementWidget(p, todayName){
+  var link = document.getElementById('accomp-link');
+  var card = document.getElementById('accomp-card');
+  if(!link || !card) return;
+
+  var msgRes = await sb.from('messages')
+    .select('content, created_at')
+    .eq('user_id', USER.id)
+    .eq('is_admin_sender', true)
+    .eq('read_by_user', false)
+    .order('created_at', {ascending:false})
+    .limit(1);
+
+  var latestMsg = (msgRes.data && msgRes.data[0]) || null;
+
+  if(latestMsg){
+    link.setAttribute('href','chat.html');
+    link.style.display='block';
+    card.classList.add('is-message');
+    document.getElementById('accomp-ico').textContent = '💬';
+    document.getElementById('accomp-ttl').textContent = 'Nouveau message de votre diététicien';
+    var snippet = (latestMsg.content||'').replace(/\n+/g,' ').trim();
+    if(snippet.length>72) snippet = snippet.slice(0,72)+'…';
+    document.getElementById('accomp-sub').textContent = snippet;
+    return;
+  }
+
+  // Repli : statut du bilan hebdomadaire (même logique que bilan-card,
+  // reformulée ici pour donner une vraie place à l'accompagnement en tête
+  // de page plutôt qu'enfouie plus bas dans "Mes repas").
+  card.classList.remove('is-message');
+  link.setAttribute('href','bilan.html');
+  link.style.display='block';
+  document.getElementById('accomp-ico').textContent = '📊';
+  var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
+  if(isBilanDay){
+    document.getElementById('accomp-ttl').textContent = "C'est votre jour de bilan !";
+    document.getElementById('accomp-sub').textContent = 'Faites le point sur votre semaine avec votre diététicien';
+  } else {
+    var jourLbl2 = p.jour_bilan ? p.jour_bilan.charAt(0).toUpperCase()+p.jour_bilan.slice(1) : 'dimanche';
+    document.getElementById('accomp-ttl').textContent = 'Prochain bilan';
+    document.getElementById('accomp-sub').textContent = 'Disponible '+jourLbl2+' avec votre diététicien';
+  }
+}
+
 async function renderMotivationCards(){
   var p = PROF||{};
   var row = document.getElementById('motiv-row');
@@ -2239,12 +2359,19 @@ async function renderMotivationCards(){
     var diff = Math.round((p.poids - p.poids_initial)*10)/10;
     var pathEl = document.getElementById('path-val');
     var iconEl = document.getElementById('path-ico');
+    var goesRightWay = p.objectif==='perte' ? diff<-0.1 : p.objectif==='prise' ? diff>0.1 : Math.abs(diff)<1;
+    var color = Math.abs(diff)<0.1 ? 'var(--text2)' : (goesRightWay ? 'var(--sage)' : 'var(--text)');
+    pathEl.style.color = color;
+    iconEl.style.color = color;
     if(Math.abs(diff) < 0.1){
-      pathEl.textContent = '0 kg'; iconEl.textContent = '⚖️';
+      pathEl.textContent = '0 kg';
+      iconEl.innerHTML = '<line x1="4" y1="12" x2="20" y2="12"/>';
     } else if(diff < 0){
-      pathEl.textContent = diff.toFixed(1)+' kg'; iconEl.textContent = '📉';
+      pathEl.textContent = diff.toFixed(1)+' kg';
+      iconEl.innerHTML = '<polyline points="3 7 9 13 13 9 21 17"/><polyline points="21 10 21 17 14 17"/>';
     } else {
-      pathEl.textContent = '+'+diff.toFixed(1)+' kg'; iconEl.textContent = '📈';
+      pathEl.textContent = '+'+diff.toFixed(1)+' kg';
+      iconEl.innerHTML = '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>';
     }
   } else {
     document.getElementById('path-val').textContent = '—';
@@ -2287,6 +2414,8 @@ async function refreshDash(){
     }
   }
 
+  renderAccompagnementWidget(p, todayName);
+
   var entries=await getEntries();
   var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,o3a:0,o3e:0,o3d:0,fer:0,cal:0,pot:0,na:0,fibres:0};
   entries.forEach(function(e){
@@ -2302,9 +2431,17 @@ async function refreshDash(){
   var kcalRound=Math.round(T.kcal);
   document.getElementById('d-kcal').textContent=kcalRound;
   document.getElementById('d-target').textContent=tgt.kcal;
-  document.getElementById('d-reste').textContent=Math.max(0,tgt.kcal-kcalRound);
+  var ecartKcal = tgt.kcal-kcalRound;
+  var restEl = document.getElementById('d-reste');
+  if(kcalRound>0 && Math.abs(ecartKcal) <= Math.max(50, tgt.kcal*0.02)){
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
+  } else {
+    restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,ecartKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
+  }
   var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
-  document.getElementById('prog-kcal').style.width=pct+'%';
+  var progFill = document.getElementById('prog-kcal');
+  progFill.style.width=pct+'%';
+  progFill.style.background = pct>=98 ? 'var(--sage)' : pct>=80 ? 'var(--amber)' : 'var(--gold)';
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
@@ -2371,10 +2508,8 @@ async function refreshDash(){
         :score>=30?'Plusieurs nutriments sont à revoir aujourd\'hui.'
         :'Votre équilibre nutritionnel du jour est insuffisant.';
       document.getElementById('score-pill').innerHTML=
-        '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;margin-top:4px">'
-        +'<span style="font-size:1rem">'+(score>=85?'⭐':score>=70?'✅':score>=50?'🟡':score>=30?'🟠':'🔴')+'</span>'
-        +niveau.lbl+'</div>'
-        +'<div style="font-size:.7rem;color:var(--text3);margin-top:5px">Touchez pour voir vos valeurs nutritionnelles →</div>';
+        '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;margin-top:4px">'
+        +niveau.lbl+'</div>';
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
@@ -2407,11 +2542,13 @@ async function refreshDash(){
   if(qnRes || rjRes){
     extraRow.style.display='flex';
     if(qnRes){
-      document.getElementById('qn-num').textContent = qnRes.score+'/100';
-      var qnColor = qnRes.score>=70?'var(--sage)':qnRes.score>=45?'var(--amber)':'var(--rose)';
-      document.getElementById('qn-bar').style.width = qnRes.score+'%';
-      document.getElementById('qn-bar').style.background = qnColor;
-      document.getElementById('qn-num').style.color = qnColor;
+      var qnOkCount = Object.values(qnRes.criteria).filter(Boolean).length;
+      document.getElementById('qn-status').textContent = qnOkCount+'/4 critères respectés';
+      var qnMiniMap = {diversite:'qn-mini-diversite', fibres:'qn-mini-fibres', legumes:'qn-mini-legumes', ultraTransformes:'qn-mini-ultra'};
+      Object.keys(qnMiniMap).forEach(function(key){
+        var el = document.getElementById(qnMiniMap[key]);
+        if(el) el.className = 'qn-mini-item ' + (qnRes.criteria[key] ? 'ok' : 'warn');
+      });
       document.getElementById('qn-tip').innerHTML = qnRes.tipHtml || qnRes.tip;
     }
     if(rjRes){
@@ -3154,6 +3291,13 @@ function goToVoiceLog(){
 }
 function openPhotoScannerFromNav(){
   window.location.href = 'photo-ia.html';
+}
+
+function openAddSheet(){
+  document.getElementById('add-sheet-ov').style.display='flex';
+}
+function closeAddSheet(){
+  document.getElementById('add-sheet-ov').style.display='none';
 }
 
 function handleScanNav(){
