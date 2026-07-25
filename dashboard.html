@@ -553,6 +553,11 @@ body {
 .mp-tot-row { display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:4px; }
 .mp-tot-row span:first-child { color:var(--text2); }
 .mp-tot-row span:last-child { font-weight:600; color:var(--text); }
+
+.day-validated-banner { background:var(--sage-l); border:1px solid rgba(74,122,58,0.3); border-radius:var(--r); padding:16px 18px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start; }
+.day-validated-ico { flex-shrink:0; width:32px; height:32px; border-radius:50%; background:var(--sage); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; }
+.day-validated-ttl { font-family:'Lora',serif; font-weight:700; font-size:.96rem; color:var(--sage); margin-bottom:3px; }
+.day-validated-txt { font-size:.83rem; color:var(--text2); line-height:1.55; }
 .mp-bar { height:5px; background:rgba(255,255,255,.06); border-radius:99px; margin-bottom:12px; overflow:hidden; }
 .mp-bar-fill { height:100%; border-radius:99px; transition:width .5s ease; }
 .subst-opt { padding:11px 13px; background:var(--card); border:1px solid var(--border); border-radius:10px; cursor:pointer; margin-bottom:7px; transition:all .15s; }
@@ -748,6 +753,7 @@ body {
   </div>
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div id="mealplan-diabetes-note" style="display:none;background:var(--sage-l);border:1px solid rgba(74,122,58,0.25);border-radius:11px;padding:12px 15px;margin-bottom:16px;font-size:.83rem;color:var(--sage);line-height:1.55"></div>
+  <div id="mp-day-validated" style="display:none"></div>
   <div class="card mb-12">
     <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journée</span></div>
     <div class="card-body" id="mp-totals"></div>
@@ -1920,8 +1926,9 @@ function genAlerts(T,tgt,pathos,entries){
   if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
   else if(excess>100)al.push({t:'warn',i:'⚠️',ttl:'Quota dépassé',txt:'Vous avez largement dépassé votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — si vous voulez atteindre vos objectifs, chaque journée compte.'});
   else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
-  else if(r>0.95)al.push({t:'good',i:'✓',ttl:'Calories dans l\'objectif',txt:Math.round(T.kcal)+' kcal — vous êtes dans votre objectif.'});
-  else if(r>0.85)al.push({t:'good',i:'🔜',ttl:'Vous vous approchez de l\'objectif',txt:Math.round(T.kcal)+' / '+tgt.kcal+' kcal — encore un peu de marge si un repas reste à venir.'});
+  // Volontairement rien d'autre ici : le principe retenu est de n'indiquer
+  // une alerte calorique QUE lors d'un dépassement, jamais pour signaler
+  // "vous êtes dans l'objectif" ou "vous vous en approchez".
   // Alcool — seuil santé publique (au-delà de 2-3 verres en une occasion,
   // le risque augmente nettement) : message factuel, sans lien avec le score.
   var alcoholUnitsToday = countAlcoholUnits(entries);
@@ -2327,22 +2334,21 @@ async function renderAccompagnementWidget(p, todayName){
     return;
   }
 
-  // Repli : statut du bilan hebdomadaire (même logique que bilan-card,
-  // reformulée ici pour donner une vraie place à l'accompagnement en tête
-  // de page plutôt qu'enfouie plus bas dans "Mes repas").
+  // Repli : statut du bilan hebdomadaire — mais UNIQUEMENT le jour même du
+  // bilan. Les autres jours, le widget reste caché plutôt que d'afficher
+  // "prochain bilan" en permanence, ce qui devenait redondant avec la carte
+  // "Bilan hebdomadaire" plus bas dans "Mes repas".
+  var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
+  if(!isBilanDay){
+    link.style.display='none';
+    return;
+  }
   card.classList.remove('is-message');
   link.setAttribute('href','bilan.html');
   link.style.display='block';
   document.getElementById('accomp-ico').textContent = '📊';
-  var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
-  if(isBilanDay){
-    document.getElementById('accomp-ttl').textContent = "C'est votre jour de bilan !";
-    document.getElementById('accomp-sub').textContent = 'Faites le point sur votre semaine avec votre diététicien';
-  } else {
-    var jourLbl2 = p.jour_bilan ? p.jour_bilan.charAt(0).toUpperCase()+p.jour_bilan.slice(1) : 'dimanche';
-    document.getElementById('accomp-ttl').textContent = 'Prochain bilan';
-    document.getElementById('accomp-sub').textContent = 'Disponible '+jourLbl2+' avec votre diététicien';
-  }
+  document.getElementById('accomp-ttl').textContent = "C'est votre jour de bilan !";
+  document.getElementById('accomp-sub').textContent = 'Faites le point sur votre semaine avec votre diététicien';
 }
 
 async function renderMotivationCards(){
@@ -2433,7 +2439,7 @@ async function refreshDash(){
   document.getElementById('d-target').textContent=tgt.kcal;
   var ecartKcal = tgt.kcal-kcalRound;
   var restEl = document.getElementById('d-reste');
-  if(kcalRound>0 && Math.abs(ecartKcal) <= Math.max(50, tgt.kcal*0.02)){
+  if(kcalRound>0 && ecartKcal <= 0){
     restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
   } else {
     restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,ecartKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
@@ -4577,6 +4583,29 @@ function renderMealPlan(){
         +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.gluc,tgt.gluc)+'%;background:var(--sage)"></div></div>'
         +'<div class="mp-tot-row"><span>Lipides</span><span>'+T.lip.toFixed(0)+' / '+tgt.lip+' g</span></div>'
         +'<div class="mp-bar"><div class="mp-bar-fill" style="width:'+pct(T.lip,tgt.lip)+'%;background:var(--gold)"></div></div>';
+
+      // Journée validée — dès que le budget calorique du jour est atteint ET
+      // que tous les repas ont de vraies données, la page bascule dans un
+      // état "acté" plutôt que de simplement s'arrêter net sur des chiffres.
+      // Le message reste construit à partir des vraies données du jour, pas
+      // une formule figée identique pour tout le monde.
+      var dayBanner = document.getElementById('mp-day-validated');
+      if(T.kcal >= tgt.kcal){
+        var bannerBits = [];
+        if(T.prot >= tgt.prot*0.9) bannerBits.push('vos apports en protéines sont bien couverts');
+        if(T.fibres >= (tgt.fibres||27)*0.8) bannerBits.push('vos fibres sont dans une bonne fourchette');
+        var bannerDetail = bannerBits.length
+          ? ('Belle répartition sur vos '+activeMealIds().length+' repas aujourd\'hui — '+bannerBits.join(' et ')+'. ')
+          : ('Vos '+activeMealIds().length+' repas du jour sont enregistrés. ');
+        dayBanner.style.display = 'flex';
+        dayBanner.innerHTML = '<div class="day-validated-banner">'
+          +'<div class="day-validated-ico">✓</div>'
+          +'<div><div class="day-validated-ttl">Journée validée</div>'
+          +'<div class="day-validated-txt">'+bannerDetail+'Pensez à bien vous hydrater pour finir la journée en beauté.</div>'
+          +'</div></div>';
+      } else {
+        dayBanner.style.display = 'none';
+      }
     } else {
       // Pas encore TOUS les repas réels (générique pur ou hybride partiel) :
       // afficher "X / Y kcal" donnerait l'impression trompeuse d'un suivi
@@ -4589,6 +4618,7 @@ function renderMealPlan(){
         +'<div class="mp-tot-row"><span>Protéines</span><span>'+tgt.prot+' g</span></div>'
         +'<div class="mp-tot-row"><span>Glucides</span><span>'+tgt.gluc+' g</span></div>'
         +'<div class="mp-tot-row"><span>Lipides</span><span>'+tgt.lip+' g</span></div>';
+      document.getElementById('mp-day-validated').style.display = 'none';
     }
 
     // Micronutriments — uniquement affichés en mode analyse (données réelles disponibles)
