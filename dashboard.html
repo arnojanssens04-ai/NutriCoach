@@ -4983,6 +4983,22 @@ function goSt(n){
 }
 async function finSetup(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos,menophase:setup.menophase||null,menoths:setup.menoths||null};
+
+  // Limite le changement du JOUR de bilan à 1 fois toutes les 3 semaines —
+  // sans ça, on pourrait décaler le jour indéfiniment pour re-soumettre un
+  // bilan plus souvent que prévu et casser le rythme hebdomadaire voulu.
+  // Ne s'applique qu'à un vrai CHANGEMENT (pas au premier réglage initial).
+  if(PROF && PROF.jour_bilan && PROF.jour_bilan !== data.jour_bilan){
+    var lastChange = PROF.jour_bilan_changed_at ? new Date(PROF.jour_bilan_changed_at) : null;
+    var threeWeeksMs = 21*24*60*60*1000;
+    if(lastChange && (Date.now()-lastChange.getTime()) < threeWeeksMs){
+      var daysLeft = Math.ceil((threeWeeksMs-(Date.now()-lastChange.getTime()))/(24*60*60*1000));
+      toast('⏳ Le jour de bilan ne peut être changé qu\'une fois toutes les 3 semaines — encore '+daysLeft+' jour'+(daysLeft>1?'s':'')+' à patienter.');
+      return;
+    }
+    data.jour_bilan_changed_at = new Date().toISOString();
+  }
+
   data.kcal_target=calcTargets().kcal;
   // Capture le poids de départ UNE SEULE FOIS (jamais réécrasé par la suite)
   // — c'est la référence pour "chemin parcouru depuis le début".
@@ -5153,6 +5169,18 @@ function loadCustomFoods(){
 var _origFinSetup = window.finSetup;
 window.finSetup = async function(){
   var data={sexe:setup.sex,age:parseInt(document.getElementById('s-age').value)||30,taille:parseInt(document.getElementById('s-h').value)||170,poids:parseFloat(document.getElementById('s-w').value)||70,objectif:setup.objectif||'maintien',jour_bilan:document.getElementById('s-jourbilan').value,activite:setup.act,pathologies:setup.pathos,menophase:setup.menophase||null,menoths:setup.menoths||null};
+
+  if(PROF && PROF.jour_bilan && PROF.jour_bilan !== data.jour_bilan){
+    var lastChange = PROF.jour_bilan_changed_at ? new Date(PROF.jour_bilan_changed_at) : null;
+    var threeWeeksMs = 21*24*60*60*1000;
+    if(lastChange && (Date.now()-lastChange.getTime()) < threeWeeksMs){
+      var daysLeft = Math.ceil((threeWeeksMs-(Date.now()-lastChange.getTime()))/(24*60*60*1000));
+      toast('⏳ Le jour de bilan ne peut être changé qu\'une fois toutes les 3 semaines — encore '+daysLeft+' jour'+(daysLeft>1?'s':'')+' à patienter.');
+      return;
+    }
+    data.jour_bilan_changed_at = new Date().toISOString();
+  }
+
   data.kcal_target=calcTargets().kcal;
   if(!PROF || !PROF.poids_initial) data.poids_initial = data.poids;
   var result = await saveProf(data);
