@@ -550,6 +550,10 @@ body {
 .mp-recipe-link { font-size:.68rem; font-weight:600; color:var(--gold); background:var(--gold-l); border:1px solid var(--border2); border-radius:999px; padding:6px 11px; text-decoration:none; white-space:nowrap; transition:background .15s; }
 .mp-recipe-link:hover { background:var(--sage-l); color:var(--sage); }
 .mp-swap:hover { background:rgba(45,79,28,0.15); }
+.mp-mode-badge { font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+.mp-mode-badge.mode-suggestion { background:var(--gold-l); color:var(--gold); }
+.mp-mode-badge.mode-journal { background:var(--sage-l); color:var(--sage); }
+.mp-mode-badge.mode-mixte { background:var(--amber-l,rgba(122,92,30,0.1)); color:var(--amber); }
 .mp-tot-row { display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:4px; }
 .mp-tot-row span:first-child { color:var(--text2); }
 .mp-tot-row span:last-child { font-weight:600; color:var(--text); }
@@ -750,6 +754,7 @@ body {
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
     <button class="btn-back" style="flex:0 0 auto;padding:8px 12px" onclick="goPage('dashboard')">←</button>
     <h2 class="section-title" style="font-size:1.3rem;margin:0">Mon plan alimentaire</h2>
+    <span id="mealplan-mode-badge" class="mp-mode-badge"></span>
   </div>
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div id="mealplan-diabetes-note" style="display:none;background:var(--sage-l);border:1px solid rgba(74,122,58,0.25);border-radius:11px;padding:12px 15px;margin-bottom:16px;font-size:.83rem;color:var(--sage);line-height:1.55"></div>
@@ -1526,11 +1531,10 @@ function getLegumesGrams(entries){
 function calcScore(T,tgt,pathos,entries){
   if(T.kcal<100)return null;
 
-  // Les calories sont volontairement ABSENTES de ce score. Un objectif de
-  // 2200 ou 3100 kcal ne doit rien changer à la qualité réelle de
-  // l'alimentation — le suivi calorique existe ailleurs dans l'app (plan
-  // alimentaire, alertes), Score Santé se concentre uniquement sur CE que
-  // vous mangez, pas sur COMBIEN.
+  // Les calories ne comptent PAS positivement dans ce score (un objectif de
+  // 2200 ou 3100 kcal ne change rien à la qualité de l'alimentation) — mais
+  // un vrai dépassement est désormais pénalisé (voir penKcal plus bas),
+  // pour ne pas ignorer complètement les excès significatifs.
   //
   // Protéines/glucides/lipides : on ne pénalise plus le DÉPASSEMENT d'un
   // objectif, seulement le fait de ne pas l'atteindre — manger "trop" de
@@ -1577,7 +1581,15 @@ function calcScore(T,tgt,pathos,entries){
 
   var excesNa = Math.max(0,(T.na-6000)/1000);
   var penNa = excesNa*5;
-  var penaliteTotale = Math.min(penAGS+penNa, 20);
+
+  // Dépassement calorique — seule intervention des calories dans ce score
+  // (le reste du score reste volontairement indifférent au chiffre exact,
+  // seul un vrai dépassement est sanctionné) : -3 pts dès 50 kcal au-dessus
+  // de l'objectif, -6 pts dès 150 kcal au-dessus.
+  var kcalExcess = T.kcal - tgt.kcal;
+  var penKcal = kcalExcess>=150 ? 6 : (kcalExcess>=50 ? 3 : 0);
+
+  var penaliteTotale = Math.min(penAGS+penNa+penKcal, 20);
 
   // Alcool — à partir de 3 verres dans la même journée, pénalité volontairement
   // sévère et INDÉPENDANTE du plafond habituel (pas de "protection" à 20 pts
@@ -3598,7 +3610,7 @@ function askFrenchName(entry){
 // Les catégories plus spécifiques (ex: yaourt) sont placées avant les plus
 // génériques (ex: fromage) pour éviter les faux déclenchements.
 var PORTION_CATEGORIES = [
-  { id:'yaourt', keywords:['yaourt','yogourt','yoghourt','skyr','fromage blanc','fromage frais'],
+  { id:'yaourt', keywords:['yaourt','yogourt','yoghourt','skyr','fromage blanc','fromage frais','creme','creme dessert','creme fraiche'],
     options:[
       {label:'Petit pot', sub:'~100g', grams:100, icon:'🥛'},
       {label:'1 pot', sub:'~125g', grams:125, icon:'🥛'},
@@ -4423,6 +4435,21 @@ function renderMealPlan(){
         ? "Basé sur les aliments que vous avez réellement enregistrés aujourd'hui."
         : "Les repas déjà enregistrés restent inchangés (ce sont des faits) ; les repas suivants sont ajustés pour compenser et se rapprocher au maximum de vos objectifs du jour.");
 
+    // Badge de mode — indication visuelle rapide en plus de la phrase
+    // explicative, pour distinguer d'un coup d'œil "suggestions" vs
+    // "journal réel" sans avoir à lire le texte à chaque visite.
+    var modeBadge = document.getElementById('mealplan-mode-badge');
+    if(!hasAnyReal){
+      modeBadge.className = 'mp-mode-badge mode-suggestion';
+      modeBadge.textContent = '🔮 Suggestions';
+    } else if(allMealsCovered){
+      modeBadge.className = 'mp-mode-badge mode-journal';
+      modeBadge.textContent = '✓ Journal réel';
+    } else {
+      modeBadge.className = 'mp-mode-badge mode-mixte';
+      modeBadge.textContent = '⚡ Mixte';
+    }
+
     // Réassurance visible — le filtrage diabète existe déjà en coulisses,
     // mais le rendre explicite aide la personne à comprendre pourquoi
     // certaines suggestions reviennent souvent (ex: jamais de pain blanc).
@@ -4479,7 +4506,7 @@ function renderMealPlan(){
     var remainingKcal = Math.max(0, tgt.kcal - eatenKcal);
 
     var html = '';
-    var combinedT = {kcal:0,prot:0,gluc:0,lip:0};
+    var combinedT = {kcal:0,prot:0,gluc:0,lip:0,fibres:0,pot:0,cal:0,fer:0,mg:0,zn:0};
 
     activeMealIds().forEach(function(mid){
       var meta = MEAL_META[mid];
@@ -4488,7 +4515,7 @@ function renderMealPlan(){
       if(isReal){
         var items = byMeal[mid]||[];
         if(!items.length) return;
-        items.forEach(function(a){ var r=a.newQty/100; combinedT.kcal+=pN2(a.entry.food_kcal_100)*r; combinedT.prot+=pN2(a.entry.food_prot_100)*r; combinedT.gluc+=pN2(a.entry.food_gluc_100)*r; combinedT.lip+=pN2(a.entry.food_lip_100)*r; });
+        items.forEach(function(a){ var r=a.newQty/100; combinedT.kcal+=pN2(a.entry.food_kcal_100)*r; combinedT.prot+=pN2(a.entry.food_prot_100)*r; combinedT.gluc+=pN2(a.entry.food_gluc_100)*r; combinedT.lip+=pN2(a.entry.food_lip_100)*r; combinedT.fibres+=pN2(a.entry.food_fibres_100)*r; combinedT.pot+=pN2(a.entry.food_pot_100)*r; combinedT.cal+=pN2(a.entry.food_cal_100)*r; combinedT.fer+=pN2(a.entry.food_fer_100)*r; combinedT.mg+=pN2(a.entry.food_mg_100)*r; combinedT.zn+=pN2(a.entry.food_zn_100)*r; });
         // Si tous les aliments de ce repas proviennent de la même recette
         // importée (recette.html), on propose d'y revenir en un clic.
         var firstRecetteId = items[0].entry.recette_id;
@@ -4513,7 +4540,7 @@ function renderMealPlan(){
           // Plan fixe défini par la personne — prioritaire sur les
           // suggestions automatiques, affiché tel quel, sans bouton ⇄
           // (la modification se fait depuis "Mon plan fixe", pas ici).
-          pf.forEach(function(it){ var r=it.qty/100; combinedT.kcal+=pN2(it.kcal)*r; combinedT.prot+=pN2(it.prot)*r; combinedT.gluc+=pN2(it.gluc)*r; combinedT.lip+=pN2(it.lip)*r; });
+          pf.forEach(function(it){ var r=it.qty/100; combinedT.kcal+=pN2(it.kcal)*r; combinedT.prot+=pN2(it.prot)*r; combinedT.gluc+=pN2(it.gluc)*r; combinedT.lip+=pN2(it.lip)*r; combinedT.fibres+=pN2(it.fibres)*r; combinedT.pot+=pN2(it.pot)*r; combinedT.cal+=pN2(it.cal)*r; combinedT.fer+=pN2(it.fer)*r; combinedT.mg+=pN2(it.mg)*r; combinedT.zn+=pN2(it.zn)*r; });
           html += '<div class="card mb-12"><div class="card-header"><span class="card-title">'+meta.i+' '+meta.l
             +' <span style="font-size:.6rem;background:var(--sage-l);color:var(--sage);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Mon plan</span></span></div><div class="card-body">';
           pf.forEach(function(it){
@@ -4548,7 +4575,7 @@ function renderMealPlan(){
 
           if(recipeFull) gItems = scaleRecipe(recipeFull, mealTarget);
 
-          gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; });
+          gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; combinedT.fibres+=pN2(it.food.fibres)*it.qty/100; combinedT.pot+=pN2(it.food.pot)*it.qty/100; combinedT.cal+=pN2(it.food.cal)*it.qty/100; combinedT.fer+=pN2(it.food.fer)*it.qty/100; combinedT.mg+=pN2(it.food.mg)*it.qty/100; combinedT.zn+=pN2(it.food.zn)*it.qty/100; });
           html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l
             +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
             +'<div style="display:flex;gap:6px;align-items:center">'
