@@ -34,11 +34,22 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .ftab { padding:8px 4px; border:1.5px solid var(--border); border-radius:9px; cursor:pointer; text-align:center; background:var(--card); font-size:.7rem; font-weight:500; color:var(--text2); transition:all .15s; }
 .ftab.on { border-color:var(--gold); background:var(--gold-l); color:var(--gold); }
 
-.recipe-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:15px 16px; margin-bottom:11px; cursor:pointer; transition:all .15s; box-shadow:var(--sh); }
-.recipe-card:hover { border-color:var(--border2); background:var(--card2); }
-.recipe-name { font-family:'Lora',serif; font-size:1.1rem; font-weight:600; margin-bottom:4px; }
-.recipe-meta { font-size:.76rem; color:var(--text2); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+#recipe-list { display:grid; grid-template-columns:1fr; gap:12px; }
+@media (min-width:640px)  { #recipe-list { grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1000px) { #recipe-list { grid-template-columns:repeat(3,1fr); } }
+.recipe-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:0; margin-bottom:0; cursor:pointer; transition:all .15s; box-shadow:var(--sh); overflow:hidden; display:flex; flex-direction:column; }
+.recipe-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 8px 22px rgba(26,25,22,0.1); }
+.recipe-photo { width:100%; aspect-ratio:16/10; background:linear-gradient(135deg,var(--sage-l),var(--gold-l)); display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
+.recipe-card-body { padding:14px 16px 15px; }
+.recipe-name { font-family:'Lora',serif; font-size:1.1rem; font-weight:600; margin-bottom:6px; }
+.recipe-meta { font-size:.76rem; color:var(--text2); display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
 .recipe-tag { font-size:.66rem; padding:2px 9px; border-radius:999px; background:var(--sage-l); color:var(--sage); text-transform:uppercase; letter-spacing:.4px; }
+.recipe-macros { display:flex; gap:10px; font-size:.72rem; color:var(--text3); font-weight:600; border-top:1px solid var(--border); padding-top:8px; }
+.recipe-macros b { color:var(--text2); font-weight:700; }
+.recipe-search-wrap { position:relative; margin-bottom:14px; }
+.recipe-search-inp { width:100%; padding:11px 14px 11px 38px; border:1px solid var(--border2); border-radius:11px; font-size:.9rem; font-family:'Inter',sans-serif; outline:none; background:var(--card); }
+.recipe-search-inp:focus { border-color:var(--gold); }
+.recipe-search-ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text3); pointer-events:none; }
 
 .empty { text-align:center; padding:40px 16px; color:var(--text2); font-size:.86rem; line-height:1.6; }
 
@@ -66,6 +77,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 /* ── Design "mode cuisine" (cohérent avec recette-prep.html) ── */
 .rp-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.adjust-badge { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); border-radius:11px; padding:10px 13px; margin-bottom:14px; font-size:.8rem; color:var(--sage); font-weight:600; }
+.adjust-toggle-btn { font-size:.72rem; font-weight:700; color:var(--gold); background:#fff; border:1px solid var(--border2); border-radius:999px; padding:5px 11px; cursor:pointer; white-space:nowrap; }
 .rp-badge { font-size:.72rem; font-weight:600; padding:4px 11px; border-radius:999px; background:var(--card2); color:var(--text2); display:flex; align-items:center; gap:4px; }
 .rp-badge.gold { background:var(--gold-l); color:var(--gold); }
 .rp-servings { display:flex; align-items:center; gap:10px; background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:9px 12px; margin-bottom:14px; }
@@ -82,17 +95,24 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 #cookmode { display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column; }
 #cookmode.on { display:flex; }
-.cm-top { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.cm-top { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); gap:10px; }
 .cm-progress-txt { font-size:.78rem; color:var(--text2); font-weight:600; }
+.cm-wake-toggle { display:flex; align-items:center; gap:6px; font-size:.72rem; color:var(--text2); background:var(--card2); border:1px solid var(--border2); border-radius:999px; padding:5px 11px; cursor:pointer; }
+.cm-wake-toggle.on { background:var(--gold-l); color:var(--gold); border-color:var(--gold); }
 .cm-close { font-size:1.3rem; background:none; border:none; color:var(--text2); cursor:pointer; padding:4px 8px; }
-.cm-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 26px; text-align:center; }
+.cm-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 26px; text-align:center; overflow-y:auto; }
 .cm-step-title { font-size:.85rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
-.cm-step-content { font-family:'Lora',serif; font-size:1.5rem; line-height:1.4; margin-bottom:26px; }
+.cm-step-content { font-family:'Lora',serif; font-size:1.75rem; font-weight:700; line-height:1.35; margin-bottom:18px; }
+.cm-step-ingredients { display:none; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 16px; margin-bottom:20px; width:100%; max-width:340px; text-align:left; }
+.cm-step-ingredients.on { display:block; }
+.cm-step-ing-lbl { font-size:.66rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text3); margin-bottom:7px; }
+.cm-step-ing-row { display:flex; justify-content:space-between; font-size:.88rem; padding:3px 0; }
+.cm-step-ing-row b { color:var(--gold); font-weight:700; }
 .cm-timer { font-family:'Lora',serif; font-size:2.6rem; font-weight:700; color:var(--gold); margin-bottom:14px; display:none; }
 .cm-timer.on { display:block; }
 .cm-timer-btn { padding:12px 26px; border-radius:999px; border:2px solid var(--gold); background:var(--gold-l); color:var(--gold); font-weight:700; font-size:.9rem; cursor:pointer; margin-bottom:10px; }
 .cm-nav { display:flex; gap:12px; padding:20px; }
-.cm-nav-btn { flex:1; padding:16px; border-radius:12px; border:none; font-size:1.4rem; font-weight:700; cursor:pointer; }
+.cm-nav-btn { flex:1; padding:16px; border-radius:12px; border:none; font-size:1rem; font-weight:700; cursor:pointer; }
 .cm-prev { background:var(--card2); color:var(--text2); }
 .cm-next { background:var(--gold); color:#fff; }
 .cm-next:disabled, .cm-prev:disabled { opacity:.35; cursor:default; }
@@ -171,6 +191,13 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <p>Choisissez un plat, ajoutez-le à votre journée — les quantités s'adaptent automatiquement à vos besoins.</p>
   </div>
 
+  <div class="recipe-search-wrap">
+    <span class="recipe-search-ico">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </span>
+    <input type="text" class="recipe-search-inp" id="recipe-search" placeholder="Rechercher une recette ou un ingrédient..." oninput="onRecipeSearch(this.value)">
+  </div>
+
   <div class="filter-tabs">
     <div class="ftab on" data-meal="all" onclick="filterMeal('all')">Toutes</div>
     <div class="ftab" data-meal="breakfast" onclick="filterMeal('breakfast')">Petit-déj.</div>
@@ -191,6 +218,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div class="ov-body">
       <div class="recipe-meta" id="detail-tags" style="margin-bottom:12px"></div>
       <div class="rp-badges" id="detail-badges"></div>
+      <div class="adjust-badge" id="adjust-badge" style="display:none"></div>
       <div class="rp-servings">
         <div class="rp-servings-lbl">Portion</div>
         <button class="rp-serv-btn" onclick="changeMult(-0.5)">−</button>
@@ -214,6 +242,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div id="cookmode">
   <div class="cm-top">
     <span class="cm-progress-txt" id="cm-progress-txt">Étape 1/1</span>
+    <button class="cm-wake-toggle" id="cm-wake-toggle" onclick="toggleWakeLock()">💡 Écran maintenu allumé</button>
     <button class="cm-close" onclick="closeCookMode()">✕</button>
   </div>
   <div class="cm-body">
@@ -235,11 +264,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     </div>
     <div class="cm-step-title" id="cm-step-title"></div>
     <div class="cm-step-content" id="cm-step-content"></div>
+    <div class="cm-step-ingredients" id="cm-step-ingredients"></div>
     <button class="cm-timer-btn" id="cm-timer-btn" style="display:none" onclick="toggleTimer()">▶ Démarrer le minuteur</button>
   </div>
   <div class="cm-nav">
-    <button class="cm-nav-btn cm-prev" id="cm-prev" onclick="cmNav(-1)">←</button>
-    <button class="cm-nav-btn cm-next" id="cm-next" onclick="cmNav(1)">→</button>
+    <button class="cm-nav-btn cm-prev" id="cm-prev" onclick="cmNav(-1)">← Précédent</button>
+    <button class="cm-nav-btn cm-next" id="cm-next" onclick="cmNavOrFinish()">Suivant →</button>
   </div>
 </div>
 
@@ -410,6 +440,69 @@ function loadCustomFoods(){
 }
 function pN(v){ if(v===null||v===undefined||v==='-'||v==='')return 0; return parseFloat(String(v).replace(',','.'))||0; }
 
+// ── LANGAGE CULINAIRE ──
+// Les noms viennent de Ciqual ("Pomme, chair et peau, crue") ou d'un
+// aliment personnalisé — on coupe systématiquement au premier séparateur
+// descriptif pour ne garder que le nom courant. Un override manuel
+// (i.nom_affiche, posé par l'admin) prime toujours si présent, pour les
+// cas où le nom de base ne suffit pas (ex: préciser "Œuf frais" plutôt que
+// le nom générique dans une recette de pâtisserie).
+function cleanIngredientName(nom, override){
+  if(override) return override;
+  if(!nom) return '';
+  return nom.split(',')[0].split(' (')[0].trim();
+}
+
+// Poids unitaires usuels — permet d'afficher "1 Pomme (150g)" plutôt que
+// juste "150g" pour les aliments qu'on compte naturellement à l'unité.
+// Repli silencieux en grammes pour tout ce qui n'est pas dans la liste.
+var UNIT_WEIGHTS = [
+  {k:'pomme', w:150, label:'Pomme'}, {k:'banane', w:120, label:'Banane'},
+  {k:'oeuf', w:55, label:'Œuf'}, {k:'œuf', w:55, label:'Œuf'},
+  {k:'orange', w:180, label:'Orange'}, {k:'tomate', w:120, label:'Tomate'},
+  {k:'yaourt', w:125, label:'Yaourt'}, {k:'citron', w:100, label:'Citron'},
+  {k:'gousse d\'ail', w:5, label:'Gousse d\'ail'}, {k:'tranche de pain', w:25, label:'Tranche de pain'},
+  {k:'kiwi', w:75, label:'Kiwi'}, {k:'avocat', w:170, label:'Avocat'}
+];
+function formatQty(nomClean, qty){
+  var nLower = (nomClean||'').toLowerCase();
+  var unit = UNIT_WEIGHTS.find(function(u){ return nLower.indexOf(u.k)>=0; });
+  if(unit){
+    var count = qty/unit.w;
+    if(count >= 0.4){
+      var rounded = Math.round(count*2)/2; // arrondi au demi le plus proche
+      return rounded+(rounded===1?' '+unit.label:' '+unit.label+'s')+' ('+Math.round(qty)+'g)';
+    }
+  }
+  return (Math.round(qty*10)/10)+'g';
+}
+
+// ── AJUSTEMENT AUTOMATIQUE AUX BESOINS RESTANTS DU JOUR ──
+// Interroge le journal du jour pour connaître ce qui reste à manger, et
+// calcule le multiplicateur de portion qui rapprocherait le plus des
+// calories restantes — c'est la vraie fonctionnalité annoncée sur la page,
+// pas juste un multiplicateur manuel.
+async function getTodayRemaining(){
+  var tgt = calcTargets();
+  var today = new Date();
+  var dateStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var r = await sb.from('journal').select('quantite,food_kcal_100,food_prot_100,food_gluc_100,food_lip_100').eq('user_id',USER.id).eq('date',dateStr);
+  var eaten = {kcal:0, prot:0, gluc:0, lip:0};
+  (r.data||[]).forEach(function(e){
+    var ratio = (e.quantite||0)/100;
+    eaten.kcal += (e.food_kcal_100||0)*ratio;
+    eaten.prot += (e.food_prot_100||0)*ratio;
+    eaten.gluc += (e.food_gluc_100||0)*ratio;
+    eaten.lip  += (e.food_lip_100||0)*ratio;
+  });
+  return {
+    kcal: Math.max(0, tgt.kcal-eaten.kcal),
+    prot: Math.max(0, tgt.prot-eaten.prot),
+    gluc: Math.max(0, tgt.gluc-eaten.gluc),
+    lip:  Math.max(0, tgt.lip-eaten.lip)
+  };
+}
+
 async function loadRecipes(){
   var res = await sb.from('recettes').select('*').order('created_at',{ascending:false});
   ALL_RECIPES = res.data || [];
@@ -428,20 +521,45 @@ function filterMeal(meal){
   renderList();
 }
 
+var RECIPE_SEARCH = '';
+function onRecipeSearch(v){
+  RECIPE_SEARCH = (v||'').toLowerCase().trim();
+  renderList();
+}
+
+// Petite variété d'emoji selon le type de repas, en attendant de vraies
+// photos de plats — donne au moins un repère visuel différencié plutôt
+// qu'un aplat de couleur identique sur toutes les cartes.
+var MEAL_PHOTO_ICO = {breakfast:'🥣', lunch:'🍽️', snack:'🍎', dinner:'🍲', snack2:'🥤'};
+
 function renderList(){
   var el = document.getElementById('recipe-list');
   var list = CURRENT_FILTER==='all' ? ALL_RECIPES : ALL_RECIPES.filter(function(r){ return (r.repas_types||[]).indexOf(CURRENT_FILTER)>=0; });
+  if(RECIPE_SEARCH){
+    list = list.filter(function(r){
+      var nomMatch = (r.nom||'').toLowerCase().indexOf(RECIPE_SEARCH)>=0;
+      var ingMatch = (r.ingredients||[]).some(function(i){ return cleanIngredientName(i.nom, i.nom_affiche).toLowerCase().indexOf(RECIPE_SEARCH)>=0; });
+      return nomMatch || ingMatch;
+    });
+  }
   if(!list.length){
-    el.innerHTML = '<div class="empty">Aucune recette disponible pour le moment'+(PROF&&PROF.role==='admin'?' — utilisez le bouton + pour en ajouter une.':' — revenez bientôt !')+'</div>';
+    el.innerHTML = '<div class="empty">'+(RECIPE_SEARCH ? 'Aucune recette ne correspond à "'+esc(RECIPE_SEARCH)+'".' : ('Aucune recette disponible pour le moment'+(PROF&&PROF.role==='admin'?' — utilisez le bouton + pour en ajouter une.':' — revenez bientôt !')))+'</div>';
     return;
   }
   el.innerHTML = list.map(function(r){
     var kcal = (r.ingredients||[]).reduce(function(s,i){ return s+pN(i.kcal)*pN(i.qty)/100; },0);
+    var prot = (r.ingredients||[]).reduce(function(s,i){ return s+pN(i.prot)*pN(i.qty)/100; },0);
+    var gluc = (r.ingredients||[]).reduce(function(s,i){ return s+pN(i.gluc)*pN(i.qty)/100; },0);
+    var lip  = (r.ingredients||[]).reduce(function(s,i){ return s+pN(i.lip)*pN(i.qty)/100; },0);
     var tags = (r.repas_types||[]).map(function(m){ return '<span class="recipe-tag">'+(MEAL_LABELS[m]||m)+'</span>'; }).join('');
+    var mainMeal = (r.repas_types||[])[0];
     return '<div class="recipe-card" onclick="openDetail(\''+r.id+'\')">'
+      +'<div class="recipe-photo">'+(MEAL_PHOTO_ICO[mainMeal]||'🍽️')+'</div>'
+      +'<div class="recipe-card-body">'
       +'<div class="recipe-name">'+esc(r.nom)+'</div>'
-      +'<div class="recipe-meta">'+tags+'<span>'+Math.round(kcal)+' kcal (portion de base)</span></div>'
-      +'</div>';
+      +'<div class="recipe-meta">'+tags+'</div>'
+      +'<div class="recipe-macros"><b>'+Math.round(kcal)+' kcal</b><span>P '+Math.round(prot)+'g</span><span>G '+Math.round(gluc)+'g</span><span>L '+Math.round(lip)+'g</span></div>'
+      +'</div></div>';
   }).join('');
 }
 
@@ -465,6 +583,10 @@ function parseInstructionSteps(text){
   return (text||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){
     // Retire une numérotation déjà présente ("1.", "1)", "Étape 1 :") pour éviter les doublons visuels
     var clean = l.replace(/^(étape\s*\d+\s*[:.-]?|^\d+[.)]\s*)/i,'').trim();
+    // Retire aussi les préfixes bruts type "Au préalable :" — plus naturel
+    // à l'oral et à la lecture rapide en cuisine que la formulation admin.
+    clean = clean.replace(/^(au préalable|préalablement|tout d'abord|pour commencer)\s*[:.-]?\s*/i,'');
+    clean = clean.charAt(0).toUpperCase()+clean.slice(1);
     return { content: clean, timerMin: detectTimerMin(l) };
   });
 }
@@ -473,29 +595,56 @@ function totalRecipeKcal(){
   return (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+pN(i.kcal)*pN(i.qty)/100; },0);
 }
 
-function openDetail(id){
+var ADJUST_MODE = 'today'; // 'today' = ajusté aux besoins restants, 'base' = portion de base
+var TODAY_REMAINING = null;
+
+async function openDetail(id){
   SELECTED_RECIPE = ALL_RECIPES.find(function(r){ return r.id===id; });
   if(!SELECTED_RECIPE) return;
-  MULT = 1;
+  ADJUST_MODE = 'today';
   document.getElementById('detail-title').textContent = SELECTED_RECIPE.nom;
   document.getElementById('detail-tags').innerHTML = (SELECTED_RECIPE.repas_types||[]).map(function(m){ return '<span class="recipe-tag">'+(MEAL_LABELS[m]||m)+'</span>'; }).join('');
 
-  // Les recettes créées/modifiées avec le nouvel éditeur ont des étapes
-  // structurées (steps_data, avec minuteur explicite par étape) — sinon on
-  // retombe sur l'ancien texte libre (recettes créées avant cette fonctionnalité).
   GEN_STEPS = (SELECTED_RECIPE.steps_data && SELECTED_RECIPE.steps_data.length)
     ? SELECTED_RECIPE.steps_data.map(function(s){ return {content:s.content, timerMin:s.timerMin||null}; })
     : parseInstructionSteps(SELECTED_RECIPE.instructions);
 
   document.getElementById('detail-edit-btn').style.display = (PROF && PROF.role==='admin') ? 'inline-block' : 'none';
 
-  renderDetailBody();
   document.getElementById('detail-ov').classList.add('on');
+  // Calcul du budget restant en arrière-plan — la fiche s'ouvre déjà avec
+  // la portion de base pendant le temps de la requête, puis bascule sur
+  // l'ajustement dès qu'il est prêt (pas de blocage de l'ouverture).
+  MULT = 1;
+  renderDetailBody();
+  TODAY_REMAINING = await getTodayRemaining();
+  applyAutoAdjust();
+}
+
+// Calcule le multiplicateur de portion qui rapproche le plus des calories
+// restantes aujourd'hui, borné à la même plage que l'ajustement manuel
+// (0.5× à 4×) pour rester dans des portions réalistes.
+function applyAutoAdjust(){
+  if(ADJUST_MODE!=='today' || !TODAY_REMAINING){ renderDetailBody(); return; }
+  var baseKcal = totalRecipeKcal();
+  if(baseKcal<=0 || TODAY_REMAINING.kcal<=0){ MULT=1; renderDetailBody(); return; }
+  var raw = TODAY_REMAINING.kcal/baseKcal;
+  MULT = Math.round(Math.max(0.5, Math.min(4, raw))*2)/2; // arrondi au 0.5 le plus proche
+  renderDetailBody();
+}
+
+function toggleAdjustMode(){
+  ADJUST_MODE = ADJUST_MODE==='today' ? 'base' : 'today';
+  if(ADJUST_MODE==='base'){ MULT=1; renderDetailBody(); }
+  else applyAutoAdjust();
 }
 function closeDetail(){ document.getElementById('detail-ov').classList.remove('on'); }
 
 function renderDetailBody(){
   var kcal = Math.round(totalRecipeKcal()*MULT);
+  var prot = (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+pN(i.prot)*pN(i.qty)/100; },0)*MULT;
+  var gluc = (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+pN(i.gluc)*pN(i.qty)/100; },0)*MULT;
+  var lip  = (SELECTED_RECIPE.ingredients||[]).reduce(function(s,i){ return s+pN(i.lip)*pN(i.qty)/100; },0)*MULT;
   var n = GEN_STEPS.length;
   var difficulty = n<=3 ? 'Facile' : (n<=5 ? 'Moyen' : 'Un peu plus élaboré');
   var timeSum = GEN_STEPS.reduce(function(s,st){ return s+(st.timerMin||2); },0);
@@ -503,16 +652,33 @@ function renderDetailBody(){
   document.getElementById('detail-badges').innerHTML =
     '<span class="rp-badge gold">⏱ ~'+Math.max(5,timeSum)+' min</span>'
     +'<span class="rp-badge">🎚 '+difficulty+'</span>'
-    +'<span class="rp-badge">🔥 '+kcal+' kcal</span>';
+    +'<span class="rp-badge">🔥 '+kcal+' kcal</span>'
+    +'<span class="rp-badge">P '+Math.round(prot)+'g</span>'
+    +'<span class="rp-badge">G '+Math.round(gluc)+'g</span>'
+    +'<span class="rp-badge">L '+Math.round(lip)+'g</span>';
 
   document.getElementById('mult-val').textContent = MULT===1 ? 'Base' : (MULT+'×');
 
+  // Badge d'ajustement automatique — visible et explicite, pas une
+  // fonctionnalité cachée qu'il faut deviner en regardant les quantités.
+  var adjustBadge = document.getElementById('adjust-badge');
+  if(ADJUST_MODE==='today' && TODAY_REMAINING){
+    adjustBadge.style.display='flex';
+    adjustBadge.innerHTML = '✨ Quantités ajustées à vos besoins restants (env. '+Math.round(TODAY_REMAINING.kcal)+' kcal aujourd\'hui)'
+      +'<button class="adjust-toggle-btn" onclick="toggleAdjustMode()">Voir la recette de base</button>';
+  } else {
+    adjustBadge.style.display='flex';
+    adjustBadge.innerHTML = (MULT===1 ? '📖 Recette de base (1 portion)' : '✋ Réglage manuel ('+MULT+'×)')
+      +'<button class="adjust-toggle-btn" onclick="toggleAdjustMode()">Ajuster à mon profil du jour</button>';
+  }
+
   document.getElementById('detail-ingredients').innerHTML = (SELECTED_RECIPE.ingredients||[]).map(function(i,idx){
     var qty = Math.round(pN(i.qty)*MULT*10)/10;
+    var cleanName = cleanIngredientName(i.nom, i.nom_affiche);
     return '<div class="ing-row" id="ing-row-'+idx+'">'
       +'<div class="ing-check" onclick="toggleIng('+idx+')" id="ing-check-'+idx+'"></div>'
-      +'<span class="ing-name">'+esc(i.nom)+glycemicBadge(i)+'</span>'
-      +'<span class="ing-qty">'+qty+'g</span></div>';
+      +'<span class="ing-name">'+esc(cleanName)+glycemicBadge(i)+'</span>'
+      +'<span class="ing-qty">'+formatQty(cleanName, qty)+'</span></div>';
   }).join('');
 
   document.getElementById('detail-instructions').innerHTML = GEN_STEPS.length
@@ -526,6 +692,7 @@ function renderDetailBody(){
 }
 
 function changeMult(d){
+  ADJUST_MODE = 'base'; // un réglage manuel prend le pas sur l'ajustement auto
   MULT = Math.max(0.5, Math.min(4, MULT+d));
   renderDetailBody();
 }
@@ -563,7 +730,11 @@ function openCookMode(){
   document.getElementById('ring-progress').style.strokeDasharray = RING_CIRC;
   renderCookStep();
 }
-function closeCookMode(){ document.getElementById('cookmode').classList.remove('on'); stopTimer(); }
+function closeCookMode(){
+  document.getElementById('cookmode').classList.remove('on');
+  stopTimer();
+  if(wakeLockRef){ wakeLockRef.release(); wakeLockRef=null; }
+}
 function cmNav(d){
   stopTimer();
   CM_INDEX = Math.max(0, Math.min(GEN_STEPS.length-1, CM_INDEX+d));
@@ -572,11 +743,33 @@ function cmNav(d){
 function renderCookStep(){
   var s = GEN_STEPS[CM_INDEX];
   var total = GEN_STEPS.length;
+  var isLast = CM_INDEX===total-1;
   document.getElementById('cm-progress-txt').textContent = 'Étape '+(CM_INDEX+1)+'/'+total;
   document.getElementById('cm-step-title').textContent = SELECTED_RECIPE.nom;
   document.getElementById('cm-step-content').textContent = s.content;
   document.getElementById('cm-prev').disabled = CM_INDEX===0;
-  document.getElementById('cm-next').disabled = CM_INDEX===total-1;
+  document.getElementById('cm-next').textContent = isLast ? 'Terminer & valider le repas' : 'Suivant →';
+
+  // Ingrédients concernés par CETTE étape — détectés en cherchant le nom
+  // (nettoyé) de chaque ingrédient de la recette dans le texte de l'étape.
+  // Approche heuristique par nécessité : aucun lien explicite ingrédient↔
+  // étape n'existe dans les données, donc on infère depuis le texte plutôt
+  // que de ne rien afficher.
+  var stepLower = s.content.toLowerCase();
+  var matched = (SELECTED_RECIPE.ingredients||[]).map(function(i, idx){
+    var clean = cleanIngredientName(i.nom, i.nom_affiche);
+    var found = stepLower.indexOf(clean.toLowerCase()) >= 0;
+    return found ? {name:clean, qty:Math.round(pN(i.qty)*MULT*10)/10} : null;
+  }).filter(Boolean);
+  var ingEl = document.getElementById('cm-step-ingredients');
+  if(matched.length){
+    ingEl.classList.add('on');
+    ingEl.innerHTML = '<div class="cm-step-ing-lbl">Pour cette étape <span style="opacity:.6">(ajusté à vos besoins)</span></div>'
+      + matched.map(function(m){ return '<div class="cm-step-ing-row"><span>'+esc(m.name)+'</span><b>'+formatQty(m.name, m.qty)+'</b></div>'; }).join('');
+  } else {
+    ingEl.classList.remove('on');
+    ingEl.innerHTML = '';
+  }
 
   setRingProgress((CM_INDEX+1)/total);
   document.getElementById('ring-main').textContent = (CM_INDEX+1)+'/'+total;
@@ -592,6 +785,47 @@ function renderCookStep(){
     TIMER_RUNNING = false;
   } else {
     timerBtn.style.display='none';
+  }
+}
+
+// À la dernière étape, "Suivant" devient "Terminer & valider le repas" —
+// ferme le mode cuisine et ouvre directement le choix du repas pour
+// enregistrer ce qui vient d'être cuisiné, plutôt que de laisser la
+// personne chercher comment valider depuis un simple bouton "suivant" qui
+// n'aurait plus rien où aller.
+function cmNavOrFinish(){
+  var isLast = CM_INDEX===GEN_STEPS.length-1;
+  if(isLast){
+    closeCookMode();
+    openMealPicker();
+    return;
+  }
+  cmNav(1);
+}
+
+// ── Écran maintenu allumé pendant la cuisine (Wake Lock API) ──
+// Non disponible sur tous les navigateurs (notamment certaines versions de
+// Safari) — le bouton reste alors sans effet plutôt que de planter, avec un
+// message clair plutôt qu'un échec silencieux.
+var wakeLockRef = null;
+async function toggleWakeLock(){
+  var btn = document.getElementById('cm-wake-toggle');
+  if(!('wakeLock' in navigator)){
+    toast('Fonction non disponible sur ce navigateur.');
+    return;
+  }
+  if(wakeLockRef){
+    await wakeLockRef.release();
+    wakeLockRef = null;
+    btn.classList.remove('on');
+    return;
+  }
+  try{
+    wakeLockRef = await navigator.wakeLock.request('screen');
+    btn.classList.add('on');
+    wakeLockRef.addEventListener('release', function(){ btn.classList.remove('on'); wakeLockRef=null; });
+  }catch(e){
+    toast('Impossible de garder l\'écran allumé sur cet appareil.');
   }
 }
 
