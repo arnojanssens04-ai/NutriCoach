@@ -11,6 +11,8 @@
   --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
   --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
   --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --amber:#7a5c1e; --amber-l:rgba(122,92,30,0.1);
+  --blue:#2a5a8b; --blue-l:rgba(42,90,139,0.1);
   --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
   --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
   --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
@@ -26,33 +28,68 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .t-back:hover { border-color:var(--gold); color:var(--gold); }
 
 .wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
+.hero { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
 .hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
-.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; }
+.btn-new { flex-shrink:0; background:var(--gold); color:#fff; border:none; border-radius:9px; padding:10px 16px; font-size:.84rem; font-weight:700; cursor:pointer; white-space:nowrap; }
 
-.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
-.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); }
-.card-hdr span { font-family:'Lora',serif; font-size:1.05rem; }
-.card-body { padding:16px 18px; }
+.filter-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; }
+.filter-chip { font-size:.78rem; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid var(--border2); background:var(--card); color:var(--text2); cursor:pointer; }
+.filter-chip.on { background:var(--gold); border-color:var(--gold); color:#fff; }
 
+.drawer-ov { display:none; position:fixed; inset:0; background:rgba(22,36,27,0.5); z-index:200; align-items:flex-end; justify-content:center; }
+.drawer-ov.on { display:flex; }
+.drawer { background:var(--card); border-radius:20px 20px 0 0; padding:22px 20px 28px; width:100%; max-width:640px; max-height:88vh; overflow-y:auto; }
+.drawer-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.drawer-hdr span { font-family:'Lora',serif; font-size:1.15rem; font-weight:700; }
+.drawer-close { background:var(--bg2); border:none; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem; }
+.field-lbl { font-size:.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+.field-wrap { margin-bottom:14px; }
+input#a-titre, input#a-auteur-nom, input#a-auteur-role { width:100%; padding:11px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:'Inter',sans-serif; font-size:.9rem; outline:none; }
 textarea#a-contenu { width:100%; padding:11px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:'Inter',sans-serif; font-size:.9rem; resize:vertical; min-height:90px; outline:none; }
-textarea#a-contenu:focus { border-color:rgba(45,79,28,0.4); }
+textarea#a-contenu:focus, input#a-titre:focus { border-color:rgba(45,79,28,0.4); }
+.cat-picker { display:flex; gap:8px; flex-wrap:wrap; }
+.cat-opt { font-size:.78rem; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid var(--border2); background:var(--card2); color:var(--text2); cursor:pointer; }
+.cat-opt.on { border-color:currentColor; }
+.cat-opt[data-cat="nouveaute"].on { background:var(--blue-l); color:var(--blue); }
+.cat-opt[data-cat="conseil"].on { background:var(--sage-l); color:var(--sage); }
+.cat-opt[data-cat="astuce"].on { background:var(--amber-l); color:var(--amber); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 
-.check-row { display:flex; align-items:center; gap:9px; margin:12px 0; cursor:pointer; }
+.check-row { display:flex; align-items:center; gap:9px; margin:14px 0; cursor:pointer; }
 .check-box { width:19px; height:19px; border-radius:5px; border:1.5px solid var(--border2); background:var(--card2); flex-shrink:0; position:relative; }
 .check-box.on { background:var(--gold); border-color:var(--gold); }
 .check-box.on::after { content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.7rem; font-weight:700; }
 .check-lbl { font-size:.84rem; color:var(--text2); }
-
 .btn-gold { width:100%; padding:12px; border-radius:10px; border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; }
 
-.annonce { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:12px; box-shadow:var(--sh); }
-.annonce-date { font-size:.68rem; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
-.annonce-txt { font-size:.92rem; line-height:1.6; margin-bottom:14px; white-space:pre-wrap; }
-.reactions { display:flex; gap:6px; flex-wrap:wrap; }
+.annonce { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:12px; box-shadow:var(--sh); position:relative; }
+.annonce-cat { display:inline-flex; align-items:center; gap:4px; font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.3px; margin-bottom:10px; }
+.annonce-cat.nouveaute { background:var(--blue-l); color:var(--blue); }
+.annonce-cat.conseil { background:var(--sage-l); color:var(--sage); }
+.annonce-cat.astuce { background:var(--amber-l); color:var(--amber); }
+
+.annonce-author { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.author-avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Lora',serif; font-weight:700; font-size:.95rem; }
+.author-meta { flex:1; min-width:0; }
+.author-name { font-size:.86rem; font-weight:700; color:var(--text); line-height:1.3; }
+.author-role-date { font-size:.72rem; color:var(--text3); line-height:1.3; }
+.admin-del { flex-shrink:0; background:none; border:none; color:var(--text3); cursor:pointer; font-size:.72rem; padding:4px 6px; }
+.admin-del:hover { color:var(--rose); }
+
+.annonce-titre { font-family:'Lora',serif; font-size:1.05rem; font-weight:700; margin-bottom:6px; line-height:1.35; }
+.annonce-txt { font-size:.9rem; line-height:1.6; margin-bottom:14px; white-space:pre-wrap; color:var(--text2); }
+
+.reactions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .react-btn { background:var(--card2); border:1px solid var(--border); border-radius:999px; padding:5px 11px; font-size:.85rem; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all .15s; }
 .react-btn.mine { background:var(--gold-l); border-color:rgba(45,79,28,0.3); }
 .react-count { font-size:.72rem; color:var(--text2); font-weight:600; }
-.admin-del { float:right; background:none; border:none; color:var(--text3); cursor:pointer; font-size:.78rem; }
+.react-add-btn { background:none; border:1px dashed var(--border2); border-radius:999px; padding:5px 10px; font-size:.78rem; color:var(--text3); cursor:pointer; }
+.react-picker { display:none; position:absolute; bottom:44px; left:0; background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:8px; box-shadow:0 6px 20px rgba(0,0,0,0.12); gap:4px; z-index:10; }
+.react-picker.on { display:flex; }
+.react-picker button { background:none; border:none; font-size:1.2rem; cursor:pointer; padding:5px; border-radius:8px; }
+.react-picker button:hover { background:var(--card2); }
+.reactions-wrap { position:relative; }
 
 .empty { text-align:center; padding:40px 20px; color:var(--text2); font-size:.86rem; }
 </style>
@@ -67,23 +104,61 @@ textarea#a-contenu:focus { border-color:rgba(45,79,28,0.4); }
 
 <div class="wrap">
   <div class="hero">
-    <h1>📣 Annonces</h1>
-    <p>Conseils, citations et messages de l'équipe Cap Santé.</p>
+    <div>
+      <h1>📣 Annonces</h1>
+      <p>Conseils, citations et messages de l'équipe Cap Santé.</p>
+    </div>
+    <button class="btn-new" id="btn-new-annonce" style="display:none" onclick="openDrawer()">+ Nouvel article</button>
   </div>
 
-  <div class="card" id="admin-form-card" style="display:none">
-    <div class="card-hdr"><span>Écrire une annonce</span></div>
-    <div class="card-body">
-      <textarea id="a-contenu" placeholder="Écrivez votre message, conseil ou citation du jour..."></textarea>
-      <div class="check-row" onclick="toggleSendEmail()">
-        <div class="check-box" id="a-email-box"></div>
-        <span class="check-lbl">Envoyer aussi un email à tous les utilisateurs</span>
-      </div>
-      <button class="btn-gold" onclick="publishAnnonce()">Publier</button>
-    </div>
-  </div>
+  <div class="filter-row" id="filter-row"></div>
 
   <div id="annonces-list"></div>
+</div>
+
+<div class="drawer-ov" id="drawer-ov" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-hdr">
+      <span>Écrire une annonce</span>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+
+    <div class="field-wrap">
+      <label class="field-lbl">Titre</label>
+      <input type="text" id="a-titre" placeholder="Ex : Cap Santé change d'adresse !">
+    </div>
+
+    <div class="field-wrap">
+      <label class="field-lbl">Catégorie</label>
+      <div class="cat-picker" id="cat-picker">
+        <div class="cat-opt on" data-cat="nouveaute" onclick="pickCat('nouveaute')">📢 Nouveauté</div>
+        <div class="cat-opt" data-cat="conseil" onclick="pickCat('conseil')">🥗 Conseil diététique</div>
+        <div class="cat-opt" data-cat="astuce" onclick="pickCat('astuce')">💡 Astuce</div>
+      </div>
+    </div>
+
+    <div class="field-wrap">
+      <label class="field-lbl">Message</label>
+      <textarea id="a-contenu" placeholder="Écrivez votre message, conseil ou citation du jour..."></textarea>
+    </div>
+
+    <div class="row2">
+      <div class="field-wrap">
+        <label class="field-lbl">Signé par</label>
+        <input type="text" id="a-auteur-nom" placeholder="Ex : Arnaud">
+      </div>
+      <div class="field-wrap">
+        <label class="field-lbl">Rôle affiché</label>
+        <input type="text" id="a-auteur-role" placeholder="Ex : Fondateur Cap Santé">
+      </div>
+    </div>
+
+    <div class="check-row" onclick="toggleSendEmail()">
+      <div class="check-box" id="a-email-box"></div>
+      <span class="check-lbl">Envoyer aussi un email à tous les utilisateurs</span>
+    </div>
+    <button class="btn-gold" onclick="publishAnnonce()">Publier</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -94,9 +169,33 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, PROF=null, IS_ADMIN=false, ANNONCES=[], REACTIONS=[], SEND_EMAIL=false;
 var EMOJIS = ['🙌','👏','💪','❤️','👌','👍🏻'];
+var PICKED_CAT = 'nouveaute';
+var CURRENT_FILTER = 'all';
+var CAT_LABELS = {nouveaute:'📢 Nouveauté', conseil:'🥗 Conseil diététique', astuce:'💡 Astuce'};
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtDate(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'}); }
+
+function fmtRelativeDate(ts){
+  var d = new Date(ts);
+  var diffMs = Date.now() - d.getTime();
+  var diffMin = Math.floor(diffMs/60000);
+  var diffH = Math.floor(diffMin/60);
+  var diffD = Math.floor(diffH/24);
+  if(diffMin < 1) return "À l'instant";
+  if(diffMin < 60) return 'Il y a '+diffMin+' min';
+  if(diffH < 24) return 'Il y a '+diffH+'h';
+  if(diffD === 1) return 'Hier';
+  if(diffD < 7) return 'Il y a '+diffD+' jours';
+  if(diffD < 30) return 'Il y a '+Math.floor(diffD/7)+' semaine'+(Math.floor(diffD/7)>1?'s':'');
+  return d.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'});
+}
+
+var AVATAR_COLORS = ['#2d4f1c','#4a7a3a','#7a5c1e','#2a5a8b','#8b2a2a','#5c4a8b'];
+function avatarColor(seed){
+  var sum = 0;
+  for(var i=0;i<seed.length;i++) sum += seed.charCodeAt(i);
+  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+}
 
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
@@ -108,46 +207,107 @@ async function init(){
   var pr = await sb.from('profiles').select('*').eq('id',USER.id).single();
   PROF = pr.data || {};
   IS_ADMIN = PROF.role === 'admin';
-  if(IS_ADMIN) document.getElementById('admin-form-card').style.display='block';
+  if(IS_ADMIN) document.getElementById('btn-new-annonce').style.display='inline-block';
 
+  renderFilters();
   await loadAnnonces();
 
-  // Marque tout comme vu dès l'ouverture de cette page.
   await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
 }
 
+function renderFilters(){
+  var cats = [{id:'all', lbl:'Tout'}, {id:'nouveaute', lbl:'📢 Nouveauté'}, {id:'conseil', lbl:'🥗 Conseil'}, {id:'astuce', lbl:'💡 Astuce'}];
+  document.getElementById('filter-row').innerHTML = cats.map(function(c){
+    return '<button class="filter-chip'+(CURRENT_FILTER===c.id?' on':'')+'" onclick="setFilter(\''+c.id+'\')">'+c.lbl+'</button>';
+  }).join('');
+}
+function setFilter(id){
+  CURRENT_FILTER = id;
+  renderFilters();
+  renderAnnonces();
+}
+
 async function loadAnnonces(){
-  var r = await sb.from('annonces').select('*').order('created_at',{ascending:false});
+  var r = await sb.from('annonces').select('*, profiles:created_by(prenom,nom)').order('created_at',{ascending:false});
   ANNONCES = r.data || [];
   var rr = await sb.from('annonce_reactions').select('*');
   REACTIONS = rr.data || [];
   renderAnnonces();
 }
 
+function splitLegacyTitle(a){
+  if(a.titre) return {titre:a.titre, contenu:a.contenu};
+  var m = (a.contenu||'').match(/^sujet\s*:\s*(.+?)(\n|$)/i);
+  if(m) return {titre:m[1].trim(), contenu:a.contenu.slice(m[0].length).trim()};
+  return {titre:null, contenu:a.contenu};
+}
+
 function renderAnnonces(){
   var el = document.getElementById('annonces-list');
-  if(!ANNONCES.length){ el.innerHTML = '<div class="empty">Aucune annonce pour le moment.</div>'; return; }
+  var list = CURRENT_FILTER==='all' ? ANNONCES : ANNONCES.filter(function(a){ return (a.categorie||'nouveaute')===CURRENT_FILTER; });
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucune annonce pour cette catégorie.</div>'; return; }
 
-  el.innerHTML = ANNONCES.map(function(a){
+  el.innerHTML = list.map(function(a){
     var reacts = REACTIONS.filter(function(r){ return r.annonce_id===a.id; });
     var byEmoji = {};
     reacts.forEach(function(r){ byEmoji[r.emoji] = (byEmoji[r.emoji]||0)+1; });
     var mine = reacts.find(function(r){ return r.user_id===USER.id; });
 
-    var reactionsHtml = EMOJIS.map(function(em){
-      var count = byEmoji[em]||0;
+    var activeEmojis = EMOJIS.filter(function(em){ return byEmoji[em]>0; });
+    var reactionsHtml = activeEmojis.map(function(em){
       var isMine = mine && mine.emoji===em;
       return '<button class="react-btn'+(isMine?' mine':'')+'" onclick="toggleReaction(\''+a.id+'\',\''+em+'\')">'+em
-        +(count>0?'<span class="react-count">'+count+'</span>':'')+'</button>';
+        +'<span class="react-count">'+byEmoji[em]+'</span></button>';
     }).join('');
+    var pickerHtml = EMOJIS.map(function(em){ return '<button onclick="toggleReaction(\''+a.id+'\',\''+em+'\')">'+em+'</button>'; }).join('');
+
+    var split = splitLegacyTitle(a);
+    var cat = a.categorie || 'nouveaute';
+    var authorName = a.auteur_nom || (a.profiles && a.profiles.prenom) || 'Équipe Cap Santé';
+    var authorRole = a.auteur_role || 'Équipe Cap Santé';
+    var initial = authorName.charAt(0).toUpperCase();
 
     return '<div class="annonce">'
-      +(IS_ADMIN?'<button class="admin-del" onclick="deleteAnnonce(\''+a.id+'\')">✕ Supprimer</button>':'')
-      +'<div class="annonce-date">'+fmtDate(a.created_at)+'</div>'
-      +'<div class="annonce-txt">'+esc(a.contenu)+'</div>'
-      +'<div class="reactions">'+reactionsHtml+'</div>'
+      +'<span class="annonce-cat '+cat+'">'+CAT_LABELS[cat]+'</span>'
+      +'<div class="annonce-author">'
+        +'<div class="author-avatar" style="background:'+avatarColor(authorName)+'">'+esc(initial)+'</div>'
+        +'<div class="author-meta">'
+          +'<div class="author-name">'+esc(authorName)+'</div>'
+          +'<div class="author-role-date">'+esc(authorRole)+' · '+fmtRelativeDate(a.created_at)+'</div>'
+        +'</div>'
+        +(IS_ADMIN?'<button class="admin-del" onclick="deleteAnnonce(\''+a.id+'\')">✕ Supprimer</button>':'')
+      +'</div>'
+      +(split.titre ? '<div class="annonce-titre">'+esc(split.titre)+'</div>' : '')
+      +'<div class="annonce-txt">'+esc(split.contenu)+'</div>'
+      +'<div class="reactions-wrap">'
+        +'<div class="reactions">'+reactionsHtml
+          +'<button class="react-add-btn" onclick="togglePicker(\''+a.id+'\')">+ 😊</button>'
+        +'</div>'
+        +'<div class="react-picker" id="picker-'+a.id+'">'+pickerHtml+'</div>'
+      +'</div>'
       +'</div>';
   }).join('');
+}
+
+function togglePicker(id){
+  var el = document.getElementById('picker-'+id);
+  var wasOn = el.classList.contains('on');
+  document.querySelectorAll('.react-picker').forEach(function(p){ p.classList.remove('on'); });
+  if(!wasOn) el.classList.add('on');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.reactions-wrap')) document.querySelectorAll('.react-picker').forEach(function(p){ p.classList.remove('on'); });
+});
+
+function openDrawer(){
+  document.getElementById('drawer-ov').classList.add('on');
+  document.getElementById('a-auteur-nom').value = PROF.prenom || '';
+}
+function closeDrawer(){ document.getElementById('drawer-ov').classList.remove('on'); }
+
+function pickCat(cat){
+  PICKED_CAT = cat;
+  document.querySelectorAll('.cat-opt').forEach(function(o){ o.classList.toggle('on', o.dataset.cat===cat); });
 }
 
 function toggleSendEmail(){
@@ -156,11 +316,24 @@ function toggleSendEmail(){
 }
 
 async function publishAnnonce(){
+  var titre = document.getElementById('a-titre').value.trim();
   var contenu = document.getElementById('a-contenu').value.trim();
+  var auteurNom = document.getElementById('a-auteur-nom').value.trim();
+  var auteurRole = document.getElementById('a-auteur-role').value.trim();
   if(!contenu){ alert('Écrivez un message avant de publier.'); return; }
-  var r = await sb.from('annonces').insert({contenu:contenu, created_by:USER.id}).select().single();
+
+  var r = await sb.from('annonces').insert({
+    contenu:contenu, titre: titre||null, categorie: PICKED_CAT,
+    auteur_nom: auteurNom||null, auteur_role: auteurRole||null,
+    created_by:USER.id
+  }).select().single();
   if(r.error){ alert('Erreur : '+r.error.message); return; }
+
+  document.getElementById('a-titre').value='';
   document.getElementById('a-contenu').value='';
+  document.getElementById('a-auteur-nom').value='';
+  document.getElementById('a-auteur-role').value='';
+  closeDrawer();
 
   if(SEND_EMAIL){
     try{
