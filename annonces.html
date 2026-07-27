@@ -228,7 +228,16 @@ function setFilter(id){
 }
 
 async function loadAnnonces(){
-  var r = await sb.from('annonces').select('*, profiles:created_by(prenom,nom)').order('created_at',{ascending:false});
+  // Pas de jointure vers profiles ici — ça suppose une relation de clé
+  // étrangère explicite entre annonces.created_by et profiles.id, qui n'a
+  // visiblement jamais été déclarée dans la base. Résultat : la requête
+  // échouait silencieusement (aucune annonce ne s'affichait), alors que
+  // l'insertion et l'envoi d'email fonctionnaient bien puisqu'ils ne
+  // dépendaient pas de cette jointure. On n'en a de toute façon pas
+  // besoin : auteur_nom/auteur_role sont déjà stockés directement sur
+  // chaque annonce à la publication.
+  var r = await sb.from('annonces').select('*').order('created_at',{ascending:false});
+  if(r.error){ console.error('[Cap Santé] échec chargement annonces:', r.error.message); }
   ANNONCES = r.data || [];
   var rr = await sb.from('annonce_reactions').select('*');
   REACTIONS = rr.data || [];
@@ -263,7 +272,7 @@ function renderAnnonces(){
 
     var split = splitLegacyTitle(a);
     var cat = a.categorie || 'nouveaute';
-    var authorName = a.auteur_nom || (a.profiles && a.profiles.prenom) || 'Équipe Cap Santé';
+    var authorName = a.auteur_nom || 'Équipe Cap Santé';
     var authorRole = a.auteur_role || 'Équipe Cap Santé';
     var initial = authorName.charAt(0).toUpperCase();
 
