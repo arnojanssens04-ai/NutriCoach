@@ -2634,7 +2634,7 @@ async function refreshDash(){
     // pour tous — seul l'admin peut prévisualiser le nouvel affichage via
     // son propre interrupteur de test.
     document.getElementById('d-target').textContent=tgt.kcal;
-    if(kcalRound>0 && excessKcal<=0){
+    if(kcalRound>0 && excessKcal>=0){
       restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
     } else {
       restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
