@@ -289,6 +289,7 @@ body {
 
 /* ── MACROS ── */
 .macros-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
+.macros-row.with-fibres { grid-template-columns: repeat(2,1fr); }
 .macro-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -770,24 +771,31 @@ body {
     </div>
   </div>
 
-  <div class="macros-row">
-    <div class="macro-card">
+  <div id="diabete-buffer-badge" style="display:none;margin-bottom:10px"></div>
+  <div class="macros-row" id="macros-row">
+    <div class="macro-card" id="macro-card-prot" style="order:3">
       <div class="macro-ico"> </div>
       <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
       <div class="macro-lbl">Protéines</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
     </div>
-    <div class="macro-card">
+    <div class="macro-card" id="macro-card-gluc" style="order:1">
       <div class="macro-ico"> </div>
       <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
-      <div class="macro-lbl">Glucides</div>
+      <div class="macro-lbl" id="gluc-lbl">Glucides</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
     </div>
-    <div class="macro-card">
+    <div class="macro-card" id="macro-card-lip" style="order:4">
       <div class="macro-ico"> </div>
       <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
       <div class="macro-lbl">Lipides</div>
       <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
+    </div>
+    <div class="macro-card" id="macro-card-fibres" style="order:2;display:none">
+      <div class="macro-ico"> </div>
+      <div class="macro-val" id="d-fibres-card" style="color:var(--sage)">0g</div>
+      <div class="macro-lbl">Fibres</div>
+      <div class="macro-prog"><div class="macro-prog-fill" id="mp-fibres" style="width:0%;background:var(--sage)"></div></div>
     </div>
   </div>
 
@@ -799,17 +807,6 @@ body {
        les repas restants ne sont plus présentés comme "à compléter" pour
        le reste de la journée. -->
   <div id="satiety-zone" style="margin-bottom:14px"></div>
-
-  <a href="bilan.html" id="bilan-link" style="text-decoration:none;color:inherit;display:block">
-    <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
-      <div class="meal-card-top">
-        <span class="meal-ico">📊</span>
-        <div class="meal-add">→</div>
-      </div>
-      <div class="meal-name">Bilan hebdomadaire</div>
-      <div class="meal-kcal" id="bilan-card-sub">Faire le point sur votre semaine</div>
-    </div>
-  </a>
 
   <div class="stitle">Alertes santé</div>
   <div id="alerts-zone"></div>
@@ -1603,7 +1600,12 @@ function countAlcoholUnits(entries){
 // Détecte les grammes de LÉGUMES consommés — nécessaire pour le bonus
 // "200g de légumes" du Score Santé. Liste volontairement centrée sur les
 // vrais légumes (pas les légumineuses, catégorie nutritionnelle différente).
-var LEGUMES_REGEX = /carotte|brocoli|courgette|epinard|poivron|tomate|salade|haricots? verts?|chou(.fleur|rave)?|oignon|champignon|aubergine|concombre|radis|poireau|potiron|courge|navet|betterave|artichaut|asperge|fenouil|endive|cresson|celeri|petits? pois/;
+// Termes spécifiques (nom du légume) + termes génériques qui apparaissent
+// sur les produits composites où aucun légume précis n'est nommé (ex:
+// "Légumes surgelés", "Macédoine", "Poêlée de légumes") — sans ce
+// deuxième groupe, ces aliments très courants au supermarché ne
+// remontaient jamais dans le compteur "Légumes du jour".
+var LEGUMES_REGEX = /carotte|brocoli|courgette|epinard|poivron|tomate|salade|haricots? verts?|chou(.fleur|rave)?|oignon|champignon|aubergine|concombre|radis|poireau|potiron|courge|navet|betterave|artichaut|asperge|fenouil|endive|cresson|celeri|petits? pois|legumes?\b|macedoine|jardiniere|ratatouille|melange.*legume/;
 function isLegume(nom){
   var n = (nom||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   return LEGUMES_REGEX.test(n);
@@ -2068,7 +2070,27 @@ function afterJournalChange(){
 // fibreGlucRatio() est désormais fournie par regles-pathologies.js
 // (fichier partagé inclus en haut de page) — plus de définition locale ici.
 
+// Repli pour les fibres manquantes (null/undefined dans Ciqual) — mieux
+// qu'un 0g par défaut, qui fausse silencieusement tous les calculs en
+// aval (score qualité, ratio glucides/fibres pour le profil diabète...).
+// Heuristique par catégorie déduite du nom, faute d'un vrai code de
+// groupe alimentaire disponible dans les données actuelles.
+var FRUIT_REGEX = /pomme|banane|orange|poire|fraise|framboise|myrtille|kiwi|peche|abricot|prune|raisin|melon|pasteque|ananas|mangue|cerise|clementine|mandarine|pamplemousse/;
+var WHOLEGRAIN_REGEX = /complet|integral|avoine|quinoa|sarrasin|epeautre|son de/;
+var LEGUMINEUSE_REGEX = /lentille|pois chiche|haricot (rouge|blanc|noir)|feve/;
+function estimateFibresFallback(nom, gluc){
+  var n = (nom||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(LEGUMINEUSE_REGEX.test(n)) return 7;
+  if(WHOLEGRAIN_REGEX.test(n)) return 6;
+  if(isLegume(nom)) return 2.5;
+  if(FRUIT_REGEX.test(n)) return 2;
+  return 0; // pas d'estimation fiable au-delà de ces catégories connues
+}
+
 async function addEntry(food,qty){
+  var fibresVal = (food.fibres===null || food.fibres===undefined || food.fibres==='')
+    ? estimateFibresFallback(food.nom, food.gluc)
+    : pN(food.fibres);
   var r = await sb.from('journal').insert({
     user_id:USER.id,date:today(),repas:activeMeal,aliment:food.nom,
     kcal:pN(food.kcal)*qty/100,proteines:pN(food.prot)*qty/100,
@@ -2080,7 +2102,7 @@ async function addEntry(food,qty){
     food_ags_100:pN(food.ags),food_o3a_100:pN(food.o3a),
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
     food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot),
-    food_fibres_100:pN(food.fibres),food_mg_100:pN(food.mg),
+    food_fibres_100:fibresVal,food_mg_100:pN(food.mg),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
     is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4) : null
   });
@@ -2552,25 +2574,6 @@ async function refreshDash(){
   // Profil si le jour ne convient plus).
   var joursFR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   var todayName = joursFR[new Date().getDay()];
-  var bilanCard = document.getElementById('bilan-card');
-  var bilanLink = document.getElementById('bilan-link');
-  if(bilanCard){
-    var isBilanDay = (p.jour_bilan||'dimanche')===todayName;
-    if(isBilanDay){
-      bilanCard.style.borderColor='var(--gold)';
-      bilanCard.style.opacity='1';
-      bilanLink.removeAttribute('data-disabled');
-      bilanLink.href='bilan.html';
-      document.getElementById('bilan-card-sub').innerHTML='<strong style="color:var(--gold)">C\'est votre jour de bilan !</strong>';
-    } else {
-      bilanCard.style.borderColor='var(--border)';
-      bilanCard.style.opacity='.5';
-      bilanLink.removeAttribute('href');
-      bilanLink.style.cursor='not-allowed';
-      var jourLbl = p.jour_bilan ? p.jour_bilan.charAt(0).toUpperCase()+p.jour_bilan.slice(1) : 'dimanche';
-      document.getElementById('bilan-card-sub').textContent='Disponible le '+jourLbl;
-    }
-  }
 
   renderAccompagnementWidget(p, todayName);
 
@@ -2656,11 +2659,51 @@ async function refreshDash(){
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
   document.getElementById('d-prot').textContent=T.prot.toFixed(1)+'g';
-  document.getElementById('d-gluc').textContent=T.gluc.toFixed(1)+'g';
   document.getElementById('d-lip').textContent=T.lip.toFixed(1)+'g';
   document.getElementById('mp-prot').style.width=Math.min(100,tgt.prot>0?T.prot/tgt.prot*100:0)+'%';
-  document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?T.gluc/tgt.gluc*100:0)+'%';
   document.getElementById('mp-lip').style.width=Math.min(100,tgt.lip>0?T.lip/tgt.lip*100:0)+'%';
+
+  // Profil diabète — glucides nets mis en avant, carte fibres visible et
+  // réorganisation (glucides puis fibres en premier), plus un repère
+  // simple sur la capacité du repas à lisser la réponse glycémique.
+  var isDiabetic = pathos.indexOf('diabetes')>=0;
+  var macrosRow = document.getElementById('macros-row');
+  var fibresCard = document.getElementById('macro-card-fibres');
+  var glucLbl = document.getElementById('gluc-lbl');
+  macrosRow.classList.toggle('with-fibres', isDiabetic);
+  fibresCard.style.display = isDiabetic ? 'block' : 'none';
+
+  if(isDiabetic){
+    var glucNets = Math.max(0, T.gluc - T.fibres);
+    document.getElementById('d-gluc').textContent = glucNets.toFixed(1)+'g';
+    glucLbl.textContent = 'Glucides nets';
+    document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?glucNets/tgt.gluc*100:0)+'%';
+    document.getElementById('d-fibres-card').textContent = T.fibres.toFixed(1)+'g';
+    document.getElementById('mp-fibres').style.width=Math.min(100,(tgt.fibres||27)>0?T.fibres/(tgt.fibres||27)*100:0)+'%';
+
+    // "Tampon glycémique" — ratio fibres/glucides de la journée : plus il
+    // est élevé, plus la réponse glycémique tend à être lissée par les
+    // fibres (et dans une moindre mesure les protéines) présentes avec les
+    // glucides, plutôt que des glucides "nus".
+    var bufferBadge = document.getElementById('diabete-buffer-badge');
+    if(T.gluc >= 5){
+      var ratio = T.fibres / T.gluc;
+      var bufferLvl = ratio>=0.12 ? {cls:'ok', lbl:'✓ Bon tampon glycémique', txt:'Vos glucides sont bien accompagnés de fibres aujourd\'hui.'}
+        : ratio>=0.06 ? {cls:'mid', lbl:'⚠️ Tampon glycémique modéré', txt:'Un peu plus de fibres (légumes, légumineuses) aiderait à lisser la réponse glycémique.'}
+        : {cls:'low', lbl:'⚠️ Tampon glycémique faible', txt:'Glucides peu accompagnés de fibres aujourd\'hui — privilégiez légumes et céréales complètes au prochain repas.'};
+      bufferBadge.style.display = 'block';
+      bufferBadge.innerHTML = '<div class="kcal-done-badge '+(bufferLvl.cls==='ok'?'':'over-mid')+'" style="width:100%;box-sizing:border-box;display:block">'
+        +bufferLvl.lbl+'<div style="font-size:.72rem;font-weight:400;margin-top:3px;opacity:.85">'+bufferLvl.txt+'</div></div>';
+    } else {
+      bufferBadge.style.display = 'none';
+    }
+  } else {
+    document.getElementById('d-gluc').textContent=T.gluc.toFixed(1)+'g';
+    glucLbl.textContent = 'Glucides';
+    document.getElementById('mp-gluc').style.width=Math.min(100,tgt.gluc>0?T.gluc/tgt.gluc*100:0)+'%';
+    document.getElementById('diabete-buffer-badge').style.display='none';
+  }
+
   // Score — affiché uniquement quand au moins 2 repas principaux sont enregistrés.
   // Avant ça, un score de 15/100 à 9h du matin est décourageant et non représentatif.
   var mainMealsEntered = {};
