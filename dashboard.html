@@ -2628,16 +2628,13 @@ async function refreshDash(){
       restEl.parentElement.innerHTML = '<span class="kcal-rest-lbl">Repas enregistrés aujourd\'hui</span>';
     }
   } else {
-    // ANCIEN — objectif fixe + compte à rebours précis. C'est ce que tout
-    // le monde voit par défaut tant que le nouvel affichage est en test.
+    // ANCIEN — strictement identique à ce qui existait avant toute cette
+    // MAJ, sans aucune modification. C'est ce que tout le monde continue
+    // de voir tant que le mode focus n'est pas officiellement disponible
+    // pour tous — seul l'admin peut prévisualiser le nouvel affichage via
+    // son propre interrupteur de test.
     document.getElementById('d-target').textContent=tgt.kcal;
-    if(SATIETY_TODAY){
-      restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Rassasié(e) aujourd\'hui</span>';
-    } else if(kcalRound>0 && ratioKcal>1.15){
-      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">⚠️ Apport élevé (+'+excessKcal+' kcal)</span>';
-    } else if(kcalRound>0 && excessKcal>100){
-      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">⚠️ Quota dépassé (+'+excessKcal+' kcal)</span>';
-    } else if(kcalRound>0 && excessKcal>0){
+    if(kcalRound>0 && excessKcal<=0){
       restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
     } else {
       restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
@@ -2646,7 +2643,15 @@ async function refreshDash(){
   var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
   var progFill = document.getElementById('prog-kcal');
   progFill.style.width=pct+'%';
-  progFill.style.background = SATIETY_TODAY ? 'var(--sage)' : (ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>(previewNewKcal?150:100) ? 'var(--amber)' : 'var(--sage)'));
+  if(previewNewKcal){
+    progFill.style.background = SATIETY_TODAY ? 'var(--sage)' : (ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>150 ? 'var(--amber)' : 'var(--sage)'));
+  } else {
+    // Ancien comportement exact : couleur basée sur le pourcentage de la
+    // barre, pas sur le dépassement réel — c'est ce qui produisait une
+    // barre verte pleine même en cas de fort dépassement (comme sur la
+    // capture). Volontairement laissé tel quel pour tout le monde.
+    progFill.style.background = pct>=98 ? 'var(--sage)' : pct>=80 ? 'var(--amber)' : 'var(--gold)';
+  }
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
