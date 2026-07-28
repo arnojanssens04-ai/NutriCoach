@@ -251,6 +251,21 @@ body {
 .focus-card-hdr { font-family:'Lora',serif; font-weight:700; font-size:1rem; color:var(--sage); margin-bottom:8px; }
 .focus-card-txt { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:10px; }
 .focus-card-meals { font-size:.76rem; color:var(--text3); }
+
+.energy-gauge-wrap { display:flex; align-items:center; gap:12px; margin:12px 0; }
+.energy-gauge-track { flex:1; height:14px; background:var(--bg2); border-radius:999px; overflow:hidden; }
+.energy-gauge-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--sage),var(--gold)); transition:width 1s cubic-bezier(.4,0,.2,1); }
+.energy-gauge-pct { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; color:var(--gold); min-width:44px; text-align:right; }
+
+.sleep-checkin-ov { position:fixed; inset:0; background:rgba(22,36,27,0.55); z-index:600; display:flex; align-items:center; justify-content:center; padding:20px; }
+.sleep-checkin-card { background:var(--card); border-radius:18px; padding:24px 20px; max-width:360px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.2); text-align:center; }
+.sleep-checkin-ttl { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; margin-bottom:6px; }
+.sleep-checkin-sub { font-size:.82rem; color:var(--text2); margin-bottom:18px; }
+.sleep-checkin-opts { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+.sleep-opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; border:1px solid var(--border2); background:var(--card2); cursor:pointer; font-size:.88rem; font-weight:600; color:var(--text); text-align:left; transition:all .15s; }
+.sleep-opt:hover { border-color:var(--gold); background:var(--gold-l); }
+.sleep-opt .ico { font-size:1.2rem; }
+.sleep-checkin-skip { background:none; border:none; color:var(--text3); font-size:.78rem; text-decoration:underline; cursor:pointer; }
 @keyframes slideDownBanner { from{opacity:0;transform:translateY(-12px);} to{opacity:1;transform:translateY(0);} }
 
 .satiety-btn { width:100%; padding:14px; border-radius:var(--r); border:1px dashed var(--border2); background:var(--card); color:var(--text2); font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .15s; }
@@ -679,16 +694,34 @@ body {
     </div>
   </div>
 
-  <!-- MODE FOCUS — remplace la carte kcal par une vue centrée sur la
-       qualité plutôt que le chiffre, quand ce mode est activé (par
-       l'utilisateur ou son diététicien). Les calories continuent d'être
-       calculées normalement en arrière-plan pour le bilan, simplement
-       pas affichées au quotidien pour ne pas nourrir un rapport
-       comptable à l'alimentation. -->
+  <!-- MODE FOCUS — remplace la carte kcal par la Jauge d'Énergie
+       Quotidienne quand ce mode est activé (par l'utilisateur ou son
+       diététicien). Les calories continuent d'être calculées normalement
+       en arrière-plan pour le bilan, simplement pas affichées au
+       quotidien pour ne pas nourrir un rapport comptable à l'alimentation. -->
   <div class="focus-card" id="focus-card" style="display:none">
-    <div class="focus-card-hdr">🌿 Mode focus actif</div>
-    <div class="focus-card-txt">Vous avez choisi de ne pas afficher le chiffre exact des calories au quotidien. Votre suivi continue normalement en arrière-plan pour votre bilan.</div>
+    <div class="focus-card-hdr">🌿 Jauge d'énergie du jour</div>
+    <div class="energy-gauge-wrap">
+      <div class="energy-gauge-track"><div class="energy-gauge-fill" id="energy-gauge-fill" style="width:70%"></div></div>
+      <div class="energy-gauge-pct" id="energy-gauge-pct">70%</div>
+    </div>
+    <div class="focus-card-txt" id="energy-gauge-msg">Chaque repas équilibré (protéines + fibres) recharge votre jauge.</div>
     <div class="focus-card-meals" id="focus-meals-count">— repas enregistrés aujourd'hui</div>
+  </div>
+
+  <!-- Micro-checkin sommeil — proposé une fois par jour, au premier
+       chargement, pour initialiser la jauge d'énergie du matin. -->
+  <div class="sleep-checkin-ov" id="sleep-checkin-ov" style="display:none">
+    <div class="sleep-checkin-card">
+      <div class="sleep-checkin-ttl">Comment avez-vous dormi cette nuit ?</div>
+      <div class="sleep-checkin-sub">Ça nous aide à initialiser votre jauge d'énergie du jour.</div>
+      <div class="sleep-checkin-opts">
+        <div class="sleep-opt" onclick="submitSleepCheckin('difficile')"><span class="ico">🔴</span>Sommeil difficile</div>
+        <div class="sleep-opt" onclick="submitSleepCheckin('moyen')"><span class="ico">🟠</span>Sommeil moyen</div>
+        <div class="sleep-opt" onclick="submitSleepCheckin('reparateur')"><span class="ico">🟢</span>Sommeil réparateur</div>
+      </div>
+      <button class="sleep-checkin-skip" onclick="skipSleepCheckin()">Passer pour aujourd'hui</button>
+    </div>
   </div>
 
   <!-- VOTRE ACCOMPAGNEMENT — rend tangible la présence humaine promise sur
@@ -1878,23 +1911,23 @@ function calcNutritionalQuality(entries, tgt){
   // 1. Protéines — 20 pts
   var protRatio = tgt.prot>0 ? T.prot/tgt.prot : 0;
   score += Math.round(Math.min(1, protRatio) * 20);
-  if(protRatio<0.8) tips.push({priority:1, msg:'Protéines insuffisantes ('+Math.round(T.prot)+'g / '+Math.round(tgt.prot)+'g) — ajoutez œuf, poulet, poisson ou légumineuses.'});
+  if(protRatio<0.8) tips.push({priority:1, msg:'Un peu plus de protéines (œuf, poulet, poisson, légumineuses) vous aiderait à couvrir vos besoins du jour.'});
 
   // 2. Fibres — 15 pts
   var fibreRatio = T.fibres/(tgt.fibres||27);
   score += Math.round(Math.min(1, fibreRatio) * 15);
-  if(fibreRatio<0.5) tips.push({priority:2, msg:'Fibres insuffisantes ('+Math.round(T.fibres)+'g / '+(tgt.fibres||27)+'g) — ajoutez légumes, légumineuses ou céréales complètes.'});
+  if(fibreRatio<0.5) tips.push({priority:2, msg:'Quelques fibres en plus (légumes, légumineuses, céréales complètes) donneraient un coup de pouce à votre digestion.'});
 
   // 3. Légumes — 15 pts
   var vegRatio = totalVegGrams/200;
   score += Math.round(Math.min(1, vegRatio) * 15);
-  if(totalVegGrams<100) tips.push({priority:3, msg:'Légumes insuffisants ('+Math.round(totalVegGrams)+'g / 200g recommandés) — visez au moins une portion au déjeuner et au souper.'});
-  else if(totalVegGrams<150) tips.push({priority:6, msg:'Bon début avec les légumes ('+Math.round(totalVegGrams)+'g) — encore un peu pour atteindre les 200g.'});
+  if(totalVegGrams<100) tips.push({priority:3, msg:'Une portion de légumes au déjeuner et une au souper compléteraient bien votre journée.'});
+  else if(totalVegGrams<150) tips.push({priority:6, msg:'Belle place aux légumes aujourd\'hui — encore un petit effort pour viser les 200g.'});
 
   // 4. Diversité alimentaire — 15 pts
   var groupCount = Object.keys(foodGroups).length;
   score += Math.round(Math.min(1, groupCount/4) * 15);
-  if(groupCount<3) tips.push({priority:4, msg:'Alimentation peu diversifiée — essayez d\'inclure au moins 4 groupes d\'aliments différents dans la journée.'});
+  if(groupCount<3) tips.push({priority:4, msg:'Varier encore un peu plus les groupes d\'aliments enrichirait votre journée.'});
 
   // 5. AGS — 10 pts
   var agsKcalPct = T.kcal>0 ? (T.ags*9)/T.kcal : 0;
@@ -1951,7 +1984,20 @@ function calcNutritionalQuality(entries, tgt){
 
   // Conseil secondaire : le prochain dans la liste (différent du principal)
   var secondary = tips.find(function(t){ return t.msg !== tip; });
-  var tipHtml = tip;
+
+  // "Reinforcement First" — on valorise d'abord ce qui va bien avant de
+  // glisser une suggestion, plutôt que d'ouvrir directement sur ce qui
+  // manque. Le ton punitif ("insuffisant", "1/4 critères") ne motive pas
+  // durablement, surtout pour un usage quotidien.
+  var praisePool = [];
+  if(groupCount>=4) praisePool.push('Belle diversité alimentaire aujourd\'hui');
+  if(fibreRatio>=0.8) praisePool.push('Vos apports en fibres sont sur la bonne voie');
+  if(vegRatio>=0.75) praisePool.push('Bonne place aux légumes aujourd\'hui');
+  if(ultraCount===0) praisePool.push('Journée sans aliment ultra-transformé, bravo');
+  if(protRatio>=0.8) praisePool.push('Vos apports en protéines sont bien couverts');
+  var praise = praisePool.length ? praisePool[0] : null;
+
+  var tipHtml = (praise ? '<strong>'+praise+'.</strong> ' : '') + tip;
   if(secondary) tipHtml += ' · <em style="opacity:.7">' + secondary.msg + '</em>';
 
   return {score:Math.min(100,score), tip:tip, tipHtml:tipHtml, criteria:{
@@ -2188,6 +2234,7 @@ async function addEntry(food,qty){
   }
 
   afterJournalChange();
+  if(typeof maybeRechargeEnergyGauge==='function') maybeRechargeEnergyGauge(activeMeal);
 }
 
 // Popup informatif depuis le badge du plan fixe dans dashboard.html —
@@ -2602,6 +2649,24 @@ async function refreshDash(){
   if(hideExactKcal){
     var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
     document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
+    loadEnergyGauge();
+
+    // Hypertension — sodium/potassium restent des repères cliniques
+    // importants même en mode focus ; on les affiche sobrement sous la
+    // jauge plutôt que de les masquer complètement.
+    var htaLine = document.getElementById('focus-hta-line');
+    if(pathos.indexOf('hypertension')>=0){
+      if(!htaLine){
+        htaLine = document.createElement('div');
+        htaLine.id = 'focus-hta-line';
+        htaLine.style.cssText = 'font-size:.76rem;color:var(--text2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)';
+        document.getElementById('focus-card').appendChild(htaLine);
+      }
+      htaLine.style.display='block';
+      htaLine.innerHTML = '<b>Sodium</b> '+Math.round(T.na)+'mg · <b>Potassium</b> '+Math.round(T.pot)+'mg';
+    } else if(htaLine){
+      htaLine.style.display='none';
+    }
   }
 
   // Kcal — deux affichages coexistent le temps des tests : l'ANCIEN (par
@@ -2670,6 +2735,7 @@ async function refreshDash(){
   // réorganisation (glucides puis fibres en premier), plus un repère
   // simple sur la capacité du repas à lisser la réponse glycémique.
   var isDiabetic = pathos.indexOf('diabetes')>=0;
+  var DIABETE_BUFFER_OK = null; // null = non applicable, sinon true/false
   var macrosRow = document.getElementById('macros-row');
   var fibresCard = document.getElementById('macro-card-fibres');
   var glucLbl = document.getElementById('gluc-lbl');
@@ -2691,9 +2757,10 @@ async function refreshDash(){
     var bufferBadge = document.getElementById('diabete-buffer-badge');
     if(T.gluc >= 5){
       var ratio = T.fibres / T.gluc;
-      var bufferLvl = ratio>=0.12 ? {cls:'ok', lbl:'✓ Bon tampon glycémique', txt:'Vos glucides sont bien accompagnés de fibres aujourd\'hui.'}
-        : ratio>=0.06 ? {cls:'mid', lbl:'⚠️ Tampon glycémique modéré', txt:'Un peu plus de fibres (légumes, légumineuses) aiderait à lisser la réponse glycémique.'}
-        : {cls:'low', lbl:'⚠️ Tampon glycémique faible', txt:'Glucides peu accompagnés de fibres aujourd\'hui — privilégiez légumes et céréales complètes au prochain repas.'};
+      var bufferLvl = ratio>=0.12 ? {cls:'ok', lbl:'✓ Bon tampon glycémique', txt:'Vos glucides sont bien accompagnés de fibres aujourd\'hui — une association qui aide à lisser la réponse glycémique.'}
+        : ratio>=0.06 ? {cls:'mid', lbl:'Tampon glycémique modéré', txt:'Un peu plus de fibres (légumes, légumineuses) au prochain repas aiderait à mieux lisser la réponse glycémique.'}
+        : {cls:'low', lbl:'Tampon glycémique à renforcer', txt:'Au prochain repas, associer vos glucides à des légumes ou des céréales complètes aidera à limiter le pic glycémique.'};
+      DIABETE_BUFFER_OK = bufferLvl.cls==='ok';
       bufferBadge.style.display = 'block';
       bufferBadge.innerHTML = '<div class="kcal-done-badge '+(bufferLvl.cls==='ok'?'':'over-mid')+'" style="width:100%;box-sizing:border-box;display:block">'
         +bufferLvl.lbl+'<div style="font-size:.72rem;font-weight:400;margin-top:3px;opacity:.85">'+bufferLvl.txt+'</div></div>';
@@ -2802,13 +2869,26 @@ async function refreshDash(){
     extraRow.style.display='flex';
     if(qnRes){
       var qnOkCount = Object.values(qnRes.criteria).filter(Boolean).length;
-      document.getElementById('qn-status').textContent = qnOkCount+'/4 critères respectés';
+      var qnStatusTxt = qnOkCount>=3 ? 'Très bel équilibre aujourd\'hui'
+        : qnOkCount===2 ? 'Bon équilibre, presque au top'
+        : qnOkCount===1 ? 'Un point fort à souligner'
+        : 'En construction aujourd\'hui';
+      document.getElementById('qn-status').textContent = qnStatusTxt;
       var qnMiniMap = {diversite:'qn-mini-diversite', fibres:'qn-mini-fibres', legumes:'qn-mini-legumes', ultraTransformes:'qn-mini-ultra'};
       Object.keys(qnMiniMap).forEach(function(key){
         var el = document.getElementById(qnMiniMap[key]);
         if(el) el.className = 'qn-mini-item ' + (qnRes.criteria[key] ? 'ok' : 'warn');
       });
-      document.getElementById('qn-tip').innerHTML = qnRes.tipHtml || qnRes.tip;
+      // Pour un profil diabète, si le tampon glycémique du jour est déjà
+      // bon (voir plus haut), on évite de contredire ce message positif
+      // avec un conseil "fibres" basé sur un quota journalier abstrait —
+      // les deux cartes doivent raconter la même histoire, pas se
+      // contredire selon l'angle (repas vs jour entier).
+      if(isDiabetic && DIABETE_BUFFER_OK===true && /[Ff]ibres/.test(qnRes.tip)){
+        document.getElementById('qn-tip').innerHTML = '<strong>Bon équilibre glucides/fibres aujourd\'hui.</strong> Continuez sur cette lancée à votre prochain repas.';
+      } else {
+        document.getElementById('qn-tip').innerHTML = qnRes.tipHtml || qnRes.tip;
+      }
     }
     if(rjRes){
       document.getElementById('rj-num').textContent = rjRes.score+'/100';
@@ -4560,8 +4640,8 @@ function analyzeAndAdjust(entries, tgt, pathologies){
       var labelMacro = key==='carb'?'glucides':key==='protein'?'protéines':'lipides';
       var gapRemaining = targetKcal - (qty*def.kcal/100);
       var gapNote = gapRemaining > targetKcal*0.25 ? ' À ce niveau de besoin, une seule portion ne suffit pas pour ce repas.' : '';
-      suggestionAlerts.push({t:'good',i:'➕',ttl:'Aliment suggéré ajouté',
-        txt:'Aucune source de '+labelMacro+' à votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' — nous avons ajouté '+qty+'g de "'+def.nom+'". Cliquez ⇄ pour le remplacer.'+gapNote});
+      suggestionAlerts.push({t:'good',i:'💡',ttl:'Idée du coach pour compléter ce repas',
+        txt:'Aucune source de '+labelMacro+' à votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' — essayez d\'ajouter '+qty+'g de "'+def.nom+'", déjà préremplis ci-dessus. Touchez ⇄ pour choisir autre chose.'+gapNote});
     });
   });
 
@@ -5336,12 +5416,12 @@ async function logout(){
 .pp-precise-row input:focus { border-color:rgba(45,79,28,0.35); }
 </style>
 
-<!-- Note: La base Ciqual (data/ciqual.json) sera chargée séparément -->
+<!-- Note: La base Ciqual (ciqual.json, à la racine) sera chargée séparément -->
 
 <script>
 // Chargement asynchrone de la base Ciqual
 var DB = [];
-fetch('data/ciqual.json')
+fetch('ciqual.json')
   .then(function(r){return r.json();})
   .then(function(raw){
     DB = raw.map(function(r){
