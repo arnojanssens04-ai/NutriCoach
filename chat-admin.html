@@ -75,7 +75,10 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
     <div class="conv-list" id="conv-list" style="border-right:none;flex:1"></div>
   </div>
   <div class="thread-panel">
-    <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">←</button><span id="thread-hdr-txt">Sélectionnez une conversation</span></div>
+    <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">←</button><span id="thread-hdr-txt">Sélectionnez une conversation</span></span>
+      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--text2);white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">🌿 Mode focus</button>
+    </div>
     <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation à gauche</div></div>
     <div class="input-bar" id="input-bar" style="display:none">
       <textarea id="msg-input" placeholder="Répondre..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
@@ -121,7 +124,7 @@ async function checkAdminAndLoad(){
   }
   document.getElementById('main').style.display='flex';
 
-  var usersRes = await sb.from('profiles').select('id,prenom,nom,email');
+  var usersRes = await sb.from('profiles').select('id,prenom,nom,email,hide_exact_kcal');
   (usersRes.data||[]).forEach(function(u){ ALL_USERS[u.id] = u; });
 
   await loadAllMessages();
@@ -178,6 +181,28 @@ async function openConv(uid){
   renderConvList();
   await sb.from('messages').update({read_by_admin:true}).eq('user_id',uid).eq('is_admin_sender',false).eq('read_by_admin',false);
   loadAllMessages();
+
+  var focusBtn = document.getElementById('focus-mode-btn');
+  var u = ALL_USERS[uid];
+  focusBtn.style.display = 'inline-block';
+  focusBtn.classList.toggle('on', u && u.hide_exact_kcal === true);
+  focusBtn.style.background = (u && u.hide_exact_kcal===true) ? 'var(--gold-l)' : 'var(--card2)';
+  focusBtn.style.color = (u && u.hide_exact_kcal===true) ? 'var(--gold)' : 'var(--text2)';
+  focusBtn.textContent = (u && u.hide_exact_kcal===true) ? '🌿 Mode focus (actif)' : '🌿 Mode focus';
+}
+
+// Permet au diététicien d'activer le mode focus pour un utilisateur
+// directement depuis sa conversation, s'il repère un rapport trop
+// comptable aux calories dans ses messages — sans devoir attendre que la
+// personne le fasse elle-même.
+async function toggleUserFocusMode(){
+  if(!CURRENT_CONV) return;
+  var u = ALL_USERS[CURRENT_CONV];
+  var newVal = !(u && u.hide_exact_kcal === true);
+  var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',CURRENT_CONV);
+  if(r.error){ alert('Erreur : '+r.error.message); return; }
+  ALL_USERS[CURRENT_CONV].hide_exact_kcal = newVal;
+  openConv(CURRENT_CONV); // rafraîchit l'apparence du bouton
 }
 function backToList(){
   document.getElementById('main').classList.remove('show-thread');
