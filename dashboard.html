@@ -247,6 +247,43 @@ body {
 .kcal-done-badge { display:inline-flex; align-items:center; gap:5px; font-size:.82rem; font-weight:700; color:var(--sage); background:var(--sage-l); padding:5px 12px; border-radius:999px; margin-bottom:10px; }
 .kcal-done-badge.over-mid { color:var(--amber); background:var(--amber-l,rgba(122,92,30,0.1)); }
 .kcal-done-badge.over-high { color:var(--rose); background:var(--rose-l,rgba(139,42,42,0.08)); }
+.focus-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:20px 18px; margin-bottom:14px; box-shadow:var(--sh); text-align:center; }
+.focus-card-hdr { font-family:'Lora',serif; font-weight:700; font-size:1rem; color:var(--sage); margin-bottom:8px; }
+.focus-card-txt { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:10px; }
+.focus-card-meals { font-size:.76rem; color:var(--text3); }
+@keyframes slideDownBanner { from{opacity:0;transform:translateY(-12px);} to{opacity:1;transform:translateY(0);} }
+
+.satiety-btn { width:100%; padding:14px; border-radius:var(--r); border:1px dashed var(--border2); background:var(--card); color:var(--text2); font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .15s; }
+.satiety-btn:hover { border-color:var(--sage); color:var(--sage); background:var(--sage-l); }
+.satiety-confirmed { background:var(--sage-l); border:1px solid rgba(74,122,58,0.3); border-radius:var(--r); padding:16px 18px; text-align:center; }
+.satiety-confirmed-ttl { font-family:'Lora',serif; font-weight:700; color:var(--sage); font-size:.95rem; margin-bottom:4px; }
+.satiety-confirmed-txt { font-size:.8rem; color:var(--text2); line-height:1.5; }
+.satiety-undo { background:none; border:none; color:var(--text3); font-size:.72rem; text-decoration:underline; cursor:pointer; margin-top:8px; }
+.energy-checkin { background:var(--card2); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; }
+.energy-checkin-ttl { font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:10px; }
+.energy-opts { display:flex; gap:8px; }
+.energy-opt { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 6px; border-radius:10px; border:1px solid var(--border2); background:var(--card); cursor:pointer; font-size:.68rem; color:var(--text2); text-align:center; transition:all .15s; }
+.energy-opt:hover { border-color:var(--gold); background:var(--gold-l); }
+.energy-opt .ico { font-size:1.2rem; }
+.energy-done { background:var(--sage-l); border:1px solid rgba(74,122,58,0.25); border-radius:var(--r); padding:12px 16px; font-size:.82rem; color:var(--sage); display:flex; align-items:center; gap:8px; }
+.energy-done button { margin-left:auto; background:none; border:none; color:var(--text3); font-size:.7rem; text-decoration:underline; cursor:pointer; }
+.alt-drawer-ov { position:fixed; inset:0; background:rgba(22,36,27,0.5); z-index:400; display:flex; align-items:flex-end; justify-content:center; }
+.alt-drawer { background:var(--card); border-radius:20px 20px 0 0; padding:20px 18px 28px; width:100%; max-width:480px; max-height:80vh; overflow-y:auto; }
+.alt-drawer-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.alt-drawer-hdr span { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; }
+.alt-section-lbl { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--sage); margin:16px 0 8px; }
+.alt-section-lbl:first-of-type { margin-top:0; }
+.alt-item { display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:11px; border:1px solid var(--border2); background:var(--card2); cursor:pointer; margin-bottom:8px; transition:all .15s; }
+.alt-item:hover { border-color:var(--gold); background:var(--gold-l); }
+.alt-item-ico { font-size:1.1rem; flex-shrink:0; }
+.alt-item-body { flex:1; min-width:0; }
+.alt-item-name { font-size:.86rem; font-weight:600; color:var(--text); }
+.alt-item-sub { font-size:.72rem; color:var(--text3); margin-top:1px; }
+.alt-empty { font-size:.78rem; color:var(--text3); padding:8px 0 4px; }
+.alt-surprise { width:100%; padding:10px; border-radius:10px; border:1px dashed var(--border2); background:none; color:var(--text2); font-size:.82rem; cursor:pointer; margin-top:6px; }
+.switch.on { background:var(--gold) !important; }
+.switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.switch.on::after { left:23px; }
 .prog-track { height:5px; background:rgba(0,0,0,.07); border-radius:99px; overflow:hidden; }
 .prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1), background .4s ease; }
 
@@ -623,7 +660,7 @@ body {
 <div class="page on" id="pg-dashboard">
 
   <!-- KCAL EN PREMIER — plus immédiatement utile au quotidien -->
-  <div class="kcal-card">
+  <div class="kcal-card" id="kcal-card">
     <div class="kcal-ring-wrap">
       <svg viewBox="0 0 110 110">
         <circle class="kr-bg" cx="55" cy="55" r="46"/>
@@ -635,10 +672,22 @@ body {
       </div>
     </div>
     <div class="kcal-info">
-      <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
+      <div class="kcal-obj">Cible : <span id="d-target">—</span> kcal</div>
       <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
       <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
     </div>
+  </div>
+
+  <!-- MODE FOCUS — remplace la carte kcal par une vue centrée sur la
+       qualité plutôt que le chiffre, quand ce mode est activé (par
+       l'utilisateur ou son diététicien). Les calories continuent d'être
+       calculées normalement en arrière-plan pour le bilan, simplement
+       pas affichées au quotidien pour ne pas nourrir un rapport
+       comptable à l'alimentation. -->
+  <div class="focus-card" id="focus-card" style="display:none">
+    <div class="focus-card-hdr">🌿 Mode focus actif</div>
+    <div class="focus-card-txt">Vous avez choisi de ne pas afficher le chiffre exact des calories au quotidien. Votre suivi continue normalement en arrière-plan pour votre bilan.</div>
+    <div class="focus-card-meals" id="focus-meals-count">— repas enregistrés aujourd'hui</div>
   </div>
 
   <!-- VOTRE ACCOMPAGNEMENT — rend tangible la présence humaine promise sur
@@ -745,6 +794,12 @@ body {
   <div class="stitle">Mes repas</div>
   <div class="meals-grid" id="meals-grid"></div>
 
+  <!-- SATIETY OVERRIDE — valide la journée sur la base de la sensation
+       réelle, plutôt que d'un niveau théorique atteint. Une fois validée,
+       les repas restants ne sont plus présentés comme "à compléter" pour
+       le reste de la journée. -->
+  <div id="satiety-zone" style="margin-bottom:14px"></div>
+
   <a href="bilan.html" id="bilan-link" style="text-decoration:none;color:inherit;display:block">
     <div class="meal-card" style="margin-bottom:14px;cursor:pointer" id="bilan-card">
       <div class="meal-card-top">
@@ -816,6 +871,7 @@ body {
   <div class="div-line"></div>
   <div class="stitle" id="added-ttl">Aliments ajoutés</div>
   <div id="added-zone"></div>
+  <div id="energy-checkin-zone" style="margin-top:12px"></div>
 </div>
 
 <!-- WEEKLY -->
@@ -868,6 +924,17 @@ body {
       <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.</div>
     </div>
   </a>
+  <div class="prof-card" id="focus-mode-card" style="display:none">
+    <div class="prof-card-hdr"><span>🌿 Mode focus <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Masque le chiffre exact des calories sur votre tableau de bord — pour vous concentrer sur la qualité de vos repas plutôt que sur un chiffre à gérer en temps réel. Le suivi continue normalement en arrière-plan pour votre bilan.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;color:var(--text)">Activer le mode focus</span>
+        <div class="switch" id="focus-mode-switch" onclick="toggleFocusMode()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>⚙️ Compte</span></div>
     <div class="prof-card-body">
@@ -1136,6 +1203,7 @@ body {
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="mode-focus.js?v=1"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <!-- Règles nutritionnelles partagées (diabète, cœliaque à venir, FODMAP à
      venir) — même fichier inclus dans plan-fixe.html et recette.html,
@@ -1149,6 +1217,7 @@ var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
 var USER = null, PROF = null;
+// SATIETY_TODAY est déclarée dans mode-focus.js
 var activeMeal = 'breakfast';
 var wkOffset = 0;
 var srchTimer = null, srchRes = [];
@@ -1942,14 +2011,19 @@ function calcDayDistribution(entries, activeMealIds){
   return {score:Math.min(100,score), tip:tip};
 }
 
-function genAlerts(T,tgt,pathos,entries){
+function genAlerts(T,tgt,pathos,entries,satietyValidated){
   var al=[];if(T.kcal<100)return al;
   var p=PROF||{};
   var r=T.kcal/tgt.kcal;
   var excess=T.kcal-tgt.kcal; // positif = dépassement réel en kcal, négatif = en dessous
-  if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
-  else if(excess>100)al.push({t:'warn',i:'⚠️',ttl:'Quota dépassé',txt:'Vous avez largement dépassé votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — si vous voulez atteindre vos objectifs, chaque journée compte.'});
-  else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
+  // Une fois la satiété validée pour la journée, le chiffre ne doit plus
+  // générer de jugement — c'est tout le principe du bouton "Je suis
+  // rassasié(e)" : la sensation réelle prime sur le niveau théorique.
+  if(!satietyValidated){
+    if(r>1.15)al.push({t:'bad',i:'🔴',ttl:'Apport calorique élevé',txt:'Dépassement de '+Math.round((r-1)*100)+'%. Objectif : '+tgt.kcal+' kcal.'});
+    else if(excess>100)al.push({t:'warn',i:'⚠️',ttl:'Quota dépassé',txt:'Vous avez largement dépassé votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — si vous voulez atteindre vos objectifs, chaque journée compte.'});
+    else if(excess>0)al.push({t:'good',i:'✓',ttl:'Quota atteint',txt:'Vous avez atteint votre quota calorique pour aujourd\'hui ('+Math.round(T.kcal)+' / '+tgt.kcal+' kcal) — faites attention à ne pas trop le dépasser.'});
+  }
   // Volontairement rien d'autre ici : le principe retenu est de n'indiquer
   // une alerte calorique QUE lors d'un dépassement, jamais pour signaler
   // "vous êtes dans l'objectif" ou "vous vous en approchez".
@@ -2452,6 +2526,10 @@ async function renderMotivationCards(){
 }
 
 // ── DASHBOARD RENDER ──
+// ── SATIETY OVERRIDE + MODE FOCUS ──
+// Toute la logique est dans mode-focus.js (fichier dédié à cette
+// fonctionnalité, pour la garder isolée et plus simple à déboguer).
+
 async function refreshDash(){
   var p=PROF||{};
   var pathos=p.pathologies||[];
@@ -2459,6 +2537,10 @@ async function refreshDash(){
   renderMotivationCards();
   checkUnreadMessages();
   checkUnreadAnnonces();
+
+  var satRes = await sb.from('satiety_logs').select('id').eq('user_id',USER.id).eq('date',today()).limit(1);
+  SATIETY_TODAY = !!(satRes.data && satRes.data.length);
+  renderSatietyZone();
 
   // Le bilan n'est accessible que le jour choisi par la personne — les
   // autres jours, la carte est grisée et non-cliquable (modifiable dans
@@ -2498,29 +2580,49 @@ async function refreshDash(){
     T.na+=(e.food_na_100||0)*e.quantite/100;T.fibres+=(e.food_fibres_100||0)*e.quantite/100;
   });
   renderClinicalIndicators(T, tgt, pathos);
-  // Kcal
+
+  // MODE FOCUS — si activé (par la personne elle-même ou son diététicien
+  // depuis le chat), on masque entièrement la carte kcal au profit d'une
+  // vue neutre. Le calcul continue derrière pour le bilan, simplement il
+  // n'est plus le premier réflexe visuel de la journée.
+  var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
+  document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
+  document.getElementById('focus-card').style.display = hideExactKcal ? 'block' : 'none';
+  if(hideExactKcal){
+    var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
+    document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
+  }
+
+  // Kcal — plage DYNAMIQUE par tranches de 200 kcal, qui suit la
+  // progression réelle plutôt qu'une fenêtre fixe autour de l'objectif
+  // final. Ex : à 800 kcal → "800 – 1000" ; à 1250 kcal → "1200 – 1400".
+  // Avant d'avoir mangé quoi que ce soit, la plage se cale sur l'objectif
+  // du jour pour rester un repère utile.
   var kcalRound=Math.round(T.kcal);
   document.getElementById('d-kcal').textContent=kcalRound;
-  document.getElementById('d-target').textContent=tgt.kcal;
-  var excessKcal = kcalRound - tgt.kcal; // positif = dépassement réel
+  var basis = kcalRound>0 ? kcalRound : tgt.kcal;
+  var rangeLow = Math.floor(basis/200)*200;
+  var rangeHigh = rangeLow+200;
+  document.getElementById('d-target').textContent=rangeLow+' – '+rangeHigh;
+  var excessKcal = kcalRound - tgt.kcal;
   var ratioKcal = tgt.kcal>0 ? kcalRound/tgt.kcal : 0;
   var restEl = document.getElementById('d-reste');
-  // Mêmes seuils que l'alerte "Alertes santé" plus bas — les deux devaient
-  // se contredire avant ce correctif (ex: "Objectif atteint" en vert ici,
-  // "Quota dépassé" en orange plus bas, pour le même chiffre).
-  if(kcalRound>0 && ratioKcal>1.15){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">⚠️ Apport élevé (+'+excessKcal+' kcal)</span>';
-  } else if(kcalRound>0 && excessKcal>100){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">⚠️ Quota dépassé (+'+excessKcal+' kcal)</span>';
-  } else if(kcalRound>0 && excessKcal>0){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
+  // Le seuil "sévère" (r>1.15) reste un vrai signal (utile notamment pour
+  // les pathologies suivies) — mais en dehors d'un vrai dépassement, aucun
+  // jugement n'est affiché : juste un repère descriptif neutre.
+  if(SATIETY_TODAY){
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Rassasié(e) aujourd\'hui</span>';
+  } else if(kcalRound>0 && ratioKcal>1.15){
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">Nettement au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
+  } else if(kcalRound>0 && excessKcal>150){
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">Au-dessus de votre cible</span>';
   } else {
-    restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
+    restEl.parentElement.innerHTML = '<span class="kcal-rest-lbl">Repas enregistrés aujourd\'hui</span>';
   }
   var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
   var progFill = document.getElementById('prog-kcal');
   progFill.style.width=pct+'%';
-  progFill.style.background = ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>100 ? 'var(--amber)' : 'var(--sage)');
+  progFill.style.background = SATIETY_TODAY ? 'var(--sage)' : (ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>150 ? 'var(--amber)' : 'var(--sage)'));
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
@@ -2599,15 +2701,18 @@ async function refreshDash(){
   var byMeal={};
   entries.forEach(function(e){if(!byMeal[e.repas])byMeal[e.repas]=[];byMeal[e.repas].push(e);});
   var mg=document.getElementById('meals-grid');
+  var hideKcalHere = PROF && PROF.hide_exact_kcal === true;
   mg.innerHTML=activeMealIds().map(function(mid){
     var meta=MEAL_META[mid];
     var foods=byMeal[mid]||[];
     var mk=foods.reduce(function(s,e){return s+(e.kcal||0);},0);
     var pct=tgt.kcal>0?Math.min(100,mk/(tgt.kcal/4)*100):0;
-    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+' · <span>'+mk.toFixed(0)+' kcal</span></div><div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div></div>';
+    var kcalPart = hideKcalHere ? '' : ' · <span>'+mk.toFixed(0)+' kcal</span>';
+    var progBar = hideKcalHere ? '' : '<div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div>';
+    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+'</div>';
   }).join('');
   // Alerts
-  var alerts=genAlerts(T,tgt,pathos,entries);
+  var alerts=genAlerts(T,tgt,pathos,entries,SATIETY_TODAY);
   var az=document.getElementById('alerts-zone');
   if(!alerts.length){az.innerHTML='<div class="empty"><div class="empty-i">🌿</div><p>Continuez à ajouter vos repas<br>pour voir vos alertes santé.</p></div>';}
   else { az.innerHTML='<div class="alerts-list">'+alerts.slice(0,4).map(function(a){
@@ -2761,7 +2866,8 @@ async function refreshSetupJournal(){
     el.innerHTML='<div class="empty" style="padding:14px 0"><p style="font-size:.8rem">Aucun aliment pour ce repas</p></div>';
   } else {
     el.innerHTML=mine.map(function(e){
-      return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><span style="font-size:.7rem;color:var(--text2);margin-right:4px">'+e.quantite+'g</span><span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span><button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
+      var kcalPart = (PROF && PROF.hide_exact_kcal===true) ? '' : '<span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span>';
+      return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><span style="font-size:.7rem;color:var(--text2);margin-right:4px">'+e.quantite+'g</span>'+kcalPart+'<button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
     }).join('');
   }
   var totEl=document.getElementById('st4-total-kcal');
@@ -2776,9 +2882,11 @@ async function refreshJournal(){
   var az=document.getElementById('added-zone');
   if(!mine.length){az.innerHTML='<div class="empty"><p>Aucun aliment — recherchez ci-dessus</p></div>';}
   else az.innerHTML=mine.map(function(e){
-    return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQty(\''+e.id+'\',parseFloat(this.value),'+JSON.stringify(e).replace(/"/g,"'")+')" /><span style="font-size:.67rem;color:var(--text3)">g</span><span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span><button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
+    var kcalPart = (PROF && PROF.hide_exact_kcal===true) ? '' : '<span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span>';
+    return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'…':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQty(\''+e.id+'\',parseFloat(this.value),'+JSON.stringify(e).replace(/"/g,"'")+')" /><span style="font-size:.67rem;color:var(--text3)">g</span>'+kcalPart+'<button class="added-del" onclick="delEntry(\''+e.id+'\')">✕</button></div>';
   }).join('');
   loadRecentMeals();
+  renderEnergyCheckin(mine.length>0);
 }
 
 // ── Repas récents / habituels ──
@@ -2835,7 +2943,7 @@ async function loadRecentMeals(){
           + (g.dates.length>1 ? '<span class="recent-meal-freq">'+g.dates.length+'x cette période</span>' : '<span>'+dateLbl+'</span>')
           + '</div>'
           + '<div class="recent-meal-foods">'+esc(foodNames.length>62?foodNames.slice(0,62)+'…':foodNames)+'</div>'
-          + '<div class="recent-meal-kcal">'+Math.round(totalKcal)+' kcal</div>'
+          + (PROF && PROF.hide_exact_kcal===true ? '' : '<div class="recent-meal-kcal">'+Math.round(totalKcal)+' kcal</div>')
           + '<button class="recent-meal-add" onclick="repeatRecentMeal('+idx+')">+ Ajouter à nouveau</button>'
           + '</div>';
       }).join('')
@@ -4641,7 +4749,7 @@ function renderMealPlan(){
             +(mealData.recipeName?' · <span style="color:var(--gold);font-weight:400">'+esc(mealData.recipeName)+'</span> <span style="font-size:.6rem;background:var(--gold-l);color:var(--gold);padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px">Suggestion</span>':'')+'</span>'
             +'<div style="display:flex;gap:6px;align-items:center">'
             +(mealData.recipeId ? '<a class="mp-recipe-link" href="recette-prep.html?id='+mealData.recipeId+'" title="Voir la recette pas à pas">👨‍🍳 Recette</a>' : '')
-            +'<button class="mp-swap" onclick="changeMealRecipe(\''+mid+'\')" title="Changer de recette">⇄</button>'
+            +'<button class="mp-swap" onclick="'+(PROF&&PROF.role==='admin'?'openAlternativesDrawer(\''+mid+'\')':'changeMealRecipe(\''+mid+'\')')+'" title="'+(PROF&&PROF.role==='admin'?'Voir des alternatives':'Changer de recette')+'">⇄</button>'
             +'</div></div><div class="card-body">';
           gItems.forEach(function(it){
             var kcal = Math.round(it.food.kcal*it.qty/100);
@@ -4853,6 +4961,11 @@ function renderProfile(){
       : 'Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.';
   }
 
+  var focusCard = document.getElementById('focus-mode-card');
+  if(focusCard) focusCard.style.display = (p.role==='admin') ? 'block' : 'none';
+  var focusSwitch = document.getElementById('focus-mode-switch');
+  if(focusSwitch) focusSwitch.classList.toggle('on', p.hide_exact_kcal === true);
+
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
   if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';}
@@ -4860,6 +4973,8 @@ function renderProfile(){
 
   renderWeightEvolution();
 }
+
+// (Toggle, avertissement et bannière du mode focus déplacés dans mode-focus.js)
 
 // Graphique d'évolution du poids — part TOUJOURS du poids initial (jamais
 // modifié après coup), puis chaque bilan hebdomadaire, puis le poids actuel
