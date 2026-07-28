@@ -933,6 +933,11 @@ body {
         <div class="switch" id="focus-mode-switch" onclick="toggleFocusMode()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
         </div>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <span style="font-weight:600;color:var(--text)">Prévisualiser la plage kcal (nouveau)</span>
+        <div class="switch" id="preview-kcal-switch" onclick="togglePreviewKcal()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
     </div>
   </div>
   <div class="prof-card">
@@ -2593,36 +2598,55 @@ async function refreshDash(){
     document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
   }
 
-  // Kcal — plage DYNAMIQUE par tranches de 200 kcal, qui suit la
-  // progression réelle plutôt qu'une fenêtre fixe autour de l'objectif
-  // final. Ex : à 800 kcal → "800 – 1000" ; à 1250 kcal → "1200 – 1400".
-  // Avant d'avoir mangé quoi que ce soit, la plage se cale sur l'objectif
-  // du jour pour rester un repère utile.
+  // Kcal — deux affichages coexistent le temps des tests : l'ANCIEN (par
+  // défaut, pour tout le monde) et le NOUVEAU (plage dynamique par
+  // tranches de 200 kcal), prévisualisable uniquement par l'admin via son
+  // propre interrupteur de test. Personne d'autre ne voit le nouveau tant
+  // qu'il n'est pas validé.
   var kcalRound=Math.round(T.kcal);
   document.getElementById('d-kcal').textContent=kcalRound;
-  var basis = kcalRound>0 ? kcalRound : tgt.kcal;
-  var rangeLow = Math.floor(basis/200)*200;
-  var rangeHigh = rangeLow+200;
-  document.getElementById('d-target').textContent=rangeLow+' – '+rangeHigh;
   var excessKcal = kcalRound - tgt.kcal;
   var ratioKcal = tgt.kcal>0 ? kcalRound/tgt.kcal : 0;
   var restEl = document.getElementById('d-reste');
-  // Le seuil "sévère" (r>1.15) reste un vrai signal (utile notamment pour
-  // les pathologies suivies) — mais en dehors d'un vrai dépassement, aucun
-  // jugement n'est affiché : juste un repère descriptif neutre.
-  if(SATIETY_TODAY){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Rassasié(e) aujourd\'hui</span>';
-  } else if(kcalRound>0 && ratioKcal>1.15){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">Nettement au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
-  } else if(kcalRound>0 && excessKcal>150){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">Au-dessus de votre cible</span>';
+  var previewNewKcal = PROF && PROF.role==='admin' && PROF.preview_new_kcal===true;
+
+  if(previewNewKcal){
+    // NOUVEAU — plage dynamique. Ex : à 800 kcal → "800 – 1000" ; à 1250
+    // kcal → "1200 – 1400". Avant d'avoir mangé, la plage se cale sur
+    // l'objectif du jour pour rester un repère utile.
+    var basis = kcalRound>0 ? kcalRound : tgt.kcal;
+    var rangeLow = Math.floor(basis/200)*200;
+    var rangeHigh = rangeLow+200;
+    document.getElementById('d-target').textContent=rangeLow+' – '+rangeHigh;
+    if(SATIETY_TODAY){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Rassasié(e) aujourd\'hui</span>';
+    } else if(kcalRound>0 && ratioKcal>1.15){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">Nettement au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
+    } else if(kcalRound>0 && excessKcal>150){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">Au-dessus de votre cible</span>';
+    } else {
+      restEl.parentElement.innerHTML = '<span class="kcal-rest-lbl">Repas enregistrés aujourd\'hui</span>';
+    }
   } else {
-    restEl.parentElement.innerHTML = '<span class="kcal-rest-lbl">Repas enregistrés aujourd\'hui</span>';
+    // ANCIEN — objectif fixe + compte à rebours précis. C'est ce que tout
+    // le monde voit par défaut tant que le nouvel affichage est en test.
+    document.getElementById('d-target').textContent=tgt.kcal;
+    if(SATIETY_TODAY){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Rassasié(e) aujourd\'hui</span>';
+    } else if(kcalRound>0 && ratioKcal>1.15){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">⚠️ Apport élevé (+'+excessKcal+' kcal)</span>';
+    } else if(kcalRound>0 && excessKcal>100){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">⚠️ Quota dépassé (+'+excessKcal+' kcal)</span>';
+    } else if(kcalRound>0 && excessKcal>0){
+      restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
+    } else {
+      restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
+    }
   }
   var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
   var progFill = document.getElementById('prog-kcal');
   progFill.style.width=pct+'%';
-  progFill.style.background = SATIETY_TODAY ? 'var(--sage)' : (ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>150 ? 'var(--amber)' : 'var(--sage)'));
+  progFill.style.background = SATIETY_TODAY ? 'var(--sage)' : (ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>(previewNewKcal?150:100) ? 'var(--amber)' : 'var(--sage)'));
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
@@ -4965,6 +4989,8 @@ function renderProfile(){
   if(focusCard) focusCard.style.display = (p.role==='admin') ? 'block' : 'none';
   var focusSwitch = document.getElementById('focus-mode-switch');
   if(focusSwitch) focusSwitch.classList.toggle('on', p.hide_exact_kcal === true);
+  var previewSwitch = document.getElementById('preview-kcal-switch');
+  if(previewSwitch) previewSwitch.classList.toggle('on', p.preview_new_kcal === true);
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
