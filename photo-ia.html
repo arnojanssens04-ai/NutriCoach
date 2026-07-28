@@ -310,7 +310,7 @@ function loadDB(){
   var btn = document.getElementById('confirm-btn');
   if(btn){ btn.disabled=true; btn.textContent='Chargement de la base...'; btn.style.opacity='0.6'; }
 
-  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
+  fetch('ciqual.json').then(function(r){return r.json();}).then(function(raw){
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
         ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
@@ -662,11 +662,26 @@ function pN(v){
 // aliments personnalisés — la prochaine recherche le retrouvera directement.
 async function createCustomFoodFromAI(item){
   var n = item.aiNutrition;
-  if(!n || !(n.kcal>0)) return null; // pas d'estimation exploitable, échec normal
+  if(!n) return null;
+
+  // Garde-fou de sécurité : refuse d'enregistrer des valeurs physiquement
+  // impossibles (ex: 300g de lipides pour 100g d'aliment — le maximum
+  // physique est 100g). Sans ce contrôle, une réponse IA aberrante ou
+  // mal formée pouvait polluer durablement la base avec des chiffres
+  // absurdes, retrouvés ensuite à chaque scan similaire.
+  var kcal = n.kcal||0, prot = n.prot||0, gluc = n.gluc||0, lip = n.lip||0;
+  var valeursPlausibles = kcal>=5 && kcal<=950
+    && prot>=0 && prot<=100
+    && gluc>=0 && gluc<=100
+    && lip>=0  && lip<=100;
+  if(!valeursPlausibles){
+    console.warn('[Cap Santé] Estimation IA rejetée (valeurs implausibles) pour "'+item.nom+'":', n);
+    return null;
+  }
 
   var row = {
     nom: item.nom,
-    kcal: n.kcal||0, prot: n.prot||0, gluc: n.gluc||0, lip: n.lip||0,
+    kcal: kcal, prot: prot, gluc: gluc, lip: lip,
     ags: n.ags||0, fibres: n.fibres||0, sucres: n.sucres||0,
     na: n.sodium||0, mg: n.magnesium||0, fer: n.fer||0
   };
@@ -707,6 +722,17 @@ async function confirmFoods(){
       food = await createCustomFoodFromAI(item);
       if(!food){ notFound.push(item.nom); continue; }
       autoCreated.push(item.nom);
+    }
+
+    // Garde-fou de sécurité — même si l'aliment a été trouvé dans la base
+    // (Ciqual ou aliments_custom), on vérifie que ses valeurs restent
+    // physiquement possibles avant d'enregistrer quoi que ce soit. Protège
+    // contre une entrée déjà corrompue enregistrée avant ce correctif.
+    var fKcal = pN(food.kcal), fLip = pN(food.lip), fProt = pN(food.prot), fGluc = pN(food.gluc);
+    if(!(fKcal>=5 && fKcal<=950 && fLip<=100 && fProt<=100 && fGluc<=100)){
+      console.error('[Cap Santé] Aliment rejeté (valeurs implausibles dans la base) :', food.nom, food);
+      errors.push(food.nom+' (données invalides en base — signalez ce bug avec le nom exact)');
+      continue;
     }
 
     var qty = item.qty;
@@ -853,6 +879,14 @@ function bestStrictMatch(queryTok){
 
   var candidates = [];
   DB.forEach(function(d){
+    // Certaines entrées Ciqual ont des données manquantes (marquées "-" dans
+    // le fichier source, ex: "Riz blanc, précuit, cuit" n'a pas de kcal
+    // renseignée). pN() convertit silencieusement "-" en 0, ce qui produisait
+    // des aliments enregistrés à "0 kcal" — on écarte ces entrées de la
+    // recherche AVANT le classement, pour qu'une entrée voisine avec de
+    // vraies données (ex: "Riz blanc, cuit") soit choisie à la place.
+    var kcalUsable = pN(d.kcal) >= 5 && pN(d.kcal) <= 950;
+    if(!kcalUsable) return;
     var dTok = tok(d.nom);
     if(allMeaningfulPresent(meaningfulQt, dTok) && extraTokenCount(meaningfulQt, dTok) <= MAX_EXTRA_TOKENS){
       candidates.push(d);
