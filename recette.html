@@ -416,7 +416,7 @@ async function init(){
   PROF = pr.data || {};
   if(PROF.role==='admin') document.getElementById('fab-add').style.display='flex';
 
-  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
+  fetch('ciqual.json').then(function(r){return r.json();}).then(function(raw){
     // Ciqual stocke certaines valeurs avec une virgule française ("15,2")
     // en texte brut — pN() les convertit en vrais nombres JS, sinon les
     // calculs (NaN) et l'enregistrement Supabase (erreur Postgres) échouent.
