@@ -247,6 +247,13 @@ body {
 .kcal-done-badge { display:inline-flex; align-items:center; gap:5px; font-size:.82rem; font-weight:700; color:var(--sage); background:var(--sage-l); padding:5px 12px; border-radius:999px; margin-bottom:10px; }
 .kcal-done-badge.over-mid { color:var(--amber); background:var(--amber-l,rgba(122,92,30,0.1)); }
 .kcal-done-badge.over-high { color:var(--rose); background:var(--rose-l,rgba(139,42,42,0.08)); }
+.focus-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:20px 18px; margin-bottom:14px; box-shadow:var(--sh); text-align:center; }
+.focus-card-hdr { font-family:'Lora',serif; font-weight:700; font-size:1rem; color:var(--sage); margin-bottom:8px; }
+.focus-card-txt { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:10px; }
+.focus-card-meals { font-size:.76rem; color:var(--text3); }
+.switch.on { background:var(--gold) !important; }
+.switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.switch.on::after { left:23px; }
 .prog-track { height:5px; background:rgba(0,0,0,.07); border-radius:99px; overflow:hidden; }
 .prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1), background .4s ease; }
 
@@ -623,7 +630,7 @@ body {
 <div class="page on" id="pg-dashboard">
 
   <!-- KCAL EN PREMIER — plus immédiatement utile au quotidien -->
-  <div class="kcal-card">
+  <div class="kcal-card" id="kcal-card">
     <div class="kcal-ring-wrap">
       <svg viewBox="0 0 110 110">
         <circle class="kr-bg" cx="55" cy="55" r="46"/>
@@ -635,10 +642,22 @@ body {
       </div>
     </div>
     <div class="kcal-info">
-      <div class="kcal-obj">Objectif : <span id="d-target">—</span> kcal</div>
+      <div class="kcal-obj">Cible : <span id="d-target">—</span> kcal</div>
       <div class="kcal-rest"><span id="d-reste">—</span> <span class="kcal-rest-lbl">restants</span></div>
       <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
     </div>
+  </div>
+
+  <!-- MODE FOCUS — remplace la carte kcal par une vue centrée sur la
+       qualité plutôt que le chiffre, quand ce mode est activé (par
+       l'utilisateur ou son diététicien). Les calories continuent d'être
+       calculées normalement en arrière-plan pour le bilan, simplement
+       pas affichées au quotidien pour ne pas nourrir un rapport
+       comptable à l'alimentation. -->
+  <div class="focus-card" id="focus-card" style="display:none">
+    <div class="focus-card-hdr">🌿 Mode focus actif</div>
+    <div class="focus-card-txt">Vous avez choisi de ne pas afficher le chiffre exact des calories au quotidien. Votre suivi continue normalement en arrière-plan pour votre bilan.</div>
+    <div class="focus-card-meals" id="focus-meals-count">— repas enregistrés aujourd'hui</div>
   </div>
 
   <!-- VOTRE ACCOMPAGNEMENT — rend tangible la présence humaine promise sur
@@ -868,6 +887,17 @@ body {
       <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.</div>
     </div>
   </a>
+  <div class="prof-card">
+    <div class="prof-card-hdr"><span>🌿 Mode focus</span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Masque le chiffre exact des calories sur votre tableau de bord — pour vous concentrer sur la qualité de vos repas plutôt que sur un chiffre à gérer en temps réel. Le suivi continue normalement en arrière-plan pour votre bilan.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;color:var(--text)">Activer le mode focus</span>
+        <div class="switch" id="focus-mode-switch" onclick="toggleFocusMode()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>⚙️ Compte</span></div>
     <div class="prof-card-body">
@@ -2498,29 +2528,47 @@ async function refreshDash(){
     T.na+=(e.food_na_100||0)*e.quantite/100;T.fibres+=(e.food_fibres_100||0)*e.quantite/100;
   });
   renderClinicalIndicators(T, tgt, pathos);
-  // Kcal
+
+  // MODE FOCUS — si activé (par la personne elle-même ou son diététicien
+  // depuis le chat), on masque entièrement la carte kcal au profit d'une
+  // vue neutre. Le calcul continue derrière pour le bilan, simplement il
+  // n'est plus le premier réflexe visuel de la journée.
+  var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
+  document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
+  document.getElementById('focus-card').style.display = hideExactKcal ? 'block' : 'none';
+  if(hideExactKcal){
+    var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
+    document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
+  }
+
+  // Kcal — plage DYNAMIQUE par tranches de 200 kcal, qui suit la
+  // progression réelle plutôt qu'une fenêtre fixe autour de l'objectif
+  // final. Ex : à 800 kcal → "800 – 1000" ; à 1250 kcal → "1200 – 1400".
+  // Avant d'avoir mangé quoi que ce soit, la plage se cale sur l'objectif
+  // du jour pour rester un repère utile.
   var kcalRound=Math.round(T.kcal);
   document.getElementById('d-kcal').textContent=kcalRound;
-  document.getElementById('d-target').textContent=tgt.kcal;
-  var excessKcal = kcalRound - tgt.kcal; // positif = dépassement réel
+  var basis = kcalRound>0 ? kcalRound : tgt.kcal;
+  var rangeLow = Math.floor(basis/200)*200;
+  var rangeHigh = rangeLow+200;
+  document.getElementById('d-target').textContent=rangeLow+' – '+rangeHigh;
+  var excessKcal = kcalRound - tgt.kcal;
   var ratioKcal = tgt.kcal>0 ? kcalRound/tgt.kcal : 0;
   var restEl = document.getElementById('d-reste');
-  // Mêmes seuils que l'alerte "Alertes santé" plus bas — les deux devaient
-  // se contredire avant ce correctif (ex: "Objectif atteint" en vert ici,
-  // "Quota dépassé" en orange plus bas, pour le même chiffre).
+  // Le seuil "sévère" (r>1.15) reste un vrai signal (utile notamment pour
+  // les pathologies suivies) — mais en dehors d'un vrai dépassement, aucun
+  // jugement n'est affiché : juste un repère descriptif neutre.
   if(kcalRound>0 && ratioKcal>1.15){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">⚠️ Apport élevé (+'+excessKcal+' kcal)</span>';
-  } else if(kcalRound>0 && excessKcal>100){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">⚠️ Quota dépassé (+'+excessKcal+' kcal)</span>';
-  } else if(kcalRound>0 && excessKcal>0){
-    restEl.parentElement.innerHTML = '<span class="kcal-done-badge">✓ Objectif atteint</span>';
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-high">Nettement au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
+  } else if(kcalRound>0 && excessKcal>150){
+    restEl.parentElement.innerHTML = '<span class="kcal-done-badge over-mid">Au-dessus de votre cible</span>';
   } else {
-    restEl.parentElement.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
+    restEl.parentElement.innerHTML = '<span class="kcal-rest-lbl">Repas enregistrés aujourd\'hui</span>';
   }
   var pct=Math.min(100,tgt.kcal>0?T.kcal/tgt.kcal*100:0);
   var progFill = document.getElementById('prog-kcal');
   progFill.style.width=pct+'%';
-  progFill.style.background = ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>100 ? 'var(--amber)' : 'var(--sage)');
+  progFill.style.background = ratioKcal>1.15 ? 'var(--rose)' : (excessKcal>150 ? 'var(--amber)' : 'var(--sage)');
   var ringKcal=document.getElementById('ring-kcal');
   if(ringKcal){ var circ=289; ringKcal.style.strokeDashoffset=circ-(circ*pct/100); }
   // Macros
@@ -4853,12 +4901,55 @@ function renderProfile(){
       : 'Construisez une journée type qui ne change jamais, à la place des suggestions automatiques.';
   }
 
+  var focusSwitch = document.getElementById('focus-mode-switch');
+  if(focusSwitch) focusSwitch.classList.toggle('on', p.hide_exact_kcal === true);
+
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
   if(!pathos.length){pEl.innerHTML='<div style="color:var(--text2);font-size:.83rem">Aucune pathologie renseignée.</div>';}
   else pEl.innerHTML=pathos.map(function(pp){var m=PATHO_META[pp];return m?'<span class="ptag">'+m.i+' '+m.l+'</span>':'';}).join('');
 
   renderWeightEvolution();
+}
+
+async function toggleFocusMode(){
+  var willEnable = !(PROF && PROF.hide_exact_kcal === true);
+  if(willEnable){
+    openFocusWarning();
+    return;
+  }
+  await setFocusMode(false);
+}
+
+async function setFocusMode(newVal){
+  var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  PROF.hide_exact_kcal = newVal;
+  document.getElementById('focus-mode-switch').classList.toggle('on', newVal);
+  toast(newVal ? '🌿 Mode focus activé' : 'Mode focus désactivé');
+}
+
+// Avertissement requis avant d'activer le mode focus — masquer les
+// chiffres n'est pas automatiquement le bon choix pour tout le monde non
+// plus : ça peut, selon la situation, devenir un évitement plutôt qu'un
+// rapport plus sain à l'alimentation. On demande une vraie confirmation
+// plutôt qu'un simple clic silencieux.
+function openFocusWarning(){
+  var ov = document.createElement('div');
+  ov.id = 'focus-warning-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.55);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.innerHTML = '<div style="background:var(--card);border-radius:16px;padding:22px 20px;max-width:380px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.2)">'
+    +'<div style="font-size:1.6rem;margin-bottom:10px;text-align:center">⚠️</div>'
+    +'<div style="font-family:\'Lora\',serif;font-weight:700;font-size:1.05rem;margin-bottom:10px;text-align:center">Avant d\'activer le mode focus</div>'
+    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Masquer les chiffres peut aider certaines personnes à moins raisonner en "solde à dépenser" — mais chez d\'autres, ça peut aussi devenir une façon d\'éviter de regarder son alimentation en face, ce qui n\'est pas plus sain sur le long terme. Ce n\'est pas un réglage que nous recommandons par défaut : on vous laisse ce choix, mais on préfère être honnête sur le fait qu\'il n\'est pas neutre.</div>'
+    +'<button onclick="confirmFocusMode()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:8px">J\'ai compris, activer quand même</button>'
+    +'<button onclick="document.getElementById(\'focus-warning-ov\').remove()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:600;font-size:.9rem;cursor:pointer">Annuler</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+function confirmFocusMode(){
+  document.getElementById('focus-warning-ov').remove();
+  setFocusMode(true);
 }
 
 // Graphique d'évolution du poids — part TOUJOURS du poids initial (jamais
