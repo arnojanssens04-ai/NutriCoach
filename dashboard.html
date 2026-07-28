@@ -1840,8 +1840,11 @@ function calcNutritionalQuality(entries, tgt){
     var n = (e.aliment||'').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-    // ── Légumes (200g/jour OMS) ──
-    if(/salade|brocoli|carotte|courgette|epinard|haricot vert|tomate|poivron|chou|celeri|poireau|champignon|aubergine|concombre|radis|betterave|asperge|artichaut|fenouil|navet|panais|edamame|endive|petits pois/.test(n))
+    // ── Légumes (200g/jour OMS) ── réutilise isLegume(), déjà corrigée
+    // pour couvrir les termes génériques ("légumes surgelés", macédoine...)
+    // — avant, un second regex local ici ne les couvrait pas du tout, et
+    // c'est CETTE copie-ci qui alimente la carte "Qualité nutritionnelle".
+    if(isLegume(e.aliment))
       totalVegGrams += e.quantite||0;
 
     // ── Groupes alimentaires (diversité) ──
