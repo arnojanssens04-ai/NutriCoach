@@ -642,6 +642,208 @@ body {
   .patho-grid,.row2,.gender-row { grid-template-columns: 1fr; }
   .macros-row { grid-template-columns: 1fr 1fr; }
 }
+
+/* ══ RESPONSIVE SYSTEM v2.0 ══ */
+:root {
+  --shadow-soft: 0 2px 12px rgba(26,25,22,0.06);
+  --shadow-card: 0 4px 24px rgba(26,25,22,0.09);
+  --shadow-deep: 0 16px 56px rgba(26,25,22,0.18);
+  --r-lg: 18px; --r-xl: 26px;
+}
+
+/* iOS zoom prevention */
+.search-inp, .field input, .field select, .added-qty {
+  font-size: max(16px, 1em) !important;
+}
+
+/* Touch targets */
+.bnav-btn { min-height: 52px; }
+.mtab { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+/* Journal tabs: horizontal scroll on mobile */
+.meal-tabs {
+  display: flex !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  padding-bottom: 3px;
+  grid-template-columns: unset !important;
+}
+.meal-tabs::-webkit-scrollbar { display: none; }
+.mtab { flex-shrink: 0; min-width: 80px; }
+
+/* Desktop nav hidden on mobile */
+.d-nav { display: none; }
+
+/* ══ TABLET ≥ 768px ══ */
+@media (min-width: 768px) {
+  .page { max-width: 860px; padding: 24px 28px 100px; }
+  .macros-row { grid-template-columns: repeat(4,1fr) !important; }
+}
+
+/* ══ DESKTOP ≥ 1024px ══ */
+@media (min-width: 1024px) {
+  .bnav { display: none !important; }
+  .topbar { display: none !important; }
+
+  .d-nav {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(245,243,238,0.97);
+    backdrop-filter: blur(16px) saturate(1.6);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 0 var(--border), 0 3px 12px rgba(26,25,22,0.04);
+  }
+  .d-nav-logo {
+    font-family: 'Lora', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .d-nav-logo span { color: var(--gold); }
+  .d-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .d-nav-link {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: all .15s;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .d-nav-link:hover { background: var(--gold-l); color: var(--gold); }
+  .d-nav-link.on { background: var(--gold-l); color: var(--gold); font-weight: 600; }
+  .d-nav-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .d-nav-av {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: #fff;
+    font-family: 'Lora', serif;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  body { background: #edeae3; }
+
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 3rem;
+  }
+
+  /* Dashboard 2-column layout */
+  #pg-dashboard.page {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.75rem;
+    align-items: start;
+  }
+  #pg-dashboard.page > * { margin-bottom: 0; }
+
+  /* Right column items */
+  #pg-dashboard #accomp-link       { grid-column: 2; grid-row: 1; }
+  #pg-dashboard .score-hero        { grid-column: 2; grid-row: 2; }
+  #pg-dashboard .motiv-row         { grid-column: 2; grid-row: 3; }
+  #pg-dashboard .clinical-card     { grid-column: 2; grid-row: 4; }
+  #pg-dashboard #extra-scores-row  { grid-column: 2; grid-row: 5; }
+  #pg-dashboard #diabete-buffer-badge { grid-column: 2; grid-row: 6; }
+
+  /* Left column items auto-flow to column 1 */
+  #pg-dashboard .kcal-card         { grid-column: 1; }
+  #pg-dashboard .focus-card        { grid-column: 1; }
+  #pg-dashboard .macros-row        { grid-column: 1; }
+  #pg-dashboard .meals-grid        { grid-column: 1; }
+  #pg-dashboard #satiety-zone      { grid-column: 1; }
+  #pg-dashboard #alerts-zone       { grid-column: 1; }
+  #pg-dashboard #weekly-alcool-box { grid-column: 1; }
+  #pg-dashboard .stitle            { grid-column: 1; }
+
+  /* Card enhancements */
+  .kcal-card, .score-hero, .macro-card, .meal-card {
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Journal segmented tabs on desktop */
+  .meal-tabs {
+    display: flex !important;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    overflow-x: visible;
+    box-shadow: var(--shadow-soft);
+  }
+  .mtab {
+    flex: 1;
+    flex-shrink: 1;
+    min-width: unset;
+    border-radius: 9px;
+    font-size: .8rem;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text2) !important;
+    min-height: 40px;
+  }
+  .mtab.on {
+    background: var(--gold) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(45,79,28,0.25);
+  }
+
+  /* Plan 2-column layout */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.75rem;
+    align-items: start;
+  }
+  .plan-left { display: flex; flex-direction: column; gap: 14px; }
+  .plan-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 88px;
+  }
+
+  /* Toast position */
+  .toast { bottom: 24px; }
+
+  /* Desktop inputs: reduce font-size override */
+  .field input, .field select, .search-inp, .added-qty {
+    font-size: .9rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page { padding: 2.25rem 3rem 3rem; }
+  #pg-dashboard.page { grid-template-columns: 1fr 360px; }
+  .plan-grid { grid-template-columns: 1fr 340px; }
+}
 </style>
 <script src="protect.js?v=2"></script>
 </head>
@@ -669,6 +871,27 @@ body {
     <div class="t-av" id="t-av" onclick="goPage('profile')">?</div>
   </div>
 </header>
+
+<!-- DESKTOP NAV -->
+<nav class="d-nav" id="d-nav">
+  <div class="d-nav-logo">
+    <img src="logo-capsante.png" width="28" height="28" alt="" style="object-fit:contain">
+    Cap<span> Santé</span>
+  </div>
+  <div class="d-nav-links" id="d-nav-links">
+    <button class="d-nav-link on" id="dnav-dashboard" onclick="goPage('dashboard')">🏠 Accueil</button>
+    <button class="d-nav-link" id="dnav-journal" onclick="goPage('journal')">📓 Journal</button>
+    <button class="d-nav-link" id="dnav-mealplan" onclick="goPage('mealplan')">📋 Mon plan</button>
+    <a class="d-nav-link" href="recette.html">🍽️ Recettes</a>
+    <button class="d-nav-link" id="dnav-coach" onclick="goPage('coach')">🤖 Coach</button>
+    <button class="d-nav-link" id="dnav-weekly" onclick="goPage('weekly')">📢 Annonces</button>
+  </div>
+  <div class="d-nav-right">
+    <a href="admin.html" id="d-admin-btn" style="display:none;font-size:.68rem;background:rgba(201,122,110,0.12);color:var(--rose);border:1px solid rgba(201,122,110,0.3);padding:5px 11px;border-radius:7px;text-decoration:none;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">⚙ Admin</a>
+    <button onclick="toggleNotifDrawer()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;padding:6px;color:var(--text2)" title="Notifications">🔔</button>
+    <div class="d-nav-av" id="d-nav-av" onclick="goPage('profile')">?</div>
+  </div>
+</nav>
 
 <!-- PAGES -->
 
@@ -855,18 +1078,24 @@ body {
   </div>
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div id="mealplan-diabetes-note" style="display:none;background:var(--sage-l);border:1px solid rgba(74,122,58,0.25);border-radius:11px;padding:12px 15px;margin-bottom:16px;font-size:.83rem;color:var(--sage);line-height:1.55"></div>
-  <div id="mp-day-validated" style="display:none"></div>
-  <div class="card mb-12">
-    <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journée</span></div>
-    <div class="card-body" id="mp-totals"></div>
+  <div class="plan-grid">
+    <div class="plan-left">
+      <div id="mp-day-validated"></div>
+      <div id="mp-alerts"></div>
+      <div id="mealplan-content"></div>
+      <button class="btn btn-secondary btn-full" id="mp-regen-btn" onclick="regenerateMealPlan()" style="display:none">🔄 Régénérer le plan générique</button>
+    </div>
+    <div class="plan-right">
+      <div class="card mb-12">
+        <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journée</span></div>
+        <div class="card-body" id="mp-totals"></div>
+      </div>
+      <div class="card mb-12" id="mp-micro-card" style="display:none">
+        <div class="card-header"><span class="card-title">Micronutriments clés</span></div>
+        <div class="card-body" id="mp-micro-body"></div>
+      </div>
+    </div>
   </div>
-  <div class="card mb-12" id="mp-micro-card" style="display:none">
-    <div class="card-header"><span class="card-title">Micronutriments clés</span></div>
-    <div class="card-body" id="mp-micro-body"></div>
-  </div>
-  <div id="mp-alerts" class="mb-12"></div>
-  <div id="mealplan-content"></div>
-  <button class="btn btn-secondary btn-full" id="mp-regen-btn" onclick="regenerateMealPlan()" style="display:none">🔄 Régénérer le plan générique</button>
 </div>
 
 <!-- JOURNAL -->
@@ -1420,8 +1649,11 @@ function initGreeting(){
   var initial = (p.prenom||'?')[0].toUpperCase();
   applyAvatar(document.getElementById('t-av'), initial, seed);
   applyAvatar(document.getElementById('pav'), initial, seed);
+  var dav=document.getElementById('d-nav-av');if(dav){applyAvatar(dav,initial,seed);}
   var adminBtn=document.getElementById('admin-btn');
   if(adminBtn) adminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
+  var dAdminBtn=document.getElementById('d-admin-btn');
+  if(dAdminBtn) dAdminBtn.style.display = (p.role==='admin') ? 'inline-flex' : 'none';
   // Log vocal réservé à l'admin pour l'instant (fonctionnalité en test)
   var voiceBtn=document.getElementById('voice-log-btn');
   if(voiceBtn) voiceBtn.style.display = (p.role==='admin') ? 'flex' : 'none';
@@ -5363,9 +5595,12 @@ function updateMealTabsVisibility(){
 function goPage(p){
   document.querySelectorAll('.page').forEach(function(el){el.classList.remove('on');});
   document.querySelectorAll('.bnav-btn').forEach(function(el){el.classList.remove('on');});
+  document.querySelectorAll('.d-nav-link').forEach(function(el){el.classList.remove('on');});
   document.getElementById('pg-'+p).classList.add('on');
   var nb=document.getElementById('nav-'+p);if(nb)nb.classList.add('on');
+  var dn=document.getElementById('dnav-'+p);if(dn)dn.classList.add('on');
   if(p==='mealplan'){var np=document.getElementById('nav-plan');if(np)np.classList.add('on');}
+  if(p==='dashboard'){var dd=document.getElementById('dnav-dashboard');if(dd)dd.classList.add('on');}
   if(p==='dashboard')refreshDash();
   if(p==='weekly')renderWeekly();
   if(p==='profile')renderProfile();
