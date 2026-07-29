@@ -762,13 +762,6 @@ body {
 
   <!-- DIVERSITÉ VÉGÉTALE — compte les végétaux distincts consommés sur
        les 7 derniers jours, indicateur associé à la santé du microbiote. -->
-  <div class="plate-card" id="plant-diversity-card" style="display:none">
-    <div class="focus-card-hdr">🌱 Diversité végétale de la semaine</div>
-    <div class="diversity-count" id="diversity-count">— / 20 végétaux</div>
-    <div class="diversity-track"><div class="diversity-fill" id="diversity-fill" style="width:0%"></div></div>
-    <div class="focus-card-txt" id="diversity-msg" style="margin-top:8px">Plus vous variez légumes, fruits, céréales et légumineuses, mieux c'est pour votre microbiote.</div>
-  </div>
-
   <!-- TENDANCE DE LA SEMAINE — un repère de progression narratif plutôt
        que chiffré, avec un sparkline qualitatif (7 points colorés) qui se
        lit d'un coup d'œil sans aucun chiffre. -->
@@ -2758,7 +2751,6 @@ async function refreshDash(){
     document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
     loadEnergyGauge();
     if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries);
-    if(typeof renderPlantDiversity==='function') renderPlantDiversity();
     if(typeof renderWeeklyTrend==='function') renderWeeklyTrend();
 
     // Hypertension — sodium/potassium restent des repères cliniques
