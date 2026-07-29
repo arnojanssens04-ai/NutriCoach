@@ -1322,6 +1322,34 @@ var sb = supabase.createClient(SURL, SKEY);
 
 // ── STATE ──
 var USER = null, PROF = null;
+
+// ── ATTRAPE-ERREURS VISIBLE (admin uniquement) ──
+// F12 étant bloqué par protect.js, impossible de voir les erreurs JS dans
+// la console habituelle. Ce filet affiche directement sur la page toute
+// erreur non gérée, sous forme de bannière rouge — uniquement visible
+// pour le compte admin, pour ne jamais perturber un utilisateur normal.
+window._jsErrors = [];
+function showJsErrorBanner(){
+  if(!(PROF && PROF.role==='admin')) return;
+  var old = document.getElementById('js-error-banner');
+  if(old) old.remove();
+  var b = document.createElement('div');
+  b.id = 'js-error-banner';
+  b.style.cssText = 'position:fixed;bottom:14px;left:14px;right:14px;max-width:600px;margin:0 auto;background:#3a1414;color:#ffb4b4;padding:14px 16px;border-radius:10px;font-family:monospace;font-size:.76rem;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.4);max-height:220px;overflow-y:auto';
+  b.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:#fff">⚠️ '+window._jsErrors.length+' erreur(s) JS détectée(s) (admin only) :</div>'
+    + window._jsErrors.map(function(e){ return '<div style="margin-bottom:6px;white-space:pre-wrap">'+e+'</div>'; }).join('')
+    + '<button onclick="document.getElementById(\'js-error-banner\').remove()" style="background:none;border:1px solid #ffb4b4;color:#ffb4b4;padding:4px 10px;border-radius:6px;cursor:pointer;margin-top:4px">Fermer</button>';
+  document.body.appendChild(b);
+}
+window.addEventListener('error', function(e){
+  window._jsErrors.push((e.message||'Erreur inconnue')+' — '+(e.filename||'?')+':'+(e.lineno||'?'));
+  showJsErrorBanner();
+});
+window.addEventListener('unhandledrejection', function(e){
+  window._jsErrors.push('Promise rejetée : '+(e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+  showJsErrorBanner();
+});
+
 // SATIETY_TODAY est déclarée dans mode-focus.js
 var activeMeal = 'breakfast';
 var wkOffset = 0;
