@@ -266,6 +266,31 @@ body {
 .sleep-opt:hover { border-color:var(--gold); background:var(--gold-l); }
 .sleep-opt .ico { font-size:1.2rem; }
 .sleep-checkin-skip { background:none; border:none; color:var(--text3); font-size:.78rem; text-decoration:underline; cursor:pointer; }
+
+.plate-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; margin-bottom:14px; box-shadow:var(--sh); }
+.plate-bars { display:flex; flex-direction:column; gap:11px; margin-top:12px; }
+.plate-bar-row { display:flex; align-items:center; gap:10px; }
+.plate-bar-lbl { font-size:.78rem; color:var(--text2); width:150px; flex-shrink:0; }
+.plate-bar-track { flex:1; height:9px; background:var(--bg2); border-radius:999px; overflow:hidden; }
+.plate-bar-fill { height:100%; border-radius:999px; transition:width .8s cubic-bezier(.4,0,.2,1); }
+.plate-bar-pct { font-size:.76rem; font-weight:700; color:var(--text); width:36px; text-align:right; flex-shrink:0; }
+
+.diversity-count { font-family:'Lora',serif; font-size:1.35rem; font-weight:700; color:var(--gold); margin:10px 0 8px; }
+.diversity-track { height:9px; background:var(--bg2); border-radius:999px; overflow:hidden; }
+.diversity-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--sage),var(--gold)); transition:width 1s cubic-bezier(.4,0,.2,1); }
+
+.focus-dietitian-link { display:block; text-align:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:.8rem; color:var(--gold); font-weight:600; text-decoration:none; }
+.focus-dietitian-link:hover { text-decoration:underline; }
+
+.sparkline-row { display:flex; justify-content:space-between; align-items:flex-end; gap:6px; height:44px; }
+.spark-dot-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+.spark-dot { width:12px; height:12px; border-radius:50%; }
+.spark-dot.good { background:var(--sage); }
+.spark-dot.mid { background:var(--amber); }
+.spark-dot.low { background:var(--border2); }
+.spark-dot.none { background:var(--bg2); border:1px dashed var(--border2); }
+.sparkline-days { display:flex; justify-content:space-between; gap:6px; margin-top:6px; }
+.sparkline-days span { flex:1; text-align:center; font-size:.62rem; color:var(--text3); }
 @keyframes slideDownBanner { from{opacity:0;transform:translateY(-12px);} to{opacity:1;transform:translateY(0);} }
 
 .satiety-btn { width:100%; padding:14px; border-radius:var(--r); border:1px dashed var(--border2); background:var(--card); color:var(--text2); font-size:.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .15s; }
@@ -707,6 +732,51 @@ body {
     </div>
     <div class="focus-card-txt" id="energy-gauge-msg">Chaque repas équilibré (protéines + fibres) recharge votre jauge.</div>
     <div class="focus-card-meals" id="focus-meals-count">— repas enregistrés aujourd'hui</div>
+    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Demandez à votre diététicien →</a>
+  </div>
+
+  <!-- L'ASSIETTE ÉQUILIBRÉE — remplace la logique "combien de kcal" par
+       "quelle forme prend mon assiette aujourd'hui" (végétaux/protéines/
+       féculents), visible uniquement en mode focus. -->
+  <div class="plate-card" id="balanced-plate-card" style="display:none">
+    <div class="focus-card-hdr">🍽️ L'assiette équilibrée</div>
+    <div class="plate-bars">
+      <div class="plate-bar-row">
+        <span class="plate-bar-lbl">🥦 Végétaux &amp; fibres</span>
+        <div class="plate-bar-track"><div class="plate-bar-fill" id="plate-veg-fill" style="width:0%;background:var(--sage)"></div></div>
+        <span class="plate-bar-pct" id="plate-veg-pct">0%</span>
+      </div>
+      <div class="plate-bar-row">
+        <span class="plate-bar-lbl">🍗 Protéines</span>
+        <div class="plate-bar-track"><div class="plate-bar-fill" id="plate-prot-fill" style="width:0%;background:var(--cyan)"></div></div>
+        <span class="plate-bar-pct" id="plate-prot-pct">0%</span>
+      </div>
+      <div class="plate-bar-row">
+        <span class="plate-bar-lbl">🌾 Féculents &amp; céréales</span>
+        <div class="plate-bar-track"><div class="plate-bar-fill" id="plate-starch-fill" style="width:0%;background:var(--gold)"></div></div>
+        <span class="plate-bar-pct" id="plate-starch-pct">0%</span>
+      </div>
+    </div>
+    <div class="focus-card-txt" id="plate-status" style="margin-top:10px">Ajoutez vos repas pour voir la structure de votre assiette.</div>
+  </div>
+
+  <!-- DIVERSITÉ VÉGÉTALE — compte les végétaux distincts consommés sur
+       les 7 derniers jours, indicateur associé à la santé du microbiote. -->
+  <div class="plate-card" id="plant-diversity-card" style="display:none">
+    <div class="focus-card-hdr">🌱 Diversité végétale de la semaine</div>
+    <div class="diversity-count" id="diversity-count">— / 20 végétaux</div>
+    <div class="diversity-track"><div class="diversity-fill" id="diversity-fill" style="width:0%"></div></div>
+    <div class="focus-card-txt" id="diversity-msg" style="margin-top:8px">Plus vous variez légumes, fruits, céréales et légumineuses, mieux c'est pour votre microbiote.</div>
+  </div>
+
+  <!-- TENDANCE DE LA SEMAINE — un repère de progression narratif plutôt
+       que chiffré, avec un sparkline qualitatif (7 points colorés) qui se
+       lit d'un coup d'œil sans aucun chiffre. -->
+  <div class="plate-card" id="weekly-trend-card" style="display:none">
+    <div class="focus-card-hdr">📖 Votre semaine</div>
+    <div class="focus-card-txt" id="weekly-trend-narrative" style="margin-bottom:14px">Encore quelques jours pour dresser un vrai portrait de votre semaine.</div>
+    <div class="sparkline-row" id="sparkline-row"></div>
+    <div class="sparkline-days" id="sparkline-days"></div>
   </div>
 
   <!-- Micro-checkin sommeil — proposé une fois par jour, au premier
@@ -2574,8 +2644,17 @@ async function renderMotivationCards(){
   row.style.display = 'grid';
 
   var streak = await computeStreak();
-  document.getElementById('streak-val').textContent = streak;
-  document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
+  var focusOn = PROF && PROF.hide_exact_kcal===true;
+  if(focusOn){
+    var streakQualLbl = streak>=14 ? 'Excellente régularité' : streak>=7 ? 'Belle régularité' : streak>=3 ? 'Bonne lancée' : streak>=1 ? 'C\'est parti' : 'À vous de commencer';
+    document.getElementById('streak-val').textContent = '';
+    document.getElementById('streak-val').style.fontSize = '.98rem';
+    document.getElementById('streak-lbl').textContent = streakQualLbl;
+  } else {
+    document.getElementById('streak-val').style.fontSize = '';
+    document.getElementById('streak-val').textContent = streak;
+    document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
+  }
 
   if(p.poids_initial && p.poids && !isNaN(p.poids_initial) && !isNaN(p.poids) && p.poids_initial > 0){
     var diff = Math.round((p.poids - p.poids_initial)*10)/10;
@@ -2650,6 +2729,9 @@ async function refreshDash(){
     var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
     document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistré'+(mealsCount>1?'s':'')+' aujourd\'hui';
     loadEnergyGauge();
+    if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries);
+    if(typeof renderPlantDiversity==='function') renderPlantDiversity();
+    if(typeof renderWeeklyTrend==='function') renderWeeklyTrend();
 
     // Hypertension — sodium/potassium restent des repères cliniques
     // importants même en mode focus ; on les affiche sobrement sous la
