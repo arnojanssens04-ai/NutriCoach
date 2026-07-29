@@ -1,52 +1,52 @@
-// ═══════════════════════════════════════════════════════════════════════
-// MODE FOCUS & SATIETY OVERRIDE — Cap Santé
-// ═══════════════════════════════════════════════════════════════════════
-// Fichier dédié à cette fonctionnalité (isolée de dashboard.html) pour
-// que les bugs soient plus faciles à isoler et corriger. Dépend des
-// variables/fonctions globales déjà définies dans dashboard.html : sb,
-// USER, PROF, toast(), today(), refreshDash(). Chargé via
-// <script src="mode-focus.js"> — pas un module, partage le même scope
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// MODE FOCUS & SATIETY OVERRIDE \u2014 Cap Sant\u00e9
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// Fichier d\u00e9di\u00e9 \u00e0 cette fonctionnalit\u00e9 (isol\u00e9e de dashboard.html) pour
+// que les bugs soient plus faciles \u00e0 isoler et corriger. D\u00e9pend des
+// variables/fonctions globales d\u00e9j\u00e0 d\u00e9finies dans dashboard.html : sb,
+// USER, PROF, toast(), today(), refreshDash(). Charg\u00e9 via
+// <script src="mode-focus.js"> \u2014 pas un module, partage le m\u00eame scope
 // global que le reste de la page.
 //
-// RÉVERSIBILITÉ : chaque affichage lié au mode focus (carte kcal, cartes
-// de repas, journal, repas récents...) est piloté par une lecture directe
-// et systématique de PROF.hide_exact_kcal à chaque rendu — rien n'est
-// modifié de façon permanente. Désactiver le mode focus fait donc
-// toujours revenir l'affichage exactement à l'identique d'avant, dès le
+// R\u00c9VERSIBILIT\u00c9 : chaque affichage li\u00e9 au mode focus (carte kcal, cartes
+// de repas, journal, repas r\u00e9cents...) est pilot\u00e9 par une lecture directe
+// et syst\u00e9matique de PROF.hide_exact_kcal \u00e0 chaque rendu \u2014 rien n'est
+// modifi\u00e9 de fa\u00e7on permanente. D\u00e9sactiver le mode focus fait donc
+// toujours revenir l'affichage exactement \u00e0 l'identique d'avant, d\u00e8s le
 // prochain refreshDash().
-// ═══════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 
-var SATIETY_TODAY = false; // vrai si "Je suis rassasié(e)" a été validé aujourd'hui
+var SATIETY_TODAY = false; // vrai si "Je suis rassasi\u00e9(e)" a \u00e9t\u00e9 valid\u00e9 aujourd'hui
 
 
-// ── SATIETY OVERRIDE ──
-// Valide la journée sur la base de la sensation réelle de satiété, plutôt
-// que d'un niveau théorique de calories atteint. Une fois validée, les
-// alertes de dépassement s'effacent pour le reste de la journée (voir
+// \u2500\u2500 SATIETY OVERRIDE \u2500\u2500
+// Valide la journ\u00e9e sur la base de la sensation r\u00e9elle de sati\u00e9t\u00e9, plut\u00f4t
+// que d'un niveau th\u00e9orique de calories atteint. Une fois valid\u00e9e, les
+// alertes de d\u00e9passement s'effacent pour le reste de la journ\u00e9e (voir
 // genAlerts et la carte kcal dans dashboard.html, qui lisent SATIETY_TODAY)
-// — le principe même du bouton est que la sensation prime sur le chiffre.
+// \u2014 le principe m\u00eame du bouton est que la sensation prime sur le chiffre.
 function renderSatietyZone(){
   var el = document.getElementById('satiety-zone');
   if(!el) return;
-  // En test — réservé à l'admin pour l'instant, le temps de vérifier que
-  // tout fonctionne correctement avant d'ouvrir à tous les utilisateurs.
+  // En test \u2014 r\u00e9serv\u00e9 \u00e0 l'admin pour l'instant, le temps de v\u00e9rifier que
+  // tout fonctionne correctement avant d'ouvrir \u00e0 tous les utilisateurs.
   if(!(PROF && PROF.role==='admin')){ el.innerHTML=''; return; }
   if(SATIETY_TODAY){
     el.innerHTML = '<div class="satiety-confirmed">'
-      +'<div class="satiety-confirmed-ttl">✓ Zone d\'équilibre atteinte par satiété</div>'
-      +'<div class="satiety-confirmed-txt">Vous avez écouté votre corps aujourd\'hui — c\'est validé, peu importe le chiffre théorique.</div>'
+      +'<div class="satiety-confirmed-ttl">\u2713 Zone d\'\u00e9quilibre atteinte par sati\u00e9t\u00e9</div>'
+      +'<div class="satiety-confirmed-txt">Vous avez \u00e9cout\u00e9 votre corps aujourd\'hui \u2014 c\'est valid\u00e9, peu importe le chiffre th\u00e9orique.</div>'
       +'<button class="satiety-undo" onclick="undoSatiety()">Annuler</button>'
       +'</div>';
   } else {
-    el.innerHTML = '<button class="satiety-btn" onclick="markSatiety()">🛑 Je suis rassasié(e) pour aujourd\'hui</button>';
+    el.innerHTML = '<button class="satiety-btn" onclick="markSatiety()">\ud83d\uded1 Je suis rassasi\u00e9(e) pour aujourd\'hui</button>';
   }
 }
 
 async function markSatiety(){
   var r = await sb.from('satiety_logs').upsert({user_id:USER.id, date:today()}, {onConflict:'user_id,date'});
-  if(r.error){ toast('❌ '+r.error.message); return; }
+  if(r.error){ toast('\u274c '+r.error.message); return; }
   SATIETY_TODAY = true;
-  toast('✓ Journée validée par satiété');
+  toast('\u2713 Journ\u00e9e valid\u00e9e par sati\u00e9t\u00e9');
   refreshDash();
 }
 async function undoSatiety(){
@@ -56,7 +56,7 @@ async function undoSatiety(){
 }
 
 
-// ── TOGGLE MODE FOCUS ──
+// \u2500\u2500 TOGGLE MODE FOCUS \u2500\u2500
 async function toggleFocusMode(){
   var willEnable = !(PROF && PROF.hide_exact_kcal === true);
   if(willEnable){
@@ -68,21 +68,21 @@ async function toggleFocusMode(){
 
 async function setFocusMode(newVal){
   var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',USER.id);
-  if(r.error){ toast('❌ '+r.error.message); return; }
+  if(r.error){ toast('\u274c '+r.error.message); return; }
   PROF.hide_exact_kcal = newVal;
   var sw = document.getElementById('focus-mode-switch');
   if(sw) sw.classList.toggle('on', newVal);
   if(newVal){
-    toast('🌿 Mode focus activé');
+    toast('\ud83c\udf3f Mode focus activ\u00e9');
   } else {
     showDetailReactivatedBanner();
   }
   refreshDash();
 }
 
-// Rappel bienveillant à la désactivation du mode focus — les chiffres
-// reviennent à l'écran, mais on ne veut pas que ça sonne comme "retour à
-// la normale, maintenant gérez bien votre solde". Auto-masqué après un
+// Rappel bienveillant \u00e0 la d\u00e9sactivation du mode focus \u2014 les chiffres
+// reviennent \u00e0 l'\u00e9cran, mais on ne veut pas que \u00e7a sonne comme "retour \u00e0
+// la normale, maintenant g\u00e9rez bien votre solde". Auto-masqu\u00e9 apr\u00e8s un
 // moment, avec un raccourci pour revenir en mode focus si la personne
 // change d'avis tout de suite.
 function showDetailReactivatedBanner(){
@@ -91,27 +91,27 @@ function showDetailReactivatedBanner(){
   var b = document.createElement('div');
   b.id = 'detail-reactivated-banner';
   b.style.cssText = 'position:fixed;top:14px;left:14px;right:14px;max-width:420px;margin:0 auto;background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px 16px;box-shadow:0 8px 26px rgba(0,0,0,0.14);z-index:500;animation:slideDownBanner .3s ease';
-  b.innerHTML = '<div style="font-weight:700;font-size:.86rem;margin-bottom:4px">💡 Mode détaillé réactivé</div>'
-    +'<div style="font-size:.8rem;color:var(--text2);line-height:1.5;margin-bottom:10px">Les chiffres sont des outils pour votre suivi, pas des objectifs rigides à atteindre absolument. Écoutez votre corps avant tout.</div>'
+  b.innerHTML = '<div style="font-weight:700;font-size:.86rem;margin-bottom:4px">\ud83d\udca1 Mode d\u00e9taill\u00e9 r\u00e9activ\u00e9</div>'
+    +'<div style="font-size:.8rem;color:var(--text2);line-height:1.5;margin-bottom:10px">Les chiffres sont des outils pour votre suivi, pas des objectifs rigides \u00e0 atteindre absolument. \u00c9coutez votre corps avant tout.</div>'
     +'<button onclick="setFocusMode(true);document.getElementById(\'detail-reactivated-banner\').remove()" style="font-size:.76rem;font-weight:700;color:var(--gold);background:var(--gold-l);border:none;border-radius:999px;padding:6px 13px;cursor:pointer">Repasser en mode focus</button>';
   document.body.appendChild(b);
   setTimeout(function(){ if(b.parentNode) b.remove(); }, 9000);
 }
 
-// Avertissement requis avant d'activer le mode focus — masquer les
+// Avertissement requis avant d'activer le mode focus \u2014 masquer les
 // chiffres n'est pas automatiquement le bon choix pour tout le monde non
-// plus : ça peut, selon la situation, devenir un évitement plutôt qu'un
-// rapport plus sain à l'alimentation. On demande une vraie confirmation
-// plutôt qu'un simple clic silencieux.
+// plus : \u00e7a peut, selon la situation, devenir un \u00e9vitement plut\u00f4t qu'un
+// rapport plus sain \u00e0 l'alimentation. On demande une vraie confirmation
+// plut\u00f4t qu'un simple clic silencieux.
 function openFocusWarning(){
   var ov = document.createElement('div');
   ov.id = 'focus-warning-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.55);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px';
   ov.innerHTML = '<div style="background:var(--card);border-radius:16px;padding:22px 20px;max-width:380px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.2)">'
-    +'<div style="font-size:1.6rem;margin-bottom:10px;text-align:center">⚠️</div>'
+    +'<div style="font-size:1.6rem;margin-bottom:10px;text-align:center">\u26a0\ufe0f</div>'
     +'<div style="font-family:\'Lora\',serif;font-weight:700;font-size:1.05rem;margin-bottom:10px;text-align:center">Avant d\'activer le mode focus</div>'
-    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Masquer les chiffres peut aider certaines personnes à moins raisonner en "solde à dépenser" — mais chez d\'autres, ça peut aussi devenir une façon d\'éviter de regarder son alimentation en face, ce qui n\'est pas plus sain sur le long terme. Ce n\'est pas un réglage que nous recommandons par défaut : on vous laisse ce choix, mais on préfère être honnête sur le fait qu\'il n\'est pas neutre.</div>'
-    +'<button onclick="confirmFocusMode()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:8px">J\'ai compris, activer quand même</button>'
+    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Masquer les chiffres peut aider certaines personnes \u00e0 moins raisonner en "solde \u00e0 d\u00e9penser" \u2014 mais chez d\'autres, \u00e7a peut aussi devenir une fa\u00e7on d\'\u00e9viter de regarder son alimentation en face, ce qui n\'est pas plus sain sur le long terme. Ce n\'est pas un r\u00e9glage que nous recommandons par d\u00e9faut : on vous laisse ce choix, mais on pr\u00e9f\u00e8re \u00eatre honn\u00eate sur le fait qu\'il n\'est pas neutre.</div>'
+    +'<button onclick="confirmFocusMode()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:8px">J\'ai compris, activer quand m\u00eame</button>'
     +'<button onclick="document.getElementById(\'focus-warning-ov\').remove()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:600;font-size:.9rem;cursor:pointer">Annuler</button>'
     +'</div>';
   document.body.appendChild(ov);
@@ -121,29 +121,29 @@ function confirmFocusMode(){
   setFocusMode(true);
 }
 
-// Prévisualisation admin-only du nouvel affichage kcal (plage dynamique).
-// Pas d'avertissement ici (contrairement au mode focus) — c'est un simple
-// réglage d'affichage en test, pas un choix qui touche le rapport à
-// l'alimentation de qui que ce soit d'autre que l'admin lui-même.
+// Pr\u00e9visualisation admin-only du nouvel affichage kcal (plage dynamique).
+// Pas d'avertissement ici (contrairement au mode focus) \u2014 c'est un simple
+// r\u00e9glage d'affichage en test, pas un choix qui touche le rapport \u00e0
+// l'alimentation de qui que ce soit d'autre que l'admin lui-m\u00eame.
 async function togglePreviewKcal(){
   var newVal = !(PROF && PROF.preview_new_kcal === true);
   var r = await sb.from('profiles').update({preview_new_kcal:newVal}).eq('id',USER.id);
-  if(r.error){ toast('❌ '+r.error.message); return; }
+  if(r.error){ toast('\u274c '+r.error.message); return; }
   PROF.preview_new_kcal = newVal;
   document.getElementById('preview-kcal-switch').classList.toggle('on', newVal);
-  toast(newVal ? '🔍 Prévisualisation activée' : 'Retour à l\'ancien affichage');
+  toast(newVal ? '\ud83d\udd0d Pr\u00e9visualisation activ\u00e9e' : 'Retour \u00e0 l\'ancien affichage');
   refreshDash();
 }
 
 
-// ── SUIVI ÉNERGIE / DIGESTION POST-REPAS ──
-// Une évaluation rapide en un tap, proposée dans le journal une fois qu'un
-// repas contient au moins un aliment — sert de signal biologique concret
-// (comment le corps réagit) en complément des chiffres, jamais à la place.
+// \u2500\u2500 SUIVI \u00c9NERGIE / DIGESTION POST-REPAS \u2500\u2500
+// Une \u00e9valuation rapide en un tap, propos\u00e9e dans le journal une fois qu'un
+// repas contient au moins un aliment \u2014 sert de signal biologique concret
+// (comment le corps r\u00e9agit) en compl\u00e9ment des chiffres, jamais \u00e0 la place.
 var ENERGY_LABELS = {
-  forme: {ico:'🟢', lbl:'Pleine forme'},
-  pompe: {ico:'🟡', lbl:'Coup de pompe'},
-  faim:  {ico:'🔴', lbl:'Faim persistante'}
+  forme: {ico:'\ud83d\udfe2', lbl:'Pleine forme'},
+  pompe: {ico:'\ud83d\udfe1', lbl:'Coup de pompe'},
+  faim:  {ico:'\ud83d\udd34', lbl:'Faim persistante'}
 };
 
 async function renderEnergyCheckin(hasItems){
@@ -157,11 +157,11 @@ async function renderEnergyCheckin(hasItems){
 
   if(existing && ENERGY_LABELS[existing]){
     var info = ENERGY_LABELS[existing];
-    el.innerHTML = '<div class="energy-done">'+info.ico+' Ressenti enregistré : '+info.lbl
+    el.innerHTML = '<div class="energy-done">'+info.ico+' Ressenti enregistr\u00e9 : '+info.lbl
       +'<button onclick="undoEnergyCheckin()">Modifier</button></div>';
   } else {
     el.innerHTML = '<div class="energy-checkin">'
-      +'<div class="energy-checkin-ttl">Comment vous sentez-vous après ce repas ?</div>'
+      +'<div class="energy-checkin-ttl">Comment vous sentez-vous apr\u00e8s ce repas ?</div>'
       +'<div class="energy-opts">'
         +Object.keys(ENERGY_LABELS).map(function(key){
           var info = ENERGY_LABELS[key];
@@ -176,8 +176,8 @@ async function submitEnergyCheckin(rating){
     {user_id:USER.id, date:today(), repas:activeMeal, rating:rating},
     {onConflict:'user_id,date,repas'}
   );
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('Merci, c\'est noté');
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  toast('Merci, c\'est not\u00e9');
   renderEnergyCheckin(true);
 }
 async function undoEnergyCheckin(){
@@ -186,14 +186,14 @@ async function undoEnergyCheckin(){
 }
 
 
-// ── MOTEUR D'ALTERNATIVES ("Pantry Core") ──
-// Pour un repas suggéré donné, propose deux types d'alternatives plutôt
-// qu'un tirage aléatoire aveugle (l'ancien comportement du bouton ⇄) :
-// "Vos Classiques" (repas réellement mangés le plus souvent par cette
-// personne, tirés de son propre historique) et "Équivalents Diététicien"
-// (vraies recettes créées côté admin, filtrées pour ce type de repas).
-// Volontairement, aucune différence calorique n'est affichée dans ce
-// tiroir — le choix se fait sur ce que c'est, pas sur un delta de chiffre.
+// \u2500\u2500 MOTEUR D'ALTERNATIVES ("Pantry Core") \u2500\u2500
+// Pour un repas sugg\u00e9r\u00e9 donn\u00e9, propose deux types d'alternatives plut\u00f4t
+// qu'un tirage al\u00e9atoire aveugle (l'ancien comportement du bouton \u21c4) :
+// "Vos Classiques" (repas r\u00e9ellement mang\u00e9s le plus souvent par cette
+// personne, tir\u00e9s de son propre historique) et "\u00c9quivalents Di\u00e9t\u00e9ticien"
+// (vraies recettes cr\u00e9\u00e9es c\u00f4t\u00e9 admin, filtr\u00e9es pour ce type de repas).
+// Volontairement, aucune diff\u00e9rence calorique n'est affich\u00e9e dans ce
+// tiroir \u2014 le choix se fait sur ce que c'est, pas sur un delta de chiffre.
 
 async function openAlternativesDrawer(mealKey){
   var old = document.getElementById('alt-drawer-ov');
@@ -204,27 +204,27 @@ async function openAlternativesDrawer(mealKey){
   ov.className = 'alt-drawer-ov';
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   ov.innerHTML = '<div class="alt-drawer">'
-    +'<div class="alt-drawer-hdr"><span>Alternatives — '+(MEAL_META[mealKey]?MEAL_META[mealKey].l:'')+'</span>'
-    +'<button onclick="document.getElementById(\'alt-drawer-ov\').remove()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">✕</button></div>'
-    +'<div class="alt-section-lbl">🔁 Vos classiques</div>'
-    +'<div id="alt-classiques">Chargement…</div>'
-    +'<div class="alt-section-lbl">🥗 Équivalents diététicien</div>'
-    +'<div id="alt-dietitian">Chargement…</div>'
-    +'<button class="alt-surprise" onclick="document.getElementById(\'alt-drawer-ov\').remove();changeMealRecipe(\''+mealKey+'\')">🎲 Surprends-moi</button>'
+    +'<div class="alt-drawer-hdr"><span>Alternatives \u2014 '+(MEAL_META[mealKey]?MEAL_META[mealKey].l:'')+'</span>'
+    +'<button onclick="document.getElementById(\'alt-drawer-ov\').remove()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">\u2715</button></div>'
+    +'<div class="alt-section-lbl">\ud83d\udd01 Vos classiques</div>'
+    +'<div id="alt-classiques">Chargement\u2026</div>'
+    +'<div class="alt-section-lbl">\ud83e\udd57 \u00c9quivalents di\u00e9t\u00e9ticien</div>'
+    +'<div id="alt-dietitian">Chargement\u2026</div>'
+    +'<button class="alt-surprise" onclick="document.getElementById(\'alt-drawer-ov\').remove();changeMealRecipe(\''+mealKey+'\')">\ud83c\udfb2 Surprends-moi</button>'
     +'</div>';
   document.body.appendChild(ov);
 
   var classiques = await computeVosClassiques(mealKey);
   var classEl = document.getElementById('alt-classiques');
   if(!classiques.length){
-    classEl.innerHTML = '<div class="alt-empty">Pas encore assez d\'historique pour ce repas — revenez dans quelques jours.</div>';
+    classEl.innerHTML = '<div class="alt-empty">Pas encore assez d\'historique pour ce repas \u2014 revenez dans quelques jours.</div>';
   } else {
     classEl.innerHTML = classiques.map(function(g,idx){
       var names = g.entries.map(function(e){ return e.aliment; }).join(', ');
-      var freqLbl = g.count>1 ? g.count+'x récemment' : 'Mangé récemment';
+      var freqLbl = g.count>1 ? g.count+'x r\u00e9cemment' : 'Mang\u00e9 r\u00e9cemment';
       return '<div class="alt-item" onclick="applyClassique(\''+mealKey+'\','+idx+')">'
-        +'<span class="alt-item-ico">🔁</span>'
-        +'<div class="alt-item-body"><div class="alt-item-name">'+esc(names.length>50?names.slice(0,50)+'…':names)+'</div>'
+        +'<span class="alt-item-ico">\ud83d\udd01</span>'
+        +'<div class="alt-item-body"><div class="alt-item-name">'+esc(names.length>50?names.slice(0,50)+'\u2026':names)+'</div>'
         +'<div class="alt-item-sub">'+freqLbl+'</div></div></div>';
     }).join('');
     window._altClassiques = classiques;
@@ -233,13 +233,13 @@ async function openAlternativesDrawer(mealKey){
   var equivalents = await fetchDietitianEquivalents(mealKey);
   var dietEl = document.getElementById('alt-dietitian');
   if(!equivalents.length){
-    dietEl.innerHTML = '<div class="alt-empty">Aucune recette diététicien disponible pour ce repas pour l\'instant.</div>';
+    dietEl.innerHTML = '<div class="alt-empty">Aucune recette di\u00e9t\u00e9ticien disponible pour ce repas pour l\'instant.</div>';
   } else {
     dietEl.innerHTML = equivalents.map(function(r,idx){
       return '<div class="alt-item" onclick="applyDietitianRecipe(\''+mealKey+'\','+idx+')">'
-        +'<span class="alt-item-ico">🥗</span>'
+        +'<span class="alt-item-ico">\ud83e\udd57</span>'
         +'<div class="alt-item-body"><div class="alt-item-name">'+esc(r.nom)+'</div>'
-        +'<div class="alt-item-sub">Suggestion de l\'équipe</div></div></div>';
+        +'<div class="alt-item-sub">Suggestion de l\'\u00e9quipe</div></div></div>';
     }).join('');
     window._altEquivalents = equivalents;
   }
@@ -247,8 +247,8 @@ async function openAlternativesDrawer(mealKey){
 
 // Analyse les 21 derniers jours du journal pour ce type de repas, regroupe
 // par jour, et fait remonter les combinaisons d'aliments qui reviennent le
-// plus souvent — même logique que "Repas récents" dans le journal, mais
-// appliquée ici au plan alimentaire.
+// plus souvent \u2014 m\u00eame logique que "Repas r\u00e9cents" dans le journal, mais
+// appliqu\u00e9e ici au plan alimentaire.
 async function computeVosClassiques(mealKey){
   var since = new Date(); since.setDate(since.getDate()-21);
   var r = await sb.from('journal').select('*')
@@ -279,26 +279,26 @@ async function computeVosClassiques(mealKey){
 async function fetchDietitianEquivalents(mealKey){
   var r = await sb.from('recettes').select('*').contains('repas_types',[mealKey]).limit(20);
   var list = r.data || [];
-  // Petite variété à chaque ouverture plutôt que toujours les mêmes en tête
+  // Petite vari\u00e9t\u00e9 \u00e0 chaque ouverture plut\u00f4t que toujours les m\u00eames en t\u00eate
   for(var i=list.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=list[i]; list[i]=list[j]; list[j]=t; }
   return list.slice(0,4);
 }
 
-// Catégories utilisées pour savoir QUOI ajuster quand il manque des
-// calories à combler sur un "classique" — certains aliments ont une
-// portion naturelle qu'on ne force pas au-delà (un yaourt ne se mange pas
-// par tranches de 200g), d'autres se prêtent bien à un ajustement, mais
-// pas pour tout le monde (noix/miel à éviter si diabète ou pathologie
-// concernée, on préfère alors fruits/craquelins).
+// Cat\u00e9gories utilis\u00e9es pour savoir QUOI ajuster quand il manque des
+// calories \u00e0 combler sur un "classique" \u2014 certains aliments ont une
+// portion naturelle qu'on ne force pas au-del\u00e0 (un yaourt ne se mange pas
+// par tranches de 200g), d'autres se pr\u00eatent bien \u00e0 un ajustement, mais
+// pas pour tout le monde (noix/miel \u00e0 \u00e9viter si diab\u00e8te ou pathologie
+// concern\u00e9e, on pr\u00e9f\u00e8re alors fruits/craquelins).
 var FIXED_PORTION_REGEX = /yaourt|yoghourt|yoghurt|fromage blanc|skyr|petit.suisse/;
 var DENSE_FLEX_REGEX = /noix|amande|noisette|miel|sucre|fruits? secs?|raisins? secs?|beurre de cacahuete/;
 var SAFE_FLEX_REGEX = /cracker|craquelin|biscotte|pomme|banane|orange|poire|kiwi|fraise|fruit/;
 
 function normalizeTxt(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
-// Ajuste les quantités d'un combo "classique" pour se rapprocher du
-// besoin calorique du repas — seulement à la hausse, seulement sur les
-// aliments qui s'y prêtent, jamais sur les portions à taille naturelle
+// Ajuste les quantit\u00e9s d'un combo "classique" pour se rapprocher du
+// besoin calorique du repas \u2014 seulement \u00e0 la hausse, seulement sur les
+// aliments qui s'y pr\u00eatent, jamais sur les portions \u00e0 taille naturelle
 // fixe (yaourt, fromage blanc...).
 function adjustClassiqueForGap(items, mealKey){
   var tgt = calcTargets();
@@ -307,28 +307,28 @@ function adjustClassiqueForGap(items, mealKey){
   var currentKcal = items.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
   var gap = mealTarget - currentKcal;
 
-  // Écart trop faible pour justifier d'y toucher, ou déjà au-dessus —
+  // \u00c9cart trop faible pour justifier d'y toucher, ou d\u00e9j\u00e0 au-dessus \u2014
   // on laisse le classique tel quel (c'est tout le principe de cette
-  // alternative : rester fidèle à ce que la personne mange vraiment).
+  // alternative : rester fid\u00e8le \u00e0 ce que la personne mange vraiment).
   if(gap < 80) return items;
 
   var pathos = (PROF && PROF.pathologies) || [];
   var avoidDenseSugar = pathos.indexOf('diabetes')>=0;
 
-  // On identifie quels items du combo peuvent absorber l'écart.
+  // On identifie quels items du combo peuvent absorber l'\u00e9cart.
   var flexItems = items.filter(function(it){
     var n = normalizeTxt(it.food.nom);
-    if(FIXED_PORTION_REGEX.test(n)) return false; // jamais ces portions-là
-    if(DENSE_FLEX_REGEX.test(n) && avoidDenseSugar) return false; // noix/miel écartés si pathologie concernée
+    if(FIXED_PORTION_REGEX.test(n)) return false; // jamais ces portions-l\u00e0
+    if(DENSE_FLEX_REGEX.test(n) && avoidDenseSugar) return false; // noix/miel \u00e9cart\u00e9s si pathologie concern\u00e9e
     return DENSE_FLEX_REGEX.test(n) || SAFE_FLEX_REGEX.test(n);
   });
 
-  if(!flexItems.length) return items; // rien dans ce combo ne se prête à l'ajustement, on ne force rien
+  if(!flexItems.length) return items; // rien dans ce combo ne se pr\u00eate \u00e0 l'ajustement, on ne force rien
 
   var flexKcalTotal = flexItems.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
   if(flexKcalTotal<=0) return items;
 
-  var scaleFactor = Math.min(2.2, (flexKcalTotal+gap)/flexKcalTotal); // jamais plus de 2.2x la quantité d'origine
+  var scaleFactor = Math.min(2.2, (flexKcalTotal+gap)/flexKcalTotal); // jamais plus de 2.2x la quantit\u00e9 d'origine
   flexItems.forEach(function(it){ it.qty = Math.round(it.qty*scaleFactor); });
   return items;
 }
@@ -336,10 +336,10 @@ function adjustClassiqueForGap(items, mealKey){
 function applyClassique(mealKey, idx){
   var g = window._altClassiques[idx];
   if(!g) return;
-  // Les quantités historiques sont le point de départ — c'est le principe
+  // Les quantit\u00e9s historiques sont le point de d\u00e9part \u2014 c'est le principe
   // d'un "classique" : ce que la personne mange vraiment. On ajuste
-  // seulement les aliments qui s'y prêtent si le besoin du jour est plus
-  // élevé que d'habitude pour ce repas.
+  // seulement les aliments qui s'y pr\u00eatent si le besoin du jour est plus
+  // \u00e9lev\u00e9 que d'habitude pour ce repas.
   var items = g.entries.map(function(e){
     return { food:{nom:e.aliment, unit:'g', kcal:e.food_kcal_100||0, prot:e.food_prot_100||0, gluc:e.food_gluc_100||0, lip:e.food_lip_100||0, fibres:e.food_fibres_100||0, pot:e.food_pot_100||0, cal:e.food_cal_100||0, fer:e.food_fer_100||0, mg:e.food_mg_100||0, zn:e.food_zn_100||0}, qty:e.quantite };
   });
@@ -348,7 +348,7 @@ function applyClassique(mealKey, idx){
   saveGenericPlan();
   document.getElementById('alt-drawer-ov').remove();
   renderMealPlan();
-  toast('✅ Repas remplacé par un de vos classiques');
+  toast('\u2705 Repas remplac\u00e9 par un de vos classiques');
 }
 
 function applyDietitianRecipe(mealKey, idx){
@@ -361,30 +361,30 @@ function applyDietitianRecipe(mealKey, idx){
     : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
   var mealKcalTarget = tgt.kcal * (mealPcts[mealKey]||0.2);
   // Adapte le format Supabase (ingredients) au format attendu par
-  // scaleRecipe (ing) — même contenu, avec unit:'g' explicite car les
+  // scaleRecipe (ing) \u2014 m\u00eame contenu, avec unit:'g' explicite car les
   // vraies recettes n'ont pas ce champ (contrairement au pool statique),
-  // et fmtQty() en a besoin pour afficher correctement les quantités.
+  // et fmtQty() en a besoin pour afficher correctement les quantit\u00e9s.
   var adapted = { ing: (recipe.ingredients||[]).map(function(i){ return Object.assign({unit:'g'}, i); }) };
   CURRENT_PLAN[mealKey] = { recipeName:recipe.nom, recipeId:recipe.id, items:scaleRecipe(adapted, mealKcalTarget) };
   saveGenericPlan();
   document.getElementById('alt-drawer-ov').remove();
   renderMealPlan();
-  toast('✅ Repas remplacé par '+recipe.nom);
+  toast('\u2705 Repas remplac\u00e9 par '+recipe.nom);
 }
 
 
-// ── JAUGE D'ÉNERGIE QUOTIDIENNE (Mode Focus) ──
-// Contrairement à la première version (un simple nombre figé), la jauge
-// se RECALCULE en direct à chaque affichage à partir de trois éléments :
-// - une base fixée le matin par le checkin sommeil
-// - une décroissance selon le temps écoulé depuis ce checkin (façon
-//   Garmin Connect / Body Battery — l'énergie s'use au fil de la journée)
-// - les recharges de la journée, une par repas, dont l'ampleur dépend à
-//   la fois de l'équilibre protéines/fibres ET de la densité énergétique
-//   du repas (un repas léger et riche en aliments bruts recharge mieux
-//   qu'un repas calorique dense, même à équilibre protéines/fibres égal).
-var ENERGY_GAUGE_TODAY = null; // {base_value, checkin_at, recharges} ou null si pas encore chargé
-var ENERGY_DECAY_PER_HOUR = 3.5; // %/heure, plafonné à 16h de décroissance
+// \u2500\u2500 JAUGE D'\u00c9NERGIE QUOTIDIENNE (Mode Focus) \u2500\u2500
+// Contrairement \u00e0 la premi\u00e8re version (un simple nombre fig\u00e9), la jauge
+// se RECALCULE en direct \u00e0 chaque affichage \u00e0 partir de trois \u00e9l\u00e9ments :
+// - une base fix\u00e9e le matin par le checkin sommeil
+// - une d\u00e9croissance selon le temps \u00e9coul\u00e9 depuis ce checkin (fa\u00e7on
+//   Garmin Connect / Body Battery \u2014 l'\u00e9nergie s'use au fil de la journ\u00e9e)
+// - les recharges de la journ\u00e9e, une par repas, dont l'ampleur d\u00e9pend \u00e0
+//   la fois de l'\u00e9quilibre prot\u00e9ines/fibres ET de la densit\u00e9 \u00e9nerg\u00e9tique
+//   du repas (un repas l\u00e9ger et riche en aliments bruts recharge mieux
+//   qu'un repas calorique dense, m\u00eame \u00e0 \u00e9quilibre prot\u00e9ines/fibres \u00e9gal).
+var ENERGY_GAUGE_TODAY = null; // {base_value, checkin_at, recharges} ou null si pas encore charg\u00e9
+var ENERGY_DECAY_PER_HOUR = 3.5; // %/heure, plafonn\u00e9 \u00e0 16h de d\u00e9croissance
 var ENERGY_DECAY_MAX_HOURS = 16;
 
 function computeEnergyGaugeValue(){
@@ -400,15 +400,15 @@ async function loadEnergyGauge(){
   var r = await sb.from('energy_gauge').select('*').eq('user_id',USER.id).eq('date',today()).maybeSingle();
   ENERGY_GAUGE_TODAY = r.data || null;
 
-  if(!(PROF && PROF.hide_exact_kcal===true)) return; // pas en mode focus, rien à afficher
+  if(!(PROF && PROF.hide_exact_kcal===true)) return; // pas en mode focus, rien \u00e0 afficher
 
   if(!ENERGY_GAUGE_TODAY || !ENERGY_GAUGE_TODAY.checkin_at){
     document.getElementById('sleep-checkin-ov').style.display='flex';
   } else {
     renderEnergyGaugeDisplay();
-    // Rafraîchit l'affichage toutes les 5 minutes tant que le dashboard
-    // reste ouvert, pour que la décroissance se voie vraiment évoluer
-    // sans avoir à recharger la page.
+    // Rafra\u00eechit l'affichage toutes les 5 minutes tant que le dashboard
+    // reste ouvert, pour que la d\u00e9croissance se voie vraiment \u00e9voluer
+    // sans avoir \u00e0 recharger la page.
     if(!window._energyGaugeInterval){
       window._energyGaugeInterval = setInterval(renderEnergyGaugeDisplay, 5*60*1000);
     }
@@ -422,9 +422,9 @@ function renderEnergyGaugeDisplay(){
   document.getElementById('energy-gauge-pct').textContent = val+'%';
   var msgEl = document.getElementById('energy-gauge-msg');
   if(msgEl){
-    msgEl.textContent = val>=75 ? 'Belle énergie — continuez comme ça.'
-      : val>=45 ? 'Un repas équilibré et pas trop dense rechargera votre jauge.'
-      : 'Un repas léger avec protéines et fibres pourrait vous aider à retrouver de l\'énergie.';
+    msgEl.textContent = val>=75 ? 'Belle \u00e9nergie \u2014 continuez comme \u00e7a.'
+      : val>=45 ? 'Un repas \u00e9quilibr\u00e9 et pas trop dense rechargera votre jauge.'
+      : 'Un repas l\u00e9ger avec prot\u00e9ines et fibres pourrait vous aider \u00e0 retrouver de l\'\u00e9nergie.';
   }
 }
 
@@ -448,11 +448,11 @@ async function skipSleepCheckin(){
   renderEnergyGaugeDisplay();
 }
 
-// Appelée après l'ajout d'un aliment au journal — si CE repas atteint un
-// bon équilibre protéines/fibres pour la première fois aujourd'hui, la
-// jauge se recharge. L'ampleur dépend aussi de la densité énergétique du
-// repas (kcal par gramme) : un repas léger et riche en aliments bruts
-// recharge mieux qu'un repas très calorique au même poids.
+// Appel\u00e9e apr\u00e8s l'ajout d'un aliment au journal \u2014 si CE repas atteint un
+// bon \u00e9quilibre prot\u00e9ines/fibres pour la premi\u00e8re fois aujourd'hui, la
+// jauge se recharge. L'ampleur d\u00e9pend aussi de la densit\u00e9 \u00e9nerg\u00e9tique du
+// repas (kcal par gramme) : un repas l\u00e9ger et riche en aliments bruts
+// recharge mieux qu'un repas tr\u00e8s calorique au m\u00eame poids.
 async function maybeRechargeEnergyGauge(mealKey){
   if(!(PROF && PROF.hide_exact_kcal===true)) return;
   if(!ENERGY_GAUGE_TODAY) return;
@@ -465,18 +465,18 @@ async function maybeRechargeEnergyGauge(mealKey){
   if(!isBalanced) return;
 
   var already = (ENERGY_GAUGE_TODAY.recharges||[]);
-  if(already.some(function(r){ return r.meal===mealKey; })) return; // déjà rechargé pour ce repas aujourd'hui
+  if(already.some(function(r){ return r.meal===mealKey; })) return; // d\u00e9j\u00e0 recharg\u00e9 pour ce repas aujourd'hui
 
   var mealKcal = mealEntries.reduce(function(s,e){ return s+(e.food_kcal_100||0)*e.quantite/100; },0);
   var mealWeight = mealEntries.reduce(function(s,e){ return s+(e.quantite||0); },0);
   var density = mealWeight>0 ? mealKcal/mealWeight : 2;
 
-  // Un repas léger et peu dense (légumes, fruits, aliments bruts) profite
-  // davantage à l'énergie ressentie qu'un repas très calorique au même
-  // poids (fritures, plats très transformés) — même à protéines/fibres
+  // Un repas l\u00e9ger et peu dense (l\u00e9gumes, fruits, aliments bruts) profite
+  // davantage \u00e0 l'\u00e9nergie ressentie qu'un repas tr\u00e8s calorique au m\u00eame
+  // poids (fritures, plats tr\u00e8s transform\u00e9s) \u2014 m\u00eame \u00e0 prot\u00e9ines/fibres
   // suffisantes dans les deux cas.
   var densityMult = density<1.5 ? 1.25 : density>2.5 ? 0.6 : 1.0;
-  var baseGain = 15 + Math.round(Math.random()*10); // +15 à +25 avant modulation
+  var baseGain = 15 + Math.round(Math.random()*10); // +15 \u00e0 +25 avant modulation
   var gain = Math.round(baseGain * densityMult);
 
   var newRecharges = already.concat([{meal:mealKey, amount:gain, at:new Date().toISOString()}]);
@@ -484,17 +484,17 @@ async function maybeRechargeEnergyGauge(mealKey){
   if(!r.error){
     ENERGY_GAUGE_TODAY.recharges = newRecharges;
     renderEnergyGaugeDisplay();
-    var densityNote = densityMult>1 ? ' (repas léger, bon impact)' : densityMult<1 ? ' (repas plus dense, impact modéré)' : '';
-    toast('🌿 +'+gain+'% d\'énergie — bel équilibre protéines/fibres'+densityNote);
+    var densityNote = densityMult>1 ? ' (repas l\u00e9ger, bon impact)' : densityMult<1 ? ' (repas plus dense, impact mod\u00e9r\u00e9)' : '';
+    toast('\ud83c\udf3f +'+gain+'% d\'\u00e9nergie \u2014 bel \u00e9quilibre prot\u00e9ines/fibres'+densityNote);
   }
 }
 
 
-// ── TENDANCE DE LA SEMAINE ──
-// Un repère de progression narratif plutôt que chiffré : on regarde les 7
-// derniers jours, on classe chaque jour selon l'équilibre de l'assiette
-// (même logique que la carte du jour, appliquée rétrospectivement), et on
-// en tire une phrase de synthèse plutôt qu'un tableau de chiffres.
+// \u2500\u2500 TENDANCE DE LA SEMAINE \u2500\u2500
+// Un rep\u00e8re de progression narratif plut\u00f4t que chiffr\u00e9 : on regarde les 7
+// derniers jours, on classe chaque jour selon l'\u00e9quilibre de l'assiette
+// (m\u00eame logique que la carte du jour, appliqu\u00e9e r\u00e9trospectivement), et on
+// en tire une phrase de synth\u00e8se plut\u00f4t qu'un tableau de chiffres.
 async function renderWeeklyTrend(){
   var card = document.getElementById('weekly-trend-card');
   if(!card) return;
@@ -549,20 +549,20 @@ async function renderWeeklyTrend(){
   if(trackedCount<3){
     narrative = 'Encore quelques jours pour dresser un vrai portrait de votre semaine.';
   } else if(goodCount>=5){
-    narrative = 'Belle semaine — votre assiette est restée équilibrée '+goodCount+' jour'+(goodCount>1?'s':'')+' sur '+trackedCount+'.';
+    narrative = 'Belle semaine \u2014 votre assiette est rest\u00e9e \u00e9quilibr\u00e9e '+goodCount+' jour'+(goodCount>1?'s':'')+' sur '+trackedCount+'.';
   } else if(goodCount>=3){
-    narrative = 'Semaine plutôt régulière, avec '+goodCount+' jours bien équilibrés sur '+trackedCount+' suivis.';
+    narrative = 'Semaine plut\u00f4t r\u00e9guli\u00e8re, avec '+goodCount+' jours bien \u00e9quilibr\u00e9s sur '+trackedCount+' suivis.';
   } else {
-    narrative = 'Une semaine un peu plus irrégulière — pas grave, chaque jour repart de zéro.';
+    narrative = 'Une semaine un peu plus irr\u00e9guli\u00e8re \u2014 pas grave, chaque jour repart de z\u00e9ro.';
   }
   document.getElementById('weekly-trend-narrative').textContent = narrative;
 }
 
 
-// Répartition du poids (grammes) des aliments du jour entre végétaux,
-// protéines et féculents — basé sur le poids plutôt que les calories,
-// pour rester fidèle à la métaphore visuelle de l'assiette (les
-// matières grasses par ex. pèsent peu à l'œil mais beaucoup en kcal,
+// R\u00e9partition du poids (grammes) des aliments du jour entre v\u00e9g\u00e9taux,
+// prot\u00e9ines et f\u00e9culents \u2014 bas\u00e9 sur le poids plut\u00f4t que les calories,
+// pour rester fid\u00e8le \u00e0 la m\u00e9taphore visuelle de l'assiette (les
+// mati\u00e8res grasses par ex. p\u00e8sent peu \u00e0 l'\u0153il mais beaucoup en kcal,
 // ce qui fausserait la lecture si on utilisait les calories ici).
 var PROTEIN_SRC_REGEX = /poulet|boeuf|porc|jambon|thon|saumon|cabillaud|dinde|veau|agneau|oeuf|tofu|poisson|crevette|merlu|colin|sardine|steak|escalope|filet de|blanc de|viande|charcuterie|seitan|tempeh/;
 var STARCH_REGEX = /pates|riz|pain|pomme de terre|patate|quinoa|semoule|boulgour|cereales?|avoine|flocons|biscotte|tortilla|couscous/;
@@ -604,22 +604,22 @@ function renderBalancedPlate(entries){
   document.getElementById('plate-starch-fill').style.width=starchPct+'%';
   document.getElementById('plate-starch-pct').textContent=starchPct+'%';
 
-  // Écart par rapport à la répartition-repère 50/25/25 (modèle "assiette
-  // équilibrée" classique) — statut qualitatif doux, jamais un chiffre à
-  // atteindre au pourcentage près.
+  // \u00c9cart par rapport \u00e0 la r\u00e9partition-rep\u00e8re 50/25/25 (mod\u00e8le "assiette
+  // \u00e9quilibr\u00e9e" classique) \u2014 statut qualitatif doux, jamais un chiffre \u00e0
+  // atteindre au pourcentage pr\u00e8s.
   var deviation = Math.abs(vegPct-50)+Math.abs(protPct-25)+Math.abs(starchPct-25);
-  var statusTxt = deviation<=20 ? 'Structure de l\'assiette : très équilibrée aujourd\'hui.'
-    : deviation<=40 ? 'Structure de l\'assiette : plutôt équilibrée.'
-    : vegPct<30 ? 'Une portion de légumes ou de fruits en plus donnerait plus de place aux végétaux.'
-    : 'Continuez à varier les trois familles à chaque repas.';
+  var statusTxt = deviation<=20 ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
+    : deviation<=40 ? 'Structure de l\'assiette : plut\u00f4t \u00e9quilibr\u00e9e.'
+    : vegPct<30 ? 'Une portion de l\u00e9gumes ou de fruits en plus donnerait plus de place aux v\u00e9g\u00e9taux.'
+    : 'Continuez \u00e0 varier les trois familles \u00e0 chaque repas.';
   document.getElementById('plate-status').textContent = statusTxt;
 }
 
-// ── DIVERSITÉ VÉGÉTALE DE LA SEMAINE ──
-// Compte les végétaux DISTINCTS (légumes, fruits, céréales complètes,
-// légumineuses, graines) consommés sur les 7 derniers jours — un
-// indicateur associé à la diversité du microbiote, indépendant des
-// quantités ou des calories.
+// \u2500\u2500 DIVERSIT\u00c9 V\u00c9G\u00c9TALE DE LA SEMAINE \u2500\u2500
+// Compte les v\u00e9g\u00e9taux DISTINCTS (l\u00e9gumes, fruits, c\u00e9r\u00e9ales compl\u00e8tes,
+// l\u00e9gumineuses, graines) consomm\u00e9s sur les 7 derniers jours \u2014 un
+// indicateur associ\u00e9 \u00e0 la diversit\u00e9 du microbiote, ind\u00e9pendant des
+// quantit\u00e9s ou des calories.
 var SEEDS_HERBS_REGEX = /graines?|lin|chia|sesame|tournesol|courge \(graines\)|persil|basilic|coriandre|menthe|thym|romarin|ciboulette/;
 
 async function renderPlantDiversity(){
@@ -640,11 +640,11 @@ async function renderPlantDiversity(){
 
   var count = Object.keys(distinctPlants).length;
   card.style.display = 'block';
-  document.getElementById('diversity-count').textContent = count+' / 20 végétaux';
+  document.getElementById('diversity-count').textContent = count+' / 20 v\u00e9g\u00e9taux';
   document.getElementById('diversity-fill').style.width = Math.min(100, count/20*100)+'%';
   document.getElementById('diversity-msg').textContent = count>=20
-    ? 'Superbe diversité cette semaine — votre microbiote vous dit merci.'
+    ? 'Superbe diversit\u00e9 cette semaine \u2014 votre microbiote vous dit merci.'
     : count>=12
-    ? 'Belle diversité cette semaine, encore quelques végétaux différents pour viser les 20.'
-    : 'Plus vous variez légumes, fruits, céréales et légumineuses, mieux c\'est pour votre microbiote.';
+    ? 'Belle diversit\u00e9 cette semaine, encore quelques v\u00e9g\u00e9taux diff\u00e9rents pour viser les 20.'
+    : 'Plus vous variez l\u00e9gumes, fruits, c\u00e9r\u00e9ales et l\u00e9gumineuses, mieux c\'est pour votre microbiote.';
 }
