@@ -248,8 +248,15 @@ function renderThread(uid){
   var el = document.getElementById('thread');
   el.innerHTML = msgs.map(function(m){
     var side = m.is_admin_sender ? 'from-admin' : 'from-user';
+    var attachHtml = m.attachment_url
+      ? '<a href="'+esc(m.attachment_url)+'" target="_blank" rel="noopener"><img src="'+esc(m.attachment_url)+'" alt="Pi\u00e8ce jointe" style="max-width:220px;border-radius:10px;margin-top:6px;display:block;cursor:zoom-in"></a>'
+      : '';
+    // Le texte "\ud83d\udcf7 Photo" est le texte de secours quand une photo est
+    // envoy\u00e9e sans l\u00e9gende (voir chat.html) \u2014 inutile de l'afficher en plus
+    // de l'image elle-m\u00eame, sinon \u00e7a fait doublon.
+    var textHtml = (m.content && m.content!=='\ud83d\udcf7 Photo') ? esc(m.content) : '';
     return '<div class="bubble-row '+side+'"><div>'
-      +'<div class="bubble">'+esc(m.content)+'</div>'
+      +'<div class="bubble">'+textHtml+attachHtml+'</div>'
       +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
       +'</div></div>';
   }).join('');
