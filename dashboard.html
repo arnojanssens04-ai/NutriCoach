@@ -723,6 +723,7 @@ body {
        f&#233;culents), visible uniquement en mode focus. -->
   <div class="plate-card" id="balanced-plate-card" style="display:none">
     <div class="focus-card-hdr">&#127869;&#65039; L'assiette &#233;quilibr&#233;e</div>
+    <div class="focus-card-txt" id="plate-tgt-caption" style="margin-bottom:12px;font-size:.74rem"></div>
     <div class="plate-bars">
       <div class="plate-bar-row">
         <span class="plate-bar-lbl">&#129382; V&#233;g&#233;taux &amp; fibres</span>
@@ -738,6 +739,11 @@ body {
         <span class="plate-bar-lbl">&#127806; F&#233;culents &amp; c&#233;r&#233;ales</span>
         <div class="plate-bar-track"><div class="plate-bar-fill" id="plate-starch-fill" style="width:0%;background:var(--gold)"></div></div>
         <span class="plate-bar-pct" id="plate-starch-pct">0%</span>
+      </div>
+      <div class="plate-bar-row">
+        <span class="plate-bar-lbl">&#129337; Mati&#232;res grasses</span>
+        <div class="plate-bar-track"><div class="plate-bar-fill" id="plate-fat-fill" style="width:0%;background:#b8860b"></div></div>
+        <span class="plate-bar-pct" id="plate-fat-pct">0%</span>
       </div>
     </div>
     <div class="focus-card-txt" id="plate-status" style="margin-top:10px">Ajoutez vos repas pour voir la structure de votre assiette.</div>
@@ -2207,7 +2213,7 @@ async function addEntry(food,qty){
     food_code:food.code||null,food_source:food._source||'ciqual',
     food_kcal_100:pN(food.kcal),food_prot_100:pN(food.prot),
     food_gluc_100:pN(food.gluc),food_lip_100:pN(food.lip),
-    food_ags_100:pN(food.ags),food_o3a_100:pN(food.o3a),
+    food_ags_100:pN(food.ags),food_mono_100:pN(food.mono),food_o3a_100:pN(food.o3a),
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
     food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot),
     food_fibres_100:fibresVal,food_mg_100:pN(food.mg),
@@ -2930,7 +2936,14 @@ async function refreshDash(){
     extraRow.style.display='flex';
     if(qnRes){
       var qnOkCount = Object.values(qnRes.criteria).filter(Boolean).length;
-      var qnStatusTxt = qnOkCount>=3 ? 'Tr\u00e8s bel \u00e9quilibre aujourd\'hui'
+      // "Peu transform\u00e9" agit comme un veto sur le statut le plus positif \u2014
+      // 3 crit\u00e8res sur 4 ne doit pas donner "tr\u00e8s bel \u00e9quilibre" si c'est
+      // pr\u00e9cis\u00e9ment celui sur le transform\u00e9 qui manque (le plus significatif
+      // au quotidien). \u00c9vite la m\u00eame contradiction qu'on avait d\u00e9j\u00e0 corrig\u00e9e
+      // pour le tampon glyc\u00e9mique : un texte tr\u00e8s positif ne doit jamais
+      // cohabiter avec un vrai signal n\u00e9gatif visible juste \u00e0 c\u00f4t\u00e9.
+      var qnStatusTxt = (qnOkCount>=3 && qnRes.criteria.ultraTransformes) ? 'Tr\u00e8s bel \u00e9quilibre aujourd\'hui'
+        : qnOkCount>=3 ? 'Bonne diversit\u00e9, mais plusieurs aliments transform\u00e9s'
         : qnOkCount===2 ? 'Bon \u00e9quilibre, presque au top'
         : qnOkCount===1 ? 'Un point fort \u00e0 souligner'
         : 'En construction aujourd\'hui';
