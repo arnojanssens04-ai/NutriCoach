@@ -252,21 +252,6 @@ body {
 .focus-card-txt { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:10px; }
 .focus-card-meals { font-size:.76rem; color:var(--text3); }
 
-.energy-gauge-wrap { display:flex; align-items:center; gap:12px; margin:12px 0; }
-.energy-gauge-track { flex:1; height:14px; background:var(--bg2); border-radius:999px; overflow:hidden; }
-.energy-gauge-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--sage),var(--gold)); transition:width 1s cubic-bezier(.4,0,.2,1); }
-.energy-gauge-pct { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; color:var(--gold); min-width:44px; text-align:right; }
-
-.sleep-checkin-ov { position:fixed; inset:0; background:rgba(22,36,27,0.55); z-index:600; display:flex; align-items:center; justify-content:center; padding:20px; }
-.sleep-checkin-card { background:var(--card); border-radius:18px; padding:24px 20px; max-width:360px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.2); text-align:center; }
-.sleep-checkin-ttl { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; margin-bottom:6px; }
-.sleep-checkin-sub { font-size:.82rem; color:var(--text2); margin-bottom:18px; }
-.sleep-checkin-opts { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
-.sleep-opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; border:1px solid var(--border2); background:var(--card2); cursor:pointer; font-size:.88rem; font-weight:600; color:var(--text); text-align:left; transition:all .15s; }
-.sleep-opt:hover { border-color:var(--gold); background:var(--gold-l); }
-.sleep-opt .ico { font-size:1.2rem; }
-.sleep-checkin-skip { background:none; border:none; color:var(--text3); font-size:.78rem; text-decoration:underline; cursor:pointer; }
-
 .plate-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; margin-bottom:14px; box-shadow:var(--sh); }
 .plate-bars { display:flex; flex-direction:column; gap:11px; margin-top:12px; }
 .plate-bar-row { display:flex; align-items:center; gap:10px; }
@@ -724,20 +709,8 @@ body {
        di&#233;t&#233;ticien). Les calories continuent d'&#234;tre calcul&#233;es normalement
        en arri&#232;re-plan pour le bilan, simplement pas affich&#233;es au
        quotidien pour ne pas nourrir un rapport comptable &#224; l'alimentation. -->
-  <div class="focus-card" id="focus-card" style="display:none">
-    <div class="focus-card-hdr">&#127807; Jauge d'&#233;nergie du jour</div>
-    <div class="energy-gauge-wrap">
-      <div class="energy-gauge-track"><div class="energy-gauge-fill" id="energy-gauge-fill" style="width:70%"></div></div>
-      <div class="energy-gauge-pct" id="energy-gauge-pct">70%</div>
-    </div>
-    <div class="focus-card-txt" id="energy-gauge-msg">Chaque repas &#233;quilibr&#233; (prot&#233;ines + fibres) recharge votre jauge.</div>
-    <div class="focus-card-meals" id="focus-meals-count">&#8212; repas enregistr&#233;s aujourd'hui</div>
-    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Demandez &#224; votre di&#233;t&#233;ticien &#8594;</a>
-  </div>
-
-  <!-- HYPERTENSION &#8212; sodium/potassium, carte ind&#233;pendante de la jauge
-       d'&#233;nergie (masqu&#233;e pour ce profil) puisque c'est ce rep&#232;re-ci qui
-       compte vraiment pour l'hypertension, pas le ressenti g&#233;n&#233;ral. -->
+  <!-- HYPERTENSION &#8212; sodium/potassium, carte ind&#233;pendante puisque c'est
+       ce rep&#232;re-ci qui compte vraiment pour l'hypertension. -->
   <div class="focus-card" id="focus-hta-card" style="display:none">
     <div class="focus-card-hdr">&#129474; Sodium &amp; potassium du jour</div>
     <div class="focus-card-txt" id="focus-hta-line">&#8212;</div>
@@ -768,10 +741,10 @@ body {
       </div>
     </div>
     <div class="focus-card-txt" id="plate-status" style="margin-top:10px">Ajoutez vos repas pour voir la structure de votre assiette.</div>
+    <div class="focus-card-txt" id="plate-ultra-status" style="margin-top:6px;display:none"></div>
+    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Demandez &#224; votre di&#233;t&#233;ticien &#8594;</a>
   </div>
 
-  <!-- DIVERSIT&#201; V&#201;G&#201;TALE &#8212; compte les v&#233;g&#233;taux distincts consomm&#233;s sur
-       les 7 derniers jours, indicateur associ&#233; &#224; la sant&#233; du microbiote. -->
   <!-- TENDANCE DE LA SEMAINE &#8212; un rep&#232;re de progression narratif plut&#244;t
        que chiffr&#233;, avec un sparkline qualitatif (7 points color&#233;s) qui se
        lit d'un coup d'&#339;il sans aucun chiffre. -->
@@ -780,21 +753,6 @@ body {
     <div class="focus-card-txt" id="weekly-trend-narrative" style="margin-bottom:14px">Encore quelques jours pour dresser un vrai portrait de votre semaine.</div>
     <div class="sparkline-row" id="sparkline-row"></div>
     <div class="sparkline-days" id="sparkline-days"></div>
-  </div>
-
-  <!-- Micro-checkin sommeil &#8212; propos&#233; une fois par jour, au premier
-       chargement, pour initialiser la jauge d'&#233;nergie du matin. -->
-  <div class="sleep-checkin-ov" id="sleep-checkin-ov" style="display:none">
-    <div class="sleep-checkin-card">
-      <div class="sleep-checkin-ttl">Comment avez-vous dormi cette nuit ?</div>
-      <div class="sleep-checkin-sub">&#199;a nous aide &#224; initialiser votre jauge d'&#233;nergie du jour.</div>
-      <div class="sleep-checkin-opts">
-        <div class="sleep-opt" onclick="submitSleepCheckin('difficile')"><span class="ico">&#128308;</span>Sommeil difficile</div>
-        <div class="sleep-opt" onclick="submitSleepCheckin('moyen')"><span class="ico">&#128992;</span>Sommeil moyen</div>
-        <div class="sleep-opt" onclick="submitSleepCheckin('reparateur')"><span class="ico">&#128994;</span>Sommeil r&#233;parateur</div>
-      </div>
-      <button class="sleep-checkin-skip" onclick="skipSleepCheckin()">Passer pour aujourd'hui</button>
-    </div>
   </div>
 
   <!-- VOTRE ACCOMPAGNEMENT &#8212; rend tangible la pr&#233;sence humaine promise sur
@@ -2335,7 +2293,6 @@ async function addEntry(food,qty){
   }
 
   afterJournalChange();
-  if(typeof maybeRechargeEnergyGauge==='function') maybeRechargeEnergyGauge(activeMeal);
 }
 
 // Popup informatif depuis le badge du plan fixe dans dashboard.html \u2014
@@ -2756,33 +2713,13 @@ async function refreshDash(){
   var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
   document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
 
-  // La jauge d'\u00e9nergie est un rep\u00e8re de bien-\u00eatre g\u00e9n\u00e9ral \u2014 elle ne dit
-  // rien de sp\u00e9cifique sur une pathologie. Pour diab\u00e8te/hypertension/
-  // c\u0153liaque, les vrais rep\u00e8res utiles sont d\u00e9j\u00e0 ailleurs (glucides nets,
-  // tampon glyc\u00e9mique, sodium/potassium, filtre sans gluten) : on masque
-  // la jauge dans ces cas pour ne pas diluer l'attention sur ce qui
-  // compte vraiment pour ces profils. Quelqu'un avec une de ces
-  // pathologies ET un profil sportif verra quand m\u00eame les rep\u00e8res
-  // pathologie-sp\u00e9cifiques en priorit\u00e9 \u2014 la jauge n'est jamais LA
-  // fonctionnalit\u00e9 centrale du mode focus, juste un compl\u00e9ment optionnel.
-  var priorityPathos = ['diabetes','hypertension','coeliac'];
-  var hasPriorityPatho = pathos.some(function(p2){ return priorityPathos.indexOf(p2)>=0; });
-  var showEnergyGauge = hideExactKcal && !hasPriorityPatho;
-  document.getElementById('focus-card').style.display = showEnergyGauge ? 'block' : 'none';
-
   if(hideExactKcal){
-    var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
-    if(showEnergyGauge){
-      document.getElementById('focus-meals-count').textContent = mealsCount+' repas enregistr\u00e9'+(mealsCount>1?'s':'')+' aujourd\'hui';
-      loadEnergyGauge();
-    }
     if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries);
     if(typeof renderWeeklyTrend==='function') renderWeeklyTrend();
 
     // Hypertension \u2014 sodium/potassium restent des rep\u00e8res cliniques
-    // importants m\u00eame en mode focus ; carte ind\u00e9pendante de la jauge
-    // d'\u00e9nergie (qui est masqu\u00e9e pour ce profil), pas juste une ligne
-    // greff\u00e9e dessus.
+    // importants m\u00eame en mode focus ; carte ind\u00e9pendante.
+    var mealsCount = activeMealIds().filter(function(mid){ return entries.some(function(e){return e.repas===mid;}); }).length;
     var htaCard = document.getElementById('focus-hta-card');
     if(pathos.indexOf('hypertension')>=0){
       htaCard.style.display='block';
