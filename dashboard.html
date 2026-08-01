@@ -893,10 +893,11 @@ body {
   <p id="mealplan-mode-note" style="font-size:.82rem;color:var(--text2);margin-bottom:14px;line-height:1.6"></p>
   <div id="mealplan-diabetes-note" style="display:none;background:var(--sage-l);border:1px solid rgba(74,122,58,0.25);border-radius:11px;padding:12px 15px;margin-bottom:16px;font-size:.83rem;color:var(--sage);line-height:1.55"></div>
   <div id="mp-day-validated" style="display:none"></div>
-  <div class="card mb-12">
+  <div class="card mb-12" id="mp-totals-card">
     <div class="card-header"><span class="card-title" id="mp-totals-title">Bilan de la journ&#233;e</span></div>
     <div class="card-body" id="mp-totals"></div>
   </div>
+  <div class="focus-card-txt" id="mp-totals-focus-note" style="display:none;margin-bottom:12px">Repas enregistr&#233;s aujourd'hui &#8212; le d&#233;tail chiffr&#233; est masqu&#233; en mode focus.</div>
   <div class="card mb-12" id="mp-micro-card" style="display:none">
     <div class="card-header"><span class="card-title">Micronutriments cl&#233;s</span></div>
     <div class="card-body" id="mp-micro-body"></div>
@@ -2734,6 +2735,17 @@ async function refreshDash(){
     } else {
       htaCard.style.display='none';
     }
+  } else {
+    // Hors mode focus, ces cartes n'ont pas lieu d'\u00eatre \u2014 sans ce bloc,
+    // elles restaient affich\u00e9es (bloqu\u00e9es sur leur dernier \u00e9tat) si la
+    // personne avait d\u00e9j\u00e0 activ\u00e9 le mode focus une fois avant de le
+    // red\u00e9sactiver, puisque rien ne les masquait explicitement.
+    var balancedPlateCard = document.getElementById('balanced-plate-card');
+    var weeklyTrendCard = document.getElementById('weekly-trend-card');
+    var htaCardOff = document.getElementById('focus-hta-card');
+    if(balancedPlateCard) balancedPlateCard.style.display = 'none';
+    if(weeklyTrendCard) weeklyTrendCard.style.display = 'none';
+    if(htaCardOff) htaCardOff.style.display = 'none';
   }
 
   // Kcal \u2014 deux affichages coexistent le temps des tests : l'ANCIEN (par
@@ -4806,6 +4818,7 @@ function renderMicronutrientRow(label, val, target, unit, dec){
 function renderMealPlan(){
   var tgt = calcTargets();
   var pathos = (PROF&&PROF.pathologies)||[];
+  var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
 
   getEntries().then(function(entries){
     var analysis = entries.length ? analyzeAndAdjust(entries, tgt, pathos) : null;
@@ -4925,7 +4938,7 @@ function renderMealPlan(){
           var newKcal = Math.round(pN2(a.entry.food_kcal_100)*a.newQty/100);
           html += '<div class="mp-item"><div class="mp-item-info">'
             +'<div class="mp-item-name">'+esc(a.entry.aliment)+(a.suggested?' <span style="font-size:.62rem;background:var(--sage-l);color:var(--sage);padding:1px 7px;border-radius:999px;margin-left:4px;text-transform:uppercase;letter-spacing:.4px">Sugg\u00e9r\u00e9</span>':'')+'</div>'
-            +'<div class="mp-item-qty">'+a.newQty+'g \u00b7 '+newKcal+' kcal</div></div>'
+            +'<div class="mp-item-qty">'+a.newQty+'g'+(hideExactKcal?'':' \u00b7 '+newKcal+' kcal')+'</div></div>'
             +(a.suggested ? '<button class="mp-swap" onclick="openSubstituteSuggested(\''+a.cat+'\')">\u21c4</button>' : '')
             +'</div>';
         });
@@ -4945,7 +4958,7 @@ function renderMealPlan(){
             var kcal = Math.round(pN2(it.kcal)*it.qty/100);
             html += '<div class="mp-item"><div class="mp-item-info">'
               +'<div class="mp-item-name">'+esc(it.nom)+diabetePlanBadge(it)+'</div>'
-              +'<div class="mp-item-qty">'+Math.round(it.qty)+'g \u00b7 '+kcal+' kcal</div></div></div>';
+              +'<div class="mp-item-qty">'+Math.round(it.qty)+'g'+(hideExactKcal?'':' \u00b7 '+kcal+' kcal')+'</div></div></div>';
           });
           html += '</div></div>';
         } else {
@@ -4984,7 +4997,7 @@ function renderMealPlan(){
             var kcal = Math.round(it.food.kcal*it.qty/100);
             html += '<div class="mp-item"><div class="mp-item-info">'
               +'<div class="mp-item-name">'+esc(it.food.nom)+'</div>'
-              +'<div class="mp-item-qty">'+fmtQty(it)+' \u00b7 '+kcal+' kcal</div></div></div>';
+              +'<div class="mp-item-qty">'+fmtQty(it)+(hideExactKcal?'':' \u00b7 '+kcal+' kcal')+'</div></div></div>';
           });
           html += '</div></div>';
         }
@@ -4995,7 +5008,16 @@ function renderMealPlan(){
     var T = combinedT;
     var pct = function(v,t){ return t>0?Math.min(100,v/t*100):0; };
 
-    if(hasAnyReal && allMealsCovered){
+    if(hideExactKcal){
+      // Mode focus : ce bloc chiffr\u00e9 dupliquerait exactement ce qu'on \u00e9vite
+      // ailleurs (assiette \u00e9quilibr\u00e9e, jauge...) \u2014 on le masque enti\u00e8rement
+      // plut\u00f4t que de bidouiller chaque ligne.
+      document.getElementById('mp-totals-card').style.display = 'none';
+      document.getElementById('mp-totals-focus-note').style.display = 'block';
+      document.getElementById('mp-day-validated').style.display = 'none';
+    } else if(hasAnyReal && allMealsCovered){
+      document.getElementById('mp-totals-card').style.display = 'block';
+      document.getElementById('mp-totals-focus-note').style.display = 'none';
       // TOUS les repas ont de vraies donn\u00e9es : la comparaison refl\u00e8te une
       // vraie consommation compl\u00e8te de la journ\u00e9e, donc elle a du sens.
       document.getElementById('mp-totals-title').textContent = 'Bilan de la journ\u00e9e';
@@ -5037,6 +5059,8 @@ function renderMealPlan(){
       // r\u00e9el qui "bouge" \u00e0 chaque recette ajout\u00e9e, alors qu'il s'agit en
       // partie de suggestions pas encore mang\u00e9es. On affiche donc
       // uniquement la cible, stable, tant que la journ\u00e9e n'est pas compl\u00e8te.
+      document.getElementById('mp-totals-card').style.display = 'block';
+      document.getElementById('mp-totals-focus-note').style.display = 'none';
       document.getElementById('mp-totals-title').textContent = 'Objectifs de ce plan';
       document.getElementById('mp-totals').innerHTML =
         '<div class="mp-tot-row"><span>Calories</span><span>'+tgt.kcal+' kcal</span></div>'
