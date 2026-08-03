@@ -2505,12 +2505,6 @@ function renderShareScoreImage(score, label){
   var ctx = canvas.getContext('2d');
   var w = canvas.width, h = canvas.height;
 
-  var grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0,'#1e3a10');
-  grad.addColorStop(1,'#3d6128');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,w,h);
-
   // Charge le gabarit illustr\u00e9 (fond transparent, texte/ic\u00f4nes fixes d\u00e9j\u00e0
   // dessin\u00e9s dedans) puis dessine par-dessus, en blanc, uniquement ce qui
   // change d'une personne \u00e0 l'autre : l'anneau, le score, le label et la
@@ -2519,9 +2513,23 @@ function renderShareScoreImage(score, label){
   var tpl = new Image();
   tpl.onload = function(){ drawDynamicScoreParts(); };
   tpl.onerror = function(){ drawDynamicScoreParts(); };
-  tpl.src = 'share-template.png?v=1';
+  tpl.src = 'share-template.png?v=2';
 
   function drawDynamicScoreParts(){
+    // Le d\u00e9grad\u00e9 est appliqu\u00e9 ICI, juste avant l'image, dans la M\u00caME
+    // fonction \u2014 avant, il \u00e9tait rempli plus t\u00f4t de fa\u00e7on synchrone puis
+    // l'image se posait dessus de fa\u00e7on asynchrone, ce qui pouvait laisser
+    // le canvas se faire "r\u00e9initialiser" entre les deux selon le
+    // navigateur/cache, expliquant le damier de transparence brut au lieu
+    // du fond vert.
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0,0,w,h);
+    var grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#1e3a10');
+    grad.addColorStop(1,'#3d6128');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
+
     if(tpl.complete && tpl.naturalWidth>0){
       ctx.drawImage(tpl, 0, 0, w, h);
     }
