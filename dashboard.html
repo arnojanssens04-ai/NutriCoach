@@ -2512,7 +2512,20 @@ function renderShareScoreImage(score, label){
   // continue quand m\u00eame avec juste le fond d\u00e9grad\u00e9, sans planter.
   var tpl = new Image();
   tpl.onload = function(){
-    toast('\u2705 Gabarit charg\u00e9 : '+tpl.naturalWidth+'\u00d7'+tpl.naturalHeight);
+    // Test d\u00e9finitif : \u00e9chantillonne un pixel dans une zone qui devrait
+    // \u00eatre transparente (coin en haut \u00e0 gauche) pour v\u00e9rifier si le
+    // fichier a vraiment un canal alpha \u00e0 0, ou si c'est juste un damier
+    // dessin\u00e9 en pixels opaques qui imite visuellement la transparence.
+    var testCanvas = document.createElement('canvas');
+    testCanvas.width = tpl.naturalWidth; testCanvas.height = tpl.naturalHeight;
+    var testCtx = testCanvas.getContext('2d');
+    testCtx.drawImage(tpl, 0, 0);
+    var pixel = testCtx.getImageData(20, 20, 1, 1).data;
+    if(pixel[3] < 200){
+      toast('\u2705 Transparence r\u00e9elle d\u00e9tect\u00e9e (alpha='+pixel[3]+')');
+    } else {
+      toast('\u26a0\ufe0f PAS de vraie transparence \u2014 pixel opaque RGB('+pixel[0]+','+pixel[1]+','+pixel[2]+') alpha='+pixel[3]);
+    }
     drawDynamicScoreParts();
   };
   tpl.onerror = function(){
@@ -2564,7 +2577,7 @@ function renderShareScoreImage(score, label){
     // Badge qualitatif
     ctx.font = '700 37px Arial';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(label, cx, cy+256);
+    ctx.fillText(label, cx, cy+300);
 
     // Date, sous les \u00e9l\u00e9ments fixes du gabarit (soleil, "Viens essayer")
     ctx.font = '400 24px Arial';
