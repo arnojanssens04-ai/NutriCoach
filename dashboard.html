@@ -1829,6 +1829,7 @@ var lastScoreDetail = null;
 var lastScoreUltraCount = 0;
 var lastScoreT = null;   // valeurs r\u00e9elles de la journ\u00e9e
 var lastScoreTgt = null; // objectifs du profil
+var lastScoreLabel = '';
 
 function openScoreDetail(){
   if(!lastScoreT || !lastScoreTgt) return;
@@ -1877,6 +1878,7 @@ function openScoreDetail(){
     +'<button onclick="document.getElementById(\'score-detail-ov\').remove()" style="background:var(--bg2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem">\u2715</button>'
     +'</div>'
     +'<div style="position:relative;z-index:1">'+rowsHtml+'</div>'
+    +getShareSectionHtml(parseInt(score,10), lastScoreLabel)
     +'</div>';
 
   ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
@@ -2428,14 +2430,51 @@ function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 // par jour, jamais impos\u00e9) de partager une image g\u00e9n\u00e9r\u00e9e du score \u2014
 // pens\u00e9 pour du bouche-\u00e0-oreille organique (stories Instagram etc.) sans
 // jamais transformer le score en obligation ou en comp\u00e9tition impos\u00e9e.
+// \u2500\u2500 PARTAGE DU SCORE SANT\u00c9 \u2500\u2500
+// Deux points d'entr\u00e9e, tous deux discrets \u2014 jamais un gros pop-up qui
+// s'impose chaque jour (\u00e7a userait vite la fonctionnalit\u00e9, surtout sur
+// mobile) :
+// 1. Un petit toast, une seule fois, uniquement pour un score
+//    exceptionnel (85+) \u2014 une vraie petite f\u00eate, pas une routine.
+// 2. \u00c0 partir de 19h, un bouton discret directement dans la fiche
+//    d\u00e9taill\u00e9e du score (ouverte en cliquant sur l'anneau) \u2014 disponible
+//    sans jamais s'imposer, la personne va le chercher si elle veut.
 function checkShareScorePrompt(score, label){
-  if(score < 75) return;
-  var h = new Date().getHours();
-  if(h < 19 || h >= 23) return;
-  var todayKey = 'cs_share_prompt_'+today();
+  if(score < 85) return;
+  var todayKey = 'cs_share_toast_'+today();
   if(localStorage.getItem(todayKey)) return; // d\u00e9j\u00e0 propos\u00e9 aujourd'hui
   localStorage.setItem(todayKey, '1');
-  setTimeout(function(){ openShareScoreModal(score, label); }, 1200);
+  setTimeout(function(){ openShareToast(score, label); }, 1400);
+}
+
+function openShareToast(score, label){
+  var old = document.getElementById('share-toast');
+  if(old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'share-toast';
+  el.style.cssText = 'position:fixed;bottom:90px;left:14px;right:14px;max-width:400px;margin:0 auto;background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px 16px;box-shadow:0 8px 26px rgba(0,0,0,0.16);z-index:500;display:flex;align-items:center;gap:12px;animation:slideDownBanner .3s ease';
+  el.innerHTML = '<div style="font-size:1.6rem;flex-shrink:0">\ud83c\udfc6</div>'
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-weight:700;font-size:.86rem">Wow, quel score !</div>'
+      +'<div style="font-size:.78rem;color:var(--text2);margin-top:1px">Le partager avec vos amis ?</div>'
+    +'</div>'
+    +'<button onclick="document.getElementById(\'share-toast\').remove();openShareScoreModal('+score+',\''+esc(label)+'\')" style="background:var(--gold);color:#fff;border:none;border-radius:9px;padding:8px 13px;font-size:.8rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Partager</button>'
+    +'<button onclick="document.getElementById(\'share-toast\').remove()" style="background:none;border:none;color:var(--text3);font-size:1rem;cursor:pointer;flex-shrink:0;padding:2px">\u2715</button>';
+  document.body.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.remove(); }, 10000);
+}
+
+// G\u00e9n\u00e8re la petite section partage ins\u00e9r\u00e9e en bas de la fiche d\u00e9taill\u00e9e du
+// score (voir openScoreDetail) \u2014 uniquement visible \u00e0 partir de 19h, pour
+// ne pas encombrer la consultation du score en pleine journ\u00e9e alors que
+// rien n'est encore d\u00e9finitif.
+function getShareSectionHtml(score, label){
+  var h = new Date().getHours();
+  if(h < 19) return '';
+  return '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;position:relative;z-index:1;text-align:center">'
+    +'<div style="font-size:.82rem;color:var(--text2);margin-bottom:10px">Voulez-vous partager ce score avec vos amis&nbsp;?</div>'
+    +'<button onclick="document.getElementById(\'score-detail-ov\').remove();openShareScoreModal('+score+',\''+esc(label)+'\')" style="background:var(--gold-l);color:var(--gold);border:1px solid rgba(45,79,28,0.25);border-radius:10px;padding:10px 18px;font-size:.84rem;font-weight:700;cursor:pointer">\ud83d\udcf7 Partager mon score</button>'
+    +'</div>';
 }
 
 function openShareScoreModal(score, label){
@@ -2447,9 +2486,9 @@ function openShareScoreModal(score, label){
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   ov.innerHTML = '<div style="background:var(--card);border-radius:18px;padding:24px 22px;max-width:360px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center">'
     +'<div style="font-size:1.8rem;margin-bottom:8px">\ud83c\udf89</div>'
-    +'<div style="font-family:\'Lora\',serif;font-weight:700;font-size:1.1rem;margin-bottom:8px">Belle journ\u00e9e \u2014 score de '+score+'/100 !</div>'
-    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.55;margin-bottom:18px">Envie de le partager avec vos proches pour comparer vos scores ?</div>'
-    +'<canvas id="share-score-canvas" width="1080" height="1920" style="display:none"></canvas>'
+    +'<div style="font-family:\'Lora\',serif;font-weight:700;font-size:1.1rem;margin-bottom:8px">Score de '+score+'/100 aujourd\'hui</div>'
+    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.55;margin-bottom:18px">Une belle image pr\u00eate \u00e0 partager, pour comparer vos scores avec vos amis.</div>'
+    +'<canvas id="share-score-canvas" width="1024" height="1536" style="display:none"></canvas>'
     +'<img id="share-score-preview" style="width:100%;border-radius:12px;margin-bottom:16px;display:block">'
     +'<button onclick="shareScoreNow('+score+',\''+esc(label)+'\')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:8px">Partager mon score</button>'
     +'<button onclick="document.getElementById(\'share-score-ov\').remove()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:600;font-size:.9rem;cursor:pointer">Pas aujourd\'hui</button>'
@@ -2472,60 +2511,54 @@ function renderShareScoreImage(score, label){
   ctx.fillStyle = grad;
   ctx.fillRect(0,0,w,h);
 
-  // Logo + sous-titre contextuel \u2014 sans \u00e7a, un chiffre seul dans une story
-  // ne veut rien dire pour quelqu'un qui ne connait pas l'app.
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 56px Georgia, serif';
-  ctx.fillText('Cap Sant\u00e9', w/2, 165);
-  ctx.font = '400 30px Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.fillText('Mon \u00e9quilibre alimentaire du jour', w/2, 215);
+  // Charge le gabarit illustr\u00e9 (fond transparent, texte/ic\u00f4nes fixes d\u00e9j\u00e0
+  // dessin\u00e9s dedans) puis dessine par-dessus, en blanc, uniquement ce qui
+  // change d'une personne \u00e0 l'autre : l'anneau, le score, le label et la
+  // date. Si le fichier n'est pas trouv\u00e9 (pas encore mis en ligne), on
+  // continue quand m\u00eame avec juste le fond d\u00e9grad\u00e9, sans planter.
+  var tpl = new Image();
+  tpl.onload = function(){ drawDynamicScoreParts(); };
+  tpl.onerror = function(){ drawDynamicScoreParts(); };
+  tpl.src = 'share-template.png?v=1';
 
-  // Anneau de score
-  var cx=w/2, cy=h/2-140, r=280;
-  ctx.lineWidth = 34;
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.arc(cx,cy, r, -Math.PI/2, -Math.PI/2 + (Math.PI*2*score/100));
-  ctx.stroke();
+  function drawDynamicScoreParts(){
+    if(tpl.complete && tpl.naturalWidth>0){
+      ctx.drawImage(tpl, 0, 0, w, h);
+    }
 
-  ctx.font = '700 220px Georgia, serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(String(score), cx, cy+70);
-  ctx.font = '400 34px Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.fillText('SCORE SANT\u00c9', cx, cy+140);
+    ctx.textAlign = 'center';
 
-  // Badge qualitatif
-  ctx.font = '700 46px Arial';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(label, cx, cy+320);
+    // Toutes les tailles/positions ci-dessous sont calibr\u00e9es directement
+    // sur le vrai gabarit (1024\u00d71536, ratio 2:3) fourni.
+    var cx=w/2, cy=h/2-112, r=224;
+    ctx.lineWidth = 27;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx,cy, r, -Math.PI/2, -Math.PI/2 + (Math.PI*2*score/100));
+    ctx.stroke();
 
-  // Appel au d\u00e9fi \u2014 c'est ce qui donne envie \u00e0 quelqu'un qui voit la story
-  // de r\u00e9agir, plut\u00f4t qu'un simple chiffre affich\u00e9 sans contexte ni
-  // invitation.
-  var challengeY = h-330;
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  roundRect(ctx, w/2-360, challengeY-70, 720, 150, 24);
-  ctx.fill();
-  ctx.font = '700 44px Georgia, serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('Et toi, quel score', w/2, challengeY-10);
-  ctx.fillText('atteindras-tu\u00a0?', w/2, challengeY+50);
+    ctx.font = '700 176px Georgia, serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(String(score), cx, cy+56);
+    ctx.font = '400 27px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillText('SCORE SANT\u00c9', cx, cy+112);
 
-  // Bas de page
-  ctx.font = '600 36px Arial';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('Viens essayer \u2192', cx, h-150);
-  ctx.font = '400 30px Arial';
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText(new Date().toLocaleDateString('fr-BE',{day:'numeric',month:'long'})+' \u00b7 mycapsante.be', cx, h-95);
+    // Badge qualitatif
+    ctx.font = '700 37px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, cx, cy+256);
 
-  document.getElementById('share-score-preview').src = canvas.toDataURL('image/png');
+    // Date, sous les \u00e9l\u00e9ments fixes du gabarit (soleil, "Viens essayer")
+    ctx.font = '400 24px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(new Date().toLocaleDateString('fr-BE',{day:'numeric',month:'long'})+' \u00b7 mycapsante.be', cx, h-76);
+
+    document.getElementById('share-score-preview').src = canvas.toDataURL('image/png');
+  }
 }
 
 function roundRect(ctx,x,y,width,height,radius){
@@ -2674,12 +2707,15 @@ function renderClinicalIndicators(T, tgt, pathos){
 
 async function checkUnreadAnnonces(){
   var badge = document.getElementById('annonces-badge');
-  if(!badge) return;
   var lastSeen = (PROF && PROF.last_seen_annonce_at) || '1970-01-01';
   var r = await sb.from('annonces').select('id',{count:'exact',head:true}).gt('created_at', lastSeen);
   var n = r.count || 0;
-  if(n>0){ badge.textContent = '+'+n; badge.style.display='flex'; badge.style.alignItems='center'; badge.style.justifyContent='center'; }
-  else { badge.style.display='none'; }
+  if(badge){
+    if(n>0){ badge.textContent = '+'+n; badge.style.display='flex'; badge.style.alignItems='center'; badge.style.justifyContent='center'; }
+    else { badge.style.display='none'; }
+  }
+  UNREAD_ANNONCES_COUNT = n;
+  updateNotifBell();
 }
 
 async function checkUnreadMessages(){
@@ -2698,11 +2734,21 @@ async function checkUnreadMessages(){
       dot.remove();
     }
   }
+  UNREAD_MESSAGES_COUNT = n;
+  updateNotifBell();
+}
 
+// La cloche additionne messages non lus + annonces non lues \u2014 un seul
+// total, peu importe la source, plut\u00f4t que deux badges qui racontent des
+// histoires diff\u00e9rentes \u00e0 des endroits diff\u00e9rents de l'app.
+var UNREAD_MESSAGES_COUNT = 0;
+var UNREAD_ANNONCES_COUNT = 0;
+function updateNotifBell(){
+  var total = UNREAD_MESSAGES_COUNT + UNREAD_ANNONCES_COUNT;
   var badge = document.getElementById('notif-badge');
   if(badge){
-    badge.textContent = n>9 ? '9+' : n;
-    badge.style.display = n>0 ? 'flex' : 'none';
+    badge.textContent = total>9 ? '9+' : total;
+    badge.style.display = total>0 ? 'flex' : 'none';
     badge.style.alignItems = 'center'; badge.style.justifyContent = 'center';
   }
 }
@@ -2717,18 +2763,30 @@ async function toggleNotifDrawer(){
   var isOpen = drawer.style.display === 'block';
   if(isOpen){ drawer.style.display = 'none'; return; }
 
-  var r = await sb.from('messages').select('*').eq('user_id',USER.id).eq('is_admin_sender',true).order('created_at',{ascending:false}).limit(8);
-  var msgs = r.data || [];
+  var msgR = await sb.from('messages').select('*').eq('user_id',USER.id).eq('is_admin_sender',true).order('created_at',{ascending:false}).limit(6);
+  var msgs = (msgR.data||[]).map(function(m){
+    return { type:'message', date:m.created_at, unread:!m.read_by_user,
+      snippet:(m.content||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udcac' };
+  });
+
+  var lastSeen = (PROF && PROF.last_seen_annonce_at) || '1970-01-01';
+  var annR = await sb.from('annonces').select('*').order('created_at',{ascending:false}).limit(6);
+  var anns = (annR.data||[]).map(function(a){
+    return { type:'annonce', date:a.created_at, unread:new Date(a.created_at)>new Date(lastSeen),
+      snippet:(a.titre||a.contenu||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udce3' };
+  });
+
+  var combined = msgs.concat(anns).sort(function(a,b){ return new Date(b.date)-new Date(a.date); }).slice(0,10);
   var list = document.getElementById('notif-list');
-  if(!msgs.length){
+  if(!combined.length){
     list.innerHTML = '<div style="padding:20px 15px;text-align:center;color:var(--text3);font-size:.8rem">Aucune notification pour l\'instant.</div>';
   } else {
-    list.innerHTML = msgs.map(function(m){
-      var snippet = (m.content||'').replace(/\n+/g,' ').trim();
+    list.innerHTML = combined.map(function(n){
+      var snippet = n.snippet;
       if(snippet.length>78) snippet = snippet.slice(0,78)+'\u2026';
-      return '<div style="padding:10px 12px;border-radius:9px;'+(!m.read_by_user?'background:var(--gold-l);':'')+'margin-bottom:2px">'
-        +'<div style="font-size:.82rem;color:var(--text);line-height:1.45">'+snippet+'</div>'
-        +'<div style="font-size:.68rem;color:var(--text3);margin-top:3px">'+new Date(m.created_at).toLocaleDateString('fr-BE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</div>'
+      return '<div style="padding:10px 12px;border-radius:9px;'+(n.unread?'background:var(--gold-l);':'')+'margin-bottom:2px">'
+        +'<div style="font-size:.82rem;color:var(--text);line-height:1.45">'+n.icon+' '+esc(snippet)+'</div>'
+        +'<div style="font-size:.68rem;color:var(--text3);margin-top:3px">'+new Date(n.date).toLocaleDateString('fr-BE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</div>'
         +'</div>';
     }).join('');
   }
@@ -3070,6 +3128,7 @@ async function refreshDash(){
         '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;margin-top:4px">'
         +niveau.lbl+'</div>';
 
+      lastScoreLabel = niveau.lbl;
       checkShareScorePrompt(score, niveau.lbl);
     } else {
       rf.style.strokeDashoffset='251.3';
