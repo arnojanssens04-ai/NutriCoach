@@ -2511,8 +2511,14 @@ function renderShareScoreImage(score, label){
   // date. Si le fichier n'est pas trouv\u00e9 (pas encore mis en ligne), on
   // continue quand m\u00eame avec juste le fond d\u00e9grad\u00e9, sans planter.
   var tpl = new Image();
-  tpl.onload = function(){ drawDynamicScoreParts(); };
-  tpl.onerror = function(){ drawDynamicScoreParts(); };
+  tpl.onload = function(){
+    toast('\u2705 Gabarit charg\u00e9 : '+tpl.naturalWidth+'\u00d7'+tpl.naturalHeight);
+    drawDynamicScoreParts();
+  };
+  tpl.onerror = function(){
+    toast('\u26a0\ufe0f Gabarit introuvable \u2014 v\u00e9rifiez que share-template.png est bien \u00e0 la racine');
+    drawDynamicScoreParts();
+  };
   tpl.src = 'share-template.png?v=2';
 
   function drawDynamicScoreParts(){
@@ -2565,7 +2571,13 @@ function renderShareScoreImage(score, label){
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fillText(new Date().toLocaleDateString('fr-BE',{day:'numeric',month:'long'})+' \u00b7 mycapsante.be', cx, h-76);
 
-    document.getElementById('share-score-preview').src = canvas.toDataURL('image/png');
+    try{
+      document.getElementById('share-score-preview').src = canvas.toDataURL('image/png');
+    }catch(err){
+      window._jsErrors = window._jsErrors || [];
+      window._jsErrors.push('toDataURL a \u00e9chou\u00e9 (canvas "souill\u00e9" ?) : '+err.message);
+      if(typeof showJsErrorBanner==='function') showJsErrorBanner();
+    }
   }
 }
 
