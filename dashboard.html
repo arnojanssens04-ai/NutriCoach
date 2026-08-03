@@ -2034,6 +2034,21 @@ function calcNutritionalQuality(entries, tgt){
   }
   score = Math.max(0, score-penUltraQ);
 
+  // 11. Garde-fou anti-restriction \u2014 un score parfait ne doit jamais
+  // r\u00e9compenser une journ\u00e9e o\u00f9 on a mang\u00e9 nettement moins que ses besoins
+  // r\u00e9els, m\u00eame si les crit\u00e8res de QUALIT\u00c9 (prot\u00e9ines, fibres, l\u00e9gumes) sont
+  // par ailleurs bien remplis \u2014 c'est exactement l'effet inverse qu'on
+  // cherche \u00e0 \u00e9viter avec le Mode Focus : ni obs\u00e9d\u00e9 par le chiffre, ni
+  // pouss\u00e9 \u00e0 se restreindre pour "bien scorer". Suspendu si la satit\u00e9 du
+  // jour a \u00e9t\u00e9 valid\u00e9e (Satiety Override) \u2014 dans ce cas la sensation de la
+  // personne prime sur le chiffre, pas de jugement ext\u00e9rieur suppl\u00e9mentaire.
+  var kcalRatio = tgt.kcal>0 ? T.kcal/tgt.kcal : 1;
+  var satietyOk = (typeof SATIETY_TODAY!=='undefined') && SATIETY_TODAY===true;
+  if(!satietyOk && kcalRatio>0 && kcalRatio<0.7){
+    score = Math.min(score, 82);
+    tips.push({priority:0, msg:'Vous avez mang\u00e9 nettement moins que d\'habitude aujourd\'hui \u2014 pas de souci si c\'est ponctuel, mais si \u00e7a devient r\u00e9gulier, parlez-en \u00e0 votre di\u00e9t\u00e9ticien.'});
+  }
+
   // Conseil rotatif \u2014 on affiche le plus prioritaire + un second conseil diff\u00e9rent.
   // La cl\u00e9 localStorage \u00e9vite de toujours montrer le m\u00eame message.
   tips.sort(function(a,b){ return a.priority-b.priority; });
@@ -2407,6 +2422,148 @@ async function updQty(id,qty,e){
 
 // \u2500\u2500 MOTIVATION : s\u00e9rie de constance, chemin parcouru, paliers \u2500\u2500
 function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// \u2500\u2500 PARTAGE DU SCORE SANT\u00c9 \u2500\u2500
+// Entre 19h et 23h, si le score du jour atteint 75+, on propose (une fois
+// par jour, jamais impos\u00e9) de partager une image g\u00e9n\u00e9r\u00e9e du score \u2014
+// pens\u00e9 pour du bouche-\u00e0-oreille organique (stories Instagram etc.) sans
+// jamais transformer le score en obligation ou en comp\u00e9tition impos\u00e9e.
+function checkShareScorePrompt(score, label){
+  if(score < 75) return;
+  var h = new Date().getHours();
+  if(h < 19 || h >= 23) return;
+  var todayKey = 'cs_share_prompt_'+today();
+  if(localStorage.getItem(todayKey)) return; // d\u00e9j\u00e0 propos\u00e9 aujourd'hui
+  localStorage.setItem(todayKey, '1');
+  setTimeout(function(){ openShareScoreModal(score, label); }, 1200);
+}
+
+function openShareScoreModal(score, label){
+  var old = document.getElementById('share-score-ov');
+  if(old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'share-score-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(22,36,27,0.6);z-index:997;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML = '<div style="background:var(--card);border-radius:18px;padding:24px 22px;max-width:360px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center">'
+    +'<div style="font-size:1.8rem;margin-bottom:8px">\ud83c\udf89</div>'
+    +'<div style="font-family:\'Lora\',serif;font-weight:700;font-size:1.1rem;margin-bottom:8px">Belle journ\u00e9e \u2014 score de '+score+'/100 !</div>'
+    +'<div style="font-size:.86rem;color:var(--text2);line-height:1.55;margin-bottom:18px">Envie de le partager avec vos proches pour comparer vos scores ?</div>'
+    +'<canvas id="share-score-canvas" width="1080" height="1920" style="display:none"></canvas>'
+    +'<img id="share-score-preview" style="width:100%;border-radius:12px;margin-bottom:16px;display:block">'
+    +'<button onclick="shareScoreNow('+score+',\''+esc(label)+'\')" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:8px">Partager mon score</button>'
+    +'<button onclick="document.getElementById(\'share-score-ov\').remove()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:600;font-size:.9rem;cursor:pointer">Pas aujourd\'hui</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  renderShareScoreImage(score, label);
+}
+
+// Dessine l'image partageable au format story (1080x1920) sur un canvas
+// cach\u00e9, puis l'affiche en aper\u00e7u \u2014 g\u00e9n\u00e9r\u00e9e enti\u00e8rement c\u00f4t\u00e9 client, sans
+// appel serveur.
+function renderShareScoreImage(score, label){
+  var canvas = document.getElementById('share-score-canvas');
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+
+  var grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'#1e3a10');
+  grad.addColorStop(1,'#3d6128');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,w,h);
+
+  // Logo + sous-titre contextuel \u2014 sans \u00e7a, un chiffre seul dans une story
+  // ne veut rien dire pour quelqu'un qui ne connait pas l'app.
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 56px Georgia, serif';
+  ctx.fillText('Cap Sant\u00e9', w/2, 165);
+  ctx.font = '400 30px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText('Mon \u00e9quilibre alimentaire du jour', w/2, 215);
+
+  // Anneau de score
+  var cx=w/2, cy=h/2-140, r=280;
+  ctx.lineWidth = 34;
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx,cy, r, -Math.PI/2, -Math.PI/2 + (Math.PI*2*score/100));
+  ctx.stroke();
+
+  ctx.font = '700 220px Georgia, serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(String(score), cx, cy+70);
+  ctx.font = '400 34px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText('SCORE SANT\u00c9', cx, cy+140);
+
+  // Badge qualitatif
+  ctx.font = '700 46px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(label, cx, cy+320);
+
+  // Appel au d\u00e9fi \u2014 c'est ce qui donne envie \u00e0 quelqu'un qui voit la story
+  // de r\u00e9agir, plut\u00f4t qu'un simple chiffre affich\u00e9 sans contexte ni
+  // invitation.
+  var challengeY = h-330;
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  roundRect(ctx, w/2-360, challengeY-70, 720, 150, 24);
+  ctx.fill();
+  ctx.font = '700 44px Georgia, serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('Et toi, quel score', w/2, challengeY-10);
+  ctx.fillText('atteindras-tu\u00a0?', w/2, challengeY+50);
+
+  // Bas de page
+  ctx.font = '600 36px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('Viens essayer \u2192', cx, h-150);
+  ctx.font = '400 30px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText(new Date().toLocaleDateString('fr-BE',{day:'numeric',month:'long'})+' \u00b7 mycapsante.be', cx, h-95);
+
+  document.getElementById('share-score-preview').src = canvas.toDataURL('image/png');
+}
+
+function roundRect(ctx,x,y,width,height,radius){
+  ctx.beginPath();
+  ctx.moveTo(x+radius,y);
+  ctx.arcTo(x+width,y,x+width,y+height,radius);
+  ctx.arcTo(x+width,y+height,x,y+height,radius);
+  ctx.arcTo(x,y+height,x,y,radius);
+  ctx.arcTo(x,y,x+width,y,radius);
+  ctx.closePath();
+}
+
+// Partage natif (ouvre le s\u00e9lecteur du t\u00e9l\u00e9phone \u2014 Instagram Stories,
+// Messages, etc. y apparaissent directement) avec repli sur un simple
+// t\u00e9l\u00e9chargement si le navigateur ne supporte pas le partage de fichiers.
+async function shareScoreNow(score, label){
+  var canvas = document.getElementById('share-score-canvas');
+  canvas.toBlob(async function(blob){
+    var file = new File([blob], 'cap-sante-score.png', {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({
+          files: [file],
+          title: 'Mon score Cap Sant\u00e9',
+          text: 'Score de '+score+'/100 aujourd\'hui sur Cap Sant\u00e9 \u2014 et toi, quel score tu atteindras ? Viens essayer : mycapsante.be'
+        });
+      }catch(e){ /* annul\u00e9 par l'utilisateur, rien \u00e0 faire */ }
+    } else {
+      var a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'cap-sante-score.png';
+      a.click();
+      toast('\ud83d\udcf7 Image t\u00e9l\u00e9charg\u00e9e \u2014 partagez-la depuis vos photos');
+    }
+    var ov = document.getElementById('share-score-ov');
+    if(ov) ov.remove();
+  }, 'image/png');
+}
 
 async function computeStreak(){
   var since = new Date(); since.setDate(since.getDate()-60);
@@ -2912,6 +3069,8 @@ async function refreshDash(){
       document.getElementById('score-pill').innerHTML=
         '<div class="score-pill '+niveau.cls+'" style="font-size:.95rem;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;margin-top:4px">'
         +niveau.lbl+'</div>';
+
+      checkShareScorePrompt(score, niveau.lbl);
     } else {
       rf.style.strokeDashoffset='251.3';
       rf.style.stroke='rgba(255,255,255,.08)';
