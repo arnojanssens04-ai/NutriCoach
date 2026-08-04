@@ -671,7 +671,10 @@ body {
         <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;background:var(--rose);color:#fff;font-size:.6rem;font-weight:700;min-width:15px;height:15px;border-radius:999px;line-height:15px;text-align:center;padding:0 3px">0</span>
       </button>
       <div id="notif-drawer" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:300px;max-height:360px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.14);z-index:150">
-        <div style="padding:12px 15px;border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem">Notifications</div>
+        <div style="padding:12px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;font-size:.85rem">Notifications</span>
+          <button onclick="clearAllNotifications()" style="background:none;border:none;color:var(--gold);font-size:.72rem;font-weight:600;cursor:pointer;padding:2px 4px">Tout effacer</button>
+        </div>
         <div id="notif-list" style="padding:6px"></div>
       </div>
     </div>
@@ -2791,6 +2794,24 @@ function updateNotifBell(){
 // natives. Un vrai syst\u00e8me de push (service worker + cl\u00e9s VAPID +
 // abonnement stock\u00e9 c\u00f4t\u00e9 serveur) reste un chantier s\u00e9par\u00e9, plus lourd,
 // si on veut recevoir des alertes m\u00eame app ferm\u00e9e.
+// Marque tout comme lu d'un coup : messages non lus + annonces non vues,
+// pour vider la cloche sans avoir à ouvrir chaque conversation une par une.
+async function clearAllNotifications(){
+  await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
+  await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
+  if(PROF) PROF.last_seen_annonce_at = new Date().toISOString();
+  UNREAD_MESSAGES_COUNT = 0;
+  UNREAD_ANNONCES_COUNT = 0;
+  updateNotifBell();
+  var navCoach = document.getElementById('nav-coach');
+  var dot = navCoach && navCoach.querySelector('.coach-dot');
+  if(dot) dot.remove();
+  var annBadge = document.getElementById('annonces-badge');
+  if(annBadge) annBadge.style.display = 'none';
+  document.getElementById('notif-list').innerHTML = '<div style="padding:20px 15px;text-align:center;color:var(--text3);font-size:.8rem">Aucune notification pour l\'instant.</div>';
+  toast('\u2705 Notifications effac\u00e9es');
+}
+
 async function toggleNotifDrawer(){
   var drawer = document.getElementById('notif-drawer');
   var isOpen = drawer.style.display === 'block';
