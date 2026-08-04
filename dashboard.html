@@ -1948,18 +1948,22 @@ function calcNutritionalQuality(entries, tgt){
     // pour couvrir les termes g\u00e9n\u00e9riques ("l\u00e9gumes surgel\u00e9s", mac\u00e9doine...)
     // \u2014 avant, un second regex local ici ne les couvrait pas du tout, et
     // c'est CETTE copie-ci qui alimente la carte "Qualit\u00e9 nutritionnelle".
-    if(isLegume(e.aliment))
-      totalVegGrams += e.quantite||0;
+    var estLegume = isLegume(e.aliment);
+    if(estLegume) totalVegGrams += e.quantite||0;
 
-    // \u2500\u2500 Groupes alimentaires (diversit\u00e9) \u2500\u2500
+    // \u2500\u2500 Groupes alimentaires (diversit\u00e9) \u2500\u2500 v\u00e9rifie L'ALIMENT EN COURS,
+    // pas un total cumul\u00e9 \u2014 avant, "legumes" d\u00e9pendait de totalVegGrams
+    // (la somme de TOUTE la journ\u00e9e jusqu'ici), ce qui pouvait cr\u00e9diter \u00e0
+    // tort un aliment non-l\u00e9gume simplement parce qu'un l\u00e9gume avait \u00e9t\u00e9
+    // mang\u00e9 plus t\u00f4t dans la m\u00eame journ\u00e9e.
     if(/viande|boeuf|porc|agneau|veau|poulet|dinde|canard/.test(n)) foodGroups['viande']=1;
     else if(/poisson|saumon|cabillaud|thon|sardine|maquereau|colin|lieu|sole|daurade/.test(n)) foodGroups['poisson']=1;
     else if(/oeuf|oeufs/.test(n)) foodGroups['oeuf']=1;
     else if(/lait|yaourt|fromage|kefir|skyr/.test(n)) foodGroups['laitier']=1;
     else if(/lentille|pois chiche|haricot rouge|haricot blanc|feve|soja/.test(n)) foodGroups['legumineuse']=1;
-    else if(/pain|pate|riz|quinoa|cereale|flocon|semoule|boulgour/.test(n)) foodGroups['feculents']=1;
-    else if(totalVegGrams>0) foodGroups['legumes']=1;
+    else if(estLegume) foodGroups['legumes']=1;
     else if(/pomme|poire|banane|orange|kiwi|fraise|raisin|peche|abricot|cerise|framboise|myrtille|mangue|ananas/.test(n)) foodGroups['fruit']=1;
+    else if(/pain|pate|riz|quinoa|cereale|flocon|semoule|boulgour/.test(n)) foodGroups['feculents']=1;
     else if(/huile|beurre|avocat|noix|amande|noisette/.test(n)) foodGroups['lipides']=1;
 
     // \u2500\u2500 Ultra-transform\u00e9s : d\u00e9tection d\u00e9plac\u00e9e dans countUltraProcessed()
@@ -1997,6 +2001,9 @@ function calcNutritionalQuality(entries, tgt){
 
   // 4. Diversit\u00e9 alimentaire \u2014 15 pts
   var groupCount = Object.keys(foodGroups).length;
+  if(PROF && PROF.role==='admin'){
+    toast('\ud83d\udd0d Groupes d\u00e9tect\u00e9s ('+groupCount+'/4 requis) : '+(Object.keys(foodGroups).join(', ')||'aucun'));
+  }
   score += Math.round(Math.min(1, groupCount/4) * 15);
   if(groupCount<3) tips.push({priority:4, msg:'Varier encore un peu plus les groupes d\'aliments enrichirait votre journ\u00e9e.'});
 
