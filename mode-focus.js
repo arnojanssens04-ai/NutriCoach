@@ -296,6 +296,47 @@ var SAFE_FLEX_REGEX = /cracker|craquelin|biscotte|pomme|banane|orange|poire|kiwi
 
 function normalizeTxt(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
+var FRUIT_REGEX = /pomme|banane|orange|poire|kiwi|fraise|fruit|ananas|mangue|raisin|pasteque|melon|peche|abricot|prune|cerise|figue|avocat|citron|lime|grenade|papaye|coing|litchi|mandarine|clementine|pamplemousse|framboise|myrtille|mure|groseille|cassis|goji|datte|maracuja|coco/;
+var LEGUMINEUSE_REGEX = /pois|haricot|lentille|soja|edamame|pois chiche|pois chiches|fava|feve|fèves|garbanzo|kidney|bean|beans|lupin|legumineuse/;
+var VEGETABLE_REGEX = /legume|legumes|brocoli|carotte|courgette|concombre|tomate|salade|epinard|champignon|aubergine|poivron|celeri|navet|betterave|radis|courge|oignon|ail|patate douce|haricot vert|haricots verts|piment|fenouil|chou|endive|artichaut|poireau|cresson|petit pois/;
+
+function isLegume(value){
+  var n = normalizeTxt(value||'');
+  return /legume|legumes|haricot|pois|lentille|soja|edamame|pois chiche|pois chiches|fava|feve|fèves|garbanzo|kidney|bean|beans|lupin|legumineuse/.test(n);
+}
+
+function classifyPlateEntry(entry){
+  var n = normalizeTxt(entry.aliment || '');
+  var w = entry.quantite || 0;
+  if(w<=0) return {category:'none', weight:0, fallback:false};
+
+  var carbG = (entry.food_gluc_100 || 0) * w / 100;
+  var protG = (entry.food_prot_100 || 0) * w / 100;
+  var fatG = (entry.food_lip_100 || 0) * w / 100;
+  var maxG = Math.max(carbG, protG, fatG);
+
+  if(maxG<=0){
+    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:true};
+    if(PROTEIN_SRC_REGEX.test(n)) return {category:'prot', weight:w, fallback:true};
+    if(STARCH_REGEX.test(n)) return {category:'starch', weight:w, fallback:true};
+    if(FAT_SRC_REGEX.test(n)) return {category:'fat', weight:w, fallback:true};
+    return {category:'unknown', weight:w, fallback:true};
+  }
+
+  if(carbG > protG && carbG >= fatG){
+    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:false};
+    return {category:'starch', weight:w, fallback:false};
+  }
+  if(protG > carbG && protG >= fatG){
+    return {category:'prot', weight:w, fallback:false};
+  }
+  if(fatG > carbG && fatG > protG){
+    if(FAT_SRC_REGEX.test(n) || fatG >= carbG * 1.5) return {category:'fat', weight:w, fallback:false};
+    return {category:'starch', weight:w, fallback:false};
+  }
+  return {category:'starch', weight:w, fallback:false};
+}
+
 // Ajuste les quantit\u00e9s d'un combo "classique" pour se rapprocher du
 // besoin calorique du repas \u2014 seulement \u00e0 la hausse, seulement sur les
 // aliments qui s'y pr\u00eatent, jamais sur les portions \u00e0 taille naturelle
@@ -398,28 +439,19 @@ async function renderWeeklyTrend(){
     if(!dayEntries.length) return 'none';
     var vegW=0, protW=0, starchW=0, fatW=0;
     dayEntries.forEach(function(e){
-      var n = normalizeTxt(e.aliment);
       var w = e.quantite||0;
       if(w<=0) return;
-      var carbG = (e.food_gluc_100||0)*w/100;
-      var protG = (e.food_prot_100||0)*w/100;
-      var fatG  = (e.food_lip_100||0)*w/100;
-      var maxG = Math.max(carbG, protG, fatG);
-      if(maxG<=0){
-        if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW+=w;
-        else if(PROTEIN_SRC_REGEX.test(n)) protW+=w;
-        else if(STARCH_REGEX.test(n)) starchW+=w;
-        else if(FAT_SRC_REGEX.test(n)) fatW+=w;
-        return;
-      }
-      if(carbG===maxG){
-        if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW+=w;
-        else starchW+=w;
-      } else if(protG===maxG){
-        protW+=w;
-      } else {
-        fatW+=w;
-      }
+      var classification = classifyPlateEntry({
+        aliment:e.aliment,
+        quantite:w,
+        food_gluc_100:e.food_gluc_100||0,
+        food_prot_100:e.food_prot_100||0,
+        food_lip_100:e.food_lip_100||0
+      });
+      if(classification.category==='veg') vegW+=classification.weight;
+      else if(classification.category==='prot') protW+=classification.weight;
+      else if(classification.category==='starch') starchW+=classification.weight;
+      else if(classification.category==='fat') fatW+=classification.weight;
     });
     var totalW = vegW+protW+starchW+fatW;
     if(totalW<250) return 'none'; // pas assez mang\u00e9 ce jour-l\u00e0 pour juger la structure avec confiance
@@ -521,33 +553,21 @@ function renderBalancedPlate(entries){
   var vegW=0, protW=0, starchW=0, fatW=0;
   var fallbackCount=0, fallbackNames=[];
   today_.forEach(function(e){
-    var n = normalizeTxt(e.aliment);
     var w = e.quantite||0;
     if(w<=0) return;
-    var carbG = (e.food_gluc_100||0)*w/100;
-    var protG = (e.food_prot_100||0)*w/100;
-    var fatG  = (e.food_lip_100||0)*w/100;
-    var maxG = Math.max(carbG, protG, fatG);
+    var classification = classifyPlateEntry({
+      aliment:e.aliment,
+      quantite:w,
+      food_gluc_100:e.food_gluc_100||0,
+      food_prot_100:e.food_prot_100||0,
+      food_lip_100:e.food_lip_100||0
+    });
 
-    if(maxG<=0){
-      // Aucune donn\u00e9e nutritionnelle exploitable (rare) \u2014 on retombe sur
-      // l'ancien filet de mots-cl\u00e9s plut\u00f4t que d'ignorer l'aliment.
-      fallbackCount++; fallbackNames.push(e.aliment);
-      if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW += w;
-      else if(PROTEIN_SRC_REGEX.test(n)) protW += w;
-      else if(STARCH_REGEX.test(n)) starchW += w;
-      else if(FAT_SRC_REGEX.test(n)) fatW += w;
-      return;
-    }
-
-    if(carbG===maxG){
-      if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW += w;
-      else starchW += w;
-    } else if(protG===maxG){
-      protW += w;
-    } else {
-      fatW += w;
-    }
+    if(classification.fallback){ fallbackCount++; fallbackNames.push(e.aliment); }
+    if(classification.category==='veg') vegW += classification.weight;
+    else if(classification.category==='prot') protW += classification.weight;
+    else if(classification.category==='starch') starchW += classification.weight;
+    else if(classification.category==='fat') fatW += classification.weight;
   });
   if(PROF && PROF.role==='admin' && fallbackCount>0){
     toast('\u26a0\ufe0f '+fallbackCount+'/'+today_.length+' aliment(s) sans donn\u00e9es nutri (filet utilis\u00e9) : '+fallbackNames.slice(0,3).join(', '));
