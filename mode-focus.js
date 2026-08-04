@@ -472,7 +472,8 @@ var STARCH_REGEX = /pates|penne|fusilli|spaghetti|macaroni|tagliatelle|linguine|
 // utilis\u00e9s ailleurs dans le mode focus \u2014 \u00e9vite qu'un m\u00eame aliment ne
 // compte deux fois dans deux cat\u00e9gories diff\u00e9rentes de l'assiette.
 var FAT_SRC_REGEX = /huile|beurre|margarine|avocat|olives?|creme (fraiche|liquide|epaisse|culinaire|entiere|legere)|mayonnaise|noix|amande|noisette|graines? de (lin|chia|sesame|tournesol|courge)|pesto|tahin|saindoux|lard\b/;
-
+var WHOLEGRAIN_REGEX = /complet|integral|avoine|quinoa|sarrasin|epeautre|son de/;
+var SEEDS_HERBS_REGEX = /graines?|lin|chia|sesame|tournesol|courge \(graines\)|persil|basilic|coriandre|menthe|thym|romarin|ciboulette/;
 // Le mod\u00e8le "assiette \u00e9quilibr\u00e9e" (v\u00e9g\u00e9taux / prot\u00e9ines / f\u00e9culents /
 // mati\u00e8res grasses) est pens\u00e9 pour un adulte s\u00e9dentaire moyen \u2014 les besoins
 // r\u00e9els changent avec le niveau d'activit\u00e9 : plus on bouge, plus les
@@ -484,6 +485,11 @@ var FAT_SRC_REGEX = /huile|beurre|margarine|avocat|olives?|creme (fraiche|liquid
 // d'huile p\u00e8se peu m\u00eame si elle compte beaucoup en kcal) \u2014 cette carte
 // travaille en grammes, pas en calories, pour rester fid\u00e8le \u00e0 ce qu'on voit
 // vraiment dans l'assiette.
+
+// ==========================================
+// 2. CIBLES D'ASSIETTE SELON L'ACTIVITE
+// ==========================================
+
 var ACTIVITY_PLATE_TARGETS = {
   sedentary: {veg:47, prot:19, starch:28, fat:6},
   light:     {veg:42, prot:21, starch:30, fat:7},
