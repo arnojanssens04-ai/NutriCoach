@@ -2795,7 +2795,7 @@ function updateNotifBell(){
 // abonnement stock\u00e9 c\u00f4t\u00e9 serveur) reste un chantier s\u00e9par\u00e9, plus lourd,
 // si on veut recevoir des alertes m\u00eame app ferm\u00e9e.
 // Marque tout comme lu d'un coup : messages non lus + annonces non vues,
-// pour vider la cloche sans avoir à ouvrir chaque conversation une par une.
+// pour vider la cloche sans avoir \u00e0 ouvrir chaque conversation une par une.
 async function clearAllNotifications(){
   await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
   await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
