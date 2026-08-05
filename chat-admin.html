@@ -45,6 +45,20 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .bubble-row.from-user .bubble { background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
 .bubble-row.from-admin .bubble { background:var(--gold); color:#fff; border-bottom-right-radius:4px; }
 .bubble-time { font-size:.65rem; color:var(--text3); margin-top:4px; }
+.msg-edited-tag { font-style:italic; opacity:.75; }
+.bubble-deleted { font-style:italic; color:var(--text3); background:var(--bg2)!important; }
+.msg-menu-wrap { position:relative; align-self:flex-end; }
+.msg-menu-btn { background:none; border:none; color:var(--text3); font-size:1rem; cursor:pointer; padding:2px 6px; line-height:1; }
+.msg-menu { display:none; position:absolute; right:0; top:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.15); z-index:50; min-width:120px; overflow:hidden; }
+.msg-menu.open { display:block; }
+.msg-menu button { display:block; width:100%; text-align:left; padding:9px 14px; background:none; border:none; font-size:.82rem; color:var(--text); cursor:pointer; }
+.msg-menu button:hover { background:var(--bg2); }
+.msg-menu button.msg-menu-danger { color:var(--rose); }
+.msg-edit-ta { width:100%; min-height:60px; border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:.88rem; resize:vertical; background:var(--bg); color:var(--text); }
+.msg-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+.msg-edit-actions button { padding:6px 12px; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; }
+.msg-edit-cancel { background:var(--bg2); color:var(--text2); }
+.msg-edit-save { background:var(--gold); color:#fff; }
 
 .input-bar { flex-shrink:0; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:10px; }
 .input-bar textarea { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:14px; color:var(--text); padding:11px 14px; font-family:'Inter',sans-serif; font-size:.88rem; resize:none; outline:none; max-height:160px; overflow-y:auto; line-height:1.4; }
@@ -249,6 +263,18 @@ function renderThread(uid){
   var el = document.getElementById('thread');
   el.innerHTML = msgs.map(function(m){
     var side = m.is_admin_sender ? 'from-admin' : 'from-user';
+    var isMine = m.sender_id===USER.id;
+    var isDeleted = !!m.deleted_at;
+    var withinEditWindow = isMine && !isDeleted && (Date.now()-new Date(m.created_at).getTime()) < 5*60*1000;
+    var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
+
+    if(isDeleted){
+      return '<div class="bubble-row '+side+'"><div>'
+        +'<div class="bubble bubble-deleted">Message supprim\u00e9</div>'
+        +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
+        +'</div></div>';
+    }
+
     var attachHtml = m.attachment_url
       ? '<a href="'+esc(m.attachment_url)+'" target="_blank" rel="noopener"><img src="'+esc(m.attachment_url)+'" alt="Pi\u00e8ce jointe" style="max-width:220px;border-radius:10px;margin-top:6px;display:block;cursor:zoom-in"></a>'
       : '';
@@ -256,12 +282,69 @@ function renderThread(uid){
     // envoy\u00e9e sans l\u00e9gende (voir chat.html) \u2014 inutile de l'afficher en plus
     // de l'image elle-m\u00eame, sinon \u00e7a fait doublon.
     var textHtml = (m.content && m.content!=='\ud83d\udcf7 Photo') ? esc(m.content) : '';
+
+    var menuHtml = isMine ? (
+      '<div class="msg-menu-wrap">'
+        +'<button class="msg-menu-btn" onclick="toggleMsgMenu(\''+m.id+'\')">\u22ef</button>'
+        +'<div class="msg-menu" id="msg-menu-'+m.id+'">'
+          +(withinEditWindow ? '<button onclick="startEditMessage(\''+m.id+'\')">Modifier</button>' : '')
+          +'<button onclick="deleteMessage(\''+m.id+'\')" class="msg-menu-danger">Supprimer</button>'
+        +'</div>'
+      +'</div>'
+    ) : '';
+
     return '<div class="bubble-row '+side+'"><div>'
-      +'<div class="bubble">'+textHtml+attachHtml+'</div>'
-      +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
-      +'</div></div>';
+      +'<div class="bubble" id="bubble-content-'+m.id+'">'+textHtml+attachHtml+'</div>'
+      +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+'</div>'
+      +'</div>'+menuHtml+'</div>';
   }).join('');
   el.scrollTop = el.scrollHeight;
+}
+
+function toggleMsgMenu(id){
+  var allMenus = document.querySelectorAll('.msg-menu.open');
+  allMenus.forEach(function(el){ if(el.id!=='msg-menu-'+id) el.classList.remove('open'); });
+  var menu = document.getElementById('msg-menu-'+id);
+  if(menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.msg-menu-wrap')){
+    document.querySelectorAll('.msg-menu.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+
+function startEditMessage(id){
+  toggleMsgMenu(id);
+  var bubbleEl = document.getElementById('bubble-content-'+id);
+  var currentText = bubbleEl.textContent;
+  bubbleEl.innerHTML = '<textarea id="edit-ta-'+id+'" class="msg-edit-ta">'+esc(currentText)+'</textarea>'
+    +'<div class="msg-edit-actions">'
+      +'<button onclick="cancelEditMessage()" class="msg-edit-cancel">Annuler</button>'
+      +'<button onclick="saveEditMessage(\''+id+'\')" class="msg-edit-save">Enregistrer</button>'
+    +'</div>';
+  document.getElementById('edit-ta-'+id).focus();
+}
+function cancelEditMessage(){
+  renderThread(CURRENT_CONV);
+}
+async function saveEditMessage(id){
+  var ta = document.getElementById('edit-ta-'+id);
+  var newContent = ta.value.trim();
+  if(!newContent) return;
+  var r = await sb.from('messages').update({content:newContent, edited_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ alert('Modification impossible : '+r.error.message); return; }
+  var msgInList = ALL_MSGS.find(function(m){ return m.id===id; });
+  if(msgInList){ msgInList.content = newContent; msgInList.edited_at = new Date().toISOString(); }
+  renderThread(CURRENT_CONV);
+}
+async function deleteMessage(id){
+  toggleMsgMenu(id);
+  if(!confirm('Supprimer ce message ?')) return;
+  var r = await sb.from('messages').update({deleted_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ alert('Suppression impossible : '+r.error.message); return; }
+  var msgInList = ALL_MSGS.find(function(m){ return m.id===id; });
+  if(msgInList){ msgInList.deleted_at = new Date().toISOString(); }
+  renderThread(CURRENT_CONV);
 }
 
 function handleKey(e){
