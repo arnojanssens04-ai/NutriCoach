@@ -2044,9 +2044,12 @@ function calcNutritionalQuality(entries, tgt){
 
   // 4. Diversit\u00e9 alimentaire \u2014 15 pts
   var groupCount = Object.keys(foodGroups).length;
-  if(PROF && PROF.role==='admin'){
-    toast('\ud83d\udd0d Groupes d\u00e9tect\u00e9s ('+groupCount+'/4 requis) : '+(Object.keys(foodGroups).join(', ')||'aucun'));
-  }
+  // DIAGNOSTIC ADMIN DESACTIVE TEMPORAIREMENT -- entrait en collision avec
+  // le diagnostic du tampon glycemique (meme toast, le dernier ecrasait
+  // l'autre). A reactiver si besoin une fois le bug glycemique regle.
+  // if(PROF && PROF.role==='admin'){
+  //   toast('\ud83d\udd0d Groupes d\u00e9tect\u00e9s ('+groupCount+'/4 requis) : '+(Object.keys(foodGroups).join(', ')||'aucun'));
+  // }
   score += Math.round(Math.min(1, groupCount/4) * 15);
   if(groupCount<3) tips.push({priority:4, msg:'Varier encore un peu plus les groupes d\'aliments enrichirait votre journ\u00e9e.'});
 
