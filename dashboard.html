@@ -200,10 +200,12 @@ body {
 .cardio-factor-lbl { flex:1; font-size:.76rem; color:var(--text2); }
 .cardio-factor-bar { width:70px; height:5px; background:var(--bg2); border-radius:999px; overflow:hidden; }
 .cardio-factor-fill { height:100%; border-radius:999px; }
-/* &#9472;&#9472; BADGE TAMPON GLYC&#201;MIQUE PAR REPAS &#9472;&#9472; */
+/* &#9472;&#9472; BADGE TAMPON GLYC&#201;MIQUE (moteur evaluateGlycemicImpact) &#9472;&#9472; */
 .meal-glyc-badge { margin-top:7px; font-size:.66rem; font-weight:600; padding:3px 8px; border-radius:7px; display:inline-block; line-height:1.3; }
 .meal-glyc-badge.meal-glyc-ok { background:rgba(80,140,60,0.14); color:#2d4f1c; }
-.meal-glyc-badge.meal-glyc-warn { background:rgba(200,140,20,0.14); color:#8a5a10; }
+.meal-glyc-badge.meal-glyc-mid { background:rgba(200,140,20,0.14); color:#8a5a10; }
+.meal-glyc-badge.meal-glyc-warn { background:rgba(210,180,20,0.18); color:#7a6708; }
+.meal-glyc-tip { margin-top:4px; font-size:.68rem; color:var(--text2); line-height:1.4; }
 .extra-score-card { background:var(--card); border:1px solid var(--border2); border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh); }
 .extra-score-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 .extra-score-ttl { font-size:.85rem; font-weight:600; color:var(--text); }
@@ -971,6 +973,7 @@ body {
   <div class="div-line"></div>
   <div class="stitle" id="added-ttl">Aliments ajout&#233;s</div>
   <div id="added-zone"></div>
+  <div id="journal-glyc-badge" style="margin-top:8px"></div>
   <div id="energy-checkin-zone" style="margin-top:12px"></div>
 </div>
 
@@ -1313,7 +1316,7 @@ body {
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
      pour qu'une correction faite ici profite partout automatiquement. -->
-<script src="regles-pathologies.js?v=5"></script>
+<script src="regles-pathologies.js?v=6"></script>
 <script src="recettes-data.js?v=2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
@@ -2294,7 +2297,8 @@ async function addEntry(food,qty){
     food_ags_100:pN(food.ags),food_mono_100:pN(food.mono),food_o3a_100:pN(food.o3a),
     food_o3e_100:pN(food.o3e),food_o3d_100:pN(food.o3d),
     food_fer_100:pN(food.fer),food_cal_100:pN(food.cal),food_pot_100:pN(food.pot),
-    food_fibres_100:fibresVal,food_mg_100:pN(food.mg),
+    food_fibres_100:fibresVal,food_mg_100:pN(food.mg),food_sucres_100:pN(food.sucres||food.sugar||0),
+    food_o6_100:pN(food.o6),food_vitc_100:pN(food.vitc),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
     is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4) : null
   });
@@ -3098,11 +3102,12 @@ async function refreshDash(){
   renderAccompagnementWidget(p, todayName);
 
   var entries=await getEntries();
-  var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,mono:0,o3a:0,o3e:0,o3d:0,fer:0,cal:0,pot:0,na:0,fibres:0};
+  var T={kcal:0,prot:0,gluc:0,lip:0,ags:0,mono:0,o3a:0,o3e:0,o3d:0,o6:0,vitc:0,fer:0,cal:0,pot:0,na:0,fibres:0};
   entries.forEach(function(e){
     T.kcal+=e.kcal||0;T.prot+=e.proteines||0;T.gluc+=e.glucides||0;T.lip+=e.lipides||0;
     T.ags+=(e.food_ags_100||0)*e.quantite/100;T.mono+=(e.food_mono_100||0)*e.quantite/100;T.o3a+=(e.food_o3a_100||0)*e.quantite/100;
     T.o3e+=(e.food_o3e_100||0)*e.quantite/100;T.o3d+=(e.food_o3d_100||0)*e.quantite/100;
+    T.o6+=(e.food_o6_100||0)*e.quantite/100;T.vitc+=(e.food_vitc_100||0)*e.quantite/100;
     T.fer+=(e.food_fer_100||0)*e.quantite/100;T.cal+=(e.food_cal_100||0)*e.quantite/100;
     T.pot+=(e.food_pot_100||0)*e.quantite/100;
     T.na+=(e.food_na_100||0)*e.quantite/100;T.fibres+=(e.food_fibres_100||0)*e.quantite/100;
@@ -3330,16 +3335,11 @@ async function refreshDash(){
     var pct=tgt.kcal>0?Math.min(100,mk/(tgt.kcal/4)*100):0;
     var kcalPart = hideKcalHere ? '' : ' \u00b7 <span>'+mk.toFixed(0)+' kcal</span>';
     var progBar = hideKcalHere ? '' : '<div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div>';
-    // Tampon glyc\u00e9mique par repas (diab\u00e8te uniquement) \u2014 calcul\u00e9 \u00e0 partir
-    // des m\u00eames entr\u00e9es que le kcal ci-dessus, jamais dupliqu\u00e9 ailleurs :
-    // voir mealGlycemicBadgeHTML() dans regles-pathologies.js.
-    var mealGlyc = '';
-    if(foods.length && typeof mealGlycemicBadgeHTML==='function'){
-      var mGluc = foods.reduce(function(s,e){return s+(e.glucides||0);},0);
-      var mFibres = foods.reduce(function(s,e){return s+(e.food_fibres_100||0)*(e.quantite||0)/100;},0);
-      var mProt = foods.reduce(function(s,e){return s+(e.proteines||0);},0);
-      mealGlyc = mealGlycemicBadgeHTML(mGluc, mFibres, mProt);
-    }
+    // Moteur "tampon glyc\u00e9mique" (diab\u00e8te uniquement) \u2014 calcul\u00e9 \u00e0 partir des
+    // m\u00eames entr\u00e9es que le kcal ci-dessus, jamais dupliqu\u00e9 ailleurs :
+    // voir evaluateGlycemicImpact() / glycemicMealBadgeHTML() dans
+    // regles-pathologies.js.
+    var mealGlyc = (typeof glycemicMealBadgeHTML==='function') ? glycemicMealBadgeHTML(foods) : '';
     return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+'</div>';
   }).join('');
   // Alerts
@@ -3536,6 +3536,8 @@ async function refreshJournal(){
     var kcalPart = (PROF && PROF.hide_exact_kcal===true) ? '' : '<span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span>';
     return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'\u2026':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQty(\''+e.id+'\',parseFloat(this.value),'+JSON.stringify(e).replace(/"/g,"'")+')" /><span style="font-size:.67rem;color:var(--text3)">g</span>'+kcalPart+'<button class="added-del" onclick="delEntry(\''+e.id+'\')">\u2715</button></div>';
   }).join('');
+  var glycEl = document.getElementById('journal-glyc-badge');
+  if(glycEl) glycEl.innerHTML = (typeof glycemicMealBadgeHTML==='function') ? glycemicMealBadgeHTML(mine) : '';
   loadRecentMeals();
   renderEnergyCheckin(mine.length>0);
 }
@@ -5945,13 +5947,18 @@ fetch('ciqual.json')
 // Aliments ajout\u00e9s manuellement par les admins (aliments.html) \u2014 fusionn\u00e9s
 // dans la m\u00eame liste DB, donc cherchables exactement comme un aliment
 // Ciqual classique, sans rien \u00e0 changer c\u00f4t\u00e9 recherche.
+// NOTE : le formulaire manuel ne d\u00e9compose pas les om\u00e9ga-3 en ALA/EPA/DHA
+// (contrairement \u00e0 Ciqual) \u2014 le total saisi est plac\u00e9 dans le seau o3a par
+// simplicit\u00e9. Sans cons\u00e9quence sur les scores : tous les calculs (moteur
+// cardio, etc.) additionnent mono+o3a+o3e+o3d, jamais s\u00e9par\u00e9ment.
 function loadCustomFoods(){
   sb.from('aliments_custom').select('*').then(function(r){
     if(!r.data) return;
     var custom = r.data.map(function(c){
       return {code:'custom_'+c.id, nom:c.nom_fr||c.nom, nom_original:c.nom, nom_fr:c.nom_fr||null,
         kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
-        ags:c.ags||0, mono:0, o3a:0, o3e:0, o3d:0, fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
+        ags:c.ags||0, mono:c.mono||0, o3a:c.o3||0, o3e:0, o3d:0, o6:c.o6||0, vitc:c.vitc||0,
+        fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
         fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0};
     });
     DB = DB.concat(custom);
