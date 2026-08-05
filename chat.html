@@ -183,12 +183,23 @@ var isShowingTyping = false;
 var pendingAttachment = null;
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Supabase renvoie parfois created_at SANS indicateur de fuseau (ex:
+// "2026-08-05T06:55:32.38"), que JavaScript interpr\u00e8te alors comme une
+// heure LOCALE au lieu d'UTC \u2014 d\u00e9calage d'environ 2h en \u00e9t\u00e9 (CEST). Cette
+// fonction force l'interpr\u00e9tation UTC dans tous les cas, qu'il y ait d\u00e9j\u00e0
+// un "Z"/d\u00e9calage ou non.
+function parseUTC(ts){
+  if(!ts) return new Date(NaN);
+  var s = String(ts);
+  if(!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
 function fmtTime(ts){
-  var d = new Date(ts);
+  var d = parseUTC(ts);
   var now = new Date();
-  var isToday = d.toDateString() === now.toDateString();
-  var t = d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'});
-  return isToday ? t : d.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+' '+t;
+  var isToday = d.toLocaleDateString('fr-BE',{timeZone:'Europe/Brussels'}) === now.toLocaleDateString('fr-BE',{timeZone:'Europe/Brussels'});
+  var t = d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'});
+  return isToday ? t : d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' '+t;
 }
 function today(){ var d=new Date(); return d.toISOString().slice(0,10); }
 
@@ -227,7 +238,7 @@ async function loadMessages(){
     var readTick = !isAdmin ? '<span class="read-tick '+(m.read_by_admin?'read':'sent')+'">'+(m.read_by_admin?'\u2713\u2713':'\u2713')+'</span>' : '';
     var isMine = m.sender_id===USER.id;
     var isDeleted = !!m.deleted_at;
-    var withinEditWindow = isMine && !isDeleted && (Date.now()-new Date(m.created_at).getTime()) < 5*60*1000;
+    var withinEditWindow = isMine && !isDeleted && (Date.now()-parseUTC(m.created_at).getTime()) < 5*60*1000;
     var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
 
     if(isDeleted){
