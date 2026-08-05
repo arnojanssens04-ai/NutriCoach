@@ -266,6 +266,11 @@ function renderThread(uid){
     var isMine = m.sender_id===USER.id;
     var isDeleted = !!m.deleted_at;
     var withinEditWindow = isMine && !isDeleted && (Date.now()-new Date(m.created_at).getTime()) < 5*60*1000;
+    if(!window._diagEditShown && isMine && !isDeleted){
+      window._diagEditShown = true;
+      var ageMs = Date.now()-new Date(m.created_at).getTime();
+      alert('created_at="'+m.created_at+'" \u00e2ge='+Math.round(ageMs/1000)+'s withinEditWindow='+withinEditWindow);
+    }
     var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
 
     if(isDeleted){
