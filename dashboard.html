@@ -1316,7 +1316,7 @@ body {
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
      pour qu'une correction faite ici profite partout automatiquement. -->
-<script src="regles-pathologies.js?v=8"></script>
+<script src="regles-pathologies.js?v=9"></script>
 <script src="recettes-data.js?v=2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
@@ -1832,12 +1832,33 @@ function calcScore(T,tgt,pathos,entries){
 
   // D\u00e9passement calorique \u2014 seule intervention des calories dans ce score
   // (le reste du score reste volontairement indiff\u00e9rent au chiffre exact,
-  // seul un vrai d\u00e9passement est sanctionn\u00e9) : -3 pts d\u00e8s 50 kcal au-dessus
-  // de l'objectif, -6 pts d\u00e8s 150 kcal au-dessus.
+  // seul un vrai d\u00e9passement est sanctionn\u00e9). Barreme \u00e9largi : un exc\u00e8s
+  // franc (400kcal+, ex: +51% comme observ\u00e9 en usage r\u00e9el) doit vraiment
+  // se voir dans le score, pas rester noy\u00e9 dans un plafond partag\u00e9 trop bas.
   var kcalExcess = T.kcal - tgt.kcal;
-  var penKcal = kcalExcess>=150 ? 6 : (kcalExcess>=50 ? 3 : 0);
+  var penKcal = kcalExcess>=400 ? 12 : kcalExcess>=150 ? 6 : (kcalExcess>=50 ? 3 : 0);
 
-  var penaliteTotale = Math.min(penAGS+penNa+penKcal, 20);
+  var penaliteTotale = Math.min(penAGS+penNa+penKcal, 30);
+
+  // Pathologie \u2014 diab\u00e8te : le score g\u00e9n\u00e9rique ci-dessus ne captait pas le
+  // risque glyc\u00e9mique par repas (voir evaluateGlycemicImpact,
+  // regles-pathologies.js) \u2014 un repas en absorption rapide aujourd'hui doit
+  // se refl\u00e9ter dans le score d'une personne diab\u00e9tique, m\u00eame si ses
+  // macros globales de la journ\u00e9e semblent correctes par ailleurs.
+  // Volontairement INDEPENDANTE du plafond ci-dessus (comme l'alcool) :
+  // c'est un risque sp\u00e9cifique \u00e0 la pathologie, pas une p\u00e9nalit\u00e9 g\u00e9n\u00e9rique
+  // parmi d'autres.
+  var penGlycemic = 0;
+  if(pathos.indexOf('diabetes')>=0 && typeof evaluateGlycemicImpact==='function'){
+    var byMealScore = {};
+    entries.forEach(function(e){ if(!byMealScore[e.repas]) byMealScore[e.repas]=[]; byMealScore[e.repas].push(e); });
+    Object.keys(byMealScore).forEach(function(mid){
+      var resGlyc = evaluateGlycemicImpact(byMealScore[mid]);
+      if(resGlyc.state==='FAST_ABSORPTION') penGlycemic += 6;
+      else if(resGlyc.state==='MODERATE_BUFFER') penGlycemic += 2;
+    });
+    penGlycemic = Math.min(penGlycemic, 25);
+  }
 
   // Alcool \u2014 \u00e0 partir de 3 verres dans la m\u00eame journ\u00e9e, p\u00e9nalit\u00e9 volontairement
   // s\u00e9v\u00e8re et IND\u00c9PENDANTE du plafond habituel (pas de "protection" \u00e0 20 pts
@@ -1847,7 +1868,7 @@ function calcScore(T,tgt,pathos,entries){
   var penAlcohol = alcoholUnitsToday>=3 ? 25 + (alcoholUnitsToday-3)*10 : 0;
 
   var totalAvecBonus = base + bonusLegumes + bonusFibres30 + bonusAGS;
-  var s = Math.max(0,Math.min(100,Math.round(totalAvecBonus-penaliteTotale-penAlcohol)));
+  var s = Math.max(0,Math.min(100,Math.round(totalAvecBonus-penaliteTotale-penAlcohol-penGlycemic)));
 
   // D\u00e9tail par crit\u00e8re \u2014 utilis\u00e9 par le panneau d'explication cliquable
   var detail = [
@@ -1881,6 +1902,13 @@ function calcScore(T,tgt,pathos,entries){
       ok: T.na<=6000,
       conseil: T.na>6000 ? 'Sodium \u00e9lev\u00e9 \u2014 limitez sel ajout\u00e9, plats pr\u00e9par\u00e9s et charcuterie.' : null }
   ];
+
+  if(penGlycemic>0){
+    detail.push({ label:'Tampon glyc\u00e9mique (diab\u00e8te)', pts:0, max:0, malus:penGlycemic,
+      val:'Au moins un repas en absorption rapide aujourd\'hui',
+      ok:false,
+      conseil:'Un ou plusieurs repas manquaient de fibres/prot\u00e9ines pour accompagner les glucides \u2014 voir le badge sur la carte du repas concern\u00e9.' });
+  }
 
   return {score:s, detail:detail};
 }
@@ -2792,7 +2820,15 @@ function renderClinicalIndicators(T, tgt, pathos){
   if(!card || !body) return;
   var rows = [];
 
-  function pctClass(pct){ return pct>=100?'bad':pct>=75?'warn':'ok'; }
+  // dir='higher_better' (fibres : plus il y en a, mieux c'est) vs le
+  // comportement par defaut 'lower_better' (sodium, graisses saturees :
+  // depasser la cible est a surveiller). Avant, les deux logiques etaient
+  // confondues et les fibres a 150% s'affichaient en rouge comme un exces,
+  // alors que c'est un bon point pour la regulation glycemique.
+  function pctClass(pct, dir){
+    if(dir==='higher_better') return pct>=75 ? 'ok' : pct>=40 ? 'warn' : 'bad';
+    return pct>=100?'bad':pct>=75?'warn':'ok';
+  }
 
   if(pathos.indexOf('hypertension')>=0){
     var pctNa = Math.round(T.na/tgt.na*100);
@@ -2801,7 +2837,7 @@ function renderClinicalIndicators(T, tgt, pathos){
   }
   if(pathos.indexOf('diabetes')>=0){
     var pctFib = Math.round(T.fibres/(tgt.fibres||27)*100);
-    rows.push({ico:'\ud83c\udf3f', pct:Math.min(150,pctFib),
+    rows.push({ico:'\ud83c\udf3f', pct:Math.min(150,pctFib), dir:'higher_better',
       txt:'<b>R\u00e9gulation glyc\u00e9mique</b> (fibres) \u2014 '+T.fibres.toFixed(0)+'g sur '+(tgt.fibres||27)+'g, '+(pctFib>=75?'un bon soutien pour votre glyc\u00e9mie':'encore l\u00e9ger pour bien r\u00e9guler votre glyc\u00e9mie')});
   }
   if(pathos.indexOf('cholesterol')>=0 || pathos.indexOf('cardiac')>=0){
@@ -2816,7 +2852,7 @@ function renderClinicalIndicators(T, tgt, pathos){
   body.innerHTML = rows.map(function(r){
     return '<div class="clinical-row"><span class="clinical-ico">'+r.ico+'</span>'
       +'<span class="clinical-txt">'+r.txt+'</span>'
-      +'<span class="clinical-pct '+pctClass(r.pct)+'">'+r.pct+'%</span></div>';
+      +'<span class="clinical-pct '+pctClass(r.pct, r.dir)+'">'+r.pct+'%</span></div>';
   }).join('');
 }
 
@@ -2840,7 +2876,8 @@ function renderCardioProtection(T, tgt, pathos){
   var colors = {ok:'var(--sage)', mid:'var(--gold)', low:'var(--rose)'};
   factorsEl.innerHTML = res.factors.map(function(f){
     var lvl = f.score>=80?'ok':f.score>=55?'mid':'low';
-    return '<div class="cardio-factor-row"><span class="cardio-factor-lbl">'+f.label+'</span>'
+    return '<div class="cardio-factor-row"><div style="flex:1"><span class="cardio-factor-lbl">'+f.label+'</span>'
+      +(f.detail?'<div style="font-size:.66rem;color:var(--text3);margin-top:1px">'+f.detail+'</div>':'')+'</div>'
       +'<div class="cardio-factor-bar"><div class="cardio-factor-fill" style="width:'+f.score+'%;background:'+colors[lvl]+'"></div></div></div>';
   }).join('');
 }
@@ -3204,7 +3241,11 @@ async function refreshDash(){
     // pour tous \u2014 seul l'admin peut pr\u00e9visualiser le nouvel affichage via
     // son propre interrupteur de test.
     document.getElementById('d-target').textContent=tgt.kcal;
-    if(kcalRound>0 && excessKcal>=0){
+    if(kcalRound>0 && ratioKcal>1.15){
+      restContainer.innerHTML = '<span class="kcal-done-badge over-high">Nettement au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
+    } else if(kcalRound>0 && excessKcal>150){
+      restContainer.innerHTML = '<span class="kcal-done-badge over-mid">Au-dessus de votre cible (+'+excessKcal+' kcal)</span>';
+    } else if(kcalRound>0 && excessKcal>=0){
       restContainer.innerHTML = '<span class="kcal-done-badge">\u2713 Objectif atteint</span>';
     } else {
       restContainer.innerHTML = '<span id="d-reste">'+Math.max(0,-excessKcal)+'</span> <span class="kcal-rest-lbl">restants</span>';
