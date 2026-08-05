@@ -2856,19 +2856,24 @@ async function toggleNotifDrawer(){
   var isOpen = drawer.style.display === 'block';
   if(isOpen){ drawer.style.display = 'none'; return; }
 
-  var msgR = await sb.from('messages').select('*').eq('user_id',USER.id).eq('is_admin_sender',true).order('created_at',{ascending:false}).limit(6);
+  var msgR = await sb.from('messages').select('*').eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false).order('created_at',{ascending:false}).limit(6);
   var msgs = (msgR.data||[]).map(function(m){
-    return { type:'message', id:m.id, date:m.created_at, unread:!m.read_by_user,
+    return { type:'message', id:m.id, date:m.created_at, unread:true,
       snippet:(m.content||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udcac' };
   });
 
   var lastSeen = (PROF && PROF.last_seen_annonce_at) || '1970-01-01';
-  var annR = await sb.from('annonces').select('*').order('created_at',{ascending:false}).limit(6);
+  var annR = await sb.from('annonces').select('*').gt('created_at', lastSeen).order('created_at',{ascending:false}).limit(6);
   var anns = (annR.data||[]).map(function(a){
-    return { type:'annonce', id:a.id, date:a.created_at, unread:parseUTC(a.created_at)>parseUTC(lastSeen),
+    return { type:'annonce', id:a.id, date:a.created_at, unread:true,
       snippet:(a.titre||a.contenu||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udce3' };
   });
 
+  // Ne montre que ce qui n'a PAS encore \u00e9t\u00e9 lu/vu \u2014 avant, la liste
+  // affichait toujours les 10 derni\u00e8res notifications peu importe leur
+  // statut, donc "Tout effacer" retirait juste le surlignage sans faire
+  // dispara\u00eetre les \u00e9l\u00e9ments de la liste, ce qui donnait l'impression
+  // trompeuse qu'ils \u00e9taient revenus \u00e0 chaque r\u00e9ouverture.
   var combined = msgs.concat(anns).sort(function(a,b){ return parseUTC(b.date)-parseUTC(a.date); }).slice(0,10);
   var list = document.getElementById('notif-list');
   if(!combined.length){
@@ -2877,7 +2882,7 @@ async function toggleNotifDrawer(){
     list.innerHTML = combined.map(function(n){
       var snippet = n.snippet;
       if(snippet.length>78) snippet = snippet.slice(0,78)+'\u2026';
-      return '<div onclick="openNotifItem(\''+n.type+'\',\''+n.id+'\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;'+(n.unread?'background:var(--gold-l);':'')+'margin-bottom:2px" onmouseover="this.style.filter=\'brightness(0.97)\'" onmouseout="this.style.filter=\'\'">'
+      return '<div onclick="openNotifItem(\''+n.type+'\',\''+n.id+'\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;background:var(--gold-l);margin-bottom:2px" onmouseover="this.style.filter=\'brightness(0.97)\'" onmouseout="this.style.filter=\'\'">'
         +'<div style="font-size:.82rem;color:var(--text);line-height:1.45">'+n.icon+' '+esc(snippet)+'</div>'
         +'<div style="font-size:.68rem;color:var(--text3);margin-top:3px">'+fmtNotifDate(n.date)+'</div>'
         +'</div>';
