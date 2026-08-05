@@ -1316,7 +1316,7 @@ body {
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
      pour qu'une correction faite ici profite partout automatiquement. -->
-<script src="regles-pathologies.js?v=6"></script>
+<script src="regles-pathologies.js?v=7"></script>
 <script src="recettes-data.js?v=2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
@@ -5937,7 +5937,7 @@ fetch('ciqual.json')
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
         ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
-        fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
+        fibres:r[14],mg:r[15],na:r[16],zn:r[17],o6:r[18],vitc:r[19]};
     });
     console.log('Ciqual charg\u00e9 : '+DB.length+' aliments');
     loadCustomFoods();
@@ -5964,6 +5964,30 @@ function loadCustomFoods(){
     DB = DB.concat(custom);
     console.log('Aliments personnalis\u00e9s ajout\u00e9s : '+custom.length);
   }).catch(function(){console.warn('Aliments personnalis\u00e9s non charg\u00e9s');});
+  loadCiqualMicronutrimentsOverlay();
+}
+
+// Fusionne les valeurs om\u00e9ga-6 / vitamine C g\u00e9n\u00e9r\u00e9es automatiquement en
+// arri\u00e8re-plan par la fonction cron "enrich-ciqual-micronutriments" (5
+// aliments Ciqual trait\u00e9s par heure, voir table ciqual_micronutriments).
+// Ne remplace jamais un aliment personnalis\u00e9 (code custom_*), uniquement
+// les entr\u00e9es Ciqual de base -- op\u00e9ration best-effort, non bloquante : si
+// elle \u00e9choue ou n'est pas encore termin\u00e9e, l'app continue de fonctionner
+// avec les valeurs "-" d\u00e9j\u00e0 g\u00e9r\u00e9es partout ailleurs (pN() les traite comme 0).
+function loadCiqualMicronutrimentsOverlay(){
+  sb.from('ciqual_micronutriments').select('*').then(function(r){
+    if(!r.data || !r.data.length) return;
+    var overlay = {};
+    r.data.forEach(function(row){ overlay[String(row.code)] = row; });
+    DB.forEach(function(food){
+      var o = overlay[String(food.code)];
+      if(o){
+        if(o.o6!=null) food.o6 = o.o6;
+        if(o.vitc!=null) food.vitc = o.vitc;
+      }
+    });
+    console.log('Micronutriments enrichis automatiquement : '+r.data.length+' aliments');
+  }).catch(function(){console.warn('Overlay micronutriments non charg\u00e9');});
 }
 </script>
 </body>
