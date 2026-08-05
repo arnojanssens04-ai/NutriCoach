@@ -314,7 +314,7 @@ function loadDB(){
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
         ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
-        fibres:r[14],mg:r[15],na:r[16],zn:r[17]};
+        fibres:r[14],mg:r[15],na:r[16],zn:r[17],o6:r[18],vitc:r[19]};
     });
     return sb.from('aliments_custom').select('*');
   }).then(function(rc){
@@ -327,12 +327,33 @@ function loadDB(){
     var btn = document.getElementById('confirm-btn');
     if(btn){ btn.disabled=false; btn.textContent='Ajouter au journal'; btn.style.opacity='1'; }
     console.log('[Cap Sant\u00e9] Ciqual charg\u00e9 : '+DB.length+' aliments');
+    loadCiqualMicronutrimentsOverlay();
   }).catch(function(e){
     console.warn('[Cap Sant\u00e9] Erreur chargement Ciqual:', e);
     DB_READY = true; // on autorise quand m\u00eame pour ne pas bloquer
     var btn = document.getElementById('confirm-btn');
     if(btn){ btn.disabled=false; btn.textContent='Ajouter au journal'; btn.style.opacity='1'; }
   });
+
+// Fusionne les valeurs om\u00e9ga-6 / vitamine C g\u00e9n\u00e9r\u00e9es automatiquement en
+// arri\u00e8re-plan par la fonction cron "enrich-ciqual-micronutriments" -- voir
+// dashboard.html pour la m\u00eame logique en d\u00e9tail. Non bloquant : le scan
+// photo reste utilisable pendant que cette fusion se fait.
+function loadCiqualMicronutrimentsOverlay(){
+  sb.from('ciqual_micronutriments').select('*').then(function(r){
+    if(!r.data || !r.data.length) return;
+    var overlay = {};
+    r.data.forEach(function(row){ overlay[String(row.code)] = row; });
+    DB.forEach(function(food){
+      var o = overlay[String(food.code)];
+      if(o){
+        if(o.o6!=null) food.o6 = o.o6;
+        if(o.vitc!=null) food.vitc = o.vitc;
+      }
+    });
+    console.log('[Cap Sant\u00e9] Micronutriments enrichis automatiquement : '+r.data.length+' aliments');
+  }).catch(function(){console.warn('[Cap Sant\u00e9] Overlay micronutriments non charg\u00e9')});
+}
 }
 
 function initMealPreselect(){
