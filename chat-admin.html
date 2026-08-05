@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Messages (Admin)</title>
+<title>Cap Sant&#233; &#8212; Messages (Admin)</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -67,7 +67,7 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 
 .thread-back { display:none; background:none; border:none; font-size:1.2rem; color:var(--text2); cursor:pointer; padding:4px 10px 4px 0; }
 
-/* ── Mobile : un seul panneau visible à la fois (liste OU conversation) ── */
+/* &#9472;&#9472; Mobile : un seul panneau visible &#224; la fois (liste OU conversation) &#9472;&#9472; */
 @media (max-width: 720px) {
   .conv-list { width:100%; }
   .thread-panel { display:none; }
@@ -80,35 +80,35 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Santé</span> · Messages</div>
-  <a href="admin.html" class="t-back">← Admin</a>
+  <div class="t-logo">Cap<span>Sant&#233;</span> &#183; Messages</div>
+  <a href="admin.html" class="t-back">&#8592; Admin</a>
 </header>
 
 <div class="main" id="main" style="display:none">
   <div class="conv-list-wrap" style="width:280px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border)">
-    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">✏️ Nouveau message</button>
+    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">&#9999;&#65039; Nouveau message</button>
     <div class="conv-list" id="conv-list" style="border-right:none;flex:1"></div>
   </div>
   <div class="thread-panel">
     <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center;justify-content:space-between">
-      <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">←</button><span id="thread-hdr-txt">Sélectionnez une conversation</span></span>
-      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--text2);white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">🌿 Mode focus</button>
+      <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">&#8592;</button><span id="thread-hdr-txt">S&#233;lectionnez une conversation</span></span>
+      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--text2);white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">&#127807; Mode focus</button>
     </div>
-    <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation à gauche</div></div>
+    <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation &#224; gauche</div></div>
     <div class="input-bar" id="input-bar" style="display:none">
-      <textarea id="msg-input" placeholder="Répondre..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
-      <button class="send-btn" onclick="sendReply()">➤</button>
+      <textarea id="msg-input" placeholder="R&#233;pondre..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+      <button class="send-btn" onclick="sendReply()">&#10148;</button>
     </div>
   </div>
 </div>
 
-<!-- Sélecteur "Nouveau message" — permet d'écrire à n'importe quel
-     utilisateur, pas seulement ceux ayant déjà une conversation active. -->
+<!-- S&#233;lecteur "Nouveau message" &#8212; permet d'&#233;crire &#224; n'importe quel
+     utilisateur, pas seulement ceux ayant d&#233;j&#224; une conversation active. -->
 <div id="new-msg-ov" style="display:none;position:fixed;inset:0;background:rgba(22,36,27,0.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:8vh" onclick="if(event.target===this)closeNewMsgPicker()">
   <div style="background:var(--card);border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:70vh;display:flex;flex-direction:column">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-weight:700;font-size:1rem">Écrire à un utilisateur</div>
-      <button onclick="closeNewMsgPicker()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">✕</button>
+      <div style="font-weight:700;font-size:1rem">&#201;crire &#224; un utilisateur</div>
+      <button onclick="closeNewMsgPicker()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">&#10005;</button>
     </div>
     <input type="text" id="new-msg-search" placeholder="Rechercher par nom ou email..." oninput="filterNewMsgUsers(this.value)" style="padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:.9rem;margin-bottom:10px;outline:none">
     <div id="new-msg-user-list" style="overflow-y:auto;flex:1"></div>
@@ -123,7 +123,7 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, ALL_USERS={}, CURRENT_CONV=null, ALL_MSGS=[];
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtTime(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' à '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'}); }
+function fmtTime(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' \u00e0 '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'}); }
 
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
@@ -134,7 +134,7 @@ sb.auth.getSession().then(function(r){
 async function checkAdminAndLoad(){
   var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
   if(!pr.data || pr.data.role!=='admin'){
-    document.body.innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    document.body.innerHTML = '<div class="denied">Acc\u00e8s r\u00e9serv\u00e9 aux administrateurs.</div>';
     return;
   }
   document.getElementById('main').style.display='flex';
@@ -146,7 +146,7 @@ async function checkAdminAndLoad(){
   subscribeRealtime();
 
   // Deep-link : chat-admin.html?u=<user_id> ouvre directement la conversation
-  // (utilisé par le bouton "Contacter" depuis bilan_recap.html)
+  // (utilis\u00e9 par le bouton "Contacter" depuis bilan_recap.html)
   var uidParam = new URLSearchParams(window.location.search).get('u');
   if(uidParam) openConv(uidParam);
 }
@@ -161,7 +161,7 @@ async function loadAllMessages(){
 function userLabel(uid){
   var u = ALL_USERS[uid];
   if(!u) return 'Utilisateur inconnu';
-  return (u.prenom||'')+' '+(u.nom||'')||u.email||'—';
+  return (u.prenom||'')+' '+(u.nom||'')||u.email||'\u2014';
 }
 
 function renderConvList(){
@@ -191,7 +191,7 @@ async function openConv(uid){
   CURRENT_CONV = uid;
   document.getElementById('thread-hdr-txt').textContent = userLabel(uid);
   document.getElementById('input-bar').style.display = 'flex';
-  document.getElementById('main').classList.add('show-thread'); // mobile : bascule en plein écran
+  document.getElementById('main').classList.add('show-thread'); // mobile : bascule en plein \u00e9cran
   renderThread(uid);
   renderConvList();
   await sb.from('messages').update({read_by_admin:true}).eq('user_id',uid).eq('is_admin_sender',false).eq('read_by_admin',false);
@@ -203,13 +203,13 @@ async function openConv(uid){
   focusBtn.classList.toggle('on', u && u.hide_exact_kcal === true);
   focusBtn.style.background = (u && u.hide_exact_kcal===true) ? 'var(--gold-l)' : 'var(--card2)';
   focusBtn.style.color = (u && u.hide_exact_kcal===true) ? 'var(--gold)' : 'var(--text2)';
-  focusBtn.textContent = (u && u.hide_exact_kcal===true) ? '🌿 Mode focus (actif)' : '🌿 Mode focus';
+  focusBtn.textContent = (u && u.hide_exact_kcal===true) ? '\ud83c\udf3f Mode focus (actif)' : '\ud83c\udf3f Mode focus';
 }
 
-// Permet au diététicien d'activer le mode focus pour un utilisateur
-// directement depuis sa conversation, s'il repère un rapport trop
-// comptable aux calories dans ses messages — sans devoir attendre que la
-// personne le fasse elle-même.
+// Permet au di\u00e9t\u00e9ticien d'activer le mode focus pour un utilisateur
+// directement depuis sa conversation, s'il rep\u00e8re un rapport trop
+// comptable aux calories dans ses messages \u2014 sans devoir attendre que la
+// personne le fasse elle-m\u00eame.
 async function toggleUserFocusMode(){
   if(!CURRENT_CONV) return;
   var u = ALL_USERS[CURRENT_CONV];
@@ -217,7 +217,7 @@ async function toggleUserFocusMode(){
   var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',CURRENT_CONV);
   if(r.error){ alert('Erreur : '+r.error.message); return; }
   ALL_USERS[CURRENT_CONV].hide_exact_kcal = newVal;
-  openConv(CURRENT_CONV); // rafraîchit l'apparence du bouton
+  openConv(CURRENT_CONV); // rafra\u00eechit l'apparence du bouton
 }
 function backToList(){
   document.getElementById('main').classList.remove('show-thread');
@@ -245,7 +245,7 @@ function renderNewMsgUsers(list){
     return userLabel(a.id).localeCompare(userLabel(b.id));
   });
   var el = document.getElementById('new-msg-user-list');
-  if(!list.length){ el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:.85rem">Aucun utilisateur trouvé.</div>'; return; }
+  if(!list.length){ el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:.85rem">Aucun utilisateur trouv\u00e9.</div>'; return; }
   el.innerHTML = list.map(function(u){
     return '<div onclick="pickNewMsgUser(\''+u.id+'\')" style="padding:11px 10px;border-radius:9px;cursor:pointer" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'transparent\'">'
       +'<div style="font-weight:600;font-size:.9rem">'+esc(userLabel(u.id))+'</div>'
@@ -351,9 +351,9 @@ function handleKey(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendReply(); }
 }
 
-// Le champ grandit avec le texte tapé (jusqu'à max-height défini en CSS,
-// au-delà ça défile normalement) — avant, le champ restait figé à 1 ligne
-// et le texte défilait hors de vue pendant la frappe.
+// Le champ grandit avec le texte tap\u00e9 (jusqu'\u00e0 max-height d\u00e9fini en CSS,
+// au-del\u00e0 \u00e7a d\u00e9file normalement) \u2014 avant, le champ restait fig\u00e9 \u00e0 1 ligne
+// et le texte d\u00e9filait hors de vue pendant la frappe.
 function autoGrow(el){
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
@@ -372,8 +372,8 @@ async function sendReply(){
   loadAllMessages();
 }
 
-// Déclenche l'email de notification (admin ↔ utilisateur) sans jamais
-// bloquer l'interface — un échec d'envoi ne doit pas gêner la conversation.
+// D\u00e9clenche l'email de notification (admin \u2194 utilisateur) sans jamais
+// bloquer l'interface \u2014 un \u00e9chec d'envoi ne doit pas g\u00eaner la conversation.
 async function notifyByEmail(messageId){
   try{
     var session = await sb.auth.getSession();
@@ -383,7 +383,7 @@ async function notifyByEmail(messageId){
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body: JSON.stringify({ message_id: messageId })
     });
-  }catch(e){ console.warn('[Cap Santé] notification email non envoyée:', e); }
+  }catch(e){ console.warn('[Cap Sant\u00e9] notification email non envoy\u00e9e:', e); }
 }
 
 function subscribeRealtime(){
