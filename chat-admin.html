@@ -123,7 +123,18 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, ALL_USERS={}, CURRENT_CONV=null, ALL_MSGS=[];
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtTime(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' \u00e0 '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'}); }
+// Supabase renvoie parfois created_at SANS indicateur de fuseau (ex:
+// "2026-08-05T06:55:32.38"), que JavaScript interpr\u00e8te alors comme une
+// heure LOCALE au lieu d'UTC \u2014 d\u00e9calage d'environ 2h en \u00e9t\u00e9 (CEST). Cette
+// fonction force l'interpr\u00e9tation UTC dans tous les cas, qu'il y ait d\u00e9j\u00e0
+// un "Z"/d\u00e9calage ou non.
+function parseUTC(ts){
+  if(!ts) return new Date(NaN);
+  var s = String(ts);
+  if(!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
+function fmtTime(ts){ var d=parseUTC(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' \u00e0 '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'}); }
 
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
@@ -265,12 +276,7 @@ function renderThread(uid){
     var side = m.is_admin_sender ? 'from-admin' : 'from-user';
     var isMine = m.sender_id===USER.id;
     var isDeleted = !!m.deleted_at;
-    var withinEditWindow = isMine && !isDeleted && (Date.now()-new Date(m.created_at).getTime()) < 5*60*1000;
-    if(!window._diagEditShown && isMine && !isDeleted){
-      window._diagEditShown = true;
-      var ageMs = Date.now()-new Date(m.created_at).getTime();
-      alert('created_at="'+m.created_at+'" \u00e2ge='+Math.round(ageMs/1000)+'s withinEditWindow='+withinEditWindow);
-    }
+    var withinEditWindow = isMine && !isDeleted && (Date.now()-parseUTC(m.created_at).getTime()) < 5*60*1000;
     var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
 
     if(isDeleted){
