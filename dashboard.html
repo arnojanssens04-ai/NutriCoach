@@ -1279,7 +1279,7 @@ body {
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="mode-focus.js?v=21"></script>
+<script src="mode-focus.js?v=19"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
@@ -2804,8 +2804,17 @@ function updateNotifBell(){
 // Marque tout comme lu d'un coup : messages non lus + annonces non vues,
 // pour vider la cloche sans avoir \u00e0 ouvrir chaque conversation une par une.
 async function clearAllNotifications(){
-  await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
-  await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
+  var r1 = await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
+  var r2 = await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
+  if(r1.error || r2.error){
+    var errMsg = (r1.error?'messages: '+r1.error.message+' ':'')+(r2.error?'profiles: '+r2.error.message:'');
+    toast('\u26a0\ufe0f \u00c9chec de l\'effacement (probablement RLS) : '+errMsg);
+    if(typeof window._jsErrors!=='undefined'){
+      window._jsErrors.push('clearAllNotifications a \u00e9chou\u00e9 : '+errMsg);
+      if(typeof showJsErrorBanner==='function') showJsErrorBanner();
+    }
+    return; // on ne vide pas l'affichage si la sauvegarde a vraiment \u00e9chou\u00e9, sinon \u00e7a redonnerait cette m\u00eame fausse impression au refresh
+  }
   if(PROF) PROF.last_seen_annonce_at = new Date().toISOString();
   UNREAD_MESSAGES_COUNT = 0;
   UNREAD_ANNONCES_COUNT = 0;
