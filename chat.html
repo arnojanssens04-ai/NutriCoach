@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Assistance</title>
+<title>Cap Sant&#233; &#8212; Assistance</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -121,18 +121,18 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <header class="topbar">
   <div class="t-logo">
     <svg width="24" height="24" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bg-c" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#3d6128"/><stop offset="100%" stop-color="#1e3a10"/></radialGradient></defs><circle cx="60" cy="60" r="58" fill="url(#bg-c)"/><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/><line x1="60" y1="8" x2="60" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/><line x1="60" y1="102" x2="60" y2="112" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/><line x1="8" y1="60" x2="18" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/><line x1="102" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" stroke-linecap="round"/><rect x="57.5" y="60" width="5" height="22" rx="2.5" fill="rgba(255,255,255,0.28)"/><rect x="59" y="34" width="2" height="26" rx="1" fill="white"/><path d="M52 38 L52 50 Q52 53 55 53 L59 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M68 38 L68 50 Q68 53 65 53 L61 53" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="52" y1="38" x2="52" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="68" y1="38" x2="68" y2="45" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M62 42 C65 38 72 36 72 42 C72 46 67 48 62 48Z" fill="rgba(255,255,255,0.55)"/><circle cx="60" cy="60" r="4.5" fill="#2d4f1c" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/><circle cx="60" cy="60" r="1.5" fill="white" opacity="0.8"/></svg>
-    Cap<span> Santé</span>
+    Cap<span> Sant&#233;</span>
   </div>
-  <a href="dashboard.html" class="t-back">← Retour</a>
+  <a href="dashboard.html" class="t-back">&#8592; Retour</a>
 </header>
 
 <div class="chat-outer">
   <div class="chat-card">
     <div class="recipient-hdr">
-      <div class="rcpt-av">🌱</div>
+      <div class="rcpt-av">&#127793;</div>
       <div class="rcpt-info">
-        <div class="rcpt-name">Support Cap Santé</div>
-        <div class="rcpt-status"><span class="rcpt-dot"></span>Répond généralement en moins de 4h · Lun–Ven 8h–19h</div>
+        <div class="rcpt-name">Support Cap Sant&#233;</div>
+        <div class="rcpt-status"><span class="rcpt-dot"></span>R&#233;pond g&#233;n&#233;ralement en moins de 4h &#183; Lun&#8211;Ven 8h&#8211;19h</div>
       </div>
     </div>
 
@@ -141,31 +141,31 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
     </div>
 
     <div class="chip-row" id="starter-chips">
-      <div class="chip" onclick="quickReply('❓ J\'ai une question sur mon plan alimentaire')">❓ Mon plan</div>
-      <div class="chip" onclick="quickReply('🎯 Je souhaite modifier mon objectif')">🎯 Objectif</div>
-      <div class="chip" onclick="quickReply('📊 Je ne comprends pas mon score santé')">📊 Score</div>
-      <div class="chip" onclick="quickReply('🐛 Je rencontre un problème technique')">🐛 Bug</div>
+      <div class="chip" onclick="quickReply('&#10067; J\'ai une question sur mon plan alimentaire')">&#10067; Mon plan</div>
+      <div class="chip" onclick="quickReply('&#127919; Je souhaite modifier mon objectif')">&#127919; Objectif</div>
+      <div class="chip" onclick="quickReply('&#128202; Je ne comprends pas mon score sant&#233;')">&#128202; Score</div>
+      <div class="chip" onclick="quickReply('&#128027; Je rencontre un probl&#232;me technique')">&#128027; Bug</div>
     </div>
 
     <div class="chip-row" id="quick-react-chips" style="display:none">
-      <div class="chip" onclick="quickSend(this,'👍 +1')">👍 +1</div>
-      <div class="chip" onclick="quickSend(this,'✅ C\'est noté')">✅ C'est noté</div>
-      <div class="chip" onclick="quickSend(this,'🙏 Merci !')">🙏 Merci !</div>
-      <div class="chip" onclick="window.location.href='bilan.html'">📊 Voir mon bilan</div>
+      <div class="chip" onclick="quickSend(this,'&#128077; +1')">&#128077; +1</div>
+      <div class="chip" onclick="quickSend(this,'&#9989; C\'est not&#233;')">&#9989; C'est not&#233;</div>
+      <div class="chip" onclick="quickSend(this,'&#128591; Merci !')">&#128591; Merci !</div>
+      <div class="chip" onclick="window.location.href='bilan.html'">&#128202; Voir mon bilan</div>
     </div>
 
     <div class="input-wrap">
       <div class="attach-preview" id="attach-preview">
         <img id="attach-preview-img" src="" alt="">
         <span id="attach-preview-name"></span>
-        <button onclick="clearAttachment()">✕</button>
+        <button onclick="clearAttachment()">&#10005;</button>
       </div>
       <div class="input-row">
-        <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Joindre une photo">📎</button>
+        <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Joindre une photo">&#128206;</button>
         <input type="file" id="file-input" accept="image/*" style="display:none" onchange="onFileSelected(this)">
-        <textarea id="msg-input" placeholder="Écrivez votre message..." rows="1"
+        <textarea id="msg-input" placeholder="&#201;crivez votre message..." rows="1"
                   onkeydown="handleKey(event)" oninput="onTyping()"></textarea>
-        <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">&#10148;</button>
       </div>
     </div>
   </div>
@@ -218,7 +218,7 @@ async function loadMessages(){
   document.getElementById('quick-react-chips').style.display = msgs.length ? 'flex' : 'none';
 
   if(!msgs.length){
-    thread.innerHTML = '<div class="empty-hint"><strong>Bienvenue dans votre espace assistance</strong>Une vraie personne vous répond ici — pas un robot. Posez votre question ou choisissez un sujet ci-dessous.</div>';
+    thread.innerHTML = '<div class="empty-hint"><strong>Bienvenue dans votre espace assistance</strong>Une vraie personne vous r\u00e9pond ici \u2014 pas un robot. Posez votre question ou choisissez un sujet ci-dessous.</div>';
     return;
   }
 
@@ -309,7 +309,7 @@ async function checkProactiveMessages(){
   var hasMessages = (r.data||[]).length > 0;
 
   if(!hasMessages && !sent.welcome){
-    await sendAutoMessage('Bienvenue sur Cap Santé ! 👋 Je suis Arnaud, votre diététicien. N\'hésitez pas à me poser toutes vos questions sur votre plan alimentaire, votre score ou vos objectifs. Je réponds généralement sous 4h du lundi au vendredi.');
+    await sendAutoMessage('Bienvenue sur Cap Sant\u00e9 ! \ud83d\udc4b Je suis Arnaud, votre di\u00e9t\u00e9ticien. N\'h\u00e9sitez pas \u00e0 me poser toutes vos questions sur votre plan alimentaire, votre score ou vos objectifs. Je r\u00e9ponds g\u00e9n\u00e9ralement sous 4h du lundi au vendredi.');
     sent.welcome = true;
     localStorage.setItem(key, JSON.stringify(sent));
     await loadMessages();
@@ -320,7 +320,7 @@ async function checkProactiveMessages(){
     var since2 = new Date(); since2.setDate(since2.getDate()-2);
     var jRes = await sb.from('journal').select('date').eq('user_id',USER.id).gte('date',since2.toISOString().slice(0,10)).limit(1);
     if((jRes.data||[]).length === 0 && p.prenom){
-      await sendAutoMessage('Bonjour '+p.prenom+' ! 🔥 Vous n\'avez pas enregistré de repas depuis 2 jours. Reprendre le suivi même partiellement aide à maintenir vos progrès. Comment se passe votre semaine ?');
+      await sendAutoMessage('Bonjour '+p.prenom+' ! \ud83d\udd25 Vous n\'avez pas enregistr\u00e9 de repas depuis 2 jours. Reprendre le suivi m\u00eame partiellement aide \u00e0 maintenir vos progr\u00e8s. Comment se passe votre semaine ?');
       sent['inactive_'+today()] = true;
       localStorage.setItem(key, JSON.stringify(sent));
       await loadMessages();
@@ -333,7 +333,7 @@ async function checkProactiveMessages(){
   if((p.jour_bilan||'dimanche') === todayName && !sent['bilan_'+today()]){
     var bilanRes = await sb.from('bilans').select('id').eq('user_id',USER.id).eq('date',today()).limit(1);
     if((bilanRes.data||[]).length === 0 && p.prenom){
-      await sendAutoMessage('C\'est votre jour de bilan '+p.prenom+' ! 📊 Prenez quelques minutes pour faire le point sur votre semaine — cela permet d\'ajuster votre plan si besoin. Bonne semaine !');
+      await sendAutoMessage('C\'est votre jour de bilan '+p.prenom+' ! \ud83d\udcca Prenez quelques minutes pour faire le point sur votre semaine \u2014 cela permet d\'ajuster votre plan si besoin. Bonne semaine !');
       sent['bilan_'+today()] = true;
       localStorage.setItem(key, JSON.stringify(sent));
       await loadMessages();
@@ -415,7 +415,7 @@ async function sendMessage(){
       var pub = sb.storage.from('chat-attachments').getPublicUrl(path);
       attachmentUrl = pub.data.publicUrl;
     } else {
-      console.warn('[Cap Santé] echec upload piece jointe:', upl.error.message);
+      console.warn('[Cap Sant\u00e9] echec upload piece jointe:', upl.error.message);
     }
   }
 
@@ -423,7 +423,7 @@ async function sendMessage(){
     user_id: USER.id,
     sender_id: USER.id,
     is_admin_sender: false,
-    content: content || '📷 Photo',
+    content: content || '\ud83d\udcf7 Photo',
     attachment_url: attachmentUrl,
     read_by_user: true,
     read_by_admin: false
@@ -446,7 +446,7 @@ async function notifyByEmail(messageId){
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body: JSON.stringify({ message_id: messageId })
     });
-  }catch(e){ console.warn('[Cap Santé] notification email non envoyee:', e); }
+  }catch(e){ console.warn('[Cap Sant\u00e9] notification email non envoyee:', e); }
 }
 
 async function markReadByUser(){
