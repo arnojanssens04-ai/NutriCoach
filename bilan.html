@@ -522,7 +522,9 @@ function computeKcalCible(prof, adj){
 // programme a fait : rien, -200, +200, et où se situe la cible résultante.
 async function logKcalDecision(bilanId, delta, raison, kcalCible){
   if(!bilanId){
-    console.warn('[Cap Santé] logKcalDecision : bilanId manquant — l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistré pour ce bilan.');
+    var msg1 = 'logKcalDecision : bilanId manquant \u2014 l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistr\u00e9 pour ce bilan.';
+    console.warn('[Cap Sant\u00e9] '+msg1);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg1);
     return;
   }
   var r = await sb.from('bilans').update({
@@ -531,9 +533,13 @@ async function logKcalDecision(bilanId, delta, raison, kcalCible){
     kcal_cible_apres: kcalCible
   }).eq('id', bilanId).select();
   if(r.error){
-    console.warn('[Cap Santé] logKcalDecision : échec de la mise à jour —', r.error.message);
+    var msg2 = 'logKcalDecision : \u00e9chec de la mise \u00e0 jour \u2014 '+r.error.message;
+    console.warn('[Cap Sant\u00e9] '+msg2);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg2);
   } else if(!r.data || !r.data.length){
-    console.warn('[Cap Santé] logKcalDecision : la mise à jour n\'a touché aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId);
+    var msg3 = 'logKcalDecision : la mise \u00e0 jour n\'a touch\u00e9 aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId;
+    console.warn('[Cap Sant\u00e9] '+msg3);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg3);
   }
 }
 
