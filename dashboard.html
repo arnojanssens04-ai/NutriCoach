@@ -1294,6 +1294,17 @@ var sb = supabase.createClient(SURL, SKEY);
 // \u2500\u2500 STATE \u2500\u2500
 var USER = null, PROF = null;
 
+// Supabase renvoie parfois des dates SANS indicateur de fuseau (ex:
+// "2026-08-05T06:55:32.38"), que JavaScript interpr\u00e8te alors comme une
+// heure LOCALE au lieu d'UTC \u2014 d\u00e9calage d'environ 2h en \u00e9t\u00e9 (CEST). Cette
+// fonction force l'interpr\u00e9tation UTC dans tous les cas.
+function parseUTC(ts){
+  if(!ts) return new Date(NaN);
+  var s = String(ts);
+  if(!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
+
 // \u2500\u2500 ATTRAPE-ERREURS VISIBLE (admin uniquement) \u2500\u2500
 // F12 \u00e9tant bloqu\u00e9 par protect.js, impossible de voir les erreurs JS dans
 // la console habituelle. Ce filet affiche directement sur la page toute
@@ -2804,10 +2815,22 @@ function updateNotifBell(){
 // Marque tout comme lu d'un coup : messages non lus + annonces non vues,
 // pour vider la cloche sans avoir \u00e0 ouvrir chaque conversation une par une.
 async function clearAllNotifications(){
-  var r1 = await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false);
-  var r2 = await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
-  if(r1.error || r2.error){
-    var errMsg = (r1.error?'messages: '+r1.error.message+' ':'')+(r2.error?'profiles: '+r2.error.message:'');
+  var hadMessages = UNREAD_MESSAGES_COUNT > 0;
+  var r1 = await sb.from('messages').update({read_by_user:true}).eq('user_id',USER.id).eq('is_admin_sender',true).eq('read_by_user',false).select();
+  var r2 = await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id).select();
+
+  // Un UPDATE bloqu\u00e9 par une policy RLS ne remonte g\u00e9n\u00e9ralement PAS
+  // d'erreur explicite \u2014 il \u00e9choue silencieusement en ne touchant aucune
+  // ligne. V\u00e9rifier uniquement .error ne suffisait donc pas ; on v\u00e9rifie
+  // maintenant aussi que des lignes ont r\u00e9ellement \u00e9t\u00e9 modifi\u00e9es.
+  var messagesBlocked = hadMessages && (!r1.data || r1.data.length===0) && !r1.error;
+  var profileBlocked = (!r2.data || r2.data.length===0) && !r2.error;
+
+  if(r1.error || r2.error || messagesBlocked || profileBlocked){
+    var errMsg = (r1.error?'messages: '+r1.error.message+' ':'')
+      +(r2.error?'profiles: '+r2.error.message+' ':'')
+      +(messagesBlocked?'messages: 0 ligne modifi\u00e9e (policy RLS UPDATE manquante ?) ':'')
+      +(profileBlocked?'profiles: 0 ligne modifi\u00e9e (policy RLS UPDATE manquante ?)':'');
     toast('\u26a0\ufe0f \u00c9chec de l\'effacement (probablement RLS) : '+errMsg);
     if(typeof window._jsErrors!=='undefined'){
       window._jsErrors.push('clearAllNotifications a \u00e9chou\u00e9 : '+errMsg);
@@ -2835,18 +2858,18 @@ async function toggleNotifDrawer(){
 
   var msgR = await sb.from('messages').select('*').eq('user_id',USER.id).eq('is_admin_sender',true).order('created_at',{ascending:false}).limit(6);
   var msgs = (msgR.data||[]).map(function(m){
-    return { type:'message', date:m.created_at, unread:!m.read_by_user,
+    return { type:'message', id:m.id, date:m.created_at, unread:!m.read_by_user,
       snippet:(m.content||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udcac' };
   });
 
   var lastSeen = (PROF && PROF.last_seen_annonce_at) || '1970-01-01';
   var annR = await sb.from('annonces').select('*').order('created_at',{ascending:false}).limit(6);
   var anns = (annR.data||[]).map(function(a){
-    return { type:'annonce', date:a.created_at, unread:new Date(a.created_at)>new Date(lastSeen),
+    return { type:'annonce', id:a.id, date:a.created_at, unread:parseUTC(a.created_at)>parseUTC(lastSeen),
       snippet:(a.titre||a.contenu||'').replace(/\n+/g,' ').trim(), icon:'\ud83d\udce3' };
   });
 
-  var combined = msgs.concat(anns).sort(function(a,b){ return new Date(b.date)-new Date(a.date); }).slice(0,10);
+  var combined = msgs.concat(anns).sort(function(a,b){ return parseUTC(b.date)-parseUTC(a.date); }).slice(0,10);
   var list = document.getElementById('notif-list');
   if(!combined.length){
     list.innerHTML = '<div style="padding:20px 15px;text-align:center;color:var(--text3);font-size:.8rem">Aucune notification pour l\'instant.</div>';
@@ -2854,13 +2877,32 @@ async function toggleNotifDrawer(){
     list.innerHTML = combined.map(function(n){
       var snippet = n.snippet;
       if(snippet.length>78) snippet = snippet.slice(0,78)+'\u2026';
-      return '<div style="padding:10px 12px;border-radius:9px;'+(n.unread?'background:var(--gold-l);':'')+'margin-bottom:2px">'
+      return '<div onclick="openNotifItem(\''+n.type+'\',\''+n.id+'\')" style="padding:10px 12px;border-radius:9px;cursor:pointer;'+(n.unread?'background:var(--gold-l);':'')+'margin-bottom:2px" onmouseover="this.style.filter=\'brightness(0.97)\'" onmouseout="this.style.filter=\'\'">'
         +'<div style="font-size:.82rem;color:var(--text);line-height:1.45">'+n.icon+' '+esc(snippet)+'</div>'
-        +'<div style="font-size:.68rem;color:var(--text3);margin-top:3px">'+new Date(n.date).toLocaleDateString('fr-BE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'</div>'
+        +'<div style="font-size:.68rem;color:var(--text3);margin-top:3px">'+fmtNotifDate(n.date)+'</div>'
         +'</div>';
     }).join('');
   }
   drawer.style.display = 'block';
+}
+
+function fmtNotifDate(ts){
+  return parseUTC(ts).toLocaleDateString('fr-BE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'});
+}
+
+// Clique sur une notification pr\u00e9cise \u2014 la marque comme lue puis navigue
+// vers l'endroit d'o\u00f9 elle vient (chat pour un message, annonces pour une
+// annonce), plut\u00f4t que de rester coinc\u00e9 dans le panneau d\u00e9roulant.
+async function openNotifItem(type, id){
+  if(type==='message'){
+    await sb.from('messages').update({read_by_user:true}).eq('id',id);
+    window.location.href = 'chat.html';
+  } else if(type==='annonce'){
+    if(PROF){
+      await sb.from('profiles').update({last_seen_annonce_at: new Date().toISOString()}).eq('id',USER.id);
+    }
+    window.location.href = 'annonces.html';
+  }
 }
 document.addEventListener('click', function(e){
   var drawer = document.getElementById('notif-drawer');
