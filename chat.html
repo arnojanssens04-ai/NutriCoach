@@ -59,6 +59,20 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .bubble-time { font-size:.63rem; color:var(--text3); margin-top:3px; display:flex; align-items:center; gap:3px; }
 .bubble-row.from-admin .bubble-time { justify-content:flex-start; }
 .bubble-row.from-user  .bubble-time { justify-content:flex-end; }
+.msg-edited-tag { font-style:italic; opacity:.75; }
+.bubble-deleted { font-style:italic; color:var(--text3); background:var(--bg2)!important; }
+.msg-menu-wrap { position:relative; align-self:flex-end; }
+.msg-menu-btn { background:none; border:none; color:var(--text3); font-size:1rem; cursor:pointer; padding:2px 6px; line-height:1; }
+.msg-menu { display:none; position:absolute; right:0; top:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.15); z-index:50; min-width:120px; overflow:hidden; }
+.msg-menu.open { display:block; }
+.msg-menu button { display:block; width:100%; text-align:left; padding:9px 14px; background:none; border:none; font-size:.82rem; color:var(--text); cursor:pointer; }
+.msg-menu button:hover { background:var(--bg2); }
+.msg-menu button.msg-menu-danger { color:var(--rose); }
+.msg-edit-ta { width:100%; min-height:60px; border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:.88rem; resize:vertical; background:var(--bg); color:var(--text); }
+.msg-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+.msg-edit-actions button { padding:6px 12px; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; }
+.msg-edit-cancel { background:var(--bg2); color:var(--text2); }
+.msg-edit-save { background:var(--gold); color:#fff; }
 .bubble-sender { font-size:.67rem; color:var(--sage); font-weight:600; margin-bottom:3px; }
 .read-tick { font-size:.72rem; }
 .read-tick.sent { color:rgba(255,255,255,0.5); }
@@ -210,14 +224,80 @@ async function loadMessages(){
 
   thread.innerHTML = msgs.map(function(m){
     var isAdmin = m.is_admin_sender;
-    var readTick = !isAdmin ? '<span class="read-tick '+(m.read_by_admin?'read':'sent')+'">'+(m.read_by_admin?'✓✓':'✓')+'</span>' : '';
-    var attachHtml = m.attachment_url ? '<img src="'+esc(m.attachment_url)+'" alt="Pièce jointe">' : '';
+    var readTick = !isAdmin ? '<span class="read-tick '+(m.read_by_admin?'read':'sent')+'">'+(m.read_by_admin?'\u2713\u2713':'\u2713')+'</span>' : '';
+    var isMine = m.sender_id===USER.id;
+    var isDeleted = !!m.deleted_at;
+    var withinEditWindow = isMine && !isDeleted && (Date.now()-new Date(m.created_at).getTime()) < 5*60*1000;
+    var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
+
+    if(isDeleted){
+      return '<div class="bubble-row '+(isAdmin?'from-admin':'from-user')+'">'
+        +'<div><div class="bubble bubble-deleted">Message supprim\u00e9</div>'
+        +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div></div>'
+        +'</div>';
+    }
+
+    var attachHtml = m.attachment_url ? '<img src="'+esc(m.attachment_url)+'" alt="Pi\u00e8ce jointe">' : '';
+    var menuHtml = isMine ? (
+      '<div class="msg-menu-wrap">'
+        +'<button class="msg-menu-btn" onclick="toggleMsgMenu(\''+m.id+'\')">\u22ef</button>'
+        +'<div class="msg-menu" id="msg-menu-'+m.id+'">'
+          +(withinEditWindow ? '<button onclick="startEditMessage(\''+m.id+'\')">Modifier</button>' : '')
+          +'<button onclick="deleteMessage(\''+m.id+'\')" class="msg-menu-danger">Supprimer</button>'
+        +'</div>'
+      +'</div>'
+    ) : '';
+
     return '<div class="bubble-row '+(isAdmin?'from-admin':'from-user')+'">'
-      +'<div><div class="bubble">'+(isAdmin?'<div class="bubble-sender">Support Cap Santé</div>':'')+esc(m.content)+attachHtml+'</div>'
-      +'<div class="bubble-time">'+fmtTime(m.created_at)+' '+readTick+'</div></div>'
+      +'<div><div class="bubble" id="bubble-content-'+m.id+'">'+(isAdmin?'<div class="bubble-sender">Support Cap Sant\u00e9</div>':'')+esc(m.content)+attachHtml+'</div>'
+      +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+' '+readTick+'</div></div>'
+      +menuHtml
       +'</div>';
   }).join('');
   thread.scrollTop = thread.scrollHeight;
+}
+
+// Menu \u00b7\u00b7\u00b7 (modifier/supprimer) \u2014 un seul ouvert \u00e0 la fois.
+function toggleMsgMenu(id){
+  var allMenus = document.querySelectorAll('.msg-menu.open');
+  allMenus.forEach(function(el){ if(el.id!=='msg-menu-'+id) el.classList.remove('open'); });
+  var menu = document.getElementById('msg-menu-'+id);
+  if(menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.msg-menu-wrap')){
+    document.querySelectorAll('.msg-menu.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+
+function startEditMessage(id){
+  toggleMsgMenu(id);
+  var bubbleEl = document.getElementById('bubble-content-'+id);
+  var currentText = bubbleEl.textContent;
+  bubbleEl.innerHTML = '<textarea id="edit-ta-'+id+'" class="msg-edit-ta">'+esc(currentText)+'</textarea>'
+    +'<div class="msg-edit-actions">'
+      +'<button onclick="cancelEditMessage()" class="msg-edit-cancel">Annuler</button>'
+      +'<button onclick="saveEditMessage(\''+id+'\')" class="msg-edit-save">Enregistrer</button>'
+    +'</div>';
+  document.getElementById('edit-ta-'+id).focus();
+}
+function cancelEditMessage(){
+  loadMessages();
+}
+async function saveEditMessage(id){
+  var ta = document.getElementById('edit-ta-'+id);
+  var newContent = ta.value.trim();
+  if(!newContent){ return; }
+  var r = await sb.from('messages').update({content:newContent, edited_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ toast('\u26a0\ufe0f Modification impossible : '+r.error.message); return; }
+  loadMessages();
+}
+async function deleteMessage(id){
+  toggleMsgMenu(id);
+  if(!confirm('Supprimer ce message ?')) return;
+  var r = await sb.from('messages').update({deleted_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ toast('\u26a0\ufe0f Suppression impossible : '+r.error.message); return; }
+  loadMessages();
 }
 
 async function checkProactiveMessages(){
