@@ -3328,6 +3328,7 @@ async function refreshDash(){
   entries.forEach(function(e){if(!byMeal[e.repas])byMeal[e.repas]=[];byMeal[e.repas].push(e);});
   var mg=document.getElementById('meals-grid');
   var hideKcalHere = PROF && PROF.hide_exact_kcal === true;
+  var glycDebugLines = []; // DIAGNOSTIC TEMPORAIRE -- a retirer une fois le bug identifie
   mg.innerHTML=activeMealIds().map(function(mid){
     var meta=MEAL_META[mid];
     var foods=byMeal[mid]||[];
@@ -3340,8 +3341,18 @@ async function refreshDash(){
     // voir evaluateGlycemicImpact() / glycemicMealBadgeHTML() dans
     // regles-pathologies.js.
     var mealGlyc = (typeof glycemicMealBadgeHTML==='function') ? glycemicMealBadgeHTML(foods) : '';
+    // DIAGNOSTIC TEMPORAIRE -- capture les valeurs reelles pour comprendre
+    // pourquoi le badge n'appara\u00eet plus. A retirer une fois la cause trouv\u00e9e.
+    if(foods.length && typeof evaluateGlycemicImpact==='function'){
+      var dbgPathos = (PROF && PROF.pathologies) || [];
+      var dbg = evaluateGlycemicImpact(foods);
+      glycDebugLines.push(meta.l+': diabete='+(dbgPathos.indexOf('diabetes')>=0)+' netCarbs='+dbg.netCarbs.toFixed(1)+' bufferRatio='+dbg.bufferRatio.toFixed(2)+' state='+dbg.state+' badgeVide='+(mealGlyc===''));
+    }
     return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+'</div>';
   }).join('');
+  if(glycDebugLines.length && typeof toast==='function'){
+    toast('\ud83d\udd0d '+glycDebugLines.join(' \u00b7 '));
+  }
   // Alerts
   var alerts=genAlerts(T,tgt,pathos,entries,SATIETY_TODAY);
   var az=document.getElementById('alerts-zone');
