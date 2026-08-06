@@ -41,7 +41,8 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .bubble-row { display:flex; margin-bottom:12px; }
 .bubble-row.from-admin { justify-content:flex-end; }
 .bubble-row.from-user { justify-content:flex-start; }
-.bubble { max-width:65%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+.bubble { max-width:65%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; }
+.bubble-emoji-only { background:none!important; border:none!important; padding:2px 0!important; font-size:2rem!important; line-height:1.2!important; }
 .bubble-row.from-user .bubble { background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
 .bubble-row.from-admin .bubble { background:var(--gold); color:#fff; border-bottom-right-radius:4px; }
 .bubble-time { font-size:.65rem; color:var(--text3); margin-top:4px; }
@@ -293,6 +294,12 @@ function renderThread(uid){
     // envoy\u00e9e sans l\u00e9gende (voir chat.html) \u2014 inutile de l'afficher en plus
     // de l'image elle-m\u00eame, sinon \u00e7a fait doublon.
     var textHtml = (m.content && m.content!=='\ud83d\udcf7 Photo') ? esc(m.content) : '';
+    // Message compos\u00e9 UNIQUEMENT d'emoji(s) (ex: "\ud83d\ude4f" tout seul) \u2192 affich\u00e9 en
+    // grand, sans fond de bulle, comme dans WhatsApp/iMessage. Volontairement
+    // strict (pas de texte du tout \u00e0 c\u00f4t\u00e9) pour ne jamais mal classer un
+    // message texte qui contient juste un emoji en plus de mots.
+    var isEmojiOnly = !!m.content && !m.attachment_url && /^(?:\s*(?:\p{Extended_Pictographic}|\u200d|\ufe0f)\s*)+$/u.test(m.content);
+    var bubbleCls = 'bubble' + (isEmojiOnly ? ' bubble-emoji-only' : '');
 
     var menuHtml = isMine ? (
       '<div class="msg-menu-wrap">'
@@ -305,7 +312,7 @@ function renderThread(uid){
     ) : '';
 
     return '<div class="bubble-row '+side+'"><div>'
-      +'<div class="bubble" id="bubble-content-'+m.id+'">'+textHtml+attachHtml+'</div>'
+      +'<div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+textHtml+attachHtml+'</div>'
       +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+'</div>'
       +'</div>'+menuHtml+'</div>';
   }).join('');
