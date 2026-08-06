@@ -1401,14 +1401,19 @@ function compareVersions(a,b){
 // Les entr\u00e9es sont d\u00e9sormais r\u00e9dig\u00e9es depuis maj.html (admin) et stock\u00e9es
 // dans la table Supabase "changelog" \u2014 plus besoin de me redemander \u00e0
 // chaque mise \u00e0 jour, ni de retoucher ce fichier pour \u00e9crire une note.
+//
+// Le "vu/pas vu" est stock\u00e9 sur le PROFIL (colonne
+// profiles.last_seen_changelog_version), pas dans le localStorage du
+// navigateur : suit vraiment le compte, pas l'appareil \u2014 se d\u00e9connecter/
+// reconnecter, ou changer de t\u00e9l\u00e9phone, ne fait plus rappara\u00eetre le popup
+// pour rien, et \u00e0 l'inverse une vraie nouvelle version s'affiche bien m\u00eame
+// sur un nouvel appareil.
 async function checkChangelog(){
-  // Supprime les anciennes cl\u00e9s (NutriCoach) pour forcer l'affichage \u00e0 tous
-  localStorage.removeItem('nutricoach_changelog_seen');
   var r = await sb.from('changelog').select('*').eq('published', true).order('created_at', {ascending:true});
   var CHANGELOG = (r.data||[]).map(function(row){ return {v:row.version, date:row.date_label, items:row.items||[]}; });
   if(!CHANGELOG.length) return;
   var latest = CHANGELOG[CHANGELOG.length-1];
-  var seen = localStorage.getItem('capsante_changelog_seen')||'0';
+  var seen = (PROF && PROF.last_seen_changelog_version) || '0';
   if(compareVersions(latest.v, seen) <= 0) return;
   var unseen = CHANGELOG.filter(function(c){ return compareVersions(c.v, seen)>0; });
   var ov = document.createElement('div');
@@ -1424,7 +1429,8 @@ async function checkChangelog(){
     +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px">Compris !</button>'
     +'</div>';
   document.body.appendChild(ov);
-  localStorage.setItem('capsante_changelog_seen', latest.v);
+  PROF.last_seen_changelog_version = latest.v;
+  sb.from('profiles').update({last_seen_changelog_version: latest.v}).eq('id', USER.id).then(function(){});
 }
 
 // \u2500\u2500 AUTH CHECK \u2500\u2500
