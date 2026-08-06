@@ -1383,21 +1383,6 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2500);}
-// DIAGNOSTIC TEMPORAIRE -- attrape toute erreur JS ET tout echec de
-// chargement de fichier (script/lien introuvable, 404...) sur la page, et
-// l'affiche via toast() (pas de F12 disponible pour ce compte). Le 3e
-// argument "true" (phase de capture) est indispensable pour intercepter
-// les echecs de chargement de ressources -- sans lui, un script.js
-// introuvable echoue silencieusement, sans jamais remonter ici. A retirer
-// une fois le bug du tampon glycemique identifie et corrige.
-window.addEventListener('error', function(ev){
-  var target = ev.target;
-  if(target && target !== window && (target.tagName==='SCRIPT' || target.tagName==='LINK' || target.tagName==='IMG')){
-    toast('\ud83d\udca5 Fichier introuvable ou en echec : '+(target.src||target.href||'?'));
-  } else {
-    toast('\ud83d\udca5 Erreur JS: '+(ev.message||'inconnue')+' (ligne '+(ev.lineno||'?')+')');
-  }
-}, true);
 
 // \u2500\u2500 JOURNAL DES MISES \u00c0 JOUR \u2500\u2500 liste \u00e0 compl\u00e9ter \u00e0 chaque \u00e9volution
 // notable. La personne voit un pop-up uniquement si une version plus
@@ -2087,12 +2072,9 @@ function calcNutritionalQuality(entries, tgt){
 
   // 4. Diversit\u00e9 alimentaire \u2014 15 pts
   var groupCount = Object.keys(foodGroups).length;
-  // DIAGNOSTIC ADMIN DESACTIVE TEMPORAIREMENT -- entrait en collision avec
-  // le diagnostic du tampon glycemique (meme toast, le dernier ecrasait
-  // l'autre). A reactiver si besoin une fois le bug glycemique regle.
-  // if(PROF && PROF.role==='admin'){
-  //   toast('\ud83d\udd0d Groupes d\u00e9tect\u00e9s ('+groupCount+'/4 requis) : '+(Object.keys(foodGroups).join(', ')||'aucun'));
-  // }
+  if(PROF && PROF.role==='admin'){
+    toast('\ud83d\udd0d Groupes d\u00e9tect\u00e9s ('+groupCount+'/4 requis) : '+(Object.keys(foodGroups).join(', ')||'aucun'));
+  }
   score += Math.round(Math.min(1, groupCount/4) * 15);
   if(groupCount<3) tips.push({priority:4, msg:'Varier encore un peu plus les groupes d\'aliments enrichirait votre journ\u00e9e.'});
 
@@ -3387,7 +3369,6 @@ async function refreshDash(){
   entries.forEach(function(e){if(!byMeal[e.repas])byMeal[e.repas]=[];byMeal[e.repas].push(e);});
   var mg=document.getElementById('meals-grid');
   var hideKcalHere = PROF && PROF.hide_exact_kcal === true;
-  var glycDebugLines = []; // DIAGNOSTIC TEMPORAIRE -- a retirer une fois le bug identifie
   mg.innerHTML=activeMealIds().map(function(mid){
     var meta=MEAL_META[mid];
     var foods=byMeal[mid]||[];
@@ -3400,26 +3381,8 @@ async function refreshDash(){
     // voir evaluateGlycemicImpact() / glycemicMealBadgeHTML() dans
     // regles-pathologies.js.
     var mealGlyc = (typeof glycemicMealBadgeHTML==='function') ? glycemicMealBadgeHTML(foods) : '';
-    // DIAGNOSTIC TEMPORAIRE (v2, plus bavard) -- pousse une ligne dans TOUS
-    // les cas, meme quand foods est vide ou que les fonctions du moteur
-    // sont introuvables, pour savoir precisement laquelle des deux choses
-    // fait defaut. A retirer une fois la cause trouvee.
-    var fnImpact = typeof evaluateGlycemicImpact;
-    var fnBadge = typeof glycemicMealBadgeHTML;
-    if(foods.length===0){
-      glycDebugLines.push(meta.l+': vide (0 aliment)');
-    } else if(fnImpact!=='function'){
-      glycDebugLines.push(meta.l+': '+foods.length+' aliment(s) MAIS evaluateGlycemicImpact='+fnImpact+' (regles-pathologies.js pas charge ?)');
-    } else {
-      var dbgPathos = (PROF && PROF.pathologies) || [];
-      var dbg = evaluateGlycemicImpact(foods);
-      glycDebugLines.push(meta.l+': diabete='+(dbgPathos.indexOf('diabetes')>=0)+' netCarbs='+dbg.netCarbs.toFixed(1)+' bufferRatio='+dbg.bufferRatio.toFixed(2)+' state='+dbg.state+' badgeFn='+fnBadge+' badgeVide='+(mealGlyc===''));
-    }
     return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+'</div>';
   }).join('');
-  if(glycDebugLines.length && typeof toast==='function'){
-    toast('\ud83d\udd0d '+glycDebugLines.join(' \u00b7 '));
-  }
   // Alerts
   var alerts=genAlerts(T,tgt,pathos,entries,SATIETY_TODAY);
   var az=document.getElementById('alerts-zone');
