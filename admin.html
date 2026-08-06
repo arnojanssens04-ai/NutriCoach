@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Administration</title>
+<title>Cap Sant&#233; &#8212; Administration</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -69,7 +69,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .empty { text-align:center; padding:50px 16px; color:var(--text2); }
 .empty-i { font-size:2.2rem; margin-bottom:10px; }
 
-/* ── EDIT PANEL ── */
+/* &#9472;&#9472; EDIT PANEL &#9472;&#9472; */
 .ov { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:30px 16px; }
 .ov.on { display:flex; }
 .ov-card { background:var(--bg2); border:1px solid var(--border2); border-radius:18px; max-width:560px; width:100%; box-shadow:0 30px 80px rgba(0,0,0,.6); }
@@ -121,27 +121,28 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Santé</span> <span class="t-badge">Admin</span></div>
+  <div class="t-logo">Cap<span>Sant&#233;</span> <span class="t-badge">Admin</span></div>
   <div style="display:flex;gap:8px">
-    <a href="chat-admin.html" class="t-back">💬 Messages</a>
-    <a href="aliments.html" class="t-back">🍽️ Aliments</a>
-    <a href="bilan_recap.html" class="t-back">📊 Bilans</a>
-    <a href="dashboard.html" class="t-back">← Retour à l'app</a>
+    <a href="chat-admin.html" class="t-back">&#128172; Messages</a>
+    <a href="aliments.html" class="t-back">&#127869;&#65039; Aliments</a>
+    <a href="bilan_recap.html" class="t-back">&#128202; Bilans</a>
+    <a href="maj.html" class="t-back">&#10024; Mises &#224; jour</a>
+    <a href="dashboard.html" class="t-back">&#8592; Retour &#224; l'app</a>
   </div>
 </header>
 
 <div class="wrap">
   <div class="stats-row" id="stats-row">
-    <div class="stat-card"><div class="stat-val" id="st-total">—</div><div class="stat-lbl">Utilisateurs</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-active">—</div><div class="stat-lbl">Actifs 7j</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-age">—</div><div class="stat-lbl">Âge moyen</div></div>
-    <div class="stat-card"><div class="stat-val" id="st-patho">—</div><div class="stat-lbl">Patho. + fréquente</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-total">&#8212;</div><div class="stat-lbl">Utilisateurs</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-active">&#8212;</div><div class="stat-lbl">Actifs 7j</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-age">&#8212;</div><div class="stat-lbl">&#194;ge moyen</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-patho">&#8212;</div><div class="stat-lbl">Patho. + fr&#233;quente</div></div>
   </div>
 
   <div class="scan-section">
-    <h3>📷 Scans Photo IA</h3>
-    <div class="scan-sub">Nombre de photos analysées par jour — 14 derniers jours</div>
-    <div id="scan-days-list">Chargement…</div>
+    <h3>&#128247; Scans Photo IA</h3>
+    <div class="scan-sub">Nombre de photos analys&#233;es par jour &#8212; 14 derniers jours</div>
+    <div id="scan-days-list">Chargement&#8230;</div>
   </div>
 
   <div class="search-row">
@@ -151,9 +152,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="user-table" id="user-table">
     <div class="user-row header">
       <span>Utilisateur</span>
-      <span class="u-age-col">Âge / Poids</span>
+      <span class="u-age-col">&#194;ge / Poids</span>
       <span>Pathologies</span>
-      <span>Rôle</span>
+      <span>R&#244;le</span>
       <span></span>
     </div>
     <div id="user-rows"></div>
@@ -165,16 +166,16 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="ov-card">
     <div class="ov-card-hdr">
       <h3 id="edit-title">Modifier l'utilisateur</h3>
-      <button class="ov-close" onclick="closeEdit()">✕</button>
+      <button class="ov-close" onclick="closeEdit()">&#10005;</button>
     </div>
     <div class="ov-card-body">
       <div class="field"><label>Email (non modifiable)</label><input type="text" id="e-email" disabled></div>
       <div class="row2">
-        <div class="field"><label>Prénom</label><input type="text" id="e-prenom"></div>
+        <div class="field"><label>Pr&#233;nom</label><input type="text" id="e-prenom"></div>
         <div class="field"><label>Nom</label><input type="text" id="e-nom"></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Âge</label><input type="number" id="e-age"></div>
+        <div class="field"><label>&#194;ge</label><input type="number" id="e-age"></div>
         <div class="field"><label>Sexe</label>
           <select id="e-sexe"><option value="F">Femme</option><option value="M">Homme</option><option value="A">Autre</option></select>
         </div>
@@ -184,15 +185,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         <div class="field"><label>Poids (kg)</label><input type="number" id="e-poids" step="0.1"></div>
       </div>
       <div class="row2">
-        <div class="field"><label>Poids visé (kg)</label><input type="number" id="e-poids-vise" step="0.1"></div>
+        <div class="field"><label>Poids vis&#233; (kg)</label><input type="number" id="e-poids-vise" step="0.1"></div>
         <div class="field"><label>Objectif kcal/j</label><input type="number" id="e-kcal"></div>
       </div>
-      <div class="field"><label>Niveau d'activité</label>
+      <div class="field"><label>Niveau d'activit&#233;</label>
         <select id="e-activite">
-          <option value="sedentary">Sédentaire</option>
-          <option value="light">Légèrement actif</option>
-          <option value="moderate">Modérément actif</option>
-          <option value="active">Très actif</option>
+          <option value="sedentary">S&#233;dentaire</option>
+          <option value="light">L&#233;g&#232;rement actif</option>
+          <option value="moderate">Mod&#233;r&#233;ment actif</option>
+          <option value="active">Tr&#232;s actif</option>
           <option value="sportif">Sportif</option>
         </select>
       </div>
@@ -207,25 +208,25 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
           <option value="samedi">Samedi</option>
         </select>
       </div>
-      <div class="field"><label>Rôle</label>
+      <div class="field"><label>R&#244;le</label>
         <select id="e-role"><option value="user">Utilisateur</option><option value="admin">Administrateur</option></select>
       </div>
       <div class="field"><label>Pathologies</label>
         <div class="patho-grid" id="e-pathos">
-          <div class="pc" data-p="diabetes" onclick="toggleEditPatho(this)">🩸 Diabète<div class="pc-chk"></div></div>
-          <div class="pc" data-p="cholesterol" onclick="toggleEditPatho(this)">🫀 Cholestérol<div class="pc-chk"></div></div>
-          <div class="pc" data-p="hypertension" onclick="toggleEditPatho(this)">💉 Hypertension<div class="pc-chk"></div></div>
-          <div class="pc" data-p="cardiac" onclick="toggleEditPatho(this)">❤️ Cardiaque<div class="pc-chk"></div></div>
-          <div class="pc" data-p="renal" onclick="toggleEditPatho(this)">🫘 Rénal<div class="pc-chk"></div></div>
-          <div class="pc" data-p="obesity" onclick="toggleEditPatho(this)">⚖️ Obésité<div class="pc-chk"></div></div>
+          <div class="pc" data-p="diabetes" onclick="toggleEditPatho(this)">&#129656; Diab&#232;te<div class="pc-chk"></div></div>
+          <div class="pc" data-p="cholesterol" onclick="toggleEditPatho(this)">&#129728; Cholest&#233;rol<div class="pc-chk"></div></div>
+          <div class="pc" data-p="hypertension" onclick="toggleEditPatho(this)">&#128137; Hypertension<div class="pc-chk"></div></div>
+          <div class="pc" data-p="cardiac" onclick="toggleEditPatho(this)">&#10084;&#65039; Cardiaque<div class="pc-chk"></div></div>
+          <div class="pc" data-p="renal" onclick="toggleEditPatho(this)">&#129752; R&#233;nal<div class="pc-chk"></div></div>
+          <div class="pc" data-p="obesity" onclick="toggleEditPatho(this)">&#9878;&#65039; Ob&#233;sit&#233;<div class="pc-chk"></div></div>
         </div>
       </div>
-      <div class="field"><label>Journal récent (7 derniers jours)</label>
-        <div class="journal-mini" id="e-journal"><div style="color:var(--text3);font-size:.78rem">Chargement…</div></div>
+      <div class="field"><label>Journal r&#233;cent (7 derniers jours)</label>
+        <div class="journal-mini" id="e-journal"><div style="color:var(--text3);font-size:.78rem">Chargement&#8230;</div></div>
       </div>
     </div>
     <div class="ov-card-ftr">
-      <button class="btn-danger" onclick="deleteUserData()">Supprimer les données</button>
+      <button class="btn-danger" onclick="deleteUserData()">Supprimer les donn&#233;es</button>
       <button class="btn btn-cancel" onclick="closeEdit()">Annuler</button>
       <button class="btn btn-save" onclick="saveUser()">Enregistrer</button>
     </div>
@@ -242,19 +243,19 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var ALL_USERS = [];
 var EDITING_ID = null;
-var PATHO_META = { diabetes:{l:'Diabète',i:'🩸'}, cholesterol:{l:'Cholestérol',i:'🫀'}, hypertension:{l:'Hypertension',i:'💉'}, cardiac:{l:'Cardiaque',i:'❤️'}, renal:{l:'Rénal',i:'🫘'}, obesity:{l:'Obésité',i:'⚖️'} };
+var PATHO_META = { diabetes:{l:'Diab\u00e8te',i:'\ud83e\ude78'}, cholesterol:{l:'Cholest\u00e9rol',i:'\ud83e\udec0'}, hypertension:{l:'Hypertension',i:'\ud83d\udc89'}, cardiac:{l:'Cardiaque',i:'\u2764\ufe0f'}, renal:{l:'R\u00e9nal',i:'\ud83e\uded8'}, obesity:{l:'Ob\u00e9sit\u00e9',i:'\u2696\ufe0f'} };
 
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2500);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ── AUTH + ADMIN CHECK ──
+// \u2500\u2500 AUTH + ADMIN CHECK \u2500\u2500
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
   var uid = r.data.session.user.id;
   sb.from('profiles').select('role').eq('id',uid).single().then(function(res){
     if(!res.data || res.data.role !== 'admin'){
-      toast('⛔ Accès refusé — réservé aux administrateurs');
+      toast('\u26d4 Acc\u00e8s refus\u00e9 \u2014 r\u00e9serv\u00e9 aux administrateurs');
       setTimeout(function(){ window.location.href='dashboard.html'; }, 1500);
       return;
     }
@@ -263,10 +264,10 @@ sb.auth.getSession().then(function(r){
   });
 });
 
-// ── LOAD USERS ──
+// \u2500\u2500 LOAD USERS \u2500\u2500
 async function loadUsers(){
   var res = await sb.from('profiles').select('*').order('created_at',{ascending:false});
-  if(res.error){ toast('❌ '+res.error.message); return; }
+  if(res.error){ toast('\u274c '+res.error.message); return; }
   ALL_USERS = res.data || [];
   renderStats();
   renderUsers(ALL_USERS);
@@ -275,23 +276,23 @@ async function loadUsers(){
 function renderStats(){
   document.getElementById('st-total').textContent = ALL_USERS.length;
   var ages = ALL_USERS.filter(function(u){return u.age;}).map(function(u){return u.age;});
-  document.getElementById('st-age').textContent = ages.length ? Math.round(ages.reduce(function(a,b){return a+b;},0)/ages.length) : '—';
+  document.getElementById('st-age').textContent = ages.length ? Math.round(ages.reduce(function(a,b){return a+b;},0)/ages.length) : '\u2014';
   var pathoCounts = {};
   ALL_USERS.forEach(function(u){(u.pathologies||[]).forEach(function(p){pathoCounts[p]=(pathoCounts[p]||0)+1;});});
   var topPatho = Object.keys(pathoCounts).sort(function(a,b){return pathoCounts[b]-pathoCounts[a];})[0];
-  document.getElementById('st-patho').textContent = topPatho ? (PATHO_META[topPatho]||{l:topPatho}).l : '—';
+  document.getElementById('st-patho').textContent = topPatho ? (PATHO_META[topPatho]||{l:topPatho}).l : '\u2014';
   var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
   var recent = ALL_USERS.filter(function(u){return u.created_at && new Date(u.created_at) > weekAgo;});
   document.getElementById('st-active').textContent = recent.length;
 }
 
-// ── SCANS PHOTO IA — répartition par jour (14 derniers jours) ──
+// \u2500\u2500 SCANS PHOTO IA \u2014 r\u00e9partition par jour (14 derniers jours) \u2500\u2500
 var JOURS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 async function loadScanStats(){
   var el = document.getElementById('scan-days-list');
   var since = new Date(); since.setDate(since.getDate()-13); since.setHours(0,0,0,0);
   var res = await sb.from('photo_scan_logs').select('created_at').gte('created_at', since.toISOString());
-  if(res.error){ el.innerHTML = '<div class="scan-empty">Erreur de chargement</div>'; console.warn('[Cap Santé] scan stats:', res.error); return; }
+  if(res.error){ el.innerHTML = '<div class="scan-empty">Erreur de chargement</div>'; console.warn('[Cap Sant\u00e9] scan stats:', res.error); return; }
 
   // Regroupe par date (YYYY-MM-DD)
   var counts = {};
@@ -300,7 +301,7 @@ async function loadScanStats(){
     counts[d] = (counts[d]||0) + 1;
   });
 
-  // Construit les 14 derniers jours dans l'ordre, du plus récent au plus ancien
+  // Construit les 14 derniers jours dans l'ordre, du plus r\u00e9cent au plus ancien
   var days = [];
   var todayStr = new Date().toISOString().slice(0,10);
   for(var i=0;i<14;i++){
@@ -311,7 +312,7 @@ async function loadScanStats(){
 
   var max = Math.max.apply(null, days.map(function(d){return d.count;}).concat([1]));
   if(!days.some(function(d){return d.count>0;})){
-    el.innerHTML = '<div class="scan-empty">Aucun scan enregistré sur cette période</div>';
+    el.innerHTML = '<div class="scan-empty">Aucun scan enregistr\u00e9 sur cette p\u00e9riode</div>';
     return;
   }
 
@@ -327,18 +328,18 @@ async function loadScanStats(){
 
 function renderUsers(list){
   var el = document.getElementById('user-rows');
-  if(!list.length){ el.innerHTML = '<div class="empty"><div class="empty-i">👤</div><p>Aucun utilisateur trouvé</p></div>'; return; }
+  if(!list.length){ el.innerHTML = '<div class="empty"><div class="empty-i">\ud83d\udc64</div><p>Aucun utilisateur trouv\u00e9</p></div>'; return; }
   el.innerHTML = list.map(function(u){
     var name = (u.prenom||'')+' '+(u.nom||'') || '(sans nom)';
-    var pathoDots = (u.pathologies||[]).slice(0,4).map(function(p){return '<span class="u-patho-dot" title="'+(PATHO_META[p]||{l:p}).l+'">'+(PATHO_META[p]||{i:'•'}).i+'</span>';}).join('');
+    var pathoDots = (u.pathologies||[]).slice(0,4).map(function(p){return '<span class="u-patho-dot" title="'+(PATHO_META[p]||{l:p}).l+'">'+(PATHO_META[p]||{i:'\u2022'}).i+'</span>';}).join('');
     var roleCls = u.role==='admin' ? 'role-admin' : 'role-user';
     var roleLbl = u.role==='admin' ? 'Admin' : 'User';
     return '<div class="user-row" onclick="openEdit(\''+u.id+'\')">'
-      +'<div><div class="u-name">'+esc(name)+'</div><div class="u-email">'+esc(u.email||'—')+'</div></div>'
-      +'<div class="u-meta u-age-col">'+(u.age||'—')+' ans · '+(u.poids||'—')+'kg</div>'
-      +'<div class="u-pathos">'+(pathoDots||'<span style="color:var(--text3);font-size:.72rem">—</span>')+'</div>'
+      +'<div><div class="u-name">'+esc(name)+'</div><div class="u-email">'+esc(u.email||'\u2014')+'</div></div>'
+      +'<div class="u-meta u-age-col">'+(u.age||'\u2014')+' ans \u00b7 '+(u.poids||'\u2014')+'kg</div>'
+      +'<div class="u-pathos">'+(pathoDots||'<span style="color:var(--text3);font-size:.72rem">\u2014</span>')+'</div>'
       +'<div><span class="u-role '+roleCls+'">'+roleLbl+'</span></div>'
-      +'<div style="color:var(--text3)">→</div>'
+      +'<div style="color:var(--text3)">\u2192</div>'
       +'</div>';
   }).join('');
 }
@@ -352,7 +353,7 @@ function filterUsers(q){
   renderUsers(filtered);
 }
 
-// ── EDIT MODAL ──
+// \u2500\u2500 EDIT MODAL \u2500\u2500
 function openEdit(id){
   var u = ALL_USERS.find(function(x){return x.id===id;});
   if(!u) return;
@@ -390,12 +391,12 @@ function closeEdit(){
 
 async function loadUserJournal(uid){
   var el = document.getElementById('e-journal');
-  el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Chargement…</div>';
+  el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Chargement\u2026</div>';
   var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
   var weekAgoStr = weekAgo.toISOString().slice(0,10);
   var res = await sb.from('journal').select('*').eq('user_id',uid).gte('date',weekAgoStr).order('date',{ascending:false}).limit(20);
   if(res.error || !res.data || !res.data.length){
-    el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Aucune entrée récente</div>';
+    el.innerHTML = '<div style="color:var(--text3);font-size:.78rem">Aucune entr\u00e9e r\u00e9cente</div>';
     return;
   }
   el.innerHTML = res.data.map(function(e){
@@ -424,21 +425,21 @@ async function saveUser(){
   };
 
   var r = await sb.from('profiles').update(data).eq('id',EDITING_ID);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Profil mis à jour');
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  toast('\u2705 Profil mis \u00e0 jour');
   closeEdit();
   loadUsers();
 }
 
 async function deleteUserData(){
   if(!EDITING_ID) return;
-  if(!confirm('Supprimer toutes les données de ce profil (journal, historique, infos) ? Le compte de connexion devra être supprimé séparément via le dashboard Supabase Auth si besoin. Action irréversible.')) return;
+  if(!confirm('Supprimer toutes les donn\u00e9es de ce profil (journal, historique, infos) ? Le compte de connexion devra \u00eatre supprim\u00e9 s\u00e9par\u00e9ment via le dashboard Supabase Auth si besoin. Action irr\u00e9versible.')) return;
 
   await sb.from('journal').delete().eq('user_id',EDITING_ID);
   await sb.from('poids_history').delete().eq('user_id',EDITING_ID);
   var r = await sb.from('profiles').delete().eq('id',EDITING_ID);
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Données supprimées');
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  toast('\u2705 Donn\u00e9es supprim\u00e9es');
   closeEdit();
   loadUsers();
 }
