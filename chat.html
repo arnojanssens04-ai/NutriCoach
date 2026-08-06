@@ -52,7 +52,8 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .bubble-row { display:flex; margin-bottom:10px; }
 .bubble-row.from-admin { justify-content:flex-start; }
 .bubble-row.from-user  { justify-content:flex-end; }
-.bubble { max-width:78%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.55; word-break:break-word; white-space:pre-wrap; }
+.bubble { max-width:78%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.55; overflow-wrap:break-word; word-break:normal; white-space:pre-wrap; }
+.bubble-emoji-only { background:none!important; border:none!important; padding:2px 0!important; font-size:2rem!important; line-height:1.2!important; }
 .bubble-row.from-admin .bubble { background:var(--card2); border:1px solid var(--border); border-bottom-left-radius:4px; }
 .bubble-row.from-user  .bubble { background:var(--gold); color:#fff; border-bottom-right-radius:4px; }
 .bubble img { max-width:100%; border-radius:10px; margin-top:4px; display:block; }
@@ -249,6 +250,11 @@ async function loadMessages(){
     }
 
     var attachHtml = m.attachment_url ? '<img src="'+esc(m.attachment_url)+'" alt="Pi\u00e8ce jointe">' : '';
+    // Message compos\u00e9 UNIQUEMENT d'emoji(s) \u2192 affich\u00e9 en grand, sans fond de
+    // bulle, comme dans WhatsApp/iMessage. Pas appliqu\u00e9 aux messages admin
+    // (qui ont d\u00e9j\u00e0 le libell\u00e9 "Support Cap Sant\u00e9" \u00e0 l'int\u00e9rieur de la bulle).
+    var isEmojiOnly = !isAdmin && !!m.content && !m.attachment_url && /^(?:\s*(?:\p{Extended_Pictographic}|\u200d|\ufe0f)\s*)+$/u.test(m.content);
+    var bubbleCls = 'bubble' + (isEmojiOnly ? ' bubble-emoji-only' : '');
     var menuHtml = isMine ? (
       '<div class="msg-menu-wrap">'
         +'<button class="msg-menu-btn" onclick="toggleMsgMenu(\''+m.id+'\')">\u22ef</button>'
@@ -260,7 +266,7 @@ async function loadMessages(){
     ) : '';
 
     return '<div class="bubble-row '+(isAdmin?'from-admin':'from-user')+'">'
-      +'<div><div class="bubble" id="bubble-content-'+m.id+'">'+(isAdmin?'<div class="bubble-sender">Support Cap Sant\u00e9</div>':'')+esc(m.content)+attachHtml+'</div>'
+      +'<div><div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+(isAdmin?'<div class="bubble-sender">Support Cap Sant\u00e9</div>':'')+esc(m.content)+attachHtml+'</div>'
       +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+' '+readTick+'</div></div>'
       +menuHtml
       +'</div>';
