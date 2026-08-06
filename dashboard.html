@@ -1411,6 +1411,12 @@ function compareVersions(a,b){
 async function checkChangelog(){
   var r = await sb.from('changelog').select('*').eq('published', true).order('created_at', {ascending:true});
   var CHANGELOG = (r.data||[]).map(function(row){ return {v:row.version, date:row.date_label, items:row.items||[]}; });
+  // DIAGNOSTIC TEMPORAIRE (admin uniquement, pas public) -- a retirer une
+  // fois le probleme du changelog identifie.
+  if(PROF && PROF.role==='admin'){
+    var seenDbg = (PROF && PROF.last_seen_changelog_version) || '0';
+    toast('\ud83d\udd0d changelog: '+CHANGELOG.length+' ligne(s) publi\u00e9e(s)'+(r.error?' | erreur: '+r.error.message:'')+' | vu='+seenDbg+' | derni\u00e8re='+(CHANGELOG.length?CHANGELOG[CHANGELOG.length-1].v:'aucune'));
+  }
   if(!CHANGELOG.length) return;
   var latest = CHANGELOG[CHANGELOG.length-1];
   var seen = (PROF && PROF.last_seen_changelog_version) || '0';
