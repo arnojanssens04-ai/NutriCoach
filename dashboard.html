@@ -3649,7 +3649,12 @@ var recentMealGroups = [];
 async function loadRecentMeals(){
   var zone = document.getElementById('recent-meals-zone');
   if(!zone) return;
-  var since = new Date(); since.setDate(since.getDate()-13); since.setHours(0,0,0,0);
+  // Fen\u00eatre \u00e9largie \u00e0 30 jours pour bien rep\u00e9rer un motif habituel (un
+  // classique mang\u00e9 1-2x/semaine n'appara\u00eetrait jamais comme "habituel" sur
+  // une fen\u00eatre de seulement 13 jours) -- le filtre de pertinence plus bas
+  // \u00e9vite qu'un repas mang\u00e9 UNE seule fois, ancien, se fasse quand m\u00eame
+  // passer pour pertinent aujourd'hui.
+  var since = new Date(); since.setDate(since.getDate()-30); since.setHours(0,0,0,0);
   var r = await sb.from('journal').select('*')
     .eq('user_id', USER.id).eq('repas', activeMeal)
     .gte('date', since.toISOString().slice(0,10))
@@ -3660,13 +3665,17 @@ async function loadRecentMeals(){
 
   var byDate = {};
   entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
-  var dates = Object.keys(byDate).sort().reverse();
+  var dates = Object.keys(byDate).sort().reverse(); // du plus r\u00e9cent au plus ancien
 
-  // Rep\u00e8re les jours partageant EXACTEMENT le m\u00eame ensemble d'aliments
-  // (m\u00eame nom + quantit\u00e9 arrondie) \u2014 un vrai repas r\u00e9p\u00e9t\u00e9, pas juste
-  // "il a mang\u00e9 du riz deux fois cette semaine parmi autre chose".
+  // Signature bas\u00e9e UNIQUEMENT sur les noms d'aliments (plus les quantit\u00e9s) :
+  // un classique mang\u00e9 avec des portions l\u00e9g\u00e8rement diff\u00e9rentes d'un jour \u00e0
+  // l'autre reste reconnu comme LE M\u00caME repas habituel. Les entr\u00e9es
+  // affich\u00e9es/r\u00e9utilis\u00e9es sont toujours celles de l'occurrence la PLUS
+  // R\u00c9CENTE de ce repas (dates d\u00e9j\u00e0 tri\u00e9es du plus r\u00e9cent au plus ancien
+  // ci-dessus, donc le premier passage sur une signature capture la bonne
+  // occurrence sans traitement suppl\u00e9mentaire).
   function signature(dayEntries){
-    return dayEntries.map(function(e){ return e.aliment+'|'+Math.round(e.quantite); }).sort().join('||');
+    return dayEntries.map(function(e){ return e.aliment.toLowerCase().trim(); }).sort().join('||');
   }
   var groups = {};
   dates.forEach(function(d){
@@ -3675,23 +3684,46 @@ async function loadRecentMeals(){
     groups[sig].dates.push(d);
   });
 
-  recentMealGroups = Object.keys(groups).map(function(k){ return groups[k]; }).sort(function(a,b){
-    if(b.dates.length !== a.dates.length) return b.dates.length - a.dates.length;
-    return b.dates[0] < a.dates[0] ? 1 : -1;
-  }).slice(0, 6);
+  var TODAY_MS = new Date(today()+'T00:00:00').getTime();
+  var DAY_MS = 86400000;
+
+  recentMealGroups = Object.keys(groups).map(function(k){ return groups[k]; })
+    .filter(function(g){
+      // Un repas mang\u00e9 une SEULE fois doit rester vraiment r\u00e9cent pour \u00eatre
+      // propos\u00e9 (sinon un plat mang\u00e9 une fois il y a 3 semaines n'a aucune
+      // raison de sembler pertinent aujourd'hui). Un repas VRAIMENT habituel
+      // (2 fois ou plus) garde toute la fen\u00eatre de 30 jours \u2014 c'est
+      // justement le but de rep\u00e9rer ce motif, m\u00eame espac\u00e9 dans le temps.
+      if(g.dates.length >= 2) return true;
+      var daysAgo = Math.round((TODAY_MS - new Date(g.dates[0]+'T00:00:00').getTime()) / DAY_MS);
+      return daysAgo <= 6;
+    })
+    .sort(function(a,b){
+      if(b.dates.length !== a.dates.length) return b.dates.length - a.dates.length;
+      return b.dates[0] < a.dates[0] ? 1 : -1;
+    })
+    .slice(0, 6);
 
   if(!recentMealGroups.length){ zone.innerHTML=''; return; }
+
+  // Libell\u00e9 de date relatif et humain plut\u00f4t qu'un JJ/MM froid, coh\u00e9rent
+  // avec le ton chaleureux du reste de l'app.
+  function relativeDayLabel(dateStr){
+    var days = Math.round((TODAY_MS - new Date(dateStr+'T00:00:00').getTime()) / DAY_MS);
+    if(days<=0) return 'Aujourd\'hui';
+    if(days===1) return 'Hier';
+    if(days===2) return 'Avant-hier';
+    return 'Il y a '+days+'j';
+  }
 
   zone.innerHTML = '<div class="stitle" style="margin-top:2px">Vos repas r\u00e9cents</div>'
     + '<div class="recent-meals-strip">'
     + recentMealGroups.map(function(g,idx){
         var totalKcal = g.entries.reduce(function(s,e){ return s+(e.kcal||0); },0);
         var foodNames = g.entries.map(function(e){ return e.aliment; }).join(', ');
-        var lastDate = new Date(g.dates[0]+'T00:00:00');
-        var dateLbl = lastDate.getDate()+'/'+(lastDate.getMonth()+1);
         return '<div class="recent-meal-card">'
           + '<div class="recent-meal-date"><span>'+(g.dates.length>1?'Habituel':'R\u00e9cent')+'</span>'
-          + (g.dates.length>1 ? '<span class="recent-meal-freq">'+g.dates.length+'x cette p\u00e9riode</span>' : '<span>'+dateLbl+'</span>')
+          + (g.dates.length>1 ? '<span class="recent-meal-freq">'+g.dates.length+'x ce mois-ci</span>' : '<span>'+relativeDayLabel(g.dates[0])+'</span>')
           + '</div>'
           + '<div class="recent-meal-foods">'+esc(foodNames.length>62?foodNames.slice(0,62)+'\u2026':foodNames)+'</div>'
           + (PROF && PROF.hide_exact_kcal===true ? '' : '<div class="recent-meal-kcal">'+Math.round(totalKcal)+' kcal</div>')
