@@ -421,11 +421,6 @@ body {
   cursor: pointer; transition: all .15s; margin-bottom: 6px;
 }
 .res-item:hover { border-color: var(--border2); background: var(--card2); }
-.res-item-featured { border: 1.5px solid var(--gold); background: var(--gold-l); padding: 13px; }
-.res-featured-badge { font-size: .62rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
-.res-variants-toggle { display: block; width: 100%; text-align: center; padding: 8px; margin: 2px 0 8px; background: none; border: 1px dashed var(--border2); border-radius: 8px; color: var(--text2); font-size: .76rem; cursor: pointer; }
-.res-variants-toggle:hover { border-color: var(--gold); color: var(--gold); }
-.res-variants-wrap.collapsed { display: none; }
 .res-info { flex: 1; min-width: 0; }
 .res-name { font-size: .84rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .res-meta { font-size: .7rem; color: var(--text2); margin-top: 1px; }
@@ -1809,8 +1804,17 @@ function calcScore(T,tgt,pathos,entries){
   var bonusLegumes = legumesG >= 200 ? 5 : 0;      // +5 pts d\u00e8s 200g de l\u00e9gumes
   var bonusFibres30 = T.fibres >= 30 ? 3 : 0;      // +3 pts d\u00e8s 30g de fibres
 
-  var penAGS = 0;
-  if(T.lip>=15){ var pctAGS=T.ags/T.lip*100; penAGS=Math.pow(Math.max(0,pctAGS-15),2)*0.15; }
+  // Graisses satur\u00e9es \u2014 bas\u00e9 sur le % des CALORIES TOTALES du jour (rep\u00e8re
+  // OMS : max 10% des calories), pas sur le % des lipides. L'ancienne version
+  // (% des lipides, seuil 15%) explosait sur des repas parfaitement normaux
+  // d\u00e8s qu'on mangeait moins de volume total dans la journ\u00e9e (ex: lardons +
+  // fromage sur un repas \u00e0 1450kcal donnaient 42% des lipides -> p\u00e9nalit\u00e9
+  // \u00e9norme, alors que la MEME quantit\u00e9 de lardons/fromage dans une journ\u00e9e \u00e0
+  // 3300kcal ne repr\u00e9sentait plus qu'une petite part -> p\u00e9nalit\u00e9 minime pour
+  // un contenu identique). Baser sur les calories totales, comme les sucres,
+  // r\u00e8gle ce biais de volume \u00e0 la racine plut\u00f4t que de rafistoler un seuil.
+  var pctAGSKcal = T.kcal>0 ? (T.ags*9)/T.kcal*100 : 0;
+  var penAGS = pctAGSKcal>10 ? Math.pow(pctAGSKcal-10, 1.3)*0.5 : 0;
   var bonusAGS = penAGS===0 ? 2 : 0;               // +2 pts si les AGS restent sous le seuil
 
   var excesNa = Math.max(0,(T.na-6000)/1000);
@@ -1919,7 +1923,7 @@ function calcScore(T,tgt,pathos,entries){
       ok: versObjectif(T.lip,tgt.lip)>=0.85,
       conseil: T.lip>tgt.lip*1.2 ? 'Lipides \u00e9lev\u00e9s \u2014 surveillez sauces, charcuteries, fromages.' : null },
     { label:'Graisses satur\u00e9es', pts:Math.round(Math.max(0,10-penAGS)), max:10,
-      val: T.lip>0 ? Math.round(T.ags/T.lip*100)+'% des lipides (seuil 15%)' : '\u2014',
+      val: T.kcal>0 ? Math.round(pctAGSKcal)+'% des calories (rep\u00e8re OMS : 10%)' : '\u2014',
       ok: penAGS<2,
       conseil: penAGS>=2 ? 'AGS \u00e9lev\u00e9es \u2014 limitez beurre, charcuterie, fromages gras, viandes grasses.' : null },
     { label:'Sodium', pts:Math.round(Math.max(0,10-penNa*2)), max:10,
@@ -3719,7 +3723,7 @@ function tok(s){if(!s)return[];return s.toLowerCase().normalize('NFD').replace(/
 function normQ(q){return q.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
 function lev(a,b){var m=a.length,n=b.length;if(Math.abs(m-n)>3)return 99;var dp=[];for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=0;}for(var j=0;j<=n;j++)dp[0][j]=j;for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);return dp[m][n];}
 var CIQUAL_STOPWORDS = {chair:1,crue:1,cru:1,crus:1,crues:1,cuit:1,cuite:1,cuits:1,cuites:1,sans:1,avec:1,peau:1,pulpe:1,frais:1,fraiche:1,fra\u00eeche:1,nature:1,sel:1,ajoute:1,ajoutee:1,ajout\u00e9e:1,ajout\u00e9:1,precision:1,pr\u00e9cision:1,moyen:1,moyenne:1,aliment:1,general:1,g\u00e9n\u00e9ral:1,et:1,ou:1,un:1,une:1,de:1,du:1,des:1,la:1,le:1,les:1,a:1,au:1,aux:1};
-function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f.length<2)continue;if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;
+function scoreFn(qt,ft,nom){if(!qt.length)return 0;var s=0,nn=nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');for(var i=0;i<qt.length;i++){var q=qt[i];if(q.length<2)continue;var best=0;for(var j=0;j<ft.length;j++){var f=ft[j];if(f===q){best=Math.max(best,10);continue;}if(f.indexOf(q)===0||q.indexOf(f)===0){best=Math.max(best,7);continue;}if(f.indexOf(q)>=0||q.indexOf(f)>=0){best=Math.max(best,4);continue;}if(q.length>=4&&f.length>=4){var d=lev(q,f);if(d===1)best=Math.max(best,6);else if(d===2&&q.length>=6)best=Math.max(best,3);}}s+=best;}if(nn.indexOf(qt.join(' '))>=0)s+=15;
   // Les qualificatifs Ciqual quasi-universels (chair, crue, sans...) ne
   // doivent pas "diluer" artificiellement le score d'un nom par ailleurs
   // simple \u2014 seuls les mots qui changent vraiment l'identit\u00e9 de l'aliment
@@ -3740,83 +3744,7 @@ var CIQUAL_ALIAS = {
   // mot g\u00e9n\u00e9rique "viande" \u2014 sans alias, le mot-cl\u00e9 le plus courant ne
   // matche jamais le bon aliment (signal\u00e9 par des b\u00eata-testeurs).
   'viande hachee': '6259',  // \u2192 "Boeuf, steak hach\u00e9, cuit (aliment moyen)"
-  'viande hache':  '6259',
-
-  // \u2500\u2500 LOT 1/7 g\u00e9n\u00e9r\u00e9 via Gemini (voir prompt_gemini_alias_recherche.md),
-  // valid\u00e9 : chaque code v\u00e9rifi\u00e9 comme appartenant bien aux options fournies
-  // pour ce terme, aucune hallucination d\u00e9tect\u00e9e \u2014 sauf "yaourt", corrig\u00e9
-  // \u00e0 la main ci-dessous (Gemini n'avait vu que des variantes sucr\u00e9es/
-  // aromatis\u00e9es \u00e0 cause d'une troncature de la liste d'options, la vraie
-  // version "nature" existe bien dans Ciqual mais \u00e9tait hors de sa vue).
-  'eau':      '18066',  // Eau du robinet
-  'boisson':  '18029',  // Boisson rafra\u00eechissante sans alcool (aliment moyen)
-  'sauce':    '11184',  // Sauce (aliment moyen)
-  'boeuf':    '6100',   // Boeuf, entrec\u00f4te, partie maigre grill\u00e9e/po\u00eal\u00e9e
-  'lait':     '19033',  // Lait demi-\u00e9cr\u00e9m\u00e9 (aliment moyen)
-  'pain':     '7001',   // Pain blanc (baguette, boule...)
-  'sandwich': '25517',  // Sandwich baguette, jambon beurre, fait maison
-  'soupe':    '25903',  // Soupe aux l\u00e9gumes vari\u00e9s, pr\u00e9emball\u00e9e \u00e0 r\u00e9chauffer
-  'yaourt':   '19600',  // Yaourt ou lait ferment\u00e9, nature, sans pr\u00e9cision (aliment moyen) -- corrig\u00e9 \u00e0 la main, voir note ci-dessus
-  'huile':    '17001',  // Huile v\u00e9g\u00e9tale (aliment moyen)
-  'porc':     '28205',  // Porc, viande, cuite (aliment moyen)
-  'poulet':   '36018',  // Poulet, filet sans peau grill\u00e9/po\u00eal\u00e9
-
-  // \u2500\u2500 LOT 2/7
-  'gateau':   '23000',  // G\u00e2teau (aliment moyen)
-  'haricot':  '20030',  // Haricot vert, cuit
-  'pates':    '9811',   // P\u00e2tes s\u00e8ches, standard, cuites, sans sel ajout\u00e9
-  'veau':     '6564',   // Veau, viande, cuite (aliment moyen)
-  'saucisse': '30780',  // Saucisse (aliment moyen)
-  'dessert':  '24999',  // Dessert (aliment moyen)
-  'tomate':   '20385',  // Tomate sans pr\u00e9cision, crue (aliment moyen)
-  'agneau':   '21523',  // Agneau, viande, cuite (aliment moyen)
-  'jambon':   '28900',  // Jambon cuit, sup\u00e9rieur
-  'riz':      '9104',   // Riz blanc, cuit, sans sel ajout\u00e9
-  'cereales': '32003',  // C\u00e9r\u00e9ales pour petit d\u00e9jeuner (aliment moyen)
-  'crepe':    '23799',  // Cr\u00eape, nature, pr\u00e9emball\u00e9e, rayon frais
-  'farine':   '9436',   // Farine de bl\u00e9 tendre ou froment T55 (pour pains)
-  'galette':  '23801',  // Galette de sarrasin, nature, souple, pr\u00e9emball\u00e9e
-  'pizza':    '25516',  // Pizza (aliment moyen)
-  'nectar':   '2061',   // Nectar multifruit, standard
-  'oeuf':     '22010',  // Oeuf dur
-
-  // \u2500\u2500 LOT 3/7
-  'chocolat':  '31120', // Chocolat, tablette (aliment moyen)
-  'confiture': '30999', // Confiture ou marmelade, tout type de fruits (aliment moyen)
-  'matiere':   '16601', // Mati\u00e8re grasse tartinable, standard, douce (aliment moyen)
-  'saumon':    '25996', // Saumon, cuit, sans pr\u00e9cision (aliment moyen)
-  'champignon':'20010', // Champignon, tout type, cru
-  'rillettes': '8000',  // Rillettes traditionnelles de porc
-  'thon':      '26039', // Thon, au naturel, apperti\u00e9, \u00e9goutt\u00e9
-  'poisson':   '26140', // Poisson cuit (aliment moyen)
-  'noix':      '15005', // Noix, cerneau, s\u00e9ch\u00e9e
-  'glace':     '39500', // Glace \u00e0 l'eau ou sorbet ou cr\u00e8me glac\u00e9e, tout parfum (aliment moyen)
-  'beurre':    '16414', // Beurre ou assimil\u00e9, doux (aliment moyen)
-  'muesli':    '32004', // Muesli (aliment moyen)
-  'petales':   '32014', // P\u00e9tales de ma\u00efs nature
-  'carotte':   '20009', // Carotte, crue
-  'poivron':   '20041', // Poivron, vert, jaune ou rouge, cru
-  'cheval':    '6902',  // Cheval, viande r\u00f4tie/cuite au four
-
-  // \u2500\u2500 LOT 4/7
-  'maquereau': '26019', 'cafe':'18004', 'oignon':'20034', 'courge':'20139', 'chips':'4004',
-  'puree':'4047', 'abricot':'13000', 'compote':'13185', 'dinde':'36302', 'saucisson':'30300',
-  'truite':'27006', 'crevette':'10101', 'canard':'36202', 'croissant':'7603',
-  // \u2500\u2500 LOT 5/7
-  'petits':'20037', 'lentille':'20360', 'peche':'13398', 'rognon':'40401', 'hareng':'26014',
-  'biere':'5001', 'macedoine':'20051', 'feuillete':'25578', 'brocoli':'20350', 'fruit':'13999',
-  'cacahuete':'15002', 'sardine':'26034', 'anchois':'26700', 'vin':'5210', 'nuggets':'36027',
-  'langue':'40203', 'couscous':'25152',
-  // \u2500\u2500 LOT 6/7
-  'epinard':'20027', 'chayote':'13177', 'artichaut':'20000', 'ananas':'13002', 'poire':'13397',
-  'merguez':'30151', 'boudin':'8705', 'lieu':'26015', 'sole':'26060', 'omelette':'22500',
-  'brioche':'7746', 'lapin':'34002', 'boulettes':'25163', 'ble':'9081',
-  // \u2500\u2500 LOT 7/7
-  'bouchee':'25580', 'asperge':'20349', 'giraumon':'20814', 'igname':'53503', 'feve':'20500',
-  'prune':'13100', 'raisin':'13395', 'biscotte':'7300', 'mouton':'21007'
-  // Tous les autres termes envoy\u00e9s \u00e0 Gemini sur les 7 lots et r\u00e9pondus
-  // "aucun" restent volontairement sans alias (cat\u00e9gories trop larges,
-  // ex: sauce/biscuit/salade/pate/melange/plat/legumes...).
+  'viande hache':  '6259'
 };
 var CIQUAL_BLOCKLIST = [
   'big mac', 'kellogg s', 'kelloggs', 'special k'
@@ -3858,7 +3786,7 @@ function doSearch(q){
       var aliasFood = db.find(function(d){return d.code===aliasCode;});
       if(aliasFood){
         ciq = ciq.filter(function(x){return x.food.code!==aliasCode;});
-        ciq.unshift({food:aliasFood,score:50,source:'ciqual',featured:true});
+        ciq.unshift({food:aliasFood,score:50,source:'ciqual'});
       }
     }
   }
@@ -3880,14 +3808,13 @@ function renderRes(res){
       +'</div>';
     return;
   }
-
-  function itemHtml(r,i,featured){
+  sz.innerHTML=res.map(function(r,i){
     var f=r.food; var kcal=pN(f.kcal);
     var sc=r.source==='off'?'src-o':'src-c'; var sl=r.source==='off'?'OFF':'Ciqual';
+    // Si le nom affich\u00e9 (FR) diff\u00e8re du nom original (langue \u00e9trang\u00e8re), on le montre en dessous
     var showOriginal = f.nom_original && f.nom_original !== f.nom;
-    return '<div class="res-item'+(featured?' res-item-featured':'')+'" onclick="pickRes('+i+')">'
+    return '<div class="res-item" onclick="pickRes('+i+')">'
       +'<div class="res-info">'
-      +(featured?'<div class="res-featured-badge">\u2b50 Le plus courant</div>':'')
       +'<div class="res-name">'+esc(f.nom)+'</div>'
       +(showOriginal?'<div style="font-size:.68rem;color:var(--text3);margin-top:1px;font-style:italic">'+esc(f.nom_original)+'</div>':'')
       +'<div class="res-meta">P:'+esc(f.prot)+'g \u00b7 G:'+esc(f.gluc)+'g \u00b7 L:'+esc(f.lip)+'g</div>'
@@ -3895,24 +3822,7 @@ function renderRes(res){
       +'<span class="src-pill '+sc+'">'+sl+'</span>'
       +(kcal?'<span class="res-kcal">'+kcal+' kcal</span>':'')
       +'</div>';
-  }
-
-  var html;
-  // Quand on a un r\u00e9sultat "featured" (alias connu, voir CIQUAL_ALIAS) ET
-  // qu'il reste d'autres variantes, on \u00e9vite de noyer l'utilisateur sous 6-8
-  // choix quasi identiques (ex: "Poivron vert/rouge/jaune, cru/cuit...") :
-  // on met en avant LE choix le plus courant, et les variantes restent
-  // disponibles en un clic plut\u00f4t que d'\u00eatre toutes affich\u00e9es d'embl\u00e9e.
-  if(res[0] && res[0].featured && res.length>1){
-    var variantsHtml = res.slice(1).map(function(r,idx){ return itemHtml(r,idx+1,false); }).join('');
-    html = itemHtml(res[0],0,true)
-      +'<button class="res-variants-toggle" onclick="this.nextElementSibling.classList.toggle(\'collapsed\');this.textContent=this.nextElementSibling.classList.contains(\'collapsed\')?\'Voir '+(res.length-1)+' autre'+(res.length-1>1?'s':'')+' variante'+(res.length-1>1?'s':'')+'\':\'Masquer les variantes\'">Voir '+(res.length-1)+' autre'+(res.length-1>1?'s':'')+' variante'+(res.length-1>1?'s':'')+'</button>'
-      +'<div class="res-variants-wrap collapsed">'+variantsHtml+'</div>';
-  } else {
-    html = res.map(function(r,i){ return itemHtml(r,i,false); }).join('');
-  }
-
-  sz.innerHTML = html
+  }).join('')
   +'<div style="text-align:center;margin-top:8px">'
   +'<button onclick="openAddCustomFood(\'\')" style="padding:6px 14px;border-radius:8px;border:1px dashed var(--border2);background:none;color:var(--text3);font-size:.74rem;cursor:pointer">Pas ce que vous cherchez ? + Ajouter un aliment</button>'
   +'</div>';
