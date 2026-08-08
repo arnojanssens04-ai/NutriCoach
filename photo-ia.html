@@ -321,7 +321,8 @@ function loadDB(){
     if(rc && rc.data) DB = DB.concat(rc.data.map(function(c){
       return {code:'custom_'+c.id,nom:c.nom,kcal:c.kcal,prot:c.prot,gluc:c.gluc,lip:c.lip,
         ags:c.ags||0,mono:c.mono||0,o3a:c.o3||0,o3e:0,o3d:0,o6:c.o6||0,vitc:c.vitc||0,fer:c.fer||0,cal:c.cal||0,pot:c.pot||0,
-        fibres:c.fibres||0,mg:c.mg||0,na:c.na||0,zn:c.zn||0,sucres:c.sucres||0};
+        fibres:c.fibres||0,mg:c.mg||0,na:c.na||0,zn:c.zn||0,sucres:c.sucres||0,
+        is_ultra_processed: (typeof c.is_ultra_processed==='boolean') ? c.is_ultra_processed : null};
     }));
     DB_READY = true;
     var btn = document.getElementById('confirm-btn');
@@ -704,7 +705,12 @@ async function createCustomFoodFromAI(item){
     nom: item.nom,
     kcal: kcal, prot: prot, gluc: gluc, lip: lip,
     ags: n.ags||0, fibres: n.fibres||0, sucres: n.sucres||0,
-    na: n.sodium||0, mg: n.magnesium||0, fer: n.fer||0
+    na: n.sodium||0, mg: n.magnesium||0, fer: n.fer||0,
+    // Persist\u00e9 d\u00e9sormais sur l'aliment lui-m\u00eame, pas seulement sur
+    // l'entr\u00e9e du journal du jour -- sinon l'info se perdait d\u00e8s que cet
+    // aliment \u00e9tait recherch\u00e9/r\u00e9utilis\u00e9 plus tard (retombait alors sur la
+    // simple d\u00e9tection par mots-cl\u00e9s, moins fiable).
+    is_ultra_processed: (typeof item.isUltraProcessed==='boolean') ? item.isUltraProcessed : null
   };
 
   var r = await sb.from('aliments_custom').insert(row).select().single();
