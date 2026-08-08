@@ -47,6 +47,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 
 .pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.pill-row-wrap { display:flex; flex-wrap:wrap; gap:8px; }
+.pill-row-wrap .pill { flex:1 1 auto; min-width:calc(33% - 6px); }
+.switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.switch.on { background:var(--gold) !important; }
+.switch.on::after { left:23px; }
 .pill { padding:13px 6px; border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--card2); transition:all .15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; }
 .pill:hover { border-color:var(--border2); }
 .pill.on-bien { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
@@ -125,6 +130,22 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
+    <!-- BLOC 0 &#8212; Contexte de la semaine (recontextualise tout le reste) -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">&#128203;</span><span>Contexte de la semaine</span></div>
+      <div class="card-body">
+        <div class="field"><label>Un &#233;v&#233;nement particulier cette semaine ?</label>
+          <div class="pill-row pill-row-wrap" data-field="contexte_semaine">
+            <div class="pill" data-val="Rien de particulier">Rien de particulier</div>
+            <div class="pill" data-val="Voyage ou d&#233;placement">Voyage</div>
+            <div class="pill" data-val="&#201;v&#233;nement social">&#201;v&#233;nement social</div>
+            <div class="pill" data-val="Malade cette semaine">Malade</div>
+            <div class="pill" data-val="P&#233;riode de r&#232;gles">P&#233;riode de r&#232;gles</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- BLOC 1 &#8212; Alimentation -->
     <div class="card">
       <div class="card-hdr"><span class="card-hdr-ico">&#127869;&#65039;</span><span>Alimentation</span></div>
@@ -141,6 +162,20 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
             <div class="pill" data-val="Non">Non</div>
             <div class="pill" data-val="Moyen">Parfois</div>
             <div class="pill" data-val="Difficile">Souvent</div>
+          </div>
+        </div>
+        <div class="field"><label>Faim entre les repas cette semaine ?</label>
+          <div class="pill-row" data-field="faim_entre_repas">
+            <div class="pill" data-val="Jamais">Jamais</div>
+            <div class="pill" data-val="Parfois">Parfois</div>
+            <div class="pill" data-val="Souvent">Souvent</div>
+          </div>
+        </div>
+        <div class="field"><label>Facile d'acc&#233;der &#224; une alimentation saine cette semaine ?</label>
+          <div class="pill-row" data-field="acces_alimentation">
+            <div class="pill" data-val="Oui">Oui</div>
+            <div class="pill" data-val="Un peu compliqu&#233;">Un peu compliqu&#233;</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
           </div>
         </div>
         <div class="field"><label>&#201;carts alimentaires (optionnel)</label>
@@ -179,6 +214,21 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
             <div class="pill" data-val="Bon">Bon</div>
             <div class="pill" data-val="Moyen">Moyen</div>
             <div class="pill" data-val="Mauvais">Mauvais</div>
+          </div>
+        </div>
+        <div class="field"><label>Ballonnements / r&#233;tention d'eau ressentis ?</label>
+          <div class="pill-row" data-field="retention_eau">
+            <div class="pill" data-val="Pas ressenti">Pas ressenti</div>
+            <div class="pill" data-val="L&#233;ger">L&#233;ger</div>
+            <div class="pill" data-val="Marqu&#233;">Marqu&#233;</div>
+          </div>
+        </div>
+        <div class="field" id="cycle-field" style="display:none"><label>O&#249; en &#234;tes-vous dans votre cycle ?</label>
+          <div class="pill-row" data-field="cycle_phase">
+            <div class="pill" data-val="Avant les r&#232;gles">Avant les r&#232;gles</div>
+            <div class="pill" data-val="Pendant les r&#232;gles">Pendant les r&#232;gles</div>
+            <div class="pill" data-val="Apr&#232;s les r&#232;gles">Apr&#232;s les r&#232;gles</div>
+            <div class="pill" data-val="Non concern&#233;(e)">Non concern&#233;(e)</div>
           </div>
         </div>
       </div>
@@ -220,6 +270,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         </div>
         <div class="field"><label>Un commentaire &#224; partager avec votre &#233;quipe ? (optionnel)</label>
           <textarea id="b-commentaire" placeholder="Exprimez librement ce que les r&#233;ponses ci-dessus ne capturent pas..."></textarea>
+        </div>
+        <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card2);padding:12px 14px;border-radius:10px;margin-top:4px">
+          <label style="margin:0;font-weight:600;font-size:.85rem">&#128075; J'aimerais qu'on en parle au prochain &#233;change</label>
+          <div class="switch" id="parler-switch" onclick="this.classList.toggle('on')" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+          </div>
         </div>
       </div>
     </div>
@@ -294,9 +349,9 @@ function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMont
 // Chaque pastille a sa propre formulation (Bien/Bonne/Bon/Oui/Faible...),
 // mais ne repr\u00e9sente toujours que 3 \u00e9tats visuels : bon, moyen, mauvais.
 var PILL_STATE = {
-  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien',
+  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien', jamais:'bien',
   moyen:'moyen', moyenne:'moyen', moyennement:'moyen',
-  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', \u00e9lev\u00e9e:'difficile'
+  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', \u00e9lev\u00e9e:'difficile', souvent:'difficile'
 };
 document.getElementById('bilan-form').addEventListener('click', function(e){
   var p = e.target.closest('.pill');
@@ -342,6 +397,10 @@ async function loadProfileAndHistory(){
 
   // Bloc 5 \u2014 questions conditionnelles selon les pathologies
   renderPathoBloc(PROF.pathologies || []);
+
+  // Question cycle \u2014 uniquement si activ\u00e9e volontairement dans le profil
+  var cycleField = document.getElementById('cycle-field');
+  if(cycleField) cycleField.style.display = (PROF.suivi_cycle_actif===true) ? 'block' : 'none';
 
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
   var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
@@ -434,12 +493,17 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     poids: poids,
     tour_taille: parseFloat(document.getElementById('b-taille').value)||null,
     tour_hanche: parseFloat(document.getElementById('b-hanche').value)||null,
+    contexte_semaine: pillValues.contexte_semaine||null,
     respect_plan: pillValues.respect_plan||null,
     envies_sucrees: pillValues.envies_sucrees||null,
+    faim_entre_repas: pillValues.faim_entre_repas||null,
+    acces_alimentation: pillValues.acces_alimentation||null,
     ecart_alimentaire: document.getElementById('b-ecart').value.trim()||null,
     activite_semaine: pillValues.activite_semaine||null,
     troubles_digestifs: pillValues.troubles_digestifs||null,
     sommeil: pillValues.sommeil||null,
+    retention_eau: pillValues.retention_eau||null,
+    cycle_phase: pillValues.cycle_phase||null,
     niveau_energie: pillValues.niveau_energie||null,
     humeur_semaine: pillValues.humeur_semaine||null,
     diabetes_fatigue: pillValues.diabetes_fatigue||null,
@@ -447,7 +511,8 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     hta_sel: pillValues.hta_sel||null,
     hta_symptomes: pillValues.hta_symptomes||null,
     objectifs_notes: document.getElementById('b-objectifs').value.trim()||null,
-    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null
+    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null,
+    souhaite_en_parler: document.getElementById('parler-switch').classList.contains('on')
   };
 
   var r = await sb.from('bilans').insert(data).select().single();
@@ -524,10 +589,7 @@ async function logKcalDecision(bilanId, delta, raison, kcalCible){
   if(!bilanId){
     var msg1 = 'logKcalDecision : bilanId manquant \u2014 l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistr\u00e9 pour ce bilan.';
     console.warn('[Cap Sant\u00e9] '+msg1);
-    // DIAGNOSTIC TEMPORAIRE -- visible pour tout le monde, pas seulement les
-    // admins, le temps de comprendre pourquoi ca echoue encore malgre la
-    // correction RLS. A revenir au filtre admin uniquement une fois regle.
-    if(typeof toast==='function') toast('\u26a0\ufe0f '+msg1);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg1);
     return;
   }
   var r = await sb.from('bilans').update({
@@ -538,11 +600,11 @@ async function logKcalDecision(bilanId, delta, raison, kcalCible){
   if(r.error){
     var msg2 = 'logKcalDecision : \u00e9chec de la mise \u00e0 jour \u2014 '+r.error.message;
     console.warn('[Cap Sant\u00e9] '+msg2);
-    if(typeof toast==='function') toast('\u26a0\ufe0f '+msg2);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg2);
   } else if(!r.data || !r.data.length){
     var msg3 = 'logKcalDecision : la mise \u00e0 jour n\'a touch\u00e9 aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId;
     console.warn('[Cap Sant\u00e9] '+msg3);
-    if(typeof toast==='function') toast('\u26a0\ufe0f '+msg3);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg3);
   }
 }
 
