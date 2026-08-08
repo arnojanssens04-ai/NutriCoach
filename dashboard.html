@@ -303,6 +303,8 @@ body {
 .satiety-confirmed-ttl { font-family:'Lora',serif; font-weight:700; color:var(--sage); font-size:.95rem; margin-bottom:4px; }
 .satiety-confirmed-txt { font-size:.8rem; color:var(--text2); line-height:1.5; }
 .satiety-undo { background:none; border:none; color:var(--text3); font-size:.72rem; text-decoration:underline; cursor:pointer; margin-top:8px; }
+.focus-guidance-card { display:flex; align-items:center; gap:10px; background:var(--sage-l); border:1px solid rgba(74,122,58,0.2); border-radius:var(--r); padding:13px 16px; font-size:.84rem; color:var(--text); line-height:1.5; }
+.focus-guidance-ico { font-size:1.3rem; flex-shrink:0; }
 .energy-checkin { background:var(--card2); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; }
 .energy-checkin-ttl { font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:10px; }
 .energy-opts { display:flex; gap:8px; }
@@ -915,6 +917,7 @@ body {
        r&#233;elle, plut&#244;t que d'un niveau th&#233;orique atteint. Une fois valid&#233;e,
        les repas restants ne sont plus pr&#233;sent&#233;s comme "&#224; compl&#233;ter" pour
        le reste de la journ&#233;e. -->
+  <div id="focus-guidance-zone" style="margin-bottom:10px"></div>
   <div id="satiety-zone" style="margin-bottom:14px"></div>
 
   <div class="stitle">Alertes sant&#233;</div>
@@ -1032,6 +1035,18 @@ body {
       <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journ&#233;e type qui ne change jamais, &#224; la place des suggestions automatiques.</div>
     </div>
   </a>
+  <div class="prof-card" id="cycle-tracking-card">
+    <div class="prof-card-hdr"><span>&#127819; Suivi du cycle (optionnel)</span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Ajoute une question discr&#232;te dans votre bilan hebdomadaire (phase du cycle) &#8212; utile pour votre di&#233;t&#233;ticien, jamais affich&#233; ni activ&#233; sans votre accord.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;color:var(--text)">Activer cette question dans mon bilan</span>
+        <div class="switch" id="cycle-tracking-switch" onclick="toggleCycleTracking()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="prof-card" id="focus-mode-card" style="display:none">
     <div class="prof-card-hdr"><span>&#127807; Mode focus <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
@@ -3221,6 +3236,7 @@ async function refreshDash(){
   if(hideExactKcal){
     if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries);
     if(typeof renderWeeklyTrend==='function') renderWeeklyTrend();
+    if(typeof renderFocusGuidance==='function') renderFocusGuidance(T, tgt);
 
     // Hypertension \u2014 sodium/potassium restent des rep\u00e8res cliniques
     // importants m\u00eame en mode focus ; carte ind\u00e9pendante.
@@ -3241,9 +3257,11 @@ async function refreshDash(){
     var balancedPlateCard = document.getElementById('balanced-plate-card');
     var weeklyTrendCard = document.getElementById('weekly-trend-card');
     var htaCardOff = document.getElementById('focus-hta-card');
+    var focusGuidanceZone = document.getElementById('focus-guidance-zone');
     if(balancedPlateCard) balancedPlateCard.style.display = 'none';
     if(weeklyTrendCard) weeklyTrendCard.style.display = 'none';
     if(htaCardOff) htaCardOff.style.display = 'none';
+    if(focusGuidanceZone) focusGuidanceZone.innerHTML = '';
   }
 
   // Kcal \u2014 deux affichages coexistent le temps des tests : l'ANCIEN (par
@@ -5853,6 +5871,8 @@ function renderProfile(){
   if(focusSwitch) focusSwitch.classList.toggle('on', p.hide_exact_kcal === true);
   var previewSwitch = document.getElementById('preview-kcal-switch');
   if(previewSwitch) previewSwitch.classList.toggle('on', p.preview_new_kcal === true);
+  var cycleSwitch = document.getElementById('cycle-tracking-switch');
+  if(cycleSwitch) cycleSwitch.classList.toggle('on', p.suivi_cycle_actif === true);
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
