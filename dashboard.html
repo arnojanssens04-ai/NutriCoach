@@ -2384,7 +2384,9 @@ async function addEntry(food,qty){
     food_fibres_100:fibresVal,food_mg_100:pN(food.mg),food_sucres_100:pN(food.sucres||food.sugar||0),
     food_o6_100:pN(food.o6),food_vitc_100:pN(food.vitc),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
-    is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4) : null
+    is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4)
+      : (typeof food.is_ultra_processed==='boolean') ? food.is_ultra_processed
+      : null
   });
   if(r.error){ toast('\u274c Erreur : '+r.error.message); console.error(r.error); return; }
   toast('\u2705 '+food.nom.slice(0,28)+' ajout\u00e9');
@@ -6178,7 +6180,8 @@ function loadCustomFoods(){
         kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
         ags:c.ags||0, mono:c.mono||0, o3a:c.o3||0, o3e:0, o3d:0, o6:c.o6||0, vitc:c.vitc||0,
         fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
-        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0};
+        fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0,
+        is_ultra_processed: (typeof c.is_ultra_processed==='boolean') ? c.is_ultra_processed : null};
     });
     DB = DB.concat(custom);
     console.log('Aliments personnalis\u00e9s ajout\u00e9s : '+custom.length);
