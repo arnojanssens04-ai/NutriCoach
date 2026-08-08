@@ -74,12 +74,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 /* &#9472;&#9472; Bandeau utilisateurs &#224; risque &#9472;&#9472; */
 .risk-banner { background:rgba(139,42,42,0.06); border:1px solid rgba(139,42,42,0.18); border-radius:var(--r); padding:14px 16px; margin-bottom:18px; }
+.parler-banner { background:rgba(45,79,28,0.06); border:1px solid rgba(45,79,28,0.18); border-radius:var(--r); padding:14px 16px; margin-bottom:18px; }
+.parler-banner .risk-banner-hdr { color:var(--cap); }
 .risk-banner-hdr { font-size:.85rem; font-weight:700; color:var(--rose); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
 .risk-user-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:.82rem; border-top:1px solid rgba(139,42,42,0.1); }
 .risk-user-row:first-of-type { border-top:none; }
 .risk-contact-link { font-size:.74rem; color:var(--rose); text-decoration:none; font-weight:600; padding:4px 10px; border:1px solid rgba(139,42,42,0.3); border-radius:7px; }
 .risk-contact-link:hover { background:rgba(139,42,42,0.08); }
 .bc-flag { font-size:.9rem; margin-left:6px; }
+.bc-contexte-badge { display:inline-block; font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--card2); color:var(--text2); border:1px solid var(--border); }
 
 /* &#9472;&#9472; Mini-graphique tendance kcal (mono-utilisateur) &#9472;&#9472; */
 .kcal-trend { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:18px; box-shadow:var(--sh); }
@@ -110,6 +113,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <p>Vue d'ensemble des bilans hebdomadaires de tous les utilisateurs.</p>
   </div>
   <div id="risk-banner-zone"></div>
+  <div id="parler-banner-zone"></div>
   <div id="kcal-trend-zone"></div>
   <div id="content"></div>
 </div>
@@ -144,6 +148,7 @@ async function checkAdminAndLoad(){
 
   renderUserSelect();
   renderRiskBanner();
+  renderParlerBanner();
   renderBilans('all');
 }
 
@@ -164,25 +169,38 @@ function renderUserSelect(){
 
 // Normalise une valeur de pill (qui varie selon le champ : Bien/Bonne/Bon/Non...)
 // vers un \u00e9tat de couleur unique : bon (vert) / moyen (jaune) / mauvais (rouge).
-function pillColor(val){
+function pillColor(val, colorMap){
   if(!val) return null;
   var v = String(val).toLowerCase();
+  if(colorMap) return colorMap[v] || null; // r\u00e8gle sp\u00e9cifique au champ, prioritaire
   if(['bien','bonne','bon','non'].indexOf(v)>=0) return 'bon';
   if(['moyen','moyenne'].indexOf(v)>=0) return 'moyen';
   if(['difficile','mauvaise','mauvais'].indexOf(v)>=0) return 'mauvais';
   return null;
 }
 
-// Groupes de champs affich\u00e9s dans l'ordre du formulaire bilan.html
+// Groupes de champs affich\u00e9s dans l'ordre du formulaire bilan.html.
+// Le 3e \u00e9l\u00e9ment optionnel (colorMap) sert quand la m\u00eame valeur texte (ex:
+// "oui") doit \u00eatre color\u00e9e diff\u00e9remment selon la question -- sans \u00e7a,
+// "oui" pour l'acc\u00e8s \u00e0 une alimentation saine (bon signe) et "oui" pour un
+// autre champ pourraient se contredire visuellement avec la seule logique
+// g\u00e9n\u00e9rique de pillColor().
 var FIELD_GROUPS = [
+  { lbl:'Contexte', fields:[
+    ['contexte_semaine','\u00c9v\u00e9nement particulier', {}]
+  ]},
   { lbl:'Alimentation', fields:[
-    ['respect_plan','Respect du plan'], ['envies_sucrees','Envies incontr\u00f4lables']
+    ['respect_plan','Respect du plan'], ['envies_sucrees','Envies incontr\u00f4lables'],
+    ['faim_entre_repas','Faim entre les repas', {jamais:'bon', parfois:'moyen', souvent:'mauvais'}],
+    ['acces_alimentation','Acc\u00e8s \u00e0 une alim. saine', {oui:'bon', 'un peu compliqu\u00e9':'moyen', difficile:'mauvais'}]
   ]},
   { lbl:'Activit\u00e9 physique', fields:[
     ['activite_semaine','Activit\u00e9']
   ]},
   { lbl:'Digestion & sommeil', fields:[
-    ['troubles_digestifs','Digestion'], ['sommeil','Sommeil']
+    ['troubles_digestifs','Digestion'], ['sommeil','Sommeil'],
+    ['retention_eau','Ballonnements / r\u00e9tention d\'eau', {'pas ressenti':'bon', 'l\u00e9ger':'moyen', 'marqu\u00e9':'mauvais'}],
+    ['cycle_phase','Cycle', {}]
   ]},
   { lbl:'\u00c9nergie & bien-\u00eatre', fields:[
     ['niveau_energie','\u00c9nergie'], ['humeur_semaine','Humeur']
@@ -242,6 +260,35 @@ function renderRiskBanner(){
     +'</div>';
 }
 
+// Liste les utilisateurs dont le bilan LE PLUS RECENT demande explicitement
+// un \u00e9change -- une fois qu'ils soumettent un nouveau bilan sans recocher
+// la case, ils sortent naturellement de cette liste.
+function renderParlerBanner(){
+  var zone = document.getElementById('parler-banner-zone');
+  var byUser = {};
+  ALL_BILANS.forEach(function(b){
+    if(!byUser[b.user_id]) byUser[b.user_id] = [];
+    byUser[b.user_id].push(b);
+  });
+  var wantsToTalk = [];
+  Object.keys(byUser).forEach(function(uid){
+    var bilans = byUser[uid].slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+    if(bilans[0] && bilans[0].souhaite_en_parler){
+      wantsToTalk.push({ uid:uid, date:bilans[0].date });
+    }
+  });
+  if(!wantsToTalk.length){ zone.innerHTML = ''; return; }
+
+  zone.innerHTML = '<div class="parler-banner">'
+    +'<div class="risk-banner-hdr">\ud83d\ude4b '+wantsToTalk.length+' utilisateur'+(wantsToTalk.length>1?'s ont':' a')+' demand\u00e9 \u00e0 en parler</div>'
+    +wantsToTalk.map(function(r){
+      var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
+      return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
+        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a></div>';
+    }).join('')
+    +'</div>';
+}
+
 function renderBilans(filterId){
   var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
   var el = document.getElementById('content');
@@ -292,7 +339,7 @@ function renderBilans(filterId){
     var groupsHtml = FIELD_GROUPS.map(function(g){
       var rows = g.fields.filter(function(f){ return b[f[0]]; }).map(function(f){
         var val = b[f[0]];
-        var color = pillColor(val);
+        var color = pillColor(val, f[2]);
         return '<div class="bc-row"><span>'+f[1]+'</span><span class="bc-pill'+(color?' pill-'+color:'')+'">'+esc(val)+'</span></div>';
       });
       if(!rows.length) return '';
@@ -305,10 +352,27 @@ function renderBilans(filterId){
     if(b.objectifs_notes) notes.push('<div><b>Objectifs semaine prochaine</b>'+esc(b.objectifs_notes)+'</div>');
     if(b.commentaire_libre) notes.push('<div><b>Commentaire libre</b>'+esc(b.commentaire_libre)+'</div>');
 
+    // \u2500\u2500 Badge de contexte \u2014 visible d'embl\u00e9e, pour lire le reste du bilan
+    // avec le bon recul (des \u00e9carts pendant un voyage n'ont pas le m\u00eame sens
+    // qu'une semaine "normale" qui d\u00e9raille).
+    var CONTEXTE_ICONS = {
+      'voyage ou d\u00e9placement': '\ud83e\uddf3', '\u00e9v\u00e9nement social': '\ud83c\udf89',
+      'malade cette semaine': '\ud83e\udd12', 'p\u00e9riode de r\u00e8gles': '\ud83e\udea9'
+    };
+    var contexteBadge = '';
+    if(b.contexte_semaine && b.contexte_semaine!=='Rien de particulier'){
+      var ico = CONTEXTE_ICONS[b.contexte_semaine.toLowerCase()] || '\ud83d\udccc';
+      contexteBadge = '<span class="bc-contexte-badge">'+ico+' '+esc(b.contexte_semaine)+'</span>';
+    }
+
     return '<div class="bilan-card">'
       +'<div class="bc-hdr"><div>'
-        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')+(riskBilanIds[b.id]?'<span class="bc-flag" title="Semaine difficile, \u00e0 surveiller">\u26a0\ufe0f</span>':'')+'</div>'
+        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')
+          +(riskBilanIds[b.id]?'<span class="bc-flag" title="Semaine difficile, \u00e0 surveiller">\u26a0\ufe0f</span>':'')
+          +(b.souhaite_en_parler?'<span class="bc-flag" title="Souhaite en parler au prochain \u00e9change">\ud83d\ude4b</span>':'')
+        +'</div>'
         +'<div style="font-size:.74rem;color:var(--text3)">'+dt.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'
+        +(contexteBadge?'<div style="margin-top:6px">'+contexteBadge+'</div>':'')
       +'</div><div style="text-align:right">'
         +'<div class="bc-weight">'+(b.poids||'\u2014')+' kg'+(mensu.length?'<span class="bc-mensu">'+mensu.join(' \u00b7 ')+'</span>':'')+'</div>'
         +(u?'<a class="bc-contact" href="chat-admin.html?u='+b.user_id+'" target="_blank">\ud83d\udcac Contacter</a>':'')
