@@ -45,6 +45,20 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .badge-none { background:var(--card2); color:var(--text3); }
 .badge-down { background:rgba(45,79,28,0.1); color:var(--gold); }
 .badge-up { background:rgba(74,122,58,0.12); color:var(--sage); }
+
+.ws-block { border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:12px 0; margin:10px 0; }
+.ws-loading, .ws-empty { font-size:.78rem; color:var(--text3); font-style:italic; }
+.ws-kcal { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.ws-kcal-pill { font-size:.72rem; font-weight:700; padding:4px 11px; border-radius:999px; }
+.ws-kcal-pill.ws-low { background:rgba(61,107,153,0.1); color:#3D6B99; }
+.ws-kcal-pill.ws-ok { background:rgba(45,90,67,0.1); color:var(--cap); }
+.ws-kcal-pill.ws-high { background:rgba(179,38,30,0.1); color:var(--needle); }
+.ws-kcal-detail { font-size:.76rem; color:var(--text2); }
+.ws-ultra-none { font-size:.78rem; color:var(--cap); }
+.ws-ultra-count { font-size:.78rem; font-weight:600; color:var(--needle); margin-bottom:6px; }
+.ws-ultra-list { display:flex; flex-direction:column; gap:4px; }
+.ws-ultra-item { display:flex; gap:8px; font-size:.76rem; color:var(--text2); }
+.ws-ultra-day { font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:var(--text3); flex-shrink:0; width:50px; }
 .bc-kcal-raison { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; }
 .bc-kcal-na { font-size:.72rem; color:var(--text3); font-style:italic; }
 
@@ -140,7 +154,7 @@ async function checkAdminAndLoad(){
     return;
   }
 
-  var usersRes = await sb.from('profiles').select('id,prenom,nom,email').order('prenom');
+  var usersRes = await sb.from('profiles').select('id,prenom,nom,email,poids,taille,age,sexe,activite,objectif,kcal_adjustment,kcal_target,plan_fixe,activite_met_kcal,pathologies').order('prenom');
   ALL_USERS = usersRes.data || [];
 
   var bilansRes = await sb.from('bilans').select('*').order('date',{ascending:false});
@@ -289,6 +303,115 @@ function renderParlerBanner(){
     +'</div>';
 }
 
+// \u2500\u2500 R\u00c9SUM\u00c9 ALIMENTAIRE HEBDOMADAIRE (nouveau) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Calcule un objectif kcal simplifi\u00e9 (juste le kcal, pas les macros) \u2014
+// reprend le m\u00eame calcul que calcTargets() dans dashboard.html, mais r\u00e9duit
+// \u00e0 ce dont on a besoin ici. ATTENTION : cette page n'a pas de module
+// partag\u00e9 avec dashboard.html (pages HTML ind\u00e9pendantes) -- si la formule
+// change dans calcTargets(), il faut penser \u00e0 la r\u00e9percuter ici \u00e0 la main.
+function estimateWeeklyKcalTarget(p){
+  p = p || {};
+  if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target){
+    return p.kcal_target * 7;
+  }
+  var w=p.poids||70, h=p.taille||170, a=p.age||35, g=p.sexe||'F';
+  var act=p.activite||'sedentary', pathos=p.pathologies||[];
+  var bmr = g==='M' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  var af = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, sportif:1.9};
+  var hasMetData = p.activite_met_kcal && p.activite_met_kcal > 0;
+  var tdee = hasMetData ? bmr*1.2 + p.activite_met_kcal : bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal = tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  kcal += (p.kcal_adjustment||0);
+  kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
+  return kcal * 7;
+}
+
+// D\u00e9tection ultra-transform\u00e9 -- copie de ULTRA_PROCESSED_PATTERNS
+// (dashboard.html). M\u00eame avertissement : \u00e0 resynchroniser \u00e0 la main si la
+// liste change l\u00e0-bas.
+var ULTRA_PROCESSED_PATTERNS = [
+  'preemball','industriel\\b',
+  'soda','coca','cola','pepsi','fanta','sprite','oasis','ice tea','schweppes',
+  'boisson energisante|energy drink|redbull|red bull|monster energy','sirop.*(grenadine|menthe)',
+  'chips','tuc\\b','crackers?','biscuits? aperitif','pringles','cacahuetes? (grillees?|salees?|aromatisees?)',
+  'bonbon','confiserie','chewing.?gum','guimauve','reglisse','dragee','caramel.*industri',
+  'barre.*chocolat','kinder','snickers|twix|kitkat|mars\\b|bounty|milka|lion\\b','nutella','pate a tartiner',
+  'biscuit','cake\\b','gateau.*industri','viennoiserie','donut|beignet','pain au chocolat industri','patisserie.*industri','frites?\\b',
+  'muesli.*chocolat|cereales?.*chocolat|corn ?flakes.*chocolat',
+  'plat.*(cuisine|prepare)','surgele.*(pane|pret)','cordon bleu','nugget','panne\\b','quenelle',
+  'lasagne.*industri','pizza.*surgel','quiche.*industri','soupe.*(brique|deshydrat|instantan)',
+  'charcuterie','saucisse','merguez','jambon.*reconstit','bacon','lardons?.*fume','knacki','chorizo.*industri','mortadelle','surimi',
+  'mcdo|burger king|kfc|quick\\b','burger\\b','hot.?dog','kebab','tacos.*(fast|frit)',
+  'cereales?.*sucre','chocapic','frosties','miel pops','granola.*industri','barre.*cereale',
+  'mayonnaise.*industri','ketchup','sauce.*(industri|bouteille|preemball)',
+  'yaourt.*(aromatise|sucre)','dessert lacte','flan.*industri','mousse.*chocolat.*industri','creme dessert','danette','petit suisse.*aromatise',
+  'glace\\b','sorbet','esquimau','magnum\\b','cornetto',
+  'pain de mie.*industri','pain.*burger','biscotte',
+  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b'
+];
+var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
+
+function isEntryUltraProcessed(e){
+  if(e.is_ultra_processed === true) return true;
+  if(e.is_ultra_processed === false) return false;
+  var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return ULTRA_PROCESSED_REGEX.test(n);
+}
+
+var WEEKDAY_SHORT = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+// Charge et affiche le r\u00e9sum\u00e9 des 7 jours menant au bilan (born\u00e9 inclus) :
+// kcal totale vs objectif de la semaine, et le d\u00e9tail des aliments
+// ultra-transform\u00e9s consomm\u00e9s (quoi, quel jour).
+async function loadWeeklySummary(bilan, user){
+  var el = document.getElementById('ws-'+bilan.id);
+  if(!el) return;
+
+  var endDate = new Date(bilan.date+'T00:00:00');
+  var startDate = new Date(endDate); startDate.setDate(startDate.getDate()-6);
+  var startStr = startDate.toISOString().slice(0,10);
+  var endStr = endDate.toISOString().slice(0,10);
+
+  var r = await sb.from('journal').select('date,aliment,kcal,is_ultra_processed')
+    .eq('user_id', bilan.user_id).gte('date', startStr).lte('date', endStr);
+
+  if(r.error || !r.data){ el.innerHTML = ''; return; }
+  var entries = r.data;
+  if(!entries.length){ el.innerHTML = '<div class="ws-empty">Aucun repas enregistr\u00e9 sur cette p\u00e9riode.</div>'; return; }
+
+  var totalKcal = entries.reduce(function(s,e){ return s+(e.kcal||0); }, 0);
+  var weeklyTarget = estimateWeeklyKcalTarget(user);
+  var ratio = weeklyTarget>0 ? totalKcal/weeklyTarget : null;
+
+  var kcalLabel, kcalCls;
+  if(ratio===null){ kcalLabel='Objectif indisponible'; kcalCls=''; }
+  else if(ratio < 0.85){ kcalLabel='Nettement en dessous de l\u2019objectif'; kcalCls='ws-low'; }
+  else if(ratio > 1.15){ kcalLabel='Nettement au-dessus de l\u2019objectif'; kcalCls='ws-high'; }
+  else { kcalLabel='Dans la zone attendue'; kcalCls='ws-ok'; }
+
+  var ultraEntries = entries.filter(isEntryUltraProcessed).map(function(e){
+    var d = new Date(e.date+'T00:00:00');
+    return { nom:e.aliment, jour:WEEKDAY_SHORT[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1) };
+  });
+
+  var ultraHtml;
+  if(!ultraEntries.length){
+    ultraHtml = '<div class="ws-ultra-none">\ud83c\udf3f Aucun aliment ultra-transform\u00e9 cette semaine</div>';
+  } else {
+    ultraHtml = '<div class="ws-ultra-count">'+ultraEntries.length+' aliment'+(ultraEntries.length>1?'s':'')+' ultra-transform\u00e9'+(ultraEntries.length>1?'s':'')+' cette semaine</div>'
+      +'<div class="ws-ultra-list">'+ultraEntries.map(function(u){
+        return '<div class="ws-ultra-item"><span class="ws-ultra-day">'+u.jour+'</span><span>'+esc(u.nom)+'</span></div>';
+      }).join('')+'</div>';
+  }
+
+  el.innerHTML = '<div class="ws-kcal"><span class="ws-kcal-pill '+kcalCls+'">'+kcalLabel+'</span>'
+    +'<span class="ws-kcal-detail">'+Math.round(totalKcal)+' kcal sur la semaine'+(ratio!==null?' (objectif \u2248 '+Math.round(weeklyTarget)+' kcal)':'')+'</span></div>'
+    +ultraHtml;
+}
+
 function renderBilans(filterId){
   var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
   var el = document.getElementById('content');
@@ -378,10 +501,18 @@ function renderBilans(filterId){
         +(u?'<a class="bc-contact" href="chat-admin.html?u='+b.user_id+'" target="_blank">\ud83d\udcac Contacter</a>':'')
       +'</div></div>'
       +kcalHtml
+      +'<div class="ws-block" id="ws-'+b.id+'"><span class="ws-loading">Chargement du r\u00e9sum\u00e9 de la semaine\u2026</span></div>'
       +groupsHtml
       +(notes.length?'<div class="bc-notes">'+notes.join('')+'</div>':'')
       +'</div>';
   }).join('');
+
+  // Charg\u00e9 apr\u00e8s coup, un bilan \u00e0 la fois -- \u00e9vite de bloquer l'affichage
+  // initial de la liste le temps que chaque r\u00e9sum\u00e9 hebdomadaire se calcule.
+  list.forEach(function(b){
+    var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
+    loadWeeklySummary(b, u);
+  });
 }
 
 // Construit le HTML du mini-graphique de tendance de la cible calorique,
