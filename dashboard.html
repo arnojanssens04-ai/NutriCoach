@@ -1681,9 +1681,12 @@ function calcTargets(){
 // est TOUJOURS prioritaire quand il existe \u2014 cette liste ne sert que de
 // repli quand aucun signal fiable n'est disponible pour cet aliment.
 var ULTRA_PROCESSED_PATTERNS = [
-  // Signal fort et universel : "pr\u00e9emball\u00e9"/"industriel" sur une \u00e9tiquette
-  // Ciqual ou OFF signifie quasi toujours un produit transform\u00e9 en usine.
-  'preemball','industriel\\b',
+  // "industriel" reste un signal fiable. "preemball" a \u00e9t\u00e9 retir\u00e9 -- trop
+  // large : Ciqual utilise ce mot pour n'importe quel aliment vendu
+  // emball\u00e9 (ex: boisson au soja nature, jambon cru...), pas seulement les
+  // produits ultra-transform\u00e9s. Confirm\u00e9 par un faux positif r\u00e9el en usage
+  // (4 boissons au soja nature signal\u00e9es \u00e0 tort en une semaine).
+  'industriel\\b',
   // Boissons sucr\u00e9es / industrielles
   'soda','coca','cola','pepsi','fanta','sprite','oasis','ice tea','schweppes',
   'boisson energisante|energy drink|redbull|red bull|monster energy','sirop.*(grenadine|menthe)',
