@@ -316,3 +316,34 @@ function glutenAlternatives(nom){
 var GLUTEN_SYMPTOMS = 'douleurs abdominales, diarrhées, fatigue intense, '
   +'malabsorption des nutriments et anémie. À long terme, une consommation '
   +'répétée peut entraîner une ostéoporose et augmenter le risque de certains cancers intestinaux.';
+
+// ── OBJECTIFS KCAL/MACROS (version partagée recette.html / recette-prep.html) ──
+// Centralise la logique qui existait à l'identique dans ces deux fichiers
+// (copié-collé confirmé strictement identique). Fonction PURE : ne lit ni
+// PROF, ni le DOM, ni aucune variable globale — tout vient du paramètre
+// `profile`, pour rester testable en dehors du navigateur et simulable
+// avec un profil hypothétique (ex: bilan.html dans une étape future).
+//
+// IMPORTANT : cette version reste la formule SIMPLIFIÉE historique de
+// recette.html/recette-prep.html (macros en pourcentages fixes). Elle ne
+// doit PAS être confondue avec la formule plus riche de dashboard.html
+// (protéines en g/kg, ajustements ménopause/diabète) — l'harmonisation
+// des deux est un sujet volontairement reporté à une étape séparée et
+// validée séparément. Ne pas modifier cette formule sans revalider les
+// pages qui en dépendent.
+function calculateTargetsShared(profile){
+  var p = profile || {};
+  var w=p.poids||70, h=p.taille||170, a=p.age||35, g=p.sexe||'F';
+  var act=p.activite||'sedentary', pathos=p.pathologies||[];
+  var bmr = g==='M' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  var af = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, sportif:1.9};
+  var hasMet = p.activite_met_kcal && p.activite_met_kcal>0;
+  var tdee = hasMet ? bmr*1.2+p.activite_met_kcal : bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal = tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  kcal += (p.kcal_adjustment||0);
+  kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
+  return {kcal:kcal, prot:Math.round(kcal*0.15/4), gluc:Math.round(kcal*0.50/4), lip:Math.round(kcal*0.35/9)};
+}
