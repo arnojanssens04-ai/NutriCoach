@@ -2354,7 +2354,13 @@ function genAlerts(T,tgt,pathos,entries,satietyValidated){
 
 // \u2500\u2500 JOURNAL (Supabase) \u2500\u2500
 async function getEntries(){
-  var r=await sb.from('journal').select('*').eq('user_id',USER.id).eq('date',today());
+  // .order('id') est indispensable ici : sans tri explicite, Postgres ne
+  // garantit AUCUN ordre stable entre deux appels identiques -- et cette
+  // fonction est rappel\u00e9e \u00e0 chaque modification de quantit\u00e9
+  // (afterJournalChange -> refreshJournal -> getEntries). Sans ce tri,
+  // l'ordre pouvait l\u00e9g\u00e8rement varier d'un appel \u00e0 l'autre, donnant
+  // l'impression qu'un aliment "sautait" de position en pleine modification.
+  var r=await sb.from('journal').select('*').eq('user_id',USER.id).eq('date',today()).order('id');
   return r.data||[];
 }
 function afterJournalChange(){
