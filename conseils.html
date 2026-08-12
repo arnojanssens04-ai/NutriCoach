@@ -86,9 +86,9 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div id="content" style="display:none">
 
     <div class="demo-banner">
-      <strong>Mode démonstration</strong>
-      <p>Les données affichées sont fictives.<br>Aucune donnée réelle de patient n'est utilisée dans cette version.</p>
-      <p>La vérification des autorisations Supabase est nécessaire avant l'activation de l'analyse de journaux réels.</p>
+      <strong>Mode démonstration actif</strong>
+      <p>Les données affichées sont fictives.</p>
+      <p>L'accès aux journaux réels est désactivé jusqu'à validation des policies RLS Supabase, des rôles autorisés et de la base légale d'accès.</p>
     </div>
 
     <div id="observation-status"></div>
@@ -114,12 +114,47 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   Le mode réel multi-utilisateur est désactivé jusqu'à vérification des
   policies RLS Supabase et validation de l'autorisation d'accès aux
   dossiers patients.
+
+  Garde-fous applicatifs additionnels (DEMO_MODE / REAL_DATA_ENABLED /
+  MULTI_USER_ACCESS_ENABLED + assertDemoMode(), plus bas dans ce fichier) :
+  seconde ligne de défense côté client, PAS un remplacement de la RLS.
+  Ne pas les considérer comme une preuve de sécurité à eux seuls.
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb = supabase.createClient(SURL, SKEY);
+
+// ══════════════════════════════════════════════════════════════════════
+// GARDE-FOUS DE MODE — protections APPLICATIVES uniquement.
+//
+// ⚠️ Ces constantes et cette fonction ne remplacent EN AUCUN CAS les
+// policies RLS Supabase. Elles ne sont qu'une seconde ligne de défense
+// côté client, destinée à empêcher qu'une évolution future de ce fichier
+// active accidentellement un accès aux données réelles avant que les
+// policies RLS n'aient été vérifiées et que la base légale de l'accès
+// professionnel n'ait été validée humainement (voir docs/AUDIT.md et le
+// rapport d'audit RLS de cette étape). La vraie frontière de sécurité
+// reste, comme documenté plus bas, la RLS côté serveur — pas ce code.
+//
+// Ne jamais modifier ces trois valeurs sans validation humaine explicite
+// couvrant : (1) les 9 tests RLS documentés, (2) la distinction entre
+// admin technique et professionnel autorisé, (3) la base légale RGPD.
+// ══════════════════════════════════════════════════════════════════════
+var DEMO_MODE = true;
+var REAL_DATA_ENABLED = false;
+var MULTI_USER_ACCESS_ENABLED = false;
+
+// Garde active, appelée avant tout calcul et tout rendu. Lève une
+// exception si l'état des trois constantes ci-dessus ne correspond pas
+// au mode démonstration strict attendu à cette étape. Volontairement
+// stricte (pas de mode "presque sûr") : toute incohérence bloque tout.
+function assertDemoMode(){
+  if(!DEMO_MODE || REAL_DATA_ENABLED || MULTI_USER_ACCESS_ENABLED){
+    throw new Error('Accès aux données réelles désactivé : validation RLS requise.');
+  }
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // CONSTANTES — seuils provisoires, centralisés et faciles à modifier.
@@ -429,6 +464,11 @@ function renderObservationPage(observationWindow, pattern, energyByDay){
 sb.auth.getSession().then(function(r){
   if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
   var uid = r.data.session.user.id;
+  // ⚠️ GARDE : cette requête doit TOUJOURS rester filtrée sur eq('id', uid)
+  // (la propre ligne de l'utilisateur connecté) et ne sélectionner que la
+  // colonne 'role'. Ne jamais l'élargir en select('*') ni retirer le
+  // .eq('id', uid) — ce serait une lecture globale de `profiles`, interdite
+  // à cette étape (voir garde-fous DEMO_MODE en tête de fichier).
   sb.from('profiles').select('role').eq('id', uid).single().then(function(res){
     if(!res.data || res.data.role !== 'admin'){
       document.getElementById('access-check').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
@@ -441,6 +481,20 @@ sb.auth.getSession().then(function(r){
 });
 
 function runDemo(){
+  // Garde-fou obligatoire : appelée avant tout calcul et tout rendu.
+  // Si elle échoue, on interrompt immédiatement — aucun calcul, aucun
+  // accès à une donnée quelconque, aucun rendu partiel.
+  try{
+    assertDemoMode();
+  } catch(e){
+    renderSecurityBlock();
+    return;
+  }
+
+  // Aucun user_id n'est jamais lu depuis l'URL ou le localStorage dans
+  // cette page — contrainte volontaire, pas un oubli. Ne pas ajouter
+  // `new URLSearchParams(window.location.search).get('user_id')` ou
+  // équivalent ici sans revalider entièrement cette étape.
   var observationWindow = computeObservationWindow(DEMO_JOURNAL, OBSERVATION_WINDOW_DAYS, DEMO_REFERENCE_DATE);
 
   var energyByDay = {};
@@ -457,6 +511,18 @@ function runDemo(){
   });
 
   renderObservationPage(observationWindow, pattern, energyByDay);
+}
+
+// Affichée uniquement si assertDemoMode() échoue. Message volontairement
+// sans détail technique (pas de trace d'erreur, pas de nom de variable)
+// pour ne rien exposer côté interface.
+function renderSecurityBlock(){
+  document.getElementById('content').innerHTML =
+    '<div class="demo-banner" style="background:var(--rose-l);border-color:rgba(139,42,42,0.3)">'
+    + '<strong style="color:var(--rose)">Accès bloqué</strong>'
+    + '<p>Cette page ne peut pas afficher de contenu tant que le mode démonstration n’est pas correctement actif. '
+    + 'Aucune donnée n’a été chargée.</p>'
+    + '</div>';
 }
 </script>
 </body>
