@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Observation (Admin, démo)</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --amber:#7a5c1e; --amber-l:rgba(122,92,30,0.1);
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; transition:all .15s; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:760px; margin:0 auto; padding:24px 20px 60px; }
+
+.access-msg { text-align:center; padding:60px 20px; color:var(--text2); font-size:.9rem; }
+.denied { text-align:center; padding:60px 20px; color:var(--text2); }
+
+.demo-banner { background:var(--amber-l); border:1px solid rgba(122,92,30,0.25); border-radius:var(--r); padding:16px 18px; margin-bottom:20px; }
+.demo-banner strong { display:block; font-family:'Lora',serif; font-size:1.05rem; color:var(--amber); margin-bottom:6px; }
+.demo-banner p { font-size:.85rem; color:var(--text2); line-height:1.55; margin-bottom:4px; }
+.demo-banner p:last-child { margin-bottom:0; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:16px; }
+.card h2 { font-family:'Lora',serif; font-size:1.05rem; margin-bottom:12px; }
+.card h3 { font-family:'Lora',serif; font-size:.92rem; margin:14px 0 8px; color:var(--gold); }
+
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:6px; }
+.stat-card { background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px; text-align:center; }
+.stat-val { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; color:var(--gold); }
+.stat-lbl { font-size:.66rem; color:var(--text2); margin-top:2px; text-transform:uppercase; letter-spacing:.4px; line-height:1.3; }
+
+.baseline-badge { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:600; padding:6px 12px; border-radius:999px; margin-top:10px; }
+.baseline-yes { background:var(--sage-l); color:var(--sage); }
+.baseline-no { background:var(--amber-l); color:var(--amber); }
+
+.day-row { display:grid; grid-template-columns:100px 1fr 90px; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:.8rem; }
+.day-row:last-child { border-bottom:none; }
+.day-date { color:var(--text2); font-weight:600; }
+.day-detail { color:var(--text2); font-size:.76rem; }
+.day-quality { text-align:right; font-size:.68rem; font-weight:600; padding:2px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.3px; }
+.q-good { background:var(--sage-l); color:var(--sage); }
+.q-degraded { background:var(--amber-l); color:var(--amber); }
+.q-insufficient { background:var(--rose-l); color:var(--rose); }
+.q-none { background:var(--card2); color:var(--text3); }
+
+.pattern-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:.82rem; border-bottom:1px solid var(--border); }
+.pattern-row:last-child { border-bottom:none; }
+.confidence-tag { font-size:.68rem; font-weight:600; padding:2px 9px; border-radius:999px; text-transform:uppercase; letter-spacing:.3px; }
+.conf-unknown { background:var(--card2); color:var(--text3); }
+.conf-low { background:var(--amber-l); color:var(--amber); }
+.conf-moderate { background:rgba(30,90,122,0.1); color:#1e5a7a; }
+.conf-high { background:var(--sage-l); color:var(--sage); }
+
+.synthese { font-size:.88rem; line-height:1.6; color:var(--text); background:var(--gold-l); border:1px solid rgba(45,79,28,0.15); border-radius:var(--r); padding:14px 16px; }
+.synthese strong { display:block; font-family:'Lora',serif; font-size:1rem; margin-bottom:6px; color:var(--gold); }
+
+.fixture-note { font-size:.74rem; color:var(--text3); font-style:italic; margin-top:8px; }
+.missing-list { font-size:.82rem; color:var(--text2); line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="admin.html" class="t-back">← Admin</a>
+</header>
+
+<div class="wrap">
+  <div id="access-check" class="access-msg">Vérification en cours…</div>
+  <div id="content" style="display:none">
+
+    <div class="demo-banner">
+      <strong>Mode démonstration</strong>
+      <p>Les données affichées sont fictives.<br>Aucune donnée réelle de patient n'est utilisée dans cette version.</p>
+      <p>La vérification des autorisations Supabase est nécessaire avant l'activation de l'analyse de journaux réels.</p>
+    </div>
+
+    <div id="observation-status"></div>
+    <div id="patterns-zone"></div>
+    <div id="synthese-neutre"></div>
+    <div id="missing-info"></div>
+
+  </div>
+</div>
+
+<!--
+  ⚠️ SÉCURITÉ — LIRE AVANT TOUTE ÉVOLUTION DE CE FICHIER :
+  Le contrôle ci-dessous (session + profiles.role) est un contrôle
+  CLIENT-SIDE, réalisé après le chargement complet de ce fichier statique
+  par Cloudflare Pages. Ce n'est PAS une sécurité serveur : n'importe qui
+  peut techniquement récupérer le HTML/JS de cette page. La vraie
+  frontière de sécurité doit être les policies RLS Supabase sur les
+  tables journal/profiles/bilans — non vérifiables depuis ce dépôt (voir
+  docs/AUDIT.md). C'est pourquoi cette page n'appelle jamais
+  sb.from('journal'|'profiles'|'bilans') pour un autre utilisateur : elle
+  ne travaille que sur DEMO_JOURNAL, des données locales fictives.
+
+  Le mode réel multi-utilisateur est désactivé jusqu'à vérification des
+  policies RLS Supabase et validation de l'autorisation d'accès aux
+  dossiers patients.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+// ══════════════════════════════════════════════════════════════════════
+// CONSTANTES — seuils provisoires, centralisés et faciles à modifier.
+// Non validés nutritionnellement ; à revoir avec un professionnel avant
+// tout usage réel (voir docs de spécification de cette étape).
+// ══════════════════════════════════════════════════════════════════════
+var OBSERVATION_WINDOW_DAYS = 7;
+var BASELINE_MIN_ANALYZABLE_DAYS = 4;
+var MIN_INTAKE_COUNT_PER_DAY = 2;
+var MAIN_MEALS = ['breakfast', 'lunch', 'dinner'];
+
+var PATTERN_CONFIDENCE_THRESHOLDS = {
+  minAnalyzableDaysForHigh: 6,
+  minRateForModerate: 0.5,
+  minRateForHigh: 0.8
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// DONNÉES SYNTHÉTIQUES — séparées de tout accès Supabase. Aucune donnée
+// réelle de patient. Format aligné sur les colonnes réelles de la table
+// journal (date, repas, aliment, quantite, kcal, is_ultra_processed) pour
+// que la logique de calcul reste directement réutilisable plus tard sur
+// de vraies données, une fois les policies RLS vérifiées.
+// ══════════════════════════════════════════════════════════════════════
+var DEMO_REFERENCE_DATE = '2026-08-12';
+
+var DEMO_JOURNAL = [
+  {date:'2026-08-06', repas:'breakfast', aliment:'Céréales chocolatées', quantite:40,  kcal:152, is_ultra_processed:true},
+  {date:'2026-08-06', repas:'lunch',     aliment:'Poulet riz légumes',   quantite:300, kcal:420, is_ultra_processed:false},
+  {date:'2026-08-06', repas:'dinner',    aliment:'Soupe et pain',        quantite:250, kcal:300, is_ultra_processed:false},
+
+  {date:'2026-08-07', repas:'breakfast', aliment:'Barre céréale industrielle', quantite:25,  kcal:110, is_ultra_processed:true},
+  {date:'2026-08-07', repas:'lunch',     aliment:'Salade composée',           quantite:180, kcal:150, is_ultra_processed:false},
+
+  {date:'2026-08-08', repas:'snack', aliment:'Chips', quantite:30, kcal:160, is_ultra_processed:true},
+
+  {date:'2026-08-09', repas:'breakfast', aliment:'Pain blanc beurre',      quantite:60,  kcal:180, is_ultra_processed:false},
+  {date:'2026-08-09', repas:'lunch',     aliment:'Plat préparé surgelé',   quantite:280, kcal:420, is_ultra_processed:true},
+  {date:'2026-08-09', repas:'dinner',    aliment:'Poisson légumes vapeur', quantite:220, kcal:250, is_ultra_processed:false},
+
+  {date:'2026-08-10', repas:'breakfast', aliment:"Flocons d'avoine fruits", quantite:80,  kcal:300, is_ultra_processed:false},
+  {date:'2026-08-10', repas:'lunch',     aliment:'Quinoa légumineuses',     quantite:250, kcal:320, is_ultra_processed:false},
+  {date:'2026-08-10', repas:'snack',     aliment:'Amandes',                 quantite:null, kcal:null, is_ultra_processed:false},
+
+  {date:'2026-08-11', repas:'breakfast', aliment:'Viennoiserie industrielle', quantite:70,  kcal:280, is_ultra_processed:true},
+  {date:'2026-08-11', repas:'lunch',     aliment:'Sandwich jambon',           quantite:200, kcal:380, is_ultra_processed:false},
+  {date:'2026-08-11', repas:'dinner',    aliment:'Pâtes légumes',             quantite:300, kcal:420, is_ultra_processed:false},
+
+  {date:'2026-08-12', repas:'breakfast', aliment:'Yaourt nature', quantite:125, kcal:80, is_ultra_processed:false}
+];
+
+// ══════════════════════════════════════════════════════════════════════
+// FONCTIONS DE CALCUL PURES — aucun accès DOM, aucun accès Supabase.
+// Prennent des données en paramètre, retournent des structures simples.
+// ══════════════════════════════════════════════════════════════════════
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Construit une chaîne 'YYYY-MM-DD' pour (referenceDate - offsetDays).
+function shiftDateStr(referenceDate, offsetDays){
+  var d = new Date(referenceDate + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0');
+}
+
+// Évalue un seul jour à partir de ses entrées journal.
+// AUCUNE règle basée sur les kcal. Une quantité absente dégrade la
+// qualité ("degraded") mais ne supprime jamais la prise du décompte,
+// tant que l'aliment est reconnu (champ "aliment" non vide).
+function computeDayCompleteness(entriesForDay, date){
+  entriesForDay = entriesForDay || [];
+  var hasData = entriesForDay.length > 0;
+
+  var recognizedIntakes = entriesForDay.filter(function(e){ return !!(e.aliment && String(e.aliment).trim()); });
+  var intakeCount = recognizedIntakes.length;
+  var missingQty = recognizedIntakes.filter(function(e){ return e.quantite===null || e.quantite===undefined; }).length;
+
+  var mealsSet = {};
+  entriesForDay.forEach(function(e){ if(e.repas) mealsSet[e.repas] = true; });
+  var mealsLogged = Object.keys(mealsSet).length;
+  var hasMainMeal = MAIN_MEALS.some(function(m){ return !!mealsSet[m]; });
+
+  var reasons = [];
+  if(!hasData) reasons.push('no_data');
+  else {
+    if(intakeCount < MIN_INTAKE_COUNT_PER_DAY) reasons.push('insufficient_intakes');
+    if(!hasMainMeal) reasons.push('no_main_meal');
+  }
+  var isAnalyzable = hasData && intakeCount >= MIN_INTAKE_COUNT_PER_DAY && hasMainMeal;
+
+  var quality;
+  if(!hasData) quality = 'none';
+  else if(!isAnalyzable) quality = 'insufficient';
+  else if(missingQty > 0) quality = 'degraded';
+  else quality = 'good';
+
+  return {
+    date: date,
+    has_data: hasData,
+    entries_count: entriesForDay.length,
+    intake_count: intakeCount,
+    intakes_missing_quantity: missingQty,
+    meals_logged: mealsLogged,
+    has_main_meal: hasMainMeal,
+    is_analyzable: isAnalyzable,
+    quality: quality,
+    reasons: reasons
+  };
+}
+
+// Construit la fenêtre d'observation complète : regroupe le journal par
+// jour calendaire (referenceDate - (windowDays-1) .. referenceDate),
+// calcule un DayCompleteness par jour, puis agrège. Aucun jour n'est
+// supprimé de la sortie, même non analysable.
+function computeObservationWindow(journal, windowDays, referenceDate){
+  journal = journal || [];
+  windowDays = windowDays || OBSERVATION_WINDOW_DAYS;
+
+  var byDate = {};
+  journal.forEach(function(e){
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  var days = [];
+  for(var i = windowDays - 1; i >= 0; i--){
+    var d = shiftDateStr(referenceDate, -i);
+    days.push(computeDayCompleteness(byDate[d], d));
+  }
+
+  var daysWithData = days.filter(function(d){ return d.has_data; }).length;
+  var analyzableDays = days.filter(function(d){ return d.is_analyzable; });
+  var analyzableCount = analyzableDays.length;
+
+  var avgMeals = analyzableCount > 0
+    ? analyzableDays.reduce(function(s,d){ return s + d.meals_logged; }, 0) / analyzableCount
+    : 0;
+
+  return {
+    window_days: windowDays,
+    reference_date: referenceDate,
+    calendar_days: windowDays,
+    days_with_data: daysWithData,
+    analyzable_days: analyzableCount,
+    data_completeness: windowDays > 0 ? analyzableCount / windowDays : 0,
+    average_meals_per_day: avgMeals,
+    baseline_ready: analyzableCount >= BASELINE_MIN_ANALYZABLE_DAYS,
+    days: days
+  };
+}
+
+// Énergie enregistrée — purement descriptive. Ne détermine jamais si un
+// jour est valide, ne porte aucune interprétation clinique.
+function computeRecordedEnergy(entriesForDay, date){
+  entriesForDay = entriesForDay || [];
+  var total = entriesForDay.reduce(function(s,e){ return s + (typeof e.kcal==='number' ? e.kcal : 0); }, 0);
+  return {
+    date: date,
+    recorded_energy_kcal: total,
+    energy_interpretation: 'not_interpreted',
+    safety_module: 'not_implemented'
+  };
+}
+
+// Détecteur GÉNÉRIQUE de motif — ne connaît rien de nutritionnel. Le
+// prédicat est injecté par l'appelant ; ici, un prédicat "ultra-transformé"
+// est utilisé UNIQUEMENT comme fixture technique de démonstration (voir
+// options.isFixture), pas comme un module nutritionnel validé.
+// Ne regroupe pas les entrées : consomme observationWindow.days, déjà
+// calculé par computeObservationWindow (pas de logique dupliquée).
+function detectPattern(observationWindow, predicate, options){
+  options = options || {};
+  var thresholds = options.thresholds || PATTERN_CONFIDENCE_THRESHOLDS;
+  var analyzableDays = observationWindow.days.filter(function(d){ return d.is_analyzable; });
+  var analyzableCount = analyzableDays.length;
+
+  var occurrenceDays = analyzableDays.filter(function(d){ return predicate(d); }).length;
+  var occurrenceRate = analyzableCount > 0 ? occurrenceDays / analyzableCount : 0;
+
+  var confidence = 'unknown';
+  if(analyzableCount >= MIN_INTAKE_COUNT_PER_DAY){
+    if(occurrenceRate >= thresholds.minRateForHigh && analyzableCount >= thresholds.minAnalyzableDaysForHigh) confidence = 'high';
+    else if(occurrenceRate >= thresholds.minRateForModerate) confidence = 'moderate';
+    else confidence = 'low';
+  }
+
+  return {
+    id: options.id || 'unnamed_pattern',
+    is_fixture: options.isFixture===true,
+    window_days: observationWindow.window_days,
+    analyzable_days: analyzableCount,
+    occurrence_days: occurrenceDays,
+    occurrence_rate: occurrenceRate,
+    is_confirmed: false, // toujours false à cette étape, par construction — jamais déduit automatiquement
+    confidence: confidence,
+    confidence_basis: {
+      min_analyzable_days_for_high: thresholds.minAnalyzableDaysForHigh,
+      min_rate_for_moderate: thresholds.minRateForModerate,
+      min_rate_for_high: thresholds.minRateForHigh
+    }
+  };
+}
+
+// Prédicat démo — un jour "matche" s'il contient au moins une prise
+// marquée is_ultra_processed dans DEMO_JOURNAL. Fixture technique
+// uniquement : nécessite que le jour transmis porte ses entrées, donc le
+// prédicat est construit avec les entrées du journal regroupées par date.
+function makeDemoUltraProcessedPredicate(journal){
+  var byDate = {};
+  journal.forEach(function(e){
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+  return function(day){
+    var entries = byDate[day.date] || [];
+    return entries.some(function(e){ return e.is_ultra_processed === true; });
+  };
+}
+
+// Synthèse neutre — aucune recommandation, aucun nom d'aliment, aucune
+// action proposée. Reprend les deux formulations déjà validées.
+function buildNeutralSynthesis(observationWindow, pattern){
+  if(!observationWindow.baseline_ready){
+    return {
+      title: 'Phase d’observation en cours',
+      text: 'Sur les ' + observationWindow.window_days + ' derniers jours, '
+        + observationWindow.analyzable_days + ' jour' + (observationWindow.analyzable_days>1?'s':'')
+        + ' sont suffisamment complets pour être analysés. '
+        + 'Il est encore trop tôt pour dégager une tendance fiable.'
+    };
+  }
+  return {
+    title: 'Ligne de base disponible',
+    text: 'Nous avons maintenant suffisamment de données pour commencer à observer des tendances. '
+      + 'Aucun conseil ou changement n’est proposé à cette étape.'
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// RENDU DOM — seule fonction qui touche le document. Ne fait aucun calcul.
+// ══════════════════════════════════════════════════════════════════════
+function renderObservationPage(observationWindow, pattern, energyByDay){
+  var statusEl = document.getElementById('observation-status');
+  statusEl.innerHTML = '<div class="card">'
+    + '<h2>Fenêtre d’observation</h2>'
+    + '<div class="stats-row">'
+      + '<div class="stat-card"><div class="stat-val">' + observationWindow.calendar_days + '</div><div class="stat-lbl">Jours calendaires</div></div>'
+      + '<div class="stat-card"><div class="stat-val">' + observationWindow.analyzable_days + '</div><div class="stat-lbl">Jours analysables</div></div>'
+      + '<div class="stat-card"><div class="stat-val">' + Math.round(observationWindow.data_completeness*100) + '%</div><div class="stat-lbl">Complétude</div></div>'
+    + '</div>'
+    + '<div style="font-size:.82rem;color:var(--text2);margin-top:10px">Moyenne de ' + observationWindow.average_meals_per_day.toFixed(1) + ' repas enregistrés par jour analysable.</div>'
+    + '<div class="baseline-badge ' + (observationWindow.baseline_ready ? 'baseline-yes' : 'baseline-no') + '">'
+      + (observationWindow.baseline_ready ? '✓ Ligne de base disponible' : '⏳ Ligne de base non atteinte')
+    + '</div>'
+    + '<h3>Détail par jour</h3>'
+    + observationWindow.days.map(function(d){
+        var energy = energyByDay[d.date];
+        var detail = d.has_data
+          ? (d.intake_count + ' prise' + (d.intake_count>1?'s':'') + ', ' + d.meals_logged + ' repas'
+             + (d.intakes_missing_quantity>0 ? ' — ' + d.intakes_missing_quantity + ' quantité manquante' : '')
+             + ' — apport enregistré ' + energy.recorded_energy_kcal + ' kcal (non interprété)')
+          : 'Aucune donnée enregistrée';
+        if(!d.is_analyzable && d.has_data) detail += ' — non analysable (' + d.reasons.join(', ') + ')';
+        return '<div class="day-row">'
+          + '<div class="day-date">' + esc(d.date) + '</div>'
+          + '<div class="day-detail">' + esc(detail) + '</div>'
+          + '<div class="day-quality q-' + d.quality + '">' + d.quality + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+
+  var patternsEl = document.getElementById('patterns-zone');
+  patternsEl.innerHTML = '<div class="card">'
+    + '<h2>Motif détecté (mécanique générique)</h2>'
+    + '<div class="pattern-row">'
+      + '<span>' + esc(pattern.id) + '</span>'
+      + '<span class="confidence-tag conf-' + pattern.confidence + '">' + pattern.confidence + '</span>'
+    + '</div>'
+    + '<div style="font-size:.82rem;color:var(--text2);margin-top:8px">'
+      + pattern.occurrence_days + ' / ' + pattern.analyzable_days + ' jours analysables ('
+      + Math.round(pattern.occurrence_rate*100) + '%) — is_confirmed : ' + pattern.is_confirmed
+    + '</div>'
+    + (pattern.is_fixture ? '<div class="fixture-note">⚠ Fixture technique de démonstration — ce n’est pas un module nutritionnel validé, aucune conclusion clinique ne doit en être tirée.</div>' : '')
+    + '</div>';
+
+  var syntheseEl = document.getElementById('synthese-neutre');
+  var synth = buildNeutralSynthesis(observationWindow, pattern);
+  syntheseEl.innerHTML = '<div class="synthese"><strong>' + esc(synth.title) + '</strong>' + esc(synth.text) + '</div>';
+
+  var missingEl = document.getElementById('missing-info');
+  var nonAnalyzable = observationWindow.days.filter(function(d){ return !d.is_analyzable; });
+  missingEl.innerHTML = nonAnalyzable.length
+    ? '<div class="card"><h2>Informations manquantes</h2><div class="missing-list">'
+      + nonAnalyzable.map(function(d){
+          return '<div>' + esc(d.date) + ' — ' + (d.has_data ? esc(d.reasons.join(', ')) : 'aucune donnée') + '</div>';
+        }).join('')
+      + '</div></div>'
+    : '';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ACCÈS — contrôle client-side reproduisant le patron de admin.html.
+// Voir le commentaire HTML au-dessus de ce bloc : ce n'est pas une
+// sécurité serveur. Aucune donnée réelle de journal/profils/bilans n'est
+// lue ici au-delà de la propre ligne "role" de la session en cours.
+// ══════════════════════════════════════════════════════════════════════
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role').eq('id', uid).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){
+      document.getElementById('access-check').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+      return;
+    }
+    document.getElementById('access-check').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    runDemo();
+  });
+});
+
+function runDemo(){
+  var observationWindow = computeObservationWindow(DEMO_JOURNAL, OBSERVATION_WINDOW_DAYS, DEMO_REFERENCE_DATE);
+
+  var energyByDay = {};
+  var byDate = {};
+  DEMO_JOURNAL.forEach(function(e){ if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+  observationWindow.days.forEach(function(d){
+    energyByDay[d.date] = computeRecordedEnergy(byDate[d.date], d.date);
+  });
+
+  var predicate = makeDemoUltraProcessedPredicate(DEMO_JOURNAL);
+  var pattern = detectPattern(observationWindow, predicate, {
+    id: 'demo_ultra_processed_presence',
+    isFixture: true
+  });
+
+  renderObservationPage(observationWindow, pattern, energyByDay);
+}
+</script>
+</body>
+</html>
