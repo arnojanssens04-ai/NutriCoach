@@ -126,6 +126,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <a href="chat-admin.html" class="t-back">💬 Messages</a>
     <a href="aliments.html" class="t-back">🍽️ Aliments</a>
     <a href="bilan_recap.html" class="t-back">📊 Bilans</a>
+    <!-- Navigation pure vers conseils.html — aucun paramètre transmis
+         (pas de user_id, pas de patientId, pas de mode). conseils.html
+         refait intégralement ses propres vérifications d'accès
+         (session, rôle) : ce lien n'est jamais la protection principale. -->
+    <a href="conseils.html" class="t-back" title="Analyse réelle en lecture seule">📓 Observation des journaux</a>
     <a href="dashboard.html" class="t-back">← Retour à l'app</a>
   </div>
 </header>
