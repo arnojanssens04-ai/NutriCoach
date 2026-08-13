@@ -329,58 +329,135 @@ function computeRecordedEnergy(entriesForDay, date){
   };
 }
 
-// Détecteur GÉNÉRIQUE de motif — ne connaît rien de nutritionnel. Le
-// prédicat est injecté par l'appelant ; ici, un prédicat "ultra-transformé"
-// est utilisé UNIQUEMENT comme fixture technique de démonstration (voir
-// options.isFixture), pas comme un module nutritionnel validé.
-// Ne regroupe pas les entrées : consomme observationWindow.days, déjà
-// calculé par computeObservationWindow (pas de logique dupliquée).
-function detectPattern(observationWindow, predicate, options){
-  options = options || {};
-  var thresholds = options.thresholds || PATTERN_CONFIDENCE_THRESHOLDS;
+// ══════════════════════════════════════════════════════════════════════
+// REGISTRE CENTRAL DES MOTIFS — un seul endroit pour seuils, textes et
+// statut actif/inactif de chaque motif. Ne décrit et ne détecte que des
+// observations descriptives — ne choisit jamais une intervention.
+//
+// Décisions validées humainement pour "repeated_ultra_processed_foods" :
+// - minimumOccurrences=2, compté en JOURS ANALYSABLES DISTINCTS où le
+//   motif est présent (jamais deux occurrences dans la même journée) ;
+// - sous ce seuil : aucun message (motif silencieusement absent) ;
+// - donnée insuffisante (is_ultra_processed absent/null/incohérent sur
+//   au moins une prise reconnue d'un jour) : ce jour est exclu du calcul
+//   (ni occurrence, ni non-occurrence) — jamais déduit du nom de
+//   l'aliment, jamais basculé vers une autre source.
+// ══════════════════════════════════════════════════════════════════════
+const PATTERN_REGISTRY = {
+  repeated_ultra_processed_foods: {
+    id: 'repeated_ultra_processed_foods',
+    label: 'Présence répétée d’aliments ultra-transformés',
+    observationWindowDays: OBSERVATION_WINDOW_DAYS,
+    minimumOccurrences: 2,
+    requiredFields: ['is_ultra_processed'],
+    confidenceLevels: PATTERN_CONFIDENCE_THRESHOLDS,
+    allowedMessage:
+      'Une présence répétée d’aliments classés comme ultra-transformés '
+      + 'a été observée sur plusieurs journées de la période analysée.',
+    insufficientDataMessage:
+      'Les données disponibles ne permettent pas d’évaluer ce motif '
+      + 'pour la période analysée, car la classification de certains '
+      + 'aliments est inconnue.',
+    forbiddenMessages: [
+      'Vous devez arrêter ces aliments.',
+      'Votre alimentation est mauvaise.',
+      'Cela augmente votre risque de maladie.',
+      'Remplacez immédiatement ces aliments.',
+      'Vous avez une alimentation déséquilibrée.'
+    ],
+    enabled: true
+  }
+};
+
+// Évalue UN jour à partir de ses entrées journal, pour le seul champ
+// is_ultra_processed. 'insufficient' dès qu'au moins une prise reconnue
+// de ce jour a une classification absente/null/incohérente (ni true, ni
+// false) — jamais déduite du nom de l'aliment (requiredFields du
+// registre déclare explicitement la seule donnée utilisée).
+function evaluateUltraProcessedForDay(dayEntries){
+  dayEntries = dayEntries || [];
+  var hasUnknown = dayEntries.some(function(e){
+    return e.is_ultra_processed !== true && e.is_ultra_processed !== false;
+  });
+  if(hasUnknown) return 'insufficient';
+  var hasTrue = dayEntries.some(function(e){ return e.is_ultra_processed === true; });
+  return hasTrue ? 'present' : 'absent';
+}
+
+// Moteur de détection générique piloté par le registre — ne connaît
+// aucune logique nutritionnelle en dur, seulement ce que l'entrée du
+// registre déclare. Ne regroupe pas deux fois : consomme
+// observationWindow.days, déjà calculé par computeObservationWindow.
+// Ne reçoit du journal que les entrées, jamais un profil/pathologie.
+function detectPatternFromRegistry(patternId, observationWindow, journalEntries){
+  var entry = PATTERN_REGISTRY[patternId];
+  if(!entry){
+    throw new Error('Motif inconnu : ' + patternId);
+  }
+  if(!entry.enabled){
+    return {
+      id: patternId, label: entry.label, enabled: false,
+      status: 'not_evaluated',
+      window_days: entry.observationWindowDays,
+      evaluated_days: 0, insufficient_days: 0, occurrence_days: 0, occurrence_rate: 0,
+      minimum_occurrences: entry.minimumOccurrences,
+      is_confirmed: false, confidence: 'unknown', confidence_basis: null,
+      message: null
+    };
+  }
+
+  var byDate = {};
+  (journalEntries || []).forEach(function(e){
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
   var analyzableDays = observationWindow.days.filter(function(d){ return d.is_analyzable; });
-  var analyzableCount = analyzableDays.length;
+  var stateByDay = analyzableDays.map(function(d){ return evaluateUltraProcessedForDay(byDate[d.date]); });
 
-  var occurrenceDays = analyzableDays.filter(function(d){ return predicate(d); }).length;
-  var occurrenceRate = analyzableCount > 0 ? occurrenceDays / analyzableCount : 0;
+  var insufficientDays = stateByDay.filter(function(s){ return s === 'insufficient'; }).length;
+  var evaluatedDays = stateByDay.length - insufficientDays;
+  var occurrenceDays = stateByDay.filter(function(s){ return s === 'present'; }).length;
+  var occurrenceRate = evaluatedDays > 0 ? occurrenceDays / evaluatedDays : 0;
 
+  var thresholds = entry.confidenceLevels;
   var confidence = 'unknown';
-  if(analyzableCount >= MIN_INTAKE_COUNT_PER_DAY){
-    if(occurrenceRate >= thresholds.minRateForHigh && analyzableCount >= thresholds.minAnalyzableDaysForHigh) confidence = 'high';
+  if(evaluatedDays >= MIN_INTAKE_COUNT_PER_DAY){
+    if(occurrenceRate >= thresholds.minRateForHigh && evaluatedDays >= thresholds.minAnalyzableDaysForHigh) confidence = 'high';
     else if(occurrenceRate >= thresholds.minRateForModerate) confidence = 'moderate';
     else confidence = 'low';
   }
 
+  var status, message;
+  if(evaluatedDays === 0){
+    status = 'insufficient_data';
+    message = entry.insufficientDataMessage;
+    confidence = 'unknown';
+  } else if(occurrenceDays < entry.minimumOccurrences){
+    status = 'below_threshold';
+    message = null;
+  } else {
+    status = 'detected';
+    message = entry.allowedMessage;
+  }
+
   return {
-    id: options.id || 'unnamed_pattern',
-    is_fixture: options.isFixture===true,
-    window_days: observationWindow.window_days,
-    analyzable_days: analyzableCount,
+    id: patternId, label: entry.label, enabled: true,
+    status: status,
+    window_days: entry.observationWindowDays,
+    evaluated_days: evaluatedDays,
+    insufficient_days: insufficientDays,
     occurrence_days: occurrenceDays,
     occurrence_rate: occurrenceRate,
-    is_confirmed: false, // toujours false à cette étape, par construction — jamais déduit automatiquement
+    minimum_occurrences: entry.minimumOccurrences,
+    is_confirmed: false, // toujours false à cette étape — jamais déduit automatiquement
     confidence: confidence,
-    confidence_basis: {
+    confidence_basis: thresholds ? {
       min_analyzable_days_for_high: thresholds.minAnalyzableDaysForHigh,
       min_rate_for_moderate: thresholds.minRateForModerate,
       min_rate_for_high: thresholds.minRateForHigh
-    }
-  };
-}
-
-// Prédicat démo — un jour "matche" s'il contient au moins une prise
-// marquée is_ultra_processed dans DEMO_JOURNAL. Fixture technique
-// uniquement : nécessite que le jour transmis porte ses entrées, donc le
-// prédicat est construit avec les entrées du journal regroupées par date.
-function makeDemoUltraProcessedPredicate(journal){
-  var byDate = {};
-  journal.forEach(function(e){
-    if(!byDate[e.date]) byDate[e.date] = [];
-    byDate[e.date].push(e);
-  });
-  return function(day){
-    var entries = byDate[day.date] || [];
-    return entries.some(function(e){ return e.is_ultra_processed === true; });
+    } : null,
+    message: message
   };
 }
 
@@ -436,19 +513,7 @@ function renderObservationPage(observationWindow, pattern, energyByDay){
       }).join('')
     + '</div>';
 
-  var patternsEl = document.getElementById('patterns-zone');
-  patternsEl.innerHTML = '<div class="card">'
-    + '<h2>Motif détecté (mécanique générique)</h2>'
-    + '<div class="pattern-row">'
-      + '<span>' + esc(pattern.id) + '</span>'
-      + '<span class="confidence-tag conf-' + pattern.confidence + '">' + pattern.confidence + '</span>'
-    + '</div>'
-    + '<div style="font-size:.82rem;color:var(--text2);margin-top:8px">'
-      + pattern.occurrence_days + ' / ' + pattern.analyzable_days + ' jours analysables ('
-      + Math.round(pattern.occurrence_rate*100) + '%) — is_confirmed : ' + pattern.is_confirmed
-    + '</div>'
-    + (pattern.is_fixture ? '<div class="fixture-note">⚠ Fixture technique de démonstration — ce n’est pas un module nutritionnel validé, aucune conclusion clinique ne doit en être tirée.</div>' : '')
-    + '</div>';
+  document.getElementById('patterns-zone').innerHTML = renderPatternCard(pattern);
 
   var syntheseEl = document.getElementById('synthese-neutre');
   var synth = buildNeutralSynthesis(observationWindow, pattern);
@@ -463,6 +528,34 @@ function renderObservationPage(observationWindow, pattern, energyByDay){
         }).join('')
       + '</div></div>'
     : '';
+}
+
+// Construit le HTML d'un motif du registre selon son statut. Aucun cas
+// n'affiche de conseil, de substitution ni de jugement — seulement les
+// deux textes validés du registre (allowedMessage / insufficientDataMessage)
+// ou une absence de message (below_threshold).
+function renderPatternCard(pattern){
+  if(!pattern.enabled){
+    return '<div class="card"><h2>Motifs observés</h2><div class="loading-msg">Aucun motif actif.</div></div>';
+  }
+  var body;
+  if(pattern.status === 'insufficient_data'){
+    body = '<p style="font-size:.86rem;color:var(--text2)">' + esc(pattern.message) + '</p>';
+  } else if(pattern.status === 'below_threshold'){
+    body = '<p style="font-size:.86rem;color:var(--text2)">Aucun motif significatif observé sur la période analysée.</p>';
+  } else {
+    body = '<div class="pattern-row">'
+      + '<span>' + esc(pattern.label) + '</span>'
+      + '<span class="confidence-tag conf-' + pattern.confidence + '">' + pattern.confidence + '</span>'
+      + '</div>'
+      + '<p style="font-size:.88rem;color:var(--text);margin-top:8px">' + esc(pattern.message) + '</p>'
+      + '<div style="font-size:.76rem;color:var(--text3);margin-top:8px">'
+      + pattern.occurrence_days + ' / ' + pattern.evaluated_days + ' jours évalués ('
+      + Math.round(pattern.occurrence_rate*100) + '%)'
+      + (pattern.insufficient_days>0 ? ' — ' + pattern.insufficient_days + ' jour(s) exclu(s) pour classification inconnue' : '')
+      + '</div>';
+  }
+  return '<div class="card"><h2>Motifs observés</h2>' + body + '</div>';
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -518,11 +611,7 @@ function runDemo(){
     energyByDay[d.date] = computeRecordedEnergy(byDate[d.date], d.date);
   });
 
-  var predicate = makeDemoUltraProcessedPredicate(DEMO_JOURNAL);
-  var pattern = detectPattern(observationWindow, predicate, {
-    id: 'demo_ultra_processed_presence',
-    isFixture: true
-  });
+  var pattern = detectPatternFromRegistry('repeated_ultra_processed_foods', observationWindow, DEMO_JOURNAL);
 
   renderObservationPage(observationWindow, pattern, energyByDay);
 }
@@ -661,14 +750,9 @@ function loadRealJournalAndRender(patientId){
         energyByDay[d.date] = computeRecordedEnergy(byDate[d.date], d.date);
       });
 
-      // Même mécanique générique de fixture que le mode démo (voir
-      // makeDemoUltraProcessedPredicate) — réutilisée telle quelle, pas
-      // un nouveau module nutritionnel. Toujours is_fixture:true.
-      var predicate = makeDemoUltraProcessedPredicate(journal);
-      var pattern = detectPattern(observationWindow, predicate, {
-        id: 'demo_ultra_processed_presence',
-        isFixture: true
-      });
+      // Même moteur, même registre que le mode démo — un seul mécanisme
+      // de détection, pas de logique dupliquée entre les deux chemins.
+      var pattern = detectPatternFromRegistry('repeated_ultra_processed_foods', observationWindow, journal);
 
       renderObservationPage(observationWindow, pattern, energyByDay);
     });
