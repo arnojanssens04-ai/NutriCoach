@@ -39,6 +39,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:16px; }
 .card h2 { font-family:'Lora',serif; font-size:1.05rem; margin-bottom:12px; }
 .card h3 { font-family:'Lora',serif; font-size:.92rem; margin:14px 0 8px; color:var(--gold); }
+.patient-select { width:100%; padding:10px 12px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.88rem; outline:none; }
+.loading-msg { font-size:.82rem; color:var(--text2); padding:8px 0; }
 
 .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:6px; }
 .stat-card { background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px; text-align:center; }
@@ -91,6 +93,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <p>L'accès aux journaux réels est désactivé jusqu'à validation des policies RLS Supabase, des rôles autorisés et de la base légale d'accès.</p>
     </div>
 
+    <div id="patient-selector-zone"></div>
     <div id="observation-status"></div>
     <div id="patterns-zone"></div>
     <div id="synthese-neutre"></div>
@@ -111,14 +114,18 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   sb.from('journal'|'profiles'|'bilans') pour un autre utilisateur : elle
   ne travaille que sur DEMO_JOURNAL, des données locales fictives.
 
-  Le mode réel multi-utilisateur est désactivé jusqu'à vérification des
-  policies RLS Supabase et validation de l'autorisation d'accès aux
-  dossiers patients.
+  L'audit RLS et la distinction admin technique / professionnel autorisé
+  ont été validés humainement pour cette étape (voir historique de
+  décision), ce qui permet au chemin réel ci-dessous d'exister dans le
+  code. Il reste toutefois INACTIF tant que DATA_SOURCE_MODE vaut 'demo'
+  — passer à 'real' est une décision humaine explicite et séparée.
 
-  Garde-fous applicatifs additionnels (DEMO_MODE / REAL_DATA_ENABLED /
-  MULTI_USER_ACCESS_ENABLED + assertDemoMode(), plus bas dans ce fichier) :
-  seconde ligne de défense côté client, PAS un remplacement de la RLS.
-  Ne pas les considérer comme une preuve de sécurité à eux seuls.
+  Garde-fou applicatif (DATA_SOURCE_MODE, const, + assertDemoMode() /
+  assertRealModeAllowed(), plus bas dans ce fichier) : seconde ligne de
+  défense côté client, PAS un remplacement de la RLS. Ne pas le
+  considérer comme une preuve de sécurité à lui seul — la RLS Supabase
+  reste la véritable frontière, y compris pour le chemin réel (liste des
+  patients et lecture du journal filtrée par user_id).
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -127,32 +134,35 @@ var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb = supabase.createClient(SURL, SKEY);
 
 // ══════════════════════════════════════════════════════════════════════
-// GARDE-FOUS DE MODE — protections APPLICATIVES uniquement.
+// GARDE-FOU DE MODE — protection APPLICATIVE uniquement.
 //
-// ⚠️ Ces constantes et cette fonction ne remplacent EN AUCUN CAS les
+// ⚠️ Cette constante et ces fonctions ne remplacent EN AUCUN CAS les
 // policies RLS Supabase. Elles ne sont qu'une seconde ligne de défense
 // côté client, destinée à empêcher qu'une évolution future de ce fichier
-// active accidentellement un accès aux données réelles avant que les
-// policies RLS n'aient été vérifiées et que la base légale de l'accès
-// professionnel n'ait été validée humainement (voir docs/AUDIT.md et le
-// rapport d'audit RLS de cette étape). La vraie frontière de sécurité
-// reste, comme documenté plus bas, la RLS côté serveur — pas ce code.
+// active accidentellement un accès aux données réelles sans décision
+// explicite. La vraie frontière de sécurité reste, comme documenté plus
+// bas, la RLS côté serveur — pas ce code.
 //
-// Ne jamais modifier ces trois valeurs sans validation humaine explicite
-// couvrant : (1) les 9 tests RLS documentés, (2) la distinction entre
-// admin technique et professionnel autorisé, (3) la base légale RGPD.
+// SOURCE UNIQUE : une seule valeur, pas plusieurs flags qui pourraient
+// entrer en conflit. 'const' empêche toute réassignation en cours
+// d'exécution — aucune valeur externe (URL, localStorage, sélecteur
+// d'interface) n'alimente jamais cette constante nulle part dans ce
+// fichier. Le mode par défaut reste 'demo' ; passer à 'real' est une
+// décision humaine explicite, prise en modifiant cette seule ligne après
+// validation (audit RLS + distinction de rôle + base légale RGPD).
 // ══════════════════════════════════════════════════════════════════════
-var DEMO_MODE = true;
-var REAL_DATA_ENABLED = false;
-var MULTI_USER_ACCESS_ENABLED = false;
+const DATA_SOURCE_MODE = 'demo'; // 'demo' | 'real'
 
-// Garde active, appelée avant tout calcul et tout rendu. Lève une
-// exception si l'état des trois constantes ci-dessus ne correspond pas
-// au mode démonstration strict attendu à cette étape. Volontairement
-// stricte (pas de mode "presque sûr") : toute incohérence bloque tout.
+// Gardes actives, appelées avant tout calcul et tout rendu de leur
+// chemin respectif. Volontairement strictes : aucun mode "presque sûr".
 function assertDemoMode(){
-  if(!DEMO_MODE || REAL_DATA_ENABLED || MULTI_USER_ACCESS_ENABLED){
-    throw new Error('Accès aux données réelles désactivé : validation RLS requise.');
+  if(DATA_SOURCE_MODE !== 'demo'){
+    throw new Error('Mode démonstration désactivé.');
+  }
+}
+function assertRealModeAllowed(){
+  if(DATA_SOURCE_MODE !== 'real'){
+    throw new Error('Mode réel désactivé.');
   }
 }
 
@@ -461,14 +471,17 @@ function renderObservationPage(observationWindow, pattern, energyByDay){
 // sécurité serveur. Aucune donnée réelle de journal/profils/bilans n'est
 // lue ici au-delà de la propre ligne "role" de la session en cours.
 // ══════════════════════════════════════════════════════════════════════
+var ADMIN_UID = null;
+
 sb.auth.getSession().then(function(r){
   if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
   var uid = r.data.session.user.id;
+  ADMIN_UID = uid;
   // ⚠️ GARDE : cette requête doit TOUJOURS rester filtrée sur eq('id', uid)
   // (la propre ligne de l'utilisateur connecté) et ne sélectionner que la
   // colonne 'role'. Ne jamais l'élargir en select('*') ni retirer le
   // .eq('id', uid) — ce serait une lecture globale de `profiles`, interdite
-  // à cette étape (voir garde-fous DEMO_MODE en tête de fichier).
+  // à cette étape (voir garde-fou DATA_SOURCE_MODE en tête de fichier).
   sb.from('profiles').select('role').eq('id', uid).single().then(function(res){
     if(!res.data || res.data.role !== 'admin'){
       document.getElementById('access-check').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
@@ -476,7 +489,8 @@ sb.auth.getSession().then(function(r){
     }
     document.getElementById('access-check').style.display = 'none';
     document.getElementById('content').style.display = 'block';
-    runDemo();
+    if(DATA_SOURCE_MODE === 'demo'){ runDemo(); }
+    if(DATA_SOURCE_MODE === 'real'){ runReal(); }
   });
 });
 
@@ -523,6 +537,141 @@ function renderSecurityBlock(){
     + '<p>Cette page ne peut pas afficher de contenu tant que le mode démonstration n’est pas correctement actif. '
     + 'Aucune donnée n’a été chargée.</p>'
     + '</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CHEMIN RÉEL — codé mais n'est jamais appelé tant que DATA_SOURCE_MODE
+// vaut 'demo' (voir le branchement dans le bloc ACCÈS ci-dessus). Aucun
+// repli automatique vers DEMO_JOURNAL en cas d'erreur : toute erreur
+// arrête le pipeline et affiche un message neutre, jamais un résultat
+// partiel ni des données fictives présentées comme réelles.
+// ══════════════════════════════════════════════════════════════════════
+var SELECTABLE_PATIENTS = [];
+var SELECTED_PATIENT_ID = null;
+
+// Date de référence unique et contrôlée — pas de new Date() dispersé.
+// En production : aujourd'hui. Le calcul est isolé ici pour rester le
+// seul endroit à modifier si un besoin de test avec une référence
+// injectée apparaît pour ce chemin (les fonctions de calcul, elles,
+// acceptent déjà une referenceDate en paramètre — voir computeObservationWindow).
+function getReferenceDate(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function clearObservationZones(){
+  document.getElementById('observation-status').innerHTML = '';
+  document.getElementById('patterns-zone').innerHTML = '';
+  document.getElementById('synthese-neutre').innerHTML = '';
+  document.getElementById('missing-info').innerHTML = '';
+}
+
+function renderLoadingState(){
+  document.getElementById('observation-status').innerHTML = '<div class="loading-msg">Chargement…</div>';
+}
+
+// Message neutre en cas d'erreur Supabase — aucun détail technique
+// (pas de message d'erreur brut, pas de code d'erreur) exposé à l'écran.
+function renderRealDataError(){
+  clearObservationZones();
+  document.getElementById('observation-status').innerHTML =
+    '<div class="demo-banner" style="background:var(--rose-l);border-color:rgba(139,42,42,0.3)">'
+    + '<strong style="color:var(--rose)">Erreur</strong>'
+    + '<p>Impossible de charger les données pour le moment. Réessayez plus tard.</p>'
+    + '</div>';
+}
+
+function runReal(){
+  try{
+    assertRealModeAllowed();
+  } catch(e){
+    renderSecurityBlock();
+    return;
+  }
+  clearObservationZones();
+  document.getElementById('patient-selector-zone').innerHTML = '<div class="loading-msg">Chargement de la liste des patients…</div>';
+  loadSelectablePatients();
+}
+
+// Liste minimale : id/prenom/nom uniquement, jamais select('*'), jamais
+// de donnée de santé. Couverte par la policy admin déjà auditée sur
+// `profiles` (is_admin()), pas une lecture globale non contrôlée.
+function loadSelectablePatients(){
+  sb.from('profiles').select('id, prenom, nom').order('prenom').then(function(res){
+    if(res.error){ renderRealDataError(); return; }
+    SELECTABLE_PATIENTS = res.data || [];
+    renderPatientSelector(SELECTABLE_PATIENTS);
+  });
+}
+
+function renderPatientSelector(list){
+  var zone = document.getElementById('patient-selector-zone');
+  if(!list.length){
+    zone.innerHTML = '<div class="card">Aucun patient accessible.</div>';
+    return;
+  }
+  var options = '<option value="">— Choisir un patient —</option>' + list.map(function(p){
+    var label = ((p.prenom||'') + ' ' + (p.nom||'')).trim() || p.id;
+    return '<option value="' + esc(p.id) + '">' + esc(label) + '</option>';
+  }).join('');
+  zone.innerHTML = '<div class="card"><h2>Sélection du patient</h2>'
+    + '<select class="patient-select" id="patient-select" onchange="onPatientSelected(this.value)">' + options + '</select>'
+    + '</div>';
+}
+
+// selectedPatientId n'est JAMAIS pris pour argent comptant : même généré
+// par notre propre <select>, il reste manipulable côté client — donc
+// revérifié contre SELECTABLE_PATIENTS avant tout appel journal.
+function onPatientSelected(patientId){
+  clearObservationZones();
+  if(!patientId){ return; }
+  var isAllowed = SELECTABLE_PATIENTS.some(function(p){ return p.id === patientId; });
+  if(!isAllowed){
+    renderRealDataError();
+    return;
+  }
+  SELECTED_PATIENT_ID = patientId;
+  renderLoadingState();
+  loadRealJournalAndRender(patientId);
+}
+
+// Requête filtrée obligatoirement par user_id + bornes de dates. Colonnes
+// strictement limitées à ce que les fonctions d'observation consomment —
+// aucune colonne de pathologie, symptôme ou traitement (ces données ne
+// sont d'ailleurs pas dans la table journal).
+function loadRealJournalAndRender(patientId){
+  var referenceDate = getReferenceDate();
+  var windowStart = shiftDateStr(referenceDate, -(OBSERVATION_WINDOW_DAYS - 1));
+
+  sb.from('journal')
+    .select('date, repas, aliment, quantite, kcal, is_ultra_processed')
+    .eq('user_id', patientId)
+    .gte('date', windowStart)
+    .lte('date', referenceDate)
+    .then(function(res){
+      if(res.error){ renderRealDataError(); return; }
+
+      var journal = res.data || [];
+      var observationWindow = computeObservationWindow(journal, OBSERVATION_WINDOW_DAYS, referenceDate);
+
+      var energyByDay = {};
+      var byDate = {};
+      journal.forEach(function(e){ if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+      observationWindow.days.forEach(function(d){
+        energyByDay[d.date] = computeRecordedEnergy(byDate[d.date], d.date);
+      });
+
+      // Même mécanique générique de fixture que le mode démo (voir
+      // makeDemoUltraProcessedPredicate) — réutilisée telle quelle, pas
+      // un nouveau module nutritionnel. Toujours is_fixture:true.
+      var predicate = makeDemoUltraProcessedPredicate(journal);
+      var pattern = detectPattern(observationWindow, predicate, {
+        id: 'demo_ultra_processed_presence',
+        isFixture: true
+      });
+
+      renderObservationPage(observationWindow, pattern, energyByDay);
+    });
 }
 </script>
 </body>
