@@ -624,3 +624,34 @@ function glutenAlternatives(nom){
 var GLUTEN_SYMPTOMS = 'douleurs abdominales, diarrh\u00e9es, fatigue intense, '
   +'malabsorption des nutriments et an\u00e9mie. \u00c0 long terme, une consommation '
   +'r\u00e9p\u00e9t\u00e9e peut entra\u00eener une ost\u00e9oporose et augmenter le risque de certains cancers intestinaux.';
+
+// \u2500\u2500 OBJECTIFS KCAL/MACROS (version partag\u00e9e recette.html / recette-prep.html) \u2500\u2500
+// Centralise la logique qui existait \u00e0 l'identique dans ces deux fichiers
+// (copi\u00e9-coll\u00e9 confirm\u00e9 strictement identique). Fonction PURE : ne lit ni
+// PROF, ni le DOM, ni aucune variable globale \u2014 tout vient du param\u00e8tre
+// `profile`, pour rester testable en dehors du navigateur et simulable
+// avec un profil hypoth\u00e9tique (ex: bilan.html dans une \u00e9tape future).
+//
+// IMPORTANT : cette version reste la formule SIMPLIFI\u00c9E historique de
+// recette.html/recette-prep.html (macros en pourcentages fixes). Elle ne
+// doit PAS \u00eatre confondue avec la formule plus riche de dashboard.html
+// (prot\u00e9ines en g/kg, ajustements m\u00e9nopause/diab\u00e8te) \u2014 l'harmonisation
+// des deux est un sujet volontairement report\u00e9 \u00e0 une \u00e9tape s\u00e9par\u00e9e et
+// valid\u00e9e s\u00e9par\u00e9ment. Ne pas modifier cette formule sans revalider les
+// pages qui en d\u00e9pendent.
+function calculateTargetsShared(profile){
+  var p = profile || {};
+  var w=p.poids||70, h=p.taille||170, a=p.age||35, g=p.sexe||'F';
+  var act=p.activite||'sedentary', pathos=p.pathologies||[];
+  var bmr = g==='M' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  var af = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, sportif:1.9};
+  var hasMet = p.activite_met_kcal && p.activite_met_kcal>0;
+  var tdee = hasMet ? bmr*1.2+p.activite_met_kcal : bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal = tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  kcal += (p.kcal_adjustment||0);
+  kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
+  return {kcal:kcal, prot:Math.round(kcal*0.15/4), gluc:Math.round(kcal*0.50/4), lip:Math.round(kcal*0.35/9)};
+}
