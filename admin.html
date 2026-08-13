@@ -127,6 +127,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <a href="aliments.html" class="t-back">&#127869;&#65039; Aliments</a>
     <a href="bilan_recap.html" class="t-back">&#128202; Bilans</a>
     <a href="maj.html" class="t-back">&#10024; Mises &#224; jour</a>
+    <!-- Navigation pure vers conseils.html — aucun paramètre transmis
+         (pas de user_id, pas de patientId, pas de mode). conseils.html
+         refait intégralement ses propres vérifications d'accès
+         (session, rôle) : ce lien n'est jamais la protection principale. -->
+    <a href="conseils.html" class="t-back" title="Analyse réelle en lecture seule">📓 Observation des journaux</a>
     <a href="dashboard.html" class="t-back">&#8592; Retour &#224; l'app</a>
   </div>
 </header>
