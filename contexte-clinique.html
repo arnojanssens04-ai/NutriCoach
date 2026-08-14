@@ -5,19 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon contexte clinique — Cap Santé</title>
 <!--
-  contexte-clinique.html — Interface de déclaration utilisateur (VERSION MOCKÉE)
+  contexte-clinique.html — Interface de déclaration utilisateur
+  (VERSION PARTIELLEMENT CONNECTÉE — étape B2)
 
-  Étape préparatoire uniquement. Cette page utilise des données mockées en
-  dur : elle n'appelle jamais sb.from(...), ne charge pas
-  clinical-context-storage.js, et ne fait aucun appel réseau clinique.
-  Seul sb.auth.getSession() est utilisé, pour la garde de session (même
-  pattern que les autres pages de l'application) — aucune donnée clinique
-  n'est lue ni écrite via Supabase.
+  Le bouton de consentement est réellement connecté à createConsent() de
+  clinical-context-storage.js (écriture réelle dans clinical_consents,
+  après calcul SHA-256 côté navigateur du texte de consentement).
 
-  Le consentement est simulé localement via la variable mockConsentActive
-  (initialisée à false). Son acceptation ne fait aucun appel réseau et ne
-  persiste rien : elle active uniquement l'état visuel des formulaires
-  dans cette page, pour cette session de navigation.
+  Tout le reste demeure MOCKÉ : les listes et formulaires de déclarations,
+  symptômes et demandes de résultat biologique utilisent toujours des
+  données en dur (mockEntries, mockSymptoms, mockLabRequests) et ne font
+  aucun appel à clinical-context-storage.js ni à sb.from(...) pour ces
+  données — seule l'écriture du consentement est réelle. Seul
+  sb.auth.getSession() (garde de session) et createConsent() (bouton de
+  consentement) accèdent réellement à Supabase depuis cette page.
 
   Aucun diagnostic, aucun conseil, aucune suggestion nutritionnelle.
   Aucune entrée ne peut passer au statut "confirmed" depuis cette page.
@@ -68,15 +69,17 @@ textarea{ min-height:60px; resize:vertical; }
 
 <main id="app-root">
 
-  <!-- Bandeau de consentement (simulé) -->
+  <!-- Bandeau de consentement -->
   <div class="consent-banner" id="consent-banner">
     <p>Je souhaite renseigner des informations sur ma santé (pathologies, allergies, intolérances, traitements, compléments, symptômes) dans le cadre du suivi nutritionnel proposé par Cap Santé. Ces informations pourront être consultées par un professionnel habilité assigné à mon suivi. Elles ne servent ni à un diagnostic automatique ni à une recommandation automatique. Je peux modifier ou retirer ce consentement à tout moment ; le retrait empêche l'ajout de nouvelles informations mais ne supprime pas l'historique déjà enregistré.</p>
     <div class="consent-check">
       <input type="checkbox" id="consent-checkbox">
-      <label for="consent-checkbox">J'accepte (simulation locale — aucune écriture réelle)</label>
+      <label for="consent-checkbox">J'accepte</label>
     </div>
-    <button type="button" class="btn btn-primary" id="consent-accept-btn" disabled>Activer (simulation)</button>
+    <button type="button" class="btn btn-primary" id="consent-accept-btn" disabled>Valider mon consentement</button>
     <p class="disabled-note" id="consent-status-note">Consentement non actif — les formulaires ci-dessous sont désactivés.</p>
+    <p class="disabled-note" id="consent-success-note" style="display:none; color:#7fbf7f;">Votre consentement a été enregistré. Vous pouvez maintenant renseigner vos informations.</p>
+    <p class="disabled-note" id="consent-error-note" style="display:none; color:#c97b4b;"></p>
   </div>
 
   <!-- Section A — Mes déclarations -->
@@ -151,6 +154,7 @@ textarea{ min-height:60px; resize:vertical; }
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="clinical-context-storage.js"></script>
 <script>
 'use strict';
 
@@ -190,7 +194,33 @@ var SYMPTOM_TYPE_LABELS = {
   unknown: 'Autre'
 };
 
-var mockConsentActive = false;
+var consentActive = false;
+
+/* ---------------------------------------------------------------------
+   Consentement réel — connexion à createConsent() de
+   clinical-context-storage.js. Le texte ci-dessous doit rester
+   strictement identique, caractère pour caractère, au texte affiché
+   dans #consent-banner : le hash porte sur cette constante, jamais sur
+   le DOM, pour éviter toute désynchronisation silencieuse entre ce qui
+   est affiché et ce qui est haché.
+   --------------------------------------------------------------------- */
+var CONSENT_VERSION = '1.0.0';
+var CONSENT_TEXT = "Je souhaite renseigner des informations sur ma santé (pathologies, allergies, intolérances, traitements, compléments, symptômes) dans le cadre du suivi nutritionnel proposé par Cap Santé. Ces informations pourront être consultées par un professionnel habilité assigné à mon suivi. Elles ne servent ni à un diagnostic automatique ni à une recommandation automatique. Je peux modifier ou retirer ce consentement à tout moment ; le retrait empêche l'ajout de nouvelles informations mais ne supprime pas l'historique déjà enregistré.";
+
+function computeConsentTextHash(text) {
+  var data = new TextEncoder().encode(text);
+  return crypto.subtle.digest('SHA-256', data).then(function (digest) {
+    return Array.from(new Uint8Array(digest)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  });
+}
+
+// Calculé une fois au chargement (pas à chaque clic). Si crypto.subtle
+// est indisponible (contexte non sécurisé, navigateur trop ancien), la
+// promesse se résout à null plutôt que de rejeter, pour ne jamais casser
+// le reste du chargement de la page ; le handler de clic détecte ce cas.
+var consentTextHashPromise = (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function')
+  ? computeConsentTextHash(CONSENT_TEXT)
+  : Promise.resolve(null);
 
 var mockEntries = [
   { id: 'm1', category: 'pathology', label: 'Reflux gastro-œsophagien', details: '', status: 'to_verify', source: 'patient_report' },
@@ -271,12 +301,23 @@ function updateConsentUI() {
     document.getElementById('symptom-submit-btn'),
     document.getElementById('lab-request-submit-btn')
   ];
-  submitBtns.forEach(function (btn) { btn.disabled = !mockConsentActive; });
-  document.getElementById('consent-status-note').style.display = mockConsentActive ? 'none' : 'block';
-  document.getElementById('consent-accept-btn').disabled = !document.getElementById('consent-checkbox').checked || mockConsentActive;
-  if (mockConsentActive) {
+  submitBtns.forEach(function (btn) { btn.disabled = !consentActive; });
+  document.getElementById('consent-status-note').style.display = consentActive ? 'none' : 'block';
+  document.getElementById('consent-success-note').style.display = consentActive ? 'block' : 'none';
+  document.getElementById('consent-accept-btn').disabled = !document.getElementById('consent-checkbox').checked || consentActive;
+  if (consentActive) {
     document.getElementById('consent-banner').style.opacity = '0.6';
   }
+}
+
+function showConsentError(message) {
+  var el = document.getElementById('consent-error-note');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function hideConsentError() {
+  document.getElementById('consent-error-note').style.display = 'none';
 }
 
 /* ---------------------------------------------------------------------
@@ -291,15 +332,43 @@ function initApp() {
   document.getElementById('consent-checkbox').addEventListener('change', updateConsentUI);
 
   document.getElementById('consent-accept-btn').addEventListener('click', function () {
-    if (!document.getElementById('consent-checkbox').checked) return;
-    // Simulation locale uniquement : aucun appel réseau, aucune persistance réelle.
-    mockConsentActive = true;
-    updateConsentUI();
+    var checkbox = document.getElementById('consent-checkbox');
+    if (!checkbox.checked) return;
+
+    var acceptBtn = document.getElementById('consent-accept-btn');
+    // Désactivation synchrone immédiate : empêche tout second clic pendant
+    // la requête (un bouton désactivé ne redéclenche pas d'événement click).
+    acceptBtn.disabled = true;
+    hideConsentError();
+
+    consentTextHashPromise.then(function (hash) {
+      if (!hash) {
+        // crypto.subtle indisponible (contexte non sécurisé ou navigateur
+        // trop ancien) — cas distinct d'une erreur réseau/RLS, message dédié.
+        showConsentError('Votre navigateur ne permet pas de valider ce consentement ici. Veuillez réessayer depuis un autre navigateur ou appareil.');
+        acceptBtn.disabled = false;
+        return;
+      }
+      return createConsent({
+        consent_version: CONSENT_VERSION,
+        consent_text_hash: hash
+      }).then(function () {
+        consentActive = true;
+        updateConsentUI();
+        // Case volontairement laissée cochée après succès (aucune remise à zéro).
+      }).catch(function () {
+        // Jamais le détail brut de l'exception/res.error affiché.
+        showConsentError('Une erreur est survenue. Veuillez réessayer.');
+        acceptBtn.disabled = false;
+        // Case volontairement laissée cochée après échec, pour permettre
+        // une nouvelle tentative immédiate.
+      });
+    });
   });
 
   document.getElementById('entry-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
-    if (!mockConsentActive) return;
+    if (!consentActive) return;
     var category = document.getElementById('entry-category').value;
     var label = document.getElementById('entry-label').value.trim();
     var details = document.getElementById('entry-details').value.trim();
@@ -318,7 +387,7 @@ function initApp() {
 
   document.getElementById('symptom-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
-    if (!mockConsentActive) return;
+    if (!consentActive) return;
     var intensity = parseInt(document.getElementById('symptom-intensity').value, 10);
     var errorEl = document.getElementById('symptom-intensity-error');
     if (isNaN(intensity) || intensity < 1 || intensity > 10) {
@@ -341,7 +410,7 @@ function initApp() {
 
   document.getElementById('lab-request-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
-    if (!mockConsentActive) return;
+    if (!consentActive) return;
     var note = document.getElementById('lab-request-note').value.trim();
     mockLabRequests.push({
       id: 'mock-lab-' + Date.now(),
