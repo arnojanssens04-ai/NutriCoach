@@ -31,12 +31,25 @@
    ────────────────────────────────────────────────────────────────────── */
 
 var FORBIDDEN_CLINICAL_WRITE_FIELDS = ['status', 'source', 'verified_by', 'verified_at', 'reviewed_by', 'reviewed_at'];
+var FORBIDDEN_CONSENT_IDENTITY_FIELDS = ['user_id', 'purpose'];
 
 function assertConsentFieldsAbsent(payload) {
   payload = payload || {};
   FORBIDDEN_CLINICAL_WRITE_FIELDS.forEach(function (field) {
     if (Object.prototype.hasOwnProperty.call(payload, field)) {
       throw new Error('assertConsentFieldsAbsent: champ interdit dans le payload client: ' + field);
+    }
+  });
+}
+
+// Garde symétrique à assertConsentFieldsAbsent, dédiée à createConsent() :
+// user_id (dérivé de la session) et purpose (constante fixe) ne doivent
+// jamais être fournis par l'appelant.
+function assertConsentIdentityFieldsAbsent(payload) {
+  payload = payload || {};
+  FORBIDDEN_CONSENT_IDENTITY_FIELDS.forEach(function (field) {
+    if (Object.prototype.hasOwnProperty.call(payload, field)) {
+      throw new Error('assertConsentIdentityFieldsAbsent: champ interdit dans le payload client: ' + field);
     }
   });
 }
@@ -205,6 +218,36 @@ function createLabResultRequest(payload) {
       };
       return sb.from('clinical_lab_result_requests').insert(insertPayload).select().single();
     });
+  }).then(function (res) {
+    if (res.error) throw res.error;
+    return res.data;
+  });
+}
+
+// createConsent() — seule fonction d'écriture du module qui ne dépend
+// d'aucun consentement préexistant (logique : c'est elle qui le crée).
+// N'impose aucune protection contre les insertions multiples au niveau
+// base (aucune contrainte d'unicité sur clinical_consents) : la
+// protection contre le double-clic reste de la responsabilité de la
+// page appelante (désactivation du bouton pendant l'appel), documentée
+// dans le Document B et non réalisable depuis ce module seul.
+function createConsent(payload) {
+  payload = payload || {};
+  assertConsentIdentityFieldsAbsent(payload);
+  if (typeof payload.consent_version !== 'string' || payload.consent_version.trim() === '') {
+    throw new Error('createConsent: consent_version requis (colonne NOT NULL)');
+  }
+  if (typeof payload.consent_text_hash !== 'string' || payload.consent_text_hash.trim() === '') {
+    throw new Error('createConsent: consent_text_hash requis (colonne NOT NULL)');
+  }
+  return assertCurrentSession().then(function (currentUser) {
+    var insertPayload = {
+      user_id: currentUser.id,
+      purpose: 'clinical_context',
+      consent_version: payload.consent_version,
+      consent_text_hash: payload.consent_text_hash
+    };
+    return sb.from('clinical_consents').insert(insertPayload).select().single();
   }).then(function (res) {
     if (res.error) throw res.error;
     return res.data;
