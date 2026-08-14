@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon contexte clinique — Cap Santé</title>
+<!--
+  contexte-clinique.html — Interface de déclaration utilisateur (VERSION MOCKÉE)
+
+  Étape préparatoire uniquement. Cette page utilise des données mockées en
+  dur : elle n'appelle jamais sb.from(...), ne charge pas
+  clinical-context-storage.js, et ne fait aucun appel réseau clinique.
+  Seul sb.auth.getSession() est utilisé, pour la garde de session (même
+  pattern que les autres pages de l'application) — aucune donnée clinique
+  n'est lue ni écrite via Supabase.
+
+  Le consentement est simulé localement via la variable mockConsentActive
+  (initialisée à false). Son acceptation ne fait aucun appel réseau et ne
+  persiste rien : elle active uniquement l'état visuel des formulaires
+  dans cette page, pour cette session de navigation.
+
+  Aucun diagnostic, aucun conseil, aucune suggestion nutritionnelle.
+  Aucune entrée ne peut passer au statut "confirmed" depuis cette page.
+  Aucun paramètre d'URL, aucune sélection d'un autre utilisateur.
+-->
+<style>
+:root{ --bg:#0b0c10; --card:#14161c; --border:#262a33; --text:#e8e6e1; --text2:#9a9a9a; --gold:#c9a24b; }
+*{box-sizing:border-box;}
+body{ background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; margin:0; padding:0; }
+.t-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); }
+.t-logo{ font-size:1.1rem; font-weight:600; }
+.t-logo span{ color:var(--gold); }
+main{ max-width:720px; margin:0 auto; padding:24px; }
+section{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:20px; }
+h2{ margin-top:0; font-size:1rem; color:var(--gold); }
+.entry{ padding:10px 0; border-bottom:1px solid var(--border); }
+.entry:last-child{ border-bottom:none; }
+.entry-label{ font-weight:600; }
+.entry-status{ font-size:.8rem; color:var(--text2); margin-top:2px; }
+.entry-status.confirmed{ color:#7fbf7f; }
+.btn{ background:transparent; border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:8px; cursor:pointer; font-size:.85rem; }
+.btn:hover:not(:disabled){ border-color:var(--gold); color:var(--gold); }
+.btn:disabled{ opacity:.4; cursor:not-allowed; }
+.btn-primary{ background:var(--gold); color:#111; border:none; font-weight:600; }
+.btn-primary:disabled{ background:var(--border); color:var(--text2); }
+form{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+label{ font-size:.85rem; color:var(--text2); }
+input, select, textarea{ background:#0e1015; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px; font-size:.9rem; }
+textarea{ min-height:60px; resize:vertical; }
+.hint{ font-size:.75rem; color:var(--text2); font-style:italic; }
+.consent-banner{ background:#1a1c22; border:1px solid var(--gold); border-radius:12px; padding:16px; margin-bottom:20px; }
+.consent-banner p{ font-size:.85rem; line-height:1.5; }
+.consent-check{ display:flex; align-items:center; gap:8px; margin:10px 0; }
+.disabled-note{ font-size:.8rem; color:var(--text2); margin-top:6px; }
+#access-denied{ display:none; padding:40px; text-align:center; color:var(--text2); }
+#app-root{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="t-header">
+  <div class="t-logo">Cap<span>Santé</span></div>
+</div>
+
+<div id="access-denied">
+  <p>Session requise. Redirection en cours...</p>
+</div>
+
+<main id="app-root">
+
+  <!-- Bandeau de consentement (simulé) -->
+  <div class="consent-banner" id="consent-banner">
+    <p>Je souhaite renseigner des informations sur ma santé (pathologies, allergies, intolérances, traitements, compléments, symptômes) dans le cadre du suivi nutritionnel proposé par Cap Santé. Ces informations pourront être consultées par un professionnel habilité assigné à mon suivi. Elles ne servent ni à un diagnostic automatique ni à une recommandation automatique. Je peux modifier ou retirer ce consentement à tout moment ; le retrait empêche l'ajout de nouvelles informations mais ne supprime pas l'historique déjà enregistré.</p>
+    <div class="consent-check">
+      <input type="checkbox" id="consent-checkbox">
+      <label for="consent-checkbox">J'accepte (simulation locale — aucune écriture réelle)</label>
+    </div>
+    <button type="button" class="btn btn-primary" id="consent-accept-btn" disabled>Activer (simulation)</button>
+    <p class="disabled-note" id="consent-status-note">Consentement non actif — les formulaires ci-dessous sont désactivés.</p>
+  </div>
+
+  <!-- Section A — Mes déclarations -->
+  <section>
+    <h2>Mes déclarations</h2>
+    <div id="entries-list"></div>
+  </section>
+
+  <!-- Section B — Ajouter une déclaration -->
+  <section>
+    <h2>Ajouter une déclaration</h2>
+    <form id="entry-form">
+      <label for="entry-category">Catégorie</label>
+      <select id="entry-category" required>
+        <option value="pathology">Pathologie</option>
+        <option value="allergy">Allergie</option>
+        <option value="intolerance">Intolérance</option>
+      </select>
+
+      <label for="entry-label">Libellé</label>
+      <input type="text" id="entry-label" required maxlength="200">
+
+      <label for="entry-details">Détails (facultatif)</label>
+      <textarea id="entry-details" maxlength="1000"></textarea>
+      <p class="hint">Ce champ n'est jamais interprété automatiquement.</p>
+
+      <button type="submit" class="btn btn-primary" id="entry-submit-btn" disabled>Ajouter</button>
+    </form>
+  </section>
+
+  <!-- Section C — Mes symptômes -->
+  <section>
+    <h2>Mes symptômes</h2>
+    <div id="symptoms-list"></div>
+
+    <form id="symptom-form">
+      <label for="symptom-type">Type de symptôme</label>
+      <select id="symptom-type" required>
+        <option value="bloating">Ballonnements</option>
+        <option value="abdominal_distension">Distension abdominale</option>
+        <option value="peripheral_swelling">Gonflement périphérique</option>
+        <option value="rapid_weight_change">Changement de poids rapide</option>
+        <option value="unknown">Autre</option>
+      </select>
+
+      <label for="symptom-occurred-at">Date et heure</label>
+      <input type="datetime-local" id="symptom-occurred-at" required>
+
+      <label for="symptom-intensity">Intensité (1 à 10)</label>
+      <input type="number" id="symptom-intensity" min="1" max="10" required>
+      <p class="hint" id="symptom-intensity-error" style="display:none; color:#c97b4b;">L'intensité doit être comprise entre 1 et 10.</p>
+
+      <label for="symptom-comment">Commentaire (facultatif)</label>
+      <textarea id="symptom-comment" maxlength="1000"></textarea>
+
+      <button type="submit" class="btn btn-primary" id="symptom-submit-btn" disabled>Ajouter le symptôme</button>
+    </form>
+  </section>
+
+  <!-- Section D — Résultat biologique -->
+  <section>
+    <h2>Résultat biologique</h2>
+    <p class="hint">Vous ne pouvez pas ajouter un résultat vous-même : seule une demande peut être signalée.</p>
+    <form id="lab-request-form">
+      <label for="lab-request-note">Note (facultatif)</label>
+      <textarea id="lab-request-note" maxlength="500" placeholder="Ex : je souhaite faire ajouter mon dernier bilan sanguin"></textarea>
+      <button type="submit" class="btn btn-primary" id="lab-request-submit-btn" disabled>Signaler que je souhaite ajouter un résultat</button>
+    </form>
+    <div id="lab-requests-list"></div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+
+/* ---------------------------------------------------------------------
+   Garde de session — seul appel Supabase de cette page (auth uniquement,
+   aucune donnée clinique lue ou écrite via Supabase).
+   --------------------------------------------------------------------- */
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+sb.auth.getSession().then(function (r) {
+  if (!r.data || !r.data.session) {
+    document.getElementById('access-denied').style.display = 'block';
+    window.location.href = 'index.html';
+    return;
+  }
+  document.getElementById('app-root').style.display = 'block';
+  initApp();
+});
+
+/* ---------------------------------------------------------------------
+   État mocké — aucune donnée réelle, aucun appel réseau clinique.
+   --------------------------------------------------------------------- */
+var STATUS_LABELS = {
+  to_verify_patient_report: 'Déclaré par vous — à vérifier',
+  confirmed: 'Confirmé par un professionnel',
+  denied: 'Non retenu',
+  unknown: 'Statut inconnu'
+};
+
+var SYMPTOM_TYPE_LABELS = {
+  bloating: 'Ballonnements',
+  abdominal_distension: 'Distension abdominale',
+  peripheral_swelling: 'Gonflement périphérique',
+  rapid_weight_change: 'Changement de poids rapide',
+  unknown: 'Autre'
+};
+
+var mockConsentActive = false;
+
+var mockEntries = [
+  { id: 'm1', category: 'pathology', label: 'Reflux gastro-œsophagien', details: '', status: 'to_verify', source: 'patient_report' },
+  { id: 'm2', category: 'allergy', label: 'Arachide', details: '', status: 'confirmed', source: 'professional_entry' },
+  { id: 'm3', category: 'intolerance', label: 'Lactose', details: '', status: 'denied', source: 'patient_report' },
+  { id: 'm4', category: 'medication', label: 'Complément vitamine D', details: '', status: 'unknown', source: 'imported_data' },
+  { id: 'm5', category: 'supplement', label: 'Magnésium', details: '', status: 'to_verify', source: 'patient_report' }
+];
+
+var mockSymptoms = [];
+var mockLabRequests = [];
+
+function statusKeyFor(entry) {
+  if (entry.status === 'confirmed') return 'confirmed';
+  if (entry.status === 'denied') return 'denied';
+  if (entry.status === 'to_verify' && entry.source === 'patient_report') return 'to_verify_patient_report';
+  return 'unknown';
+}
+
+function statusTextFor(entry) {
+  return STATUS_LABELS[statusKeyFor(entry)];
+}
+
+/* ---------------------------------------------------------------------
+   Rendu
+   --------------------------------------------------------------------- */
+function renderEntries() {
+  var list = document.getElementById('entries-list');
+  if (mockEntries.length === 0) {
+    list.innerHTML = '<p class="hint">Aucune déclaration pour le moment.</p>';
+    return;
+  }
+  list.innerHTML = mockEntries.map(function (e) {
+    var statusKey = statusKeyFor(e);
+    var canEdit = e.status === 'to_verify';
+    return '<div class="entry" data-id="' + e.id + '">' +
+      '<div class="entry-label">' + escapeHtml(e.label) + '</div>' +
+      '<div class="entry-status ' + (statusKey === 'confirmed' ? 'confirmed' : '') + '">' + escapeHtml(statusTextFor(e)) + '</div>' +
+      (canEdit ? '<button type="button" class="btn" data-action="edit" data-id="' + e.id + '">Modifier</button>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function renderSymptoms() {
+  var list = document.getElementById('symptoms-list');
+  if (mockSymptoms.length === 0) {
+    list.innerHTML = '<p class="hint">Aucun symptôme enregistré.</p>';
+    return;
+  }
+  list.innerHTML = mockSymptoms.map(function (s) {
+    return '<div class="entry">' +
+      '<div class="entry-label">' + escapeHtml(SYMPTOM_TYPE_LABELS[s.symptom_type] || s.symptom_type) + '</div>' +
+      '<div class="entry-status">' + escapeHtml(statusTextFor(s)) + ' — intensité ' + s.intensity + '/10</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderLabRequests() {
+  var list = document.getElementById('lab-requests-list');
+  if (mockLabRequests.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = mockLabRequests.map(function (r) {
+    return '<div class="entry"><div class="entry-label">Demande envoyée</div><div class="entry-status">' + escapeHtml(statusTextFor(r)) + '</div></div>';
+  }).join('');
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function updateConsentUI() {
+  var submitBtns = [
+    document.getElementById('entry-submit-btn'),
+    document.getElementById('symptom-submit-btn'),
+    document.getElementById('lab-request-submit-btn')
+  ];
+  submitBtns.forEach(function (btn) { btn.disabled = !mockConsentActive; });
+  document.getElementById('consent-status-note').style.display = mockConsentActive ? 'none' : 'block';
+  document.getElementById('consent-accept-btn').disabled = !document.getElementById('consent-checkbox').checked || mockConsentActive;
+  if (mockConsentActive) {
+    document.getElementById('consent-banner').style.opacity = '0.6';
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Interactions
+   --------------------------------------------------------------------- */
+function initApp() {
+  renderEntries();
+  renderSymptoms();
+  renderLabRequests();
+  updateConsentUI();
+
+  document.getElementById('consent-checkbox').addEventListener('change', updateConsentUI);
+
+  document.getElementById('consent-accept-btn').addEventListener('click', function () {
+    if (!document.getElementById('consent-checkbox').checked) return;
+    // Simulation locale uniquement : aucun appel réseau, aucune persistance réelle.
+    mockConsentActive = true;
+    updateConsentUI();
+  });
+
+  document.getElementById('entry-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!mockConsentActive) return;
+    var category = document.getElementById('entry-category').value;
+    var label = document.getElementById('entry-label').value.trim();
+    var details = document.getElementById('entry-details').value.trim();
+    if (!label) return;
+    mockEntries.push({
+      id: 'mock-' + Date.now(),
+      category: category,
+      label: label,
+      details: details,
+      status: 'to_verify',
+      source: 'patient_report'
+    });
+    renderEntries();
+    ev.target.reset();
+  });
+
+  document.getElementById('symptom-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!mockConsentActive) return;
+    var intensity = parseInt(document.getElementById('symptom-intensity').value, 10);
+    var errorEl = document.getElementById('symptom-intensity-error');
+    if (isNaN(intensity) || intensity < 1 || intensity > 10) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    errorEl.style.display = 'none';
+    mockSymptoms.push({
+      id: 'mock-symptom-' + Date.now(),
+      symptom_type: document.getElementById('symptom-type').value,
+      occurred_at: document.getElementById('symptom-occurred-at').value,
+      intensity: intensity,
+      patient_comment: document.getElementById('symptom-comment').value.trim(),
+      status: 'to_verify',
+      source: 'patient_report'
+    });
+    renderSymptoms();
+    ev.target.reset();
+  });
+
+  document.getElementById('lab-request-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!mockConsentActive) return;
+    var note = document.getElementById('lab-request-note').value.trim();
+    mockLabRequests.push({
+      id: 'mock-lab-' + Date.now(),
+      request_note: note,
+      status: 'to_verify',
+      source: 'patient_report'
+    });
+    renderLabRequests();
+    ev.target.reset();
+  });
+
+  document.getElementById('entries-list').addEventListener('click', function (ev) {
+    if (ev.target && ev.target.dataset && ev.target.dataset.action === 'edit') {
+      // Modification mockée : non implémentée dans cette étape (pas de
+      // persistance réelle, pas d'appel au module de stockage).
+      alert('Modification simulée — non connectée à une écriture réelle à cette étape.');
+    }
+  });
+}
+</script>
+</body>
+</html>
