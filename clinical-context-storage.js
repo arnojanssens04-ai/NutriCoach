@@ -142,7 +142,9 @@ function createClinicalEntry(payload) {
         category: payload.category,
         code: payload.code,
         label: payload.label,
-        details: payload.details
+        details: payload.details,
+        status: 'to_verify',
+        source: 'patient_report'
       };
       return sb.from('clinical_context_entries').insert(insertPayload).select().single();
     });
@@ -197,7 +199,9 @@ function createSymptom(payload) {
         activity_context: payload.activity_context,
         medication_context: payload.medication_context,
         cycle_context: payload.cycle_context,
-        patient_comment: payload.patient_comment
+        patient_comment: payload.patient_comment,
+        status: 'to_verify',
+        source: 'patient_report'
       };
       return sb.from('clinical_symptoms').insert(insertPayload).select().single();
     });
