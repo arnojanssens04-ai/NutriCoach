@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composant — carte de tendance</title>
+<!--
+  trend-card-component.html — COMPOSANT ISOLÉ, étape 1 de feature/trend-cards-v1
+  (v2 — carte compacte + modale <dialog>, après retour de non-validation
+  visuelle de la v1 "rapport technique").
+
+  Ce fichier ne fait jamais sb.from(...), ne charge aucun script Supabase,
+  ne définit ni ne lit PATTERN_REGISTRY, ne copie et n'appelle jamais
+  detectPatternFromRegistry() ni buildNeutralSynthesis() (conseils.html,
+  intact, non référencé ici). Il ne calcule rien : il affiche uniquement
+  l'objet TrendCardResult qui lui est fourni, tel quel.
+
+  Aucun diagnostic, conseil ou recommandation. Aucune écriture. Aucune
+  navigation ajoutée. Ce fichier n'est chargé par aucune autre page.
+
+  ── Contrat de données : TrendCardResult ──────────────────────────────
+  {
+    patternId: string,
+    label: string,
+    state: 'present' | 'absent' | 'insufficient' | 'not_evaluated' | 'error',
+    referenceDate: string,        // 'YYYY-MM-DD'
+    windowStart: string,          // 'YYYY-MM-DD'
+    windowEnd: string,            // 'YYYY-MM-DD'
+    calendarDays: number,
+    analyzableDays: number,
+    coverageRate: number,         // 0..1, fourni tel quel, jamais recalculé ici
+    occurrenceDays: number,
+    evaluatedDays: number,
+    occurrenceRate: number,       // 0..1, fourni tel quel, jamais recalculé ici
+    confidence: 'high' | 'moderate' | 'low' | 'unknown',
+    insufficientDays: Array<{ date: string, reason: string }>,
+    isConfirmed: boolean,
+    observationMessage: string | null,       // texte déjà validé, fourni par l'appelant
+    insufficientDataMessage: string | null    // texte déjà validé, fourni par l'appelant
+  }
+
+  Le composant ne fabrique jamais de formulation métier lui-même pour les
+  états 'present'/'absent'/'insufficient' : si observationMessage (ou
+  insufficientDataMessage pour l'état insufficient) est fourni, il est
+  affiché tel quel. S'il est absent/null, le composant affiche un texte
+  de repli STRICTEMENT NEUTRE et factuel — jamais une phrase suggérant un
+  jugement, une conclusion ou un vocabulaire culpabilisant. Pour
+  'not_evaluated' et 'error', les textes sont fixes et génériques, car ces
+  deux états ne portent par définition aucune observation.
+
+  ── Structure UX ───────────────────────────────────────────────────────
+  - Une carte COMPACTE par tendance dans la page (titre, phrase courte,
+    une seule métrique principale au maximum, période résumée, bouton
+    "Voir le détail"). Aucun nom technique de propriété n'y apparaît.
+  - Le détail complet (données disponibles, métrique principale, confiance,
+    limites, statut de validation, jours exclus) n'apparaît que dans une
+    modale <dialog> native, ouverte via showModal(), une seule tendance à
+    la fois, avec arrière-plan inerte (comportement natif de <dialog>),
+    fermeture par bouton visible ou Échap (natif), et retour du focus au
+    bouton d'ouverture à la fermeture.
+  ──────────────────────────────────────────────────────────────────── -->
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --amber:#7a5c1e; --amber-l:rgba(122,92,30,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --r:12px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;}
+html{background:var(--bg);}
+body{ background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; margin:0; padding:0 0 60px; -webkit-font-smoothing:antialiased; }
+
+.t-header{ position:sticky; top:0; z-index:10; background:var(--bg); border-bottom:1px solid var(--border); padding:0 24px; height:58px; display:flex; align-items:center; }
+.t-logo{ font-family:'Lora',serif; font-size:1.25rem; font-weight:700; letter-spacing:-.2px; color:var(--text); }
+.t-logo span{ color:var(--gold); }
+.mockup-flag{ margin-left:12px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--amber); background:var(--amber-l); border:1px solid rgba(122,92,30,0.25); padding:2px 9px; border-radius:999px; }
+
+main{ max-width:820px; margin:0 auto; padding:32px 24px 0; }
+.page-title{ font-family:'Lora',serif; font-size:1.5rem; font-weight:700; letter-spacing:-.02em; margin-bottom:8px; }
+.page-sub{ font-size:.88rem; color:var(--text2); line-height:1.6; margin-bottom:24px; max-width:640px; }
+
+.cards-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:620px){ .cards-grid{ grid-template-columns:1fr; } }
+
+/* ── Carte compacte ── */
+.trend-card-compact{ background:var(--card); border:1px solid var(--border); border-left:4px solid var(--state-color, var(--border2)); border-radius:var(--r); box-shadow:var(--sh); padding:20px 22px; display:flex; flex-direction:column; gap:10px; }
+.tc-state-tag{ display:inline-flex; align-items:center; gap:7px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--state-color, var(--text2)); }
+.tc-state-tag .emoji{ font-size:.95rem; line-height:1; }
+.tc-title{ font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--text); line-height:1.35; }
+.tc-desc{ font-size:.86rem; color:var(--text2); line-height:1.55; flex:1; }
+.tc-metric{ display:flex; align-items:baseline; gap:8px; }
+.tc-metric-val{ font-family:'Lora',serif; font-size:1.6rem; font-weight:700; color:var(--state-color, var(--gold)); line-height:1; }
+.tc-metric-lbl{ font-size:.76rem; color:var(--text2); }
+.tc-metric-none{ font-size:.82rem; color:var(--text3); font-style:italic; }
+.tc-period{ font-size:.76rem; color:var(--text3); }
+.tc-detail-btn{ margin-top:4px; align-self:flex-start; background:none; border:1px solid var(--state-color, var(--border2)); color:var(--state-color, var(--gold)); font-family:'Inter',sans-serif; font-weight:600; font-size:.82rem; padding:8px 16px; border-radius:9px; cursor:pointer; transition:all .15s; }
+.tc-detail-btn:hover{ background:var(--state-bg, var(--gold-l)); }
+.tc-detail-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.state-present{ --state-color:var(--gold); --state-bg:var(--gold-l); }
+.state-absent{ --state-color:var(--sage); --state-bg:var(--sage-l); }
+.state-insufficient{ --state-color:var(--amber); --state-bg:var(--amber-l); }
+.state-not_evaluated{ --state-color:var(--text3); --state-bg:var(--card2); }
+.state-error{ --state-color:var(--rose); --state-bg:var(--rose-l); }
+
+/* ── Modale ── */
+dialog.trend-dialog{ border:none; border-radius:16px; padding:0; max-width:560px; width:calc(100% - 40px); box-shadow:0 20px 60px rgba(0,0,0,0.25); background:var(--card); color:var(--text); max-height:min(85vh, 720px); }
+dialog.trend-dialog::backdrop{ background:rgba(26,25,22,0.55); }
+
+.td-inner{ display:flex; flex-direction:column; max-height:min(85vh, 720px); }
+.td-hdr{ padding:22px 26px 16px; border-bottom:1px solid var(--border2); border-top:4px solid var(--state-color, var(--border2)); display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-shrink:0; }
+.td-title-wrap{ min-width:0; }
+.td-state-tag{ display:inline-flex; align-items:center; gap:6px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--state-color, var(--text2)); margin-bottom:6px; }
+.td-state-tag .emoji{ font-size:.9rem; line-height:1; }
+.td-title{ font-family:'Lora',serif; font-size:1.25rem; font-weight:700; color:var(--text); line-height:1.35; margin-bottom:6px; }
+.td-period{ font-size:.82rem; color:var(--text2); }
+.td-close{ flex-shrink:0; background:var(--card2); border:1px solid var(--border2); color:var(--text2); width:34px; height:34px; border-radius:9px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.td-close:hover{ border-color:var(--gold); color:var(--gold); }
+.td-close:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.td-body{ padding:22px 26px 26px; overflow-y:auto; }
+
+.td-section{ margin-bottom:20px; }
+.td-section:last-child{ margin-bottom:0; }
+.td-section-lbl{ font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text2); margin-bottom:8px; }
+
+.td-observation{ border-radius:11px; padding:16px 18px; border:1px solid; }
+.td-observation.tone-present{ background:var(--gold-l); border-color:rgba(45,79,28,0.18); }
+.td-observation.tone-absent{ background:var(--sage-l); border-color:rgba(74,122,58,0.25); }
+.td-observation.tone-insufficient{ background:var(--amber-l); border-color:rgba(122,92,30,0.25); }
+.td-observation.tone-error{ background:var(--rose-l); border-color:rgba(139,42,42,0.25); }
+.td-observation-text{ font-size:.96rem; line-height:1.6; color:var(--text); }
+
+.td-datarow{ font-size:.86rem; color:var(--text2); line-height:1.6; }
+.td-datarow b{ color:var(--text); font-weight:600; }
+
+.td-metric-row{ display:flex; gap:14px; flex-wrap:wrap; }
+.td-metric-box{ background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px 16px; min-width:110px; }
+.td-metric-val{ font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--text); }
+.td-metric-lbl{ font-size:.74rem; color:var(--text2); margin-top:4px; }
+
+.td-limits-list{ margin:0; padding-left:20px; font-size:.86rem; color:var(--text2); line-height:1.7; }
+.td-limits-list li{ margin-bottom:2px; }
+
+.td-status{ display:flex; align-items:center; gap:9px; font-size:.86rem; color:var(--text); font-weight:600; }
+.td-status .dot{ width:9px; height:9px; border-radius:50%; background:var(--text3); flex-shrink:0; }
+
+details.day-details{ border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+details.day-details summary{ cursor:pointer; padding:12px 15px; font-size:.84rem; font-weight:600; color:var(--text); list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--card2); }
+details.day-details summary::-webkit-details-marker{ display:none; }
+details.day-details summary .chev{ transition:transform .15s; color:var(--text3); font-size:.9rem; flex-shrink:0; }
+details.day-details[open] summary .chev{ transform:rotate(90deg); }
+details.day-details summary:hover{ color:var(--gold); }
+details.day-details summary:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; }
+.excluded-day-row{ padding:12px 15px; font-size:.82rem; color:var(--text2); border-top:1px solid var(--border); line-height:1.5; }
+.excluded-day-date{ color:var(--text); font-weight:600; display:block; margin-bottom:2px; }
+.no-exclusions{ padding:12px 15px; font-size:.82rem; color:var(--text2); }
+
+.td-plain{ font-size:.94rem; color:var(--text2); line-height:1.6; }
+
+@media(max-width:480px){
+  main{ padding:24px 14px 0; }
+  dialog.trend-dialog{ width:calc(100% - 24px); }
+  .td-hdr{ padding:18px 18px 14px; }
+  .td-body{ padding:18px 18px 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="t-header">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <span class="mockup-flag">Composant — étape 1, non intégré</span>
+</div>
+
+<main>
+  <h1 class="page-title">Composant de carte de tendance</h1>
+  <p class="page-sub">Cartes compactes pour le motif <code>repeated_ultra_processed_foods</code>, piloté uniquement par l'objet <code>TrendCardResult</code> décrit en commentaire dans le <code>&lt;head&gt;</code>. Aucun calcul, aucune lecture Supabase. Cliquez sur « Voir le détail » pour ouvrir la modale d'une tendance à la fois — <code>conseils.html</code> n'est ni lu ni modifié.</p>
+
+  <div class="cards-grid" id="cards-root"></div>
+</main>
+
+<div id="dialogs-root"></div>
+
+<script>
+'use strict';
+
+/* -----------------------------------------------------------------------
+   Échappement HTML minimal — aucune dépendance externe.
+   ----------------------------------------------------------------------- */
+function escHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function formatDateFr(isoDate) {
+  if (!isoDate || typeof isoDate !== 'string') return '';
+  var parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+
+var CONFIDENCE_LABELS = {
+  high: 'Haute',
+  moderate: 'Modérée',
+  low: 'Basse',
+  unknown: 'Non déterminée'
+};
+
+/* -----------------------------------------------------------------------
+   Repère visuel par état — émoji + libellé de tag. L'émoji est TOUJOURS
+   accompagné du libellé texte (jamais seul porteur d'information), et
+   marqué aria-hidden pour ne pas être lu deux fois par un lecteur d'écran
+   (le libellé textuel suffit).
+   ----------------------------------------------------------------------- */
+var STATE_META = {
+  present: { emoji: '📊', tag: 'Observation présente' },
+  absent: { emoji: '✅', tag: 'Observation absente' },
+  insufficient: { emoji: '❔', tag: 'Données insuffisantes' },
+  not_evaluated: { emoji: '⏳', tag: 'Non évaluée' },
+  error: { emoji: '⚠️', tag: 'Erreur' }
+};
+function stateMetaFor(state) {
+  return STATE_META[state] || STATE_META.not_evaluated;
+}
+
+/* -----------------------------------------------------------------------
+   Textes de repli STRICTEMENT NEUTRES — utilisés seulement si l'appelant
+   ne fournit pas observationMessage / insufficientDataMessage. Jamais de
+   jugement, jamais de vocabulaire culpabilisant, uniquement des faits.
+   ----------------------------------------------------------------------- */
+function fallbackPresentText(r) {
+  return 'Sur les ' + r.evaluatedDays + ' jour' + (r.evaluatedDays > 1 ? 's' : '') + ' évalué' + (r.evaluatedDays > 1 ? 's' : '')
+    + ', ' + r.occurrenceDays + ' présente' + (r.occurrenceDays > 1 ? 'nt' : '') + ' cette observation.';
+}
+function fallbackAbsentText(r) {
+  return 'Sur les ' + r.evaluatedDays + ' jour' + (r.evaluatedDays > 1 ? 's' : '') + ' évalué' + (r.evaluatedDays > 1 ? 's' : '')
+    + ', cette observation n\'a pas été identifiée.';
+}
+function fallbackInsufficientText(r) {
+  var n = (r.insufficientDays || []).length;
+  return 'Les données disponibles ne permettent pas d\'évaluer cette observation pour la période analysée'
+    + (n > 0 ? ' (' + n + ' jour' + (n > 1 ? 's' : '') + ' concerné' + (n > 1 ? 's' : '') + ')' : '') + '.';
+}
+
+/* -----------------------------------------------------------------------
+   Phrase courte pour la CARTE COMPACTE — un seul texte par état, jamais
+   de nom technique de propriété, jamais de liste de compteurs.
+   ----------------------------------------------------------------------- */
+function compactDescriptionFor(r) {
+  if (r.state === 'present') return r.observationMessage || fallbackPresentText(r);
+  if (r.state === 'absent') return r.observationMessage || fallbackAbsentText(r);
+  if (r.state === 'insufficient') return 'Données insuffisantes pour observer cette tendance sur la période.';
+  if (r.state === 'not_evaluated') return 'Cette observation n\'est pas active pour le moment.';
+  return 'Cette observation ne peut pas être affichée pour le moment.';
+}
+
+/* -----------------------------------------------------------------------
+   Une seule métrique principale (ou aucune) pour la carte compacte.
+   ----------------------------------------------------------------------- */
+function compactMetricHtml(r) {
+  if (r.state === 'present') {
+    return '<div class="tc-metric"><span class="tc-metric-val">' + Math.round((r.occurrenceRate || 0) * 100) + ' %</span><span class="tc-metric-lbl">des jours évalués</span></div>';
+  }
+  if (r.state === 'absent') {
+    return '<div class="tc-metric-none">Aucune occurrence sur la période</div>';
+  }
+  return '<div class="tc-metric-none">Pas de métrique disponible</div>';
+}
+
+function periodSummary(r) {
+  return r.calendarDays + ' derniers jours';
+}
+
+/* -----------------------------------------------------------------------
+   Rendu de la carte compacte — titre, phrase courte, une métrique max,
+   période résumée, bouton d'ouverture de la modale.
+   ----------------------------------------------------------------------- */
+function renderCompactCard(r, dialogId, buttonId) {
+  var meta = stateMetaFor(r.state);
+  return '<div class="trend-card-compact state-' + r.state + '">'
+    + '<div class="tc-state-tag"><span class="emoji" aria-hidden="true">' + meta.emoji + '</span><span>' + escHtml(meta.tag) + '</span></div>'
+    + '<div class="tc-title">' + escHtml(r.label || '') + '</div>'
+    + '<div class="tc-desc">' + escHtml(compactDescriptionFor(r)) + '</div>'
+    + compactMetricHtml(r)
+    + '<div class="tc-period">' + escHtml(periodSummary(r)) + '</div>'
+    + '<button type="button" class="tc-detail-btn" id="' + buttonId + '" data-dialog-target="' + dialogId + '">Voir le détail</button>'
+    + '</div>';
+}
+
+/* -----------------------------------------------------------------------
+   Détails des jours exclus — utilisé dans la modale uniquement.
+   ----------------------------------------------------------------------- */
+function renderExclusionsDetails(insufficientDays) {
+  var days = insufficientDays || [];
+  if (days.length === 0) {
+    return '<details class="day-details">'
+      + '<summary><span>Jours exclus du calcul</span><span class="chev" aria-hidden="true">&rsaquo;</span></summary>'
+      + '<div class="no-exclusions">Aucun jour exclu sur la période analysée.</div>'
+      + '</details>';
+  }
+  var rows = days.map(function (d) {
+    return '<div class="excluded-day-row">'
+      + '<span class="excluded-day-date">' + escHtml(formatDateFr(d.date)) + '</span>'
+      + '<span>' + escHtml(d.reason) + '</span>'
+      + '</div>';
+  }).join('');
+  var n = days.length;
+  return '<details class="day-details">'
+    + '<summary><span>' + n + ' jour' + (n > 1 ? 's' : '') + ' exclu' + (n > 1 ? 's' : '') + ' du calcul</span><span class="chev" aria-hidden="true">&rsaquo;</span></summary>'
+    + rows
+    + '</details>';
+}
+
+/* -----------------------------------------------------------------------
+   Contenu de la modale, par état. Chaque section demandée est présente :
+   titre, période, "ce qui a été observé", données disponibles, métrique
+   principale, confiance, limites, statut, jours exclus — sauf pour
+   not_evaluated / error où seul un texte générique a du sens.
+   ----------------------------------------------------------------------- */
+function renderDialogBody(r) {
+  var period = 'Période observée : ' + formatDateFr(r.windowStart) + ' au ' + formatDateFr(r.windowEnd)
+    + ' (' + r.calendarDays + ' jours)';
+
+  if (r.state === 'present' || r.state === 'absent') {
+    var text = r.observationMessage || (r.state === 'present' ? fallbackPresentText(r) : fallbackAbsentText(r));
+    var metricsSection = r.state === 'present'
+      ? '<div class="td-section"><div class="td-section-lbl">Métrique principale</div>'
+        + '<div class="td-metric-row">'
+        + '<div class="td-metric-box"><div class="td-metric-val">' + r.occurrenceDays + ' / ' + r.evaluatedDays + '</div><div class="td-metric-lbl">jours avec observation</div></div>'
+        + '<div class="td-metric-box"><div class="td-metric-val">' + Math.round((r.occurrenceRate || 0) * 100) + ' %</div><div class="td-metric-lbl">taux d\'occurrence</div></div>'
+        + '</div></div>'
+        + '<div class="td-section"><div class="td-section-lbl">Confiance du calcul</div><div class="td-datarow">' + (CONFIDENCE_LABELS[r.confidence] || CONFIDENCE_LABELS.unknown) + '</div></div>'
+      : '';
+    return period
+      + '<div class="td-section"><div class="td-section-lbl">Ce qui a été observé</div>'
+      + '<div class="td-observation tone-' + r.state + '"><div class="td-observation-text">' + escHtml(text) + '</div></div></div>'
+      + '<div class="td-section"><div class="td-section-lbl">Données disponibles</div>'
+      + '<div class="td-datarow">' + r.analyzableDays + ' jours analysables sur ' + r.calendarDays + ' jours calendaires (' + Math.round((r.coverageRate || 0) * 100) + ' % de couverture).</div></div>'
+      + metricsSection
+      + '<div class="td-section"><div class="td-section-lbl">Limites</div><ul class="td-limits-list">'
+      + '<li>Cette observation ne mesure pas la quantité concernée.</li>'
+      + '<li>Elle ne mesure pas la fréquence au cours d\'une même journée.</li>'
+      + '<li>Elle n\'établit aucun lien avec un symptôme ou une pathologie.</li>'
+      + '</ul></div>'
+      + renderStatusAndExclusions(r);
+  }
+
+  if (r.state === 'insufficient') {
+    var insuffText = r.insufficientDataMessage || fallbackInsufficientText(r);
+    return period
+      + '<div class="td-section"><div class="td-section-lbl">Ce qui a été observé</div>'
+      + '<div class="td-observation tone-insufficient"><div class="td-observation-text">' + escHtml(insuffText) + '</div></div></div>'
+      + '<div class="td-section"><div class="td-section-lbl">Données disponibles</div>'
+      + '<div class="td-datarow">' + r.analyzableDays + ' jours analysables sur ' + r.calendarDays + ' jours calendaires (' + Math.round((r.coverageRate || 0) * 100) + ' % de couverture).</div></div>'
+      + '<div class="td-section"><div class="td-section-lbl">Limites</div><p class="td-datarow">Cette observation dépend de la qualité des données saisies et ne peut pas être calculée de façon fiable ici.</p></div>'
+      + renderStatusAndExclusions(r);
+  }
+
+  if (r.state === 'not_evaluated') {
+    return period
+      + '<div class="td-section"><p class="td-plain">Cette observation n\'est pas active pour le moment. Aucun résultat n\'est disponible.</p></div>';
+  }
+
+  // error
+  return period
+    + '<div class="td-section"><div class="td-observation tone-error"><div class="td-observation-text">Cette observation ne peut pas être affichée pour le moment.</div></div></div>';
+}
+
+function renderStatusAndExclusions(r) {
+  var statusText = r.isConfirmed
+    ? 'Observation confirmée par un professionnel'
+    : 'Observation non validée par un professionnel';
+  return '<div class="td-section"><div class="td-status"><span class="dot" aria-hidden="true"></span><span>' + escHtml(statusText) + '</span></div></div>'
+    + '<div class="td-section">' + renderExclusionsDetails(r.insufficientDays) + '</div>';
+}
+
+/* -----------------------------------------------------------------------
+   Rendu d'une modale <dialog> complète pour une tendance.
+   ----------------------------------------------------------------------- */
+function renderDialog(r, dialogId, titleId) {
+  var meta = stateMetaFor(r.state);
+  return '<dialog class="trend-dialog state-' + r.state + '" id="' + dialogId + '" aria-labelledby="' + titleId + '">'
+    + '<div class="td-inner">'
+    + '<div class="td-hdr">'
+    + '<div class="td-title-wrap">'
+    + '<div class="td-state-tag"><span class="emoji" aria-hidden="true">' + meta.emoji + '</span><span>' + escHtml(meta.tag) + '</span></div>'
+    + '<div class="td-title" id="' + titleId + '">' + escHtml(r.label || '') + '</div>'
+    + '<div class="td-period">' + periodSummary(r) + '</div>'
+    + '</div>'
+    + '<button type="button" class="td-close" data-dialog-close aria-label="Fermer">&times;</button>'
+    + '</div>'
+    + '<div class="td-body">' + renderDialogBody(r) + '</div>'
+    + '</div>'
+    + '</dialog>';
+}
+
+/* -----------------------------------------------------------------------
+   Données de démonstration — entièrement fictives et figées, une par état.
+   ----------------------------------------------------------------------- */
+var DEMO_RESULTS = [
+  {
+    key: 'present',
+    result: {
+      patternId: 'repeated_ultra_processed_foods',
+      label: 'Présence répétée d\'aliments ultra-transformés',
+      state: 'present',
+      referenceDate: '2026-08-12', windowStart: '2026-08-06', windowEnd: '2026-08-12',
+      calendarDays: 7, analyzableDays: 6, coverageRate: 0.86,
+      occurrenceDays: 4, evaluatedDays: 6, occurrenceRate: 0.67, confidence: 'moderate',
+      insufficientDays: [{ date: '2026-08-09', reason: 'Classification inconnue pour une prise alimentaire de ce jour.' }],
+      isConfirmed: false, observationMessage: null, insufficientDataMessage: null
+    }
+  },
+  {
+    key: 'absent',
+    result: {
+      patternId: 'repeated_ultra_processed_foods',
+      label: 'Présence répétée d\'aliments ultra-transformés',
+      state: 'absent',
+      referenceDate: '2026-08-12', windowStart: '2026-08-06', windowEnd: '2026-08-12',
+      calendarDays: 7, analyzableDays: 7, coverageRate: 1,
+      occurrenceDays: 0, evaluatedDays: 7, occurrenceRate: 0, confidence: 'high',
+      insufficientDays: [],
+      isConfirmed: false, observationMessage: null, insufficientDataMessage: null
+    }
+  },
+  {
+    key: 'insufficient',
+    result: {
+      patternId: 'repeated_ultra_processed_foods',
+      label: 'Présence répétée d\'aliments ultra-transformés',
+      state: 'insufficient',
+      referenceDate: '2026-08-12', windowStart: '2026-08-06', windowEnd: '2026-08-12',
+      calendarDays: 7, analyzableDays: 3, coverageRate: 0.43,
+      occurrenceDays: 0, evaluatedDays: 1, occurrenceRate: 0, confidence: 'unknown',
+      insufficientDays: [
+        { date: '2026-08-07', reason: 'Classification inconnue pour une prise alimentaire de ce jour.' },
+        { date: '2026-08-08', reason: 'Classification inconnue pour une prise alimentaire de ce jour.' }
+      ],
+      isConfirmed: false, observationMessage: null, insufficientDataMessage: null
+    }
+  },
+  {
+    key: 'not_evaluated',
+    result: {
+      patternId: 'repeated_ultra_processed_foods',
+      label: 'Présence répétée d\'aliments ultra-transformés',
+      state: 'not_evaluated',
+      referenceDate: '2026-08-12', windowStart: '2026-08-06', windowEnd: '2026-08-12',
+      calendarDays: 7, analyzableDays: 0, coverageRate: 0,
+      occurrenceDays: 0, evaluatedDays: 0, occurrenceRate: 0, confidence: 'unknown',
+      insufficientDays: [],
+      isConfirmed: false, observationMessage: null, insufficientDataMessage: null
+    }
+  },
+  {
+    key: 'error',
+    result: {
+      patternId: 'repeated_ultra_processed_foods',
+      label: 'Présence répétée d\'aliments ultra-transformés',
+      state: 'error',
+      referenceDate: '2026-08-12', windowStart: '2026-08-06', windowEnd: '2026-08-12',
+      calendarDays: 7, analyzableDays: 0, coverageRate: 0,
+      occurrenceDays: 0, evaluatedDays: 0, occurrenceRate: 0, confidence: 'unknown',
+      insufficientDays: [],
+      isConfirmed: false, observationMessage: null, insufficientDataMessage: null
+    }
+  }
+];
+
+var cardsRoot = document.getElementById('cards-root');
+var dialogsRoot = document.getElementById('dialogs-root');
+
+cardsRoot.innerHTML = DEMO_RESULTS.map(function (d) {
+  return renderCompactCard(d.result, 'dialog-' + d.key, 'btn-' + d.key);
+}).join('');
+
+dialogsRoot.innerHTML = DEMO_RESULTS.map(function (d) {
+  return renderDialog(d.result, 'dialog-' + d.key, 'title-' + d.key);
+}).join('');
+
+/* -----------------------------------------------------------------------
+   Ouverture/fermeture des modales — <dialog> natif, showModal()/close().
+   Le fond devient inerte automatiquement (comportement natif de <dialog>
+   avec ::backdrop et le top layer). Le focus est placé sur le bouton de
+   fermeture à l'ouverture, et rendu au bouton "Voir le détail" d'origine
+   à la fermeture (via l'attribut data-return-focus).
+   ----------------------------------------------------------------------- */
+DEMO_RESULTS.forEach(function (d) {
+  var dialogEl = document.getElementById('dialog-' + d.key);
+  var buttonEl = document.getElementById('btn-' + d.key);
+  var closeEl = dialogEl.querySelector('[data-dialog-close]');
+
+  buttonEl.addEventListener('click', function () {
+    dialogEl.showModal();
+    closeEl.focus();
+  });
+
+  closeEl.addEventListener('click', function () {
+    dialogEl.close();
+  });
+
+  // Fermeture par clic sur le fond (::backdrop) — comportement attendu
+  // d'une modale, en plus du bouton visible et de la touche Échap (native).
+  dialogEl.addEventListener('click', function (ev) {
+    if (ev.target === dialogEl) dialogEl.close();
+  });
+
+  dialogEl.addEventListener('close', function () {
+    buttonEl.focus();
+  });
+});
+</script>
+
+</body>
+</html>
