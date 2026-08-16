@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype — identité alimentaire (admin)</title>
+<!--
+  nutrition-observation-admin-prototype.html — PROTOTYPE ADMIN CONFINÉ,
+  strictement descriptif — Cap Santé
+
+  ⚠️ Aucune décision réglementaire (DM/MDR, article 22 RGPD, responsabilité,
+  rétention) n'a été tranchée pour une évolution future vers un conseil
+  généré. Cette page ne produit et n'affiche AUCUN conseil, AUCUNE
+  suggestion, AUCUN diagnostic, AUCUNE donnée clinique/allergie/symptôme.
+
+  Cette page :
+  - n'est liée depuis aucune autre page (ni conseils.html, ni admin.html,
+    ni dashboard.html — aucun de ces fichiers n'est modifié) ;
+  - n'utilise que trois profils 100% fictifs (nutrition-observation-
+    fixtures.js), jamais de donnée réelle ;
+  - ne fait aucun accès réseau au-delà de la garde de session Supabase
+    (auth uniquement, comme conseils.html/admin.html) ;
+  - ne fait jamais sb.from('journal'|'profiles'-autre-que-role) pour un
+    autre utilisateur, aucune lecture de donnée patient réelle ;
+  - n'utilise aucun des 9 fichiers nutrition-*.js du chantier précédent
+    (nutrition-rule-engine.js, nutrition-safety.js, etc.) — ils restent
+    isolés et hors périmètre ici.
+-->
+<style>
+:root{
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --amber:#7a5c1e; --amber-l:rgba(122,92,30,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;}
+body{ background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; margin:0; padding:0 0 60px; }
+.t-header{ position:sticky; top:0; background:var(--bg); border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo{ font-weight:700; }
+.t-logo span{ color:var(--gold); }
+.proto-flag{ font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--amber); background:var(--amber-l); border:1px solid rgba(122,92,30,0.25); padding:2px 9px; border-radius:999px; }
+main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
+.page-title{ font-size:1.3rem; font-weight:700; margin-bottom:6px; }
+.page-sub{ font-size:.85rem; color:var(--text2); line-height:1.6; margin-bottom:22px; }
+#access-denied{ display:none; padding:60px 20px; text-align:center; color:var(--text2); }
+#app-root{ display:none; }
+
+.profile-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:22px; }
+.profile-title{ font-weight:700; font-size:1.02rem; margin-bottom:12px; }
+
+.section-lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); margin:14px 0 8px; }
+.section-lbl:first-child{ margin-top:0; }
+
+.habit-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem; }
+.habit-row:last-child{ border-bottom:none; }
+.habit-desc b{ color:var(--text); }
+.conf-tag{ font-size:.68rem; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:999px; flex-shrink:0; }
+.conf-low{ background:var(--card2); color:var(--text3); }
+.conf-moderate{ background:var(--amber-l); color:var(--amber); }
+.conf-high{ background:var(--gold-l); color:var(--gold); }
+
+.observation-box{ background:var(--gold-l); border:1px solid rgba(45,79,28,0.18); border-radius:9px; padding:12px 14px; font-size:.85rem; line-height:1.6; }
+.datarow{ font-size:.82rem; color:var(--text2); margin-top:6px; }
+.limits-box{ font-size:.82rem; color:var(--text2); background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:10px 14px; margin-top:8px; }
+.empty{ font-size:.82rem; color:var(--text3); font-style:italic; }
+</style>
+</head>
+<body>
+
+<div class="t-header">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <span class="proto-flag">Prototype admin — descriptif uniquement</span>
+</div>
+
+<div id="access-denied">
+  <p>Accès réservé aux administrateurs. Session requise.</p>
+</div>
+
+<main id="app-root">
+  <h1 class="page-title">Identité alimentaire — prototype descriptif</h1>
+  <p class="page-sub">
+    Trois profils entièrement fictifs, aucune donnée réelle. Cette page n'affiche que des constats
+    (habitudes récurrentes, observations, preuves, couverture, limites) — aucun conseil, aucune suggestion,
+    aucun diagnostic.
+  </p>
+
+  <div id="profiles-root"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="trend-definitions.js"></script>
+<script src="trend-engine.js"></script>
+<script src="nutrition-observation-adapter.js"></script>
+<script src="food-identity-engine.js"></script>
+<script src="nutrition-observation-fixtures.js"></script>
+<script>
+'use strict';
+
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+function esc(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+var CONFIDENCE_LABELS = { low: 'Basse', moderate: 'Modérée', high: 'Haute' };
+
+function renderHabits(habits) {
+  if (!habits.length) {
+    return '<p class="empty">Aucune habitude récurrente détectée sur les données disponibles.</p>';
+  }
+  return habits.map(function (h) {
+    return '<div class="habit-row">'
+      + '<span class="habit-desc"><b>' + esc(h.value.aliment) + '</b> — ' + esc(h.value.repas)
+      + ' (' + h.evidenceCount + ' occurrence' + (h.evidenceCount > 1 ? 's' : '') + ', '
+      + esc(h.firstObservedAt) + ' → ' + esc(h.lastObservedAt) + ')</span>'
+      + '<span class="conf-tag conf-' + h.confidence + '">' + CONFIDENCE_LABELS[h.confidence] + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+// Formate une borne de période ('YYYY-MM-DD' attendu). Toute valeur
+// null/undefined/vide/non-string retourne null plutôt que d'afficher la
+// valeur brute — jamais "null"/"undefined"/"NaN" à l'écran.
+function formatPeriodBound(value) {
+  return (typeof value === 'string' && value.length > 0) ? value : null;
+}
+
+function renderObservation(obs) {
+  if (obs.error) {
+    return '<p class="empty">Observation non disponible (' + esc(obs.error) + ').</p>';
+  }
+
+  var start = formatPeriodBound(obs.period && obs.period.start);
+  var end = formatPeriodBound(obs.period && obs.period.end);
+  var calendarDays = (obs.period && typeof obs.period.calendarDays === 'number' && !isNaN(obs.period.calendarDays))
+    ? obs.period.calendarDays
+    : null;
+
+  var periodText;
+  if (start && end) {
+    periodText = 'période ' + esc(start) + ' au ' + esc(end) + (calendarDays !== null ? ' (' + calendarDays + ' jours)' : '');
+  } else {
+    periodText = 'Période non disponible' + (calendarDays !== null ? ' (' + calendarDays + ' jours)' : '');
+  }
+
+  var text = 'État : ' + esc(obs.state) + ' — ' + periodText + '.';
+  var limitsHtml = obs.limitations.length
+    ? '<div class="limits-box">' + obs.limitations.map(esc).join('<br>') + '</div>'
+    : '';
+  return '<div class="observation-box">' + esc(text) + '</div>'
+    + '<div class="datarow">' + obs.analyzableDays + ' jours analysables — couverture '
+    + Math.round((obs.coverage || 0) * 100) + '% — confiance ' + esc(obs.confidence) + '.</div>'
+    + limitsHtml;
+}
+
+function renderProfile(fixtureKey, fixture) {
+  var identity = buildFoodIdentity(fixture.journalEntries);
+  var observation = adaptTrendObservation('repeated_ultra_processed_foods', fixture.journalEntries, fixture.referenceDate);
+
+  var html = '<div class="profile-card">'
+    + '<div class="profile-title">' + esc(fixture.label) + '</div>';
+
+  html += '<div class="section-lbl">Habitudes détectées</div>' + renderHabits(identity.habits);
+
+  html += '<div class="section-lbl">Couverture des données (identité alimentaire)</div>'
+    + '<div class="datarow">' + identity.period.analyzableDays + ' jours analysables sur '
+    + identity.period.totalEntries + ' entrée' + (identity.period.totalEntries > 1 ? 's' : '') + ' au total.</div>';
+  if (identity.insufficientData) {
+    html += '<div class="limits-box">Données insuffisantes pour une détection fiable des habitudes (moins de 4 jours analysables).</div>';
+  }
+
+  html += '<div class="section-lbl">Observation (moteur existant, réutilisé via adaptateur)</div>' + renderObservation(observation);
+
+  html += '</div>';
+  return html;
+}
+
+sb.auth.getSession().then(function (r) {
+  if (!r.data || !r.data.session) {
+    document.getElementById('access-denied').style.display = 'block';
+    return;
+  }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role').eq('id', uid).single().then(function (res) {
+    if (!res.data || res.data.role !== 'admin') {
+      document.getElementById('access-denied').style.display = 'block';
+      return;
+    }
+    document.getElementById('app-root').style.display = 'block';
+
+    var root = document.getElementById('profiles-root');
+    root.innerHTML = Object.keys(NUTRITION_OBSERVATION_FIXTURES).map(function (key) {
+      return renderProfile(key, NUTRITION_OBSERVATION_FIXTURES[key]);
+    }).join('');
+  });
+});
+</script>
+</body>
+</html>
