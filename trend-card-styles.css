@@ -1,0 +1,96 @@
+/* ──────────────────────────────────────────────────────────────────────
+   trend-card-styles.css — Styles partagés de la carte de tendance
+   (carte compacte + modale) — Cap Santé
+
+   Extrait du <style> inline de trend-card-component.html. Ne redéfinit
+   AUCUNE variable :root — ce fichier suppose que la page qui le charge
+   définit déjà --bg, --card, --card2, --border, --border2, --gold,
+   --gold-l, --sage, --sage-l, --rose, --rose-l, --amber, --amber-l,
+   --text, --text2, --text3, --r, --sh (déjà le cas dans conseils.html et
+   trend-card-component.html, même système graphique que le dashboard).
+
+   Ce fichier ne contient que des styles visuels — aucun script, aucune
+   donnée, aucune logique.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Carte compacte ── */
+.trend-card-compact{ background:var(--card); border:1px solid var(--border); border-left:4px solid var(--state-color, var(--border2)); border-radius:var(--r); box-shadow:var(--sh); padding:20px 22px; display:flex; flex-direction:column; gap:10px; }
+.tc-state-tag{ display:inline-flex; align-items:center; gap:7px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--state-color, var(--text2)); }
+.tc-state-tag .emoji{ font-size:.95rem; line-height:1; }
+.tc-title{ font-family:'Lora',serif; font-size:1.05rem; font-weight:700; color:var(--text); line-height:1.35; }
+.tc-desc{ font-size:.86rem; color:var(--text2); line-height:1.55; flex:1; }
+.tc-metric{ display:flex; align-items:baseline; gap:8px; }
+.tc-metric-val{ font-family:'Lora',serif; font-size:1.6rem; font-weight:700; color:var(--state-color, var(--gold)); line-height:1; }
+.tc-metric-lbl{ font-size:.76rem; color:var(--text2); }
+.tc-metric-none{ font-size:.82rem; color:var(--text3); font-style:italic; }
+.tc-period{ font-size:.76rem; color:var(--text3); }
+.tc-detail-btn{ margin-top:4px; align-self:flex-start; background:none; border:1px solid var(--state-color, var(--border2)); color:var(--state-color, var(--gold)); font-family:'Inter',sans-serif; font-weight:600; font-size:.82rem; padding:8px 16px; border-radius:9px; cursor:pointer; transition:all .15s; }
+.tc-detail-btn:hover{ background:var(--state-bg, var(--gold-l)); }
+.tc-detail-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.state-present{ --state-color:var(--gold); --state-bg:var(--gold-l); }
+.state-absent{ --state-color:var(--sage); --state-bg:var(--sage-l); }
+.state-insufficient{ --state-color:var(--amber); --state-bg:var(--amber-l); }
+.state-not_evaluated{ --state-color:var(--text3); --state-bg:var(--card2); }
+.state-error{ --state-color:var(--rose); --state-bg:var(--rose-l); }
+
+/* ── Modale ── */
+dialog.trend-dialog{ border:none; border-radius:16px; padding:0; max-width:560px; width:calc(100% - 40px); box-shadow:0 20px 60px rgba(0,0,0,0.25); background:var(--card); color:var(--text); max-height:min(85vh, 720px); }
+dialog.trend-dialog::backdrop{ background:rgba(26,25,22,0.55); }
+
+.td-inner{ display:flex; flex-direction:column; max-height:min(85vh, 720px); }
+.td-hdr{ padding:22px 26px 16px; border-bottom:1px solid var(--border2); border-top:4px solid var(--state-color, var(--border2)); display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-shrink:0; }
+.td-title-wrap{ min-width:0; }
+.td-state-tag{ display:inline-flex; align-items:center; gap:6px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--state-color, var(--text2)); margin-bottom:6px; }
+.td-state-tag .emoji{ font-size:.9rem; line-height:1; }
+.td-title{ font-family:'Lora',serif; font-size:1.25rem; font-weight:700; color:var(--text); line-height:1.35; margin-bottom:6px; }
+.td-period{ font-size:.82rem; color:var(--text2); }
+.td-close{ flex-shrink:0; background:var(--card2); border:1px solid var(--border2); color:var(--text2); width:34px; height:34px; border-radius:9px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+.td-close:hover{ border-color:var(--gold); color:var(--gold); }
+.td-close:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.td-body{ padding:22px 26px 26px; overflow-y:auto; }
+
+.td-section{ margin-bottom:20px; }
+.td-section:last-child{ margin-bottom:0; }
+.td-section-lbl{ font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text2); margin-bottom:8px; }
+
+.td-observation{ border-radius:11px; padding:16px 18px; border:1px solid; }
+.td-observation.tone-present{ background:var(--gold-l); border-color:rgba(45,79,28,0.18); }
+.td-observation.tone-absent{ background:var(--sage-l); border-color:rgba(74,122,58,0.25); }
+.td-observation.tone-insufficient{ background:var(--amber-l); border-color:rgba(122,92,30,0.25); }
+.td-observation.tone-error{ background:var(--rose-l); border-color:rgba(139,42,42,0.25); }
+.td-observation-text{ font-size:.96rem; line-height:1.6; color:var(--text); }
+
+.td-datarow{ font-size:.86rem; color:var(--text2); line-height:1.6; }
+.td-datarow b{ color:var(--text); font-weight:600; }
+
+.td-metric-row{ display:flex; gap:14px; flex-wrap:wrap; }
+.td-metric-box{ background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px 16px; min-width:110px; }
+.td-metric-val{ font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--text); }
+.td-metric-lbl{ font-size:.74rem; color:var(--text2); margin-top:4px; }
+
+.td-limits-list{ margin:0; padding-left:20px; font-size:.86rem; color:var(--text2); line-height:1.7; }
+.td-limits-list li{ margin-bottom:2px; }
+
+.td-status{ display:flex; align-items:center; gap:9px; font-size:.86rem; color:var(--text); font-weight:600; }
+.td-status .dot{ width:9px; height:9px; border-radius:50%; background:var(--text3); flex-shrink:0; }
+
+details.day-details{ border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+details.day-details summary{ cursor:pointer; padding:12px 15px; font-size:.84rem; font-weight:600; color:var(--text); list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--card2); }
+details.day-details summary::-webkit-details-marker{ display:none; }
+details.day-details summary .chev{ transition:transform .15s; color:var(--text3); font-size:.9rem; flex-shrink:0; }
+details.day-details[open] summary .chev{ transform:rotate(90deg); }
+details.day-details summary:hover{ color:var(--gold); }
+details.day-details summary:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; }
+.excluded-day-row{ padding:12px 15px; font-size:.82rem; color:var(--text2); border-top:1px solid var(--border); line-height:1.5; }
+.excluded-day-date{ color:var(--text); font-weight:600; display:block; margin-bottom:2px; }
+.no-exclusions{ padding:12px 15px; font-size:.82rem; color:var(--text2); }
+
+.td-plain{ font-size:.94rem; color:var(--text2); line-height:1.6; }
+
+@media(max-width:480px){
+  dialog.trend-dialog{ width:calc(100% - 24px); }
+  .td-hdr{ padding:18px 18px 14px; }
+  .td-body{ padding:18px 18px 22px; }
+}
