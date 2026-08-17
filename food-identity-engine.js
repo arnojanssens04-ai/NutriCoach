@@ -32,6 +32,50 @@ function confidenceForEvidence(evidenceCount, analyzableDays) {
 }
 
 /* -----------------------------------------------------------------------
+   buildMealScheduleRegularity(journalEntries)
+
+   Régularité DESCRIPTIVE de la CATÉGORIE de repas déclarée (breakfast/
+   lunch/dinner/snack), jamais de l'heure réelle de consommation — le
+   journal ne capture aucune heure (vérifié dans dashboard.html : seuls
+   `date` et `repas`, catégorie auto-déclarée au moment de la saisie, sont
+   enregistrés). Ce champ ne doit JAMAIS être présenté comme une analyse
+   d'horaire réel — la limite associée doit toujours accompagner le
+   résultat à l'affichage.
+   ----------------------------------------------------------------------- */
+function buildMealScheduleRegularity(journalEntries) {
+  var entries = Array.isArray(journalEntries) ? journalEntries : [];
+
+  var datesSeen = {};
+  var byCategory = {};
+  entries.forEach(function (e) {
+    if (!e || typeof e.date !== 'string' || typeof e.repas !== 'string' || !e.repas) return;
+    datesSeen[e.date] = true;
+    if (!byCategory[e.repas]) byCategory[e.repas] = {};
+    byCategory[e.repas][e.date] = true;
+  });
+
+  var analyzableDays = Object.keys(datesSeen).length;
+
+  var categories = Object.keys(byCategory).map(function (repas) {
+    var daysWithCategory = Object.keys(byCategory[repas]).length;
+    return {
+      category: repas,
+      daysPresent: daysWithCategory,
+      analyzableDays: analyzableDays,
+      confidence: confidenceForEvidence(daysWithCategory, analyzableDays)
+    };
+  });
+
+  // Ordre stable : catégories les plus régulières d'abord.
+  categories.sort(function (a, b) { return b.daysPresent - a.daysPresent; });
+
+  return {
+    categories: categories,
+    limitation: 'Ces données indiquent la catégorie de repas déclarée au moment de la saisie, pas l\'heure réelle de consommation.'
+  };
+}
+
+/* -----------------------------------------------------------------------
    buildFoodIdentity(journalEntries)
 
    Regroupe les entrées par couple (aliment, repas) et construit un habit
@@ -83,6 +127,7 @@ function buildFoodIdentity(journalEntries) {
       analyzableDays: analyzableDays,
       totalEntries: entries.length
     },
-    insufficientData: analyzableDays < 4
+    insufficientData: analyzableDays < 4,
+    mealScheduleRegularity: buildMealScheduleRegularity(entries)
   };
 }

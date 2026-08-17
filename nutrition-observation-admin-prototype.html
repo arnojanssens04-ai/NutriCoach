@@ -160,6 +160,23 @@ function renderObservation(obs) {
     + limitsHtml;
 }
 
+var MEAL_CATEGORY_LABELS = { breakfast: 'Petit-déjeuner', lunch: 'Déjeuner', dinner: 'Dîner', snack: 'Collation' };
+
+function renderMealScheduleRegularity(regularity) {
+  if (!regularity.categories.length) {
+    return '<p class="empty">Aucune catégorie de repas détectée sur les données disponibles.</p>';
+  }
+  var rows = regularity.categories.map(function (c) {
+    var label = MEAL_CATEGORY_LABELS[c.category] || c.category;
+    return '<div class="habit-row">'
+      + '<span class="habit-desc"><b>' + esc(label) + '</b> — présent ' + c.daysPresent + ' jour'
+      + (c.daysPresent > 1 ? 's' : '') + ' sur ' + c.analyzableDays + ' analysable' + (c.analyzableDays > 1 ? 's' : '') + '</span>'
+      + '<span class="conf-tag conf-' + c.confidence + '">' + CONFIDENCE_LABELS[c.confidence] + '</span>'
+      + '</div>';
+  }).join('');
+  return rows + '<div class="limits-box">' + esc(regularity.limitation) + '</div>';
+}
+
 function renderProfile(fixtureKey, fixture) {
   var identity = buildFoodIdentity(fixture.journalEntries);
   var observation = adaptTrendObservation('repeated_ultra_processed_foods', fixture.journalEntries, fixture.referenceDate);
@@ -168,6 +185,9 @@ function renderProfile(fixtureKey, fixture) {
     + '<div class="profile-title">' + esc(fixture.label) + '</div>';
 
   html += '<div class="section-lbl">Habitudes détectées</div>' + renderHabits(identity.habits);
+
+  html += '<div class="section-lbl">Régularité des repas par catégorie</div>'
+    + renderMealScheduleRegularity(identity.mealScheduleRegularity);
 
   html += '<div class="section-lbl">Couverture des données (identité alimentaire)</div>'
     + '<div class="datarow">' + identity.period.analyzableDays + ' jours analysables sur '
