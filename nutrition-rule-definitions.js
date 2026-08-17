@@ -61,5 +61,92 @@ var NUTRITION_RULE_REGISTRY = {
 
     authoredBy: 'demo-spec',
     createdAt: '2026-08-17'
+  },
+
+  // Règles ajoutées pour les signaux nutriment/alcool — mêmes conventions
+  // et mêmes garde-fous que la règle de démonstration ci-dessus. Toutes
+  // en 'shadow_active', jamais 'active'.
+  increase_iron_sources_v1: {
+    id: 'increase_iron_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_iron',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'iron_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_iron_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-17'
+  },
+  increase_calcium_sources_v1: {
+    id: 'increase_calcium_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_calcium',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'calcium_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_calcium_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-17'
+  },
+  increase_fiber_sources_v1: {
+    id: 'increase_fiber_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_fiber',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'fiber_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_fiber_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-17'
+  },
+  increase_omega3_sources_v1: {
+    id: 'increase_omega3_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_omega3',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'omega3_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_omega3_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-17'
+  },
+  reduce_alcohol_v1: {
+    id: 'reduce_alcohol_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'repeated_alcohol_presence',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'alcohol_free_alternatives_v1',
+    maxSelectedFoods: 3,
+    templateId: 'reduce_alcohol_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    // Aucune contre-indication cartographiée pour cette règle de
+    // démonstration — structure prête pour une future revue clinique
+    // (ex. grossesse déjà exclue en amont par isProfileEligibleForAutomatedAdvice).
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-17'
   }
 };

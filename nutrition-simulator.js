@@ -53,13 +53,21 @@ function runNutritionSimulation(params) {
     };
   }
 
-  // Adaptateur — réutilise trend-engine.js tel quel, jamais dupliqué ni
-  // remplacé. Toute erreur de calcul d'observation est traitée comme un
-  // résultat 'error' par trend-engine.js lui-même (déjà couvert par ses
-  // propres tests), donc gérée naturellement par evaluateNutritionRule.
+  // Adaptateur — réutilise trend-engine.js tel quel pour les motifs qu'il
+  // sait calculer, jamais dupliqué ni remplacé. Pour les signaux
+  // nutriment/alcool ajoutés séparément (nutrition-signal-engine.js, non
+  // connus de trend-engine.js/trend-definitions.js, non modifiés), on
+  // délègue à NUTRITION_SIGNAL_RESOLVERS — même contrat de sortie, jamais
+  // de fusion des deux sources. Toute erreur de calcul d'observation est
+  // traitée comme un résultat 'error', donc gérée naturellement par
+  // evaluateNutritionRule.
   var trendResult;
   try {
-    trendResult = computeTrendResult(rule.triggerPatternId, params.journalEntries, params.referenceDate);
+    if (typeof NUTRITION_SIGNAL_RESOLVERS !== 'undefined' && NUTRITION_SIGNAL_RESOLVERS[rule.triggerPatternId]) {
+      trendResult = NUTRITION_SIGNAL_RESOLVERS[rule.triggerPatternId](params.journalEntries, params.referenceDate);
+    } else {
+      trendResult = computeTrendResult(rule.triggerPatternId, params.journalEntries, params.referenceDate);
+    }
   } catch (e) {
     trendResult = null;
   }

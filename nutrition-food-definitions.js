@@ -29,5 +29,66 @@ var NUTRITION_FOOD_LISTS = {
       { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
       { code: 'eggs', label: 'Œufs', allergenTags: ['egg'], dietTags: ['vegetarian', 'gluten_free'] }
     ]
+  },
+
+  // Listes ajoutées pour les signaux nutriment/alcool — mêmes conventions
+  // (tags saisis et validés humainement, jamais déduits automatiquement).
+  iron_rich_foods_v1: {
+    id: 'iron_rich_foods_v1',
+    label: 'Sources alimentaires de fer (v1)',
+    status: 'active',
+    items: [
+      { code: 'lentils', label: 'Lentilles', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'spinach_cooked', label: 'Épinards cuits', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'red_meat_lean', label: 'Viande rouge maigre', allergenTags: [], dietTags: ['gluten_free'] },
+      { code: 'tofu', label: 'Tofu', allergenTags: ['soy'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  calcium_rich_foods_v1: {
+    id: 'calcium_rich_foods_v1',
+    label: 'Sources alimentaires de calcium (v1)',
+    status: 'active',
+    items: [
+      { code: 'plain_yogurt', label: 'Yaourt nature', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'cheese', label: 'Fromage', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'almonds', label: 'Amandes', allergenTags: ['nuts'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'tofu', label: 'Tofu', allergenTags: ['soy'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'broccoli', label: 'Brocolis', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  fiber_rich_foods_v1: {
+    id: 'fiber_rich_foods_v1',
+    label: 'Sources alimentaires de fibres (v1)',
+    status: 'active',
+    items: [
+      { code: 'oats', label: 'Flocons d\'avoine', allergenTags: ['gluten'], dietTags: ['vegetarian', 'vegan'] },
+      { code: 'lentils', label: 'Lentilles', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'apple', label: 'Pomme', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'broccoli', label: 'Brocolis', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  omega3_rich_foods_v1: {
+    id: 'omega3_rich_foods_v1',
+    label: 'Sources alimentaires d\'oméga-3 (v1)',
+    status: 'active',
+    items: [
+      { code: 'salmon', label: 'Saumon', allergenTags: ['fish'], dietTags: ['gluten_free'] },
+      { code: 'walnuts', label: 'Noix', allergenTags: ['nuts'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'flaxseed', label: 'Graines de lin', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'canola_oil', label: 'Huile de colza', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  alcohol_free_alternatives_v1: {
+    id: 'alcohol_free_alternatives_v1',
+    label: 'Alternatives sans alcool (v1)',
+    status: 'active',
+    items: [
+      { code: 'sparkling_water_flavored', label: 'Eau pétillante aromatisée', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'herbal_tea', label: 'Infusion', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'unsweetened_juice', label: 'Jus de fruits sans sucre ajouté', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'non_alcoholic_beer', label: 'Bière sans alcool', allergenTags: ['gluten'], dietTags: ['vegetarian', 'vegan'] }
+    ]
   }
 };

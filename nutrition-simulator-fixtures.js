@@ -119,6 +119,110 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     ]
   },
 
+  alcohol_regular_presence: {
+    label: 'Profil fictif — alcool présent régulièrement',
+    referenceDate: '2026-08-12',
+    ruleId: 'reduce_alcohol_v1',
+    profile: {
+      patientId: 'fictif-6',
+      age: 38,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      { date: '2026-08-06', repas: 'dinner', aliment: 'Verre de vin', quantite: 1, kcal: 120, is_alcohol: true },
+      { date: '2026-08-07', repas: 'dinner', aliment: 'Verre de vin', quantite: 1, kcal: 120, is_alcohol: true },
+      { date: '2026-08-08', repas: 'dinner', aliment: 'Bière', quantite: 1, kcal: 150, is_alcohol: true },
+      { date: '2026-08-09', repas: 'dinner', aliment: 'Verre de vin', quantite: 1, kcal: 120, is_alcohol: true },
+      { date: '2026-08-10', repas: 'dinner', aliment: 'Salade composée', quantite: 200, kcal: 250, is_alcohol: false },
+      { date: '2026-08-11', repas: 'dinner', aliment: 'Bière', quantite: 1, kcal: 150, is_alcohol: true },
+      { date: '2026-08-12', repas: 'dinner', aliment: 'Verre de vin', quantite: 1, kcal: 120, is_alcohol: true }
+    ]
+  },
+
+  alcohol_occasional_social_event_not_a_trend: {
+    label: 'Profil fictif — alcool ponctuel (sortie sociale), pas une tendance',
+    referenceDate: '2026-08-12',
+    ruleId: 'reduce_alcohol_v1',
+    profile: {
+      patientId: 'fictif-7',
+      age: 27,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      { date: '2026-08-06', repas: 'dinner', aliment: 'Eau', quantite: 1, kcal: 0, is_alcohol: false },
+      { date: '2026-08-07', repas: 'dinner', aliment: 'Soupe maison', quantite: 250, kcal: 120, is_alcohol: false },
+      { date: '2026-08-08', repas: 'dinner', aliment: 'Verre de vin (anniversaire d\'un ami)', quantite: 1, kcal: 120, is_alcohol: true },
+      { date: '2026-08-09', repas: 'dinner', aliment: 'Riz et légumineuses', quantite: 200, kcal: 300, is_alcohol: false },
+      { date: '2026-08-10', repas: 'dinner', aliment: 'Poulet légumes', quantite: 200, kcal: 350, is_alcohol: false },
+      { date: '2026-08-11', repas: 'dinner', aliment: 'Quinoa légumes', quantite: 200, kcal: 300, is_alcohol: false },
+      { date: '2026-08-12', repas: 'dinner', aliment: 'Poisson vapeur', quantite: 180, kcal: 220, is_alcohol: false }
+    ]
+  },
+
+  low_iron_source_presence: {
+    label: 'Profil fictif — sources de fer peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_iron_sources_v1',
+    profile: {
+      patientId: 'fictif-8',
+      age: 36,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Pâtes au fromage', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Pain blanc et fromage', false), { nutrient_sources: ['calcium'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Pâtes au fromage', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Pommes de terre', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Lentilles', false), { nutrient_sources: ['iron', 'fiber'] })
+    ]
+  },
+
+  adequate_nutrient_sources_control: {
+    label: 'Profil fictif — sources nutritionnelles variées (témoin, aucun signal attendu)',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_iron_sources_v1',
+    profile: {
+      patientId: 'fictif-9',
+      age: 33,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Lentilles et légumes', false), { nutrient_sources: ['iron', 'fiber'] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Épinards et tofu', false), { nutrient_sources: ['iron', 'calcium'] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Pois chiches', false), { nutrient_sources: ['iron', 'fiber'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Viande rouge maigre', false), { nutrient_sources: ['iron'] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Lentilles', false), { nutrient_sources: ['iron', 'fiber'] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Épinards cuits', false), { nutrient_sources: ['iron'] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Tofu et brocolis', false), { nutrient_sources: ['iron', 'calcium'] })
+    ]
+  },
+
   not_whitelisted: {
     label: 'Profil fictif — non whitelisté pour le moteur automatisé',
     referenceDate: '2026-08-12',
