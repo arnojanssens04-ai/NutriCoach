@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur — moteur de conseils nutritionnels (admin)</title>
+<!--
+  nutrition-simulator-admin.html — PAGE ADMIN CONFINÉE, SIMULATION/SHADOW
+  UNIQUEMENT — Cap Santé
+
+  ⚠️ Aucune décision réglementaire (DM/MDR, article 22 RGPD, responsabilité,
+  rétention) n'a été tranchée pour une évolution future vers un conseil
+  généré à destination d'un patient réel. Cette page :
+
+  - est réservée aux administrateurs (même garde de rôle que
+    nutrition-observation-admin-prototype.html) ;
+  - n'affiche des conseils générés QUE pour des profils 100% fictifs
+    (nutrition-simulator-fixtures.js), jamais de donnée réelle ;
+  - n'est liée depuis aucune autre page (ni conseils.html, ni
+    dashboard.html, ni admin.html — aucun de ces fichiers n'est modifié) ;
+  - ne fait aucun accès réseau au-delà de la garde de session Supabase
+    (auth uniquement) ;
+  - n'achemine jamais un résultat vers un patient : chaque simulation est
+    annotée visibility: 'admin_simulator_only' par nutrition-audit.js ;
+  - n'active jamais une règle au statut 'active' — nutrition-rule-engine.js
+    refuse structurellement ce statut à ce stade.
+-->
+<style>
+:root{
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --amber:#7a5c1e; --amber-l:rgba(122,92,30,0.1);
+  --red:#8a2f2f; --red-l:rgba(138,47,47,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;}
+body{ background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; margin:0; padding:0 0 60px; }
+.t-header{ position:sticky; top:0; background:var(--bg); border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo{ font-weight:700; }
+.t-logo span{ color:var(--gold); }
+.proto-flag{ font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--red); background:var(--red-l); border:1px solid rgba(138,47,47,0.25); padding:2px 9px; border-radius:999px; }
+main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
+.page-title{ font-size:1.3rem; font-weight:700; margin-bottom:6px; }
+.page-sub{ font-size:.85rem; color:var(--text2); line-height:1.6; margin-bottom:22px; }
+#access-denied{ display:none; padding:60px 20px; text-align:center; color:var(--text2); }
+#app-root{ display:none; }
+
+.profile-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:22px; }
+.profile-title{ font-weight:700; font-size:1.02rem; margin-bottom:4px; }
+.profile-id{ font-size:.75rem; color:var(--text3); margin-bottom:12px; }
+
+.section-lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); margin:14px 0 8px; }
+.section-lbl:first-child{ margin-top:0; }
+
+.result-box.eligible{ background:var(--gold-l); border:1px solid rgba(45,79,28,0.18); border-radius:9px; padding:12px 14px; font-size:.85rem; line-height:1.6; }
+.result-box.blocked{ background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px 14px; font-size:.85rem; line-height:1.6; color:var(--text2); }
+.block-reason{ font-family:monospace; font-size:.78rem; background:var(--border); padding:2px 6px; border-radius:4px; }
+
+.audit-box{ font-size:.78rem; color:var(--text2); background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:10px 14px; margin-top:8px; white-space:pre-wrap; word-break:break-word; }
+.visibility-tag{ display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--red); background:var(--red-l); padding:2px 8px; border-radius:999px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="t-header">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <span class="proto-flag">Simulation admin — jamais visible d'un patient</span>
+</div>
+
+<div id="access-denied">
+  <p>Accès réservé aux administrateurs. Session requise.</p>
+</div>
+
+<main id="app-root">
+  <h1 class="page-title">Simulateur — moteur de conseils nutritionnels</h1>
+  <p class="page-sub">
+    Profils entièrement fictifs. Cette page exécute <code>runNutritionSimulation()</code> en mode
+    <code>simulation</code> sur des données de test, pour observer le comportement des règles, du filtrage de
+    sécurité et de la génération de texte — jamais affiché à un patient réel, aucune persistance.
+  </p>
+
+  <div id="profiles-root"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="trend-definitions.js"></script>
+<script src="trend-engine.js"></script>
+<script src="nutrition-food-definitions.js"></script>
+<script src="nutrition-template-definitions.js"></script>
+<script src="nutrition-rule-definitions.js"></script>
+<script src="nutrition-safety.js"></script>
+<script src="nutrition-rule-engine.js"></script>
+<script src="nutrition-food-selector.js"></script>
+<script src="nutrition-advice-renderer.js"></script>
+<script src="nutrition-audit.js"></script>
+<script src="nutrition-simulator.js"></script>
+<script src="nutrition-simulator-fixtures.js"></script>
+<script>
+'use strict';
+
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+function esc(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+var BLOCK_REASON_LABELS = {
+  observation_insufficient: 'Observation insuffisante',
+  confidence_below_threshold: 'Confiance en dessous du seuil requis',
+  coverage_below_threshold: 'Couverture des données insuffisante',
+  trigger_not_met: 'Motif déclencheur non atteint',
+  rule_not_active: 'Règle inactive (statut différent de shadow_active)',
+  production_status_not_supported_at_this_stage: 'Statut de production refusé à ce stade',
+  rule_missing: 'Règle introuvable',
+  technical_failure: 'Échec technique (blocage fail-safe)',
+  no_compatible_food: 'Aucun aliment compatible après filtrage sécurité/régime',
+  food_list_missing: 'Liste d\'aliments introuvable',
+  no_food_to_render: 'Aucun aliment à intégrer au texte',
+  template_missing: 'Gabarit de formulation introuvable',
+  invalid_mode: 'Mode d\'exécution invalide',
+  clinical_conflict: 'Conflit avec un contexte clinique déclaré',
+  relevant_symptom_declared: 'Symptôme déclaré pertinent pour cette règle',
+  diet_not_supported_by_rule: 'Régime alimentaire non couvert par cette règle'
+};
+
+function describeBlockReason(reason) {
+  if (!reason) return '';
+  var base = reason.split(':')[0];
+  return BLOCK_REASON_LABELS[base] || reason;
+}
+
+function renderResult(result) {
+  if (!result.eligible) {
+    return '<div class="result-box blocked">'
+      + 'Aucun conseil généré — <span class="block-reason">' + esc(result.blockReason) + '</span><br>'
+      + esc(describeBlockReason(result.blockReason))
+      + '</div>';
+  }
+  return '<div class="result-box eligible">' + esc(result.advice.body) + '</div>'
+    + '<span class="visibility-tag">' + esc(result.advice.visibility) + '</span>';
+}
+
+function renderAudit(audit) {
+  return '<div class="audit-box">' + esc(JSON.stringify(audit, null, 2)) + '</div>';
+}
+
+function renderProfile(fixtureKey, fixture) {
+  var result = runNutritionSimulation({
+    ruleId: fixture.ruleId,
+    journalEntries: fixture.journalEntries,
+    referenceDate: fixture.referenceDate,
+    profile: fixture.profile,
+    mode: 'simulation',
+    now: fixture.referenceDate + 'T10:00:00Z'
+  });
+
+  var html = '<div class="profile-card">'
+    + '<div class="profile-title">' + esc(fixture.label) + '</div>'
+    + '<div class="profile-id">Règle simulée : ' + esc(fixture.ruleId) + '</div>';
+
+  html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
+  html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
+
+  html += '</div>';
+  return html;
+}
+
+sb.auth.getSession().then(function (r) {
+  if (!r.data || !r.data.session) {
+    document.getElementById('access-denied').style.display = 'block';
+    return;
+  }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role').eq('id', uid).single().then(function (res) {
+    if (!res.data || res.data.role !== 'admin') {
+      document.getElementById('access-denied').style.display = 'block';
+      return;
+    }
+    document.getElementById('app-root').style.display = 'block';
+
+    var root = document.getElementById('profiles-root');
+    root.innerHTML = Object.keys(NUTRITION_SIMULATOR_FIXTURES).map(function (key) {
+      return renderProfile(key, NUTRITION_SIMULATOR_FIXTURES[key]);
+    }).join('');
+  });
+});
+</script>
+</body>
+</html>
