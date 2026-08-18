@@ -280,5 +280,60 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
+  },
+  low_source_presence_vitamin_c: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_vitamin_c',
+      label: 'Sources alimentaires de vitamine C peu présentes',
+      nutrientCode: 'vitamin_c',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de vitamine C apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_source_presence_vitamin_d: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_vitamin_d',
+      label: 'Sources alimentaires de vitamine D peu présentes',
+      nutrientCode: 'vitamin_d',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de vitamine D apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_source_presence_potassium: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_potassium',
+      label: 'Sources alimentaires de potassium peu présentes',
+      nutrientCode: 'potassium',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de potassium apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_source_presence_vitamin_b12: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_vitamin_b12',
+      label: 'Sources alimentaires de vitamine B12 peu présentes',
+      nutrientCode: 'vitamin_b12',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de vitamine B12 apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  repeated_added_sugar_presence: function (journalEntries, referenceDate) {
+    return computeBooleanFlagSignal({
+      patternId: 'repeated_added_sugar_presence',
+      label: 'Présence répétée de sucre ajouté',
+      flagField: 'is_added_sugar_rich',
+      observationWindowDays: 7,
+      neutralMessage: 'Une présence répétée d\'aliments riches en sucre ajouté a été observée sur plusieurs journées de la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
   }
 };

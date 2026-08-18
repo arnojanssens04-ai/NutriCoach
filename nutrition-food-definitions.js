@@ -104,6 +104,65 @@ var NUTRITION_FOOD_LISTS = {
       { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
     ]
   },
+  vitamin_c_rich_foods_v1: {
+    id: 'vitamin_c_rich_foods_v1',
+    label: 'Sources alimentaires de vitamine C (v1)',
+    status: 'active',
+    items: [
+      { code: 'orange', label: 'Orange', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'kiwi', label: 'Kiwi', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'bell_pepper', label: 'Poivron', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'broccoli', label: 'Brocolis', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'strawberries', label: 'Fraises', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  vitamin_d_rich_foods_v1: {
+    id: 'vitamin_d_rich_foods_v1',
+    label: 'Sources alimentaires de vitamine D (v1)',
+    status: 'active',
+    items: [
+      { code: 'salmon', label: 'Saumon', allergenTags: ['fish'], dietTags: ['gluten_free'] },
+      { code: 'eggs', label: 'Œufs', allergenTags: ['egg'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'fortified_milk', label: 'Lait enrichi', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'mackerel', label: 'Maquereau', allergenTags: ['fish'], dietTags: ['gluten_free'] }
+    ]
+  },
+  potassium_rich_foods_v1: {
+    id: 'potassium_rich_foods_v1',
+    label: 'Sources alimentaires de potassium (v1)',
+    status: 'active',
+    items: [
+      { code: 'banana', label: 'Banane', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'potato', label: 'Pomme de terre', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'lentils', label: 'Lentilles', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'spinach_cooked', label: 'Épinards cuits', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'avocado', label: 'Avocat', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  vitamin_b12_rich_foods_v1: {
+    id: 'vitamin_b12_rich_foods_v1',
+    label: 'Sources alimentaires de vitamine B12 (v1)',
+    status: 'active',
+    items: [
+      { code: 'eggs', label: 'Œufs', allergenTags: ['egg'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'plain_yogurt', label: 'Yaourt nature', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'chicken_breast', label: 'Blanc de poulet', allergenTags: [], dietTags: ['gluten_free'] },
+      { code: 'salmon', label: 'Saumon', allergenTags: ['fish'], dietTags: ['gluten_free'] },
+      { code: 'fortified_plant_drink', label: 'Boisson végétale enrichie', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'nutritional_yeast', label: 'Levure alimentaire enrichie', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  reduced_sugar_alternatives_v1: {
+    id: 'reduced_sugar_alternatives_v1',
+    label: 'Alternatives à teneur réduite en sucre ajouté (v1)',
+    status: 'active',
+    items: [
+      { code: 'plain_yogurt', label: 'Yaourt nature', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'fresh_fruit', label: 'Fruit frais', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'unsweetened_applesauce', label: 'Compote sans sucre ajouté', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'dark_chocolate', label: 'Chocolat noir', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
   alcohol_free_alternatives_v1: {
     id: 'alcohol_free_alternatives_v1',
     label: 'Alternatives sans alcool (v1)',

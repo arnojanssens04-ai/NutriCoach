@@ -249,6 +249,162 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     ]
   },
 
+  low_vitamin_c_source_presence: {
+    label: 'Profil fictif — sources de vitamine C peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_vitamin_c_sources_v1',
+    profile: {
+      patientId: 'fictif-12',
+      age: 31,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Blanc de poulet', false), { nutrient_sources: ['zinc'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Orange', false), { nutrient_sources: ['vitamin_c'] })
+    ]
+  },
+
+  low_vitamin_d_source_presence: {
+    label: 'Profil fictif — sources de vitamine D peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_vitamin_d_sources_v1',
+    profile: {
+      patientId: 'fictif-13',
+      age: 52,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Salade verte', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Riz aux légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Pâtes tomate', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Salade composée', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Riz aux légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Soupe de légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Saumon', false), { nutrient_sources: ['vitamin_d', 'omega3'] })
+    ]
+  },
+
+  low_potassium_source_presence: {
+    label: 'Profil fictif — sources de potassium peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_potassium_sources_v1',
+    profile: {
+      patientId: 'fictif-14',
+      age: 39,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Biscottes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Banane', false), { nutrient_sources: ['potassium'] })
+    ]
+  },
+
+  low_vitamin_b12_source_presence: {
+    label: 'Profil fictif — sources de vitamine B12 peu présentes (régime végétalien déclaré)',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_vitamin_b12_sources_v1',
+    profile: {
+      patientId: 'fictif-15',
+      age: 26,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: 'vegan',
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz et légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Lentilles', false), { nutrient_sources: ['iron', 'fiber'] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Tofu et légumes', false), { nutrient_sources: ['iron', 'calcium'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Riz et légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pois chiches', false), { nutrient_sources: ['iron', 'fiber'] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Salade verte', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Quinoa légumes', false), { nutrient_sources: [] })
+    ]
+  },
+
+  added_sugar_regular_presence: {
+    label: 'Profil fictif — sucre ajouté présent régulièrement',
+    referenceDate: '2026-08-12',
+    ruleId: 'reduce_added_sugar_v1',
+    profile: {
+      patientId: 'fictif-16',
+      age: 24,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      { date: '2026-08-06', repas: 'snack', aliment: 'Biscuits fourrés', quantite: 60, kcal: 300, is_added_sugar_rich: true },
+      { date: '2026-08-07', repas: 'snack', aliment: 'Barre chocolatée', quantite: 40, kcal: 210, is_added_sugar_rich: true },
+      { date: '2026-08-08', repas: 'breakfast', aliment: 'Céréales sucrées', quantite: 50, kcal: 190, is_added_sugar_rich: true },
+      { date: '2026-08-09', repas: 'snack', aliment: 'Biscuits fourrés', quantite: 60, kcal: 300, is_added_sugar_rich: true },
+      { date: '2026-08-10', repas: 'lunch', aliment: 'Salade composée', quantite: 200, kcal: 250, is_added_sugar_rich: false },
+      { date: '2026-08-11', repas: 'snack', aliment: 'Barre chocolatée', quantite: 40, kcal: 210, is_added_sugar_rich: true },
+      { date: '2026-08-12', repas: 'breakfast', aliment: 'Céréales sucrées', quantite: 50, kcal: 190, is_added_sugar_rich: true }
+    ]
+  },
+
+  added_sugar_occasional_birthday_not_a_trend: {
+    label: 'Profil fictif — sucre ajouté ponctuel (anniversaire), pas une tendance',
+    referenceDate: '2026-08-12',
+    ruleId: 'reduce_added_sugar_v1',
+    profile: {
+      patientId: 'fictif-17',
+      age: 35,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      { date: '2026-08-06', repas: 'lunch', aliment: 'Salade composée', quantite: 200, kcal: 250, is_added_sugar_rich: false },
+      { date: '2026-08-07', repas: 'lunch', aliment: 'Poulet légumes', quantite: 200, kcal: 350, is_added_sugar_rich: false },
+      { date: '2026-08-08', repas: 'dinner', aliment: 'Part de gâteau (anniversaire)', quantite: 100, kcal: 350, is_added_sugar_rich: true },
+      { date: '2026-08-09', repas: 'lunch', aliment: 'Riz et légumineuses', quantite: 200, kcal: 300, is_added_sugar_rich: false },
+      { date: '2026-08-10', repas: 'lunch', aliment: 'Quinoa légumes', quantite: 200, kcal: 300, is_added_sugar_rich: false },
+      { date: '2026-08-11', repas: 'dinner', aliment: 'Soupe maison', quantite: 250, kcal: 120, is_added_sugar_rich: false },
+      { date: '2026-08-12', repas: 'lunch', aliment: 'Poisson vapeur', quantite: 180, kcal: 220, is_added_sugar_rich: false }
+    ]
+  },
+
   adequate_nutrient_sources_control: {
     label: 'Profil fictif — sources nutritionnelles variées (témoin, aucun signal attendu)',
     referenceDate: '2026-08-12',
