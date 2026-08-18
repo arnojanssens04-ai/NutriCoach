@@ -288,8 +288,10 @@ function renderRiskBanner(){
 }
 
 // Liste les utilisateurs dont le bilan LE PLUS RECENT demande explicitement
-// un \u00e9change -- une fois qu'ils soumettent un nouveau bilan sans recocher
-// la case, ils sortent naturellement de cette liste.
+// un \u00e9change. Deux fa\u00e7ons de sortir de cette liste :
+// 1) l'admin clique "Marqu\u00e9 comme trait\u00e9" (imm\u00e9diat, voir markParlerTraite) ;
+// 2) \u00e0 d\u00e9faut, le patient soumet un nouveau bilan sans recocher la case
+//    (une semaine plus tard).
 function renderParlerBanner(){
   var zone = document.getElementById('parler-banner-zone');
   var byUser = {};
@@ -300,8 +302,8 @@ function renderParlerBanner(){
   var wantsToTalk = [];
   Object.keys(byUser).forEach(function(uid){
     var bilans = byUser[uid].slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
-    if(bilans[0] && bilans[0].souhaite_en_parler){
-      wantsToTalk.push({ uid:uid, date:bilans[0].date });
+    if(bilans[0] && bilans[0].souhaite_en_parler && !bilans[0].parler_traite){
+      wantsToTalk.push({ uid:uid, date:bilans[0].date, bilanId:bilans[0].id });
     }
   });
   if(!wantsToTalk.length){ zone.innerHTML = ''; return; }
@@ -311,9 +313,25 @@ function renderParlerBanner(){
     +wantsToTalk.map(function(r){
       var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
       return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
-        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a></div>';
+        +'<span style="display:flex;gap:8px">'
+        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a>'
+        +'<button class="risk-contact-link" style="border:none;cursor:pointer;background:none" onclick="markParlerTraite(\''+r.bilanId+'\')">\u2705 Marqu\u00e9 comme trait\u00e9</button>'
+        +'</span></div>';
     }).join('')
     +'</div>';
+}
+
+// Retire imm\u00e9diatement une demande "en parler" de la liste, une fois
+// l'\u00e9change effectu\u00e9 \u2014 sans attendre le prochain bilan hebdomadaire.
+async function markParlerTraite(bilanId){
+  var r = await sb.from('bilans').update({parler_traite:true}).eq('id', bilanId).select();
+  if(r.error || !r.data || !r.data.length){
+    alert('\u00c9chec de la mise \u00e0 jour : '+(r.error?r.error.message:'aucune ligne modifi\u00e9e'));
+    return;
+  }
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.parler_traite = true;
+  renderParlerBanner();
 }
 
 // \u2500\u2500 R\u00c9SUM\u00c9 ALIMENTAIRE HEBDOMADAIRE (nouveau) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
