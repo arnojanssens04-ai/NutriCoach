@@ -80,6 +80,30 @@ var NUTRITION_FOOD_LISTS = {
       { code: 'canola_oil', label: 'Huile de colza', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
     ]
   },
+  magnesium_rich_foods_v1: {
+    id: 'magnesium_rich_foods_v1',
+    label: 'Sources alimentaires de magnésium (v1)',
+    status: 'active',
+    items: [
+      { code: 'almonds', label: 'Amandes', allergenTags: ['nuts'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'dark_chocolate', label: 'Chocolat noir', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'spinach_cooked', label: 'Épinards cuits', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'pumpkin_seeds', label: 'Graines de courge', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  zinc_rich_foods_v1: {
+    id: 'zinc_rich_foods_v1',
+    label: 'Sources alimentaires de zinc (v1)',
+    status: 'active',
+    items: [
+      { code: 'chicken_breast', label: 'Blanc de poulet', allergenTags: [], dietTags: ['gluten_free'] },
+      { code: 'lentils', label: 'Lentilles', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'eggs', label: 'Œufs', allergenTags: ['egg'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'pumpkin_seeds', label: 'Graines de courge', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
   alcohol_free_alternatives_v1: {
     id: 'alcohol_free_alternatives_v1',
     label: 'Alternatives sans alcool (v1)',

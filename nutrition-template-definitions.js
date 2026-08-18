@@ -63,6 +63,24 @@ var NUTRITION_ADVICE_TEMPLATES = {
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
     allowedVariables: ['foods']
   },
+  increase_magnesium_sources_v1: {
+    id: 'increase_magnesium_sources_v1',
+    status: 'active',
+    bodyTemplate: 'Les sources alimentaires de magnésium apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
+      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
+      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    allowedVariables: ['foods']
+  },
+  increase_zinc_sources_v1: {
+    id: 'increase_zinc_sources_v1',
+    status: 'active',
+    bodyTemplate: 'Les sources alimentaires de zinc apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
+      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
+      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    allowedVariables: ['foods']
+  },
   reduce_alcohol_v1: {
     id: 'reduce_alcohol_v1',
     status: 'active',

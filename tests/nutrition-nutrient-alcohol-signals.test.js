@@ -69,6 +69,20 @@ check('3. Sources de fer peu présentes : conseil généré, jamais d\'affirmati
   assert(/ne permet pas de conclure/i.test(res.advice.body), 'la limite explicite est absente du texte');
 });
 
+check('3b. Sources de magnésium peu présentes : conseil généré, jamais d\'affirmation directe de carence', () => {
+  const sandbox = buildSandbox();
+  const res = runFixture(sandbox, 'low_magnesium_source_presence');
+  assert.strictEqual(res.eligible, true, res.blockReason);
+  assert(!/(?<!de conclure à une )carence/i.test(res.advice.body), 'le texte affirme une carence hors négation');
+});
+
+check('3c. Sources de zinc peu présentes : conseil généré, jamais d\'affirmation directe de carence', () => {
+  const sandbox = buildSandbox();
+  const res = runFixture(sandbox, 'low_zinc_source_presence');
+  assert.strictEqual(res.eligible, true, res.blockReason);
+  assert(!/(?<!de conclure à une )carence/i.test(res.advice.body), 'le texte affirme une carence hors négation');
+});
+
 check('4. Profil témoin avec sources nutritionnelles variées : aucun signal déclenché', () => {
   const sandbox = buildSandbox();
   const res = runFixture(sandbox, 'adequate_nutrient_sources_control');
@@ -96,7 +110,8 @@ check('6. computeBooleanFlagSignal (alcool) : jour avec is_alcohol non booléen 
 check('7. Toutes les nouvelles règles restent en "shadow_active", jamais "active"', () => {
   const src = fs.readFileSync(REPO + '/nutrition-rule-definitions.js', 'utf8');
   ['increase_iron_sources_v1', 'increase_calcium_sources_v1', 'increase_fiber_sources_v1',
-    'increase_omega3_sources_v1', 'reduce_alcohol_v1'].forEach((id) => {
+    'increase_omega3_sources_v1', 'increase_magnesium_sources_v1', 'increase_zinc_sources_v1',
+    'reduce_alcohol_v1'].forEach((id) => {
     const block = src.slice(src.indexOf(id + ': {'), src.indexOf(id + ': {') + 400);
     assert(/status:\s*'shadow_active'/.test(block), id + ' n\'est pas en shadow_active');
   });

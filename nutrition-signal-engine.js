@@ -258,5 +258,27 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
+  },
+  low_source_presence_magnesium: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_magnesium',
+      label: 'Sources alimentaires de magnésium peu présentes',
+      nutrientCode: 'magnesium',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de magnésium apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_source_presence_zinc: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_zinc',
+      label: 'Sources alimentaires de zinc peu présentes',
+      nutrientCode: 'zinc',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de zinc apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
   }
 };

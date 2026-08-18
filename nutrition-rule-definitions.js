@@ -130,6 +130,38 @@ var NUTRITION_RULE_REGISTRY = {
     authoredBy: 'demo-spec',
     createdAt: '2026-08-17'
   },
+  increase_magnesium_sources_v1: {
+    id: 'increase_magnesium_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_magnesium',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'magnesium_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_magnesium_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-18'
+  },
+  increase_zinc_sources_v1: {
+    id: 'increase_zinc_sources_v1',
+    version: 1,
+    status: 'shadow_active',
+    triggerPatternId: 'low_source_presence_zinc',
+    requiredState: 'present',
+    minConfidence: 'moderate',
+    minCoverageRate: 0.7,
+    eligibleFoodListId: 'zinc_rich_foods_v1',
+    maxSelectedFoods: 3,
+    templateId: 'increase_zinc_sources_v1',
+    allowedDietTags: ['omnivore', 'vegetarian', 'vegan', 'gluten_free'],
+    conflictingClinicalCodes: [],
+    authoredBy: 'demo-spec',
+    createdAt: '2026-08-18'
+  },
   reduce_alcohol_v1: {
     id: 'reduce_alcohol_v1',
     version: 1,

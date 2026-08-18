@@ -197,6 +197,58 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     ]
   },
 
+  low_magnesium_source_presence: {
+    label: 'Profil fictif — sources de magnésium peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_magnesium_sources_v1',
+    profile: {
+      patientId: 'fictif-10',
+      age: 28,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Blanc de poulet', false), { nutrient_sources: ['zinc'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pommes de terre', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Amandes', false), { nutrient_sources: ['magnesium'] })
+    ]
+  },
+
+  low_zinc_source_presence: {
+    label: 'Profil fictif — sources de zinc peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_zinc_sources_v1',
+    profile: {
+      patientId: 'fictif-11',
+      age: 44,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Épinards cuits', false), { nutrient_sources: ['magnesium', 'iron'] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pommes de terre', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Salade verte', false), { nutrient_sources: [] })
+    ]
+  },
+
   adequate_nutrient_sources_control: {
     label: 'Profil fictif — sources nutritionnelles variées (témoin, aucun signal attendu)',
     referenceDate: '2026-08-12',
