@@ -173,9 +173,10 @@ check('11. dashboard.html, conseils.html, admin.html restent inchangés', () => 
   });
 });
 
-check('12. Aucune migration Supabase créée pour le moteur nutrition-*.js (seule 20260818000000_add_profile_diet.sql, hors périmètre du moteur, est autorisée)', () => {
+check('12. Aucune migration Supabase créée pour le moteur nutrition-*.js (seules les migrations hors périmètre du moteur, déjà connues, sont autorisées)', () => {
+  const ALLOWED_NON_ENGINE_MIGRATIONS = ['20260818000000_add_profile_diet.sql', '20260818000001_add_bilan_kcal_approval.sql'];
   const out = execSync('git status --short -- supabase/', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
-  const unexpected = out.filter((l) => l.indexOf('20260818000000_add_profile_diet.sql') === -1);
+  const unexpected = out.filter((l) => !ALLOWED_NON_ENGINE_MIGRATIONS.some((f) => l.indexOf(f) !== -1));
   assert.deepStrictEqual(unexpected, [], 'des fichiers supabase/ inattendus ont changé: ' + JSON.stringify(unexpected));
 });
 

@@ -62,6 +62,19 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .bc-kcal-raison { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; }
 .bc-kcal-na { font-size:.72rem; color:var(--text3); font-style:italic; }
 
+/* ── Validation admin d'un ajustement calorique proposé ── */
+.badge-pending { background:rgba(122,92,30,0.12); color:#7a5c1e; }
+.badge-approved { background:rgba(45,90,67,0.1); color:var(--cap); }
+.badge-rejected { background:rgba(179,38,30,0.1); color:var(--needle); }
+.bc-kcal-actions { display:flex; gap:8px; width:100%; margin-top:4px; }
+.bc-kcal-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 10px; border-radius:8px; font-size:.75rem; font-weight:700; border:none; cursor:pointer; }
+.bc-kcal-btn.approve { background:var(--cap); color:#fff; }
+.bc-kcal-btn.approve:hover { background:#254733; }
+.bc-kcal-btn.reject { background:var(--needle); color:#fff; }
+.bc-kcal-btn.reject:hover { background:#8a1f19; }
+.bc-kcal-btn:disabled { opacity:.6; cursor:default; }
+.bc-kcal-decided { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; font-style:italic; }
+
 .bc-section-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin:12px 0 6px; }
 .bc-section-lbl:first-of-type { margin-top:0; }
 .bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; font-size:.8rem; }
@@ -450,13 +463,32 @@ function renderBilans(filterId){
         : '<div class="bc-kcal"><span class="bc-kcal-na">\ud83d\udcca Pas de suivi kcal pour ce bilan (ant\u00e9rieur \u00e0 cette fonctionnalit\u00e9)</span></div>';
     } else {
       var delta = b.kcal_ajustement_delta || 0;
-      var badgeCls = delta===0 ? 'badge-none' : (delta<0 ? 'badge-down' : 'badge-up');
-      var badgeLbl = delta===0 ? 'Aucun changement' : (delta>0?'+':'')+delta+' kcal';
+      var status = b.kcal_ajustement_status || 'none';
+      var badgeCls = status==='pending' ? 'badge-pending'
+        : status==='approved' ? 'badge-approved'
+        : status==='rejected' ? 'badge-rejected'
+        : (delta===0 ? 'badge-none' : (delta<0 ? 'badge-down' : 'badge-up'));
+      var badgeLbl = status==='pending' ? 'En attente de validation'
+        : status==='approved' ? 'Ajustement valid\u00e9'
+        : status==='rejected' ? 'Ajustement rejet\u00e9'
+        : (delta===0 ? 'Aucun changement' : (delta>0?'+':'')+delta+' kcal');
+      // Boutons de validation admin \u2014 uniquement pour un ajustement en
+      // attente (status 'pending'). L'admin d\u00e9cide apr\u00e8s consultation du
+      // bilan, jamais d'application automatique du changement calorique.
+      var actionsHtml = '';
+      if(status==='pending'){
+        actionsHtml = '<div class="bc-kcal-actions">'
+          +'<button class="bc-kcal-btn approve" onclick="approveKcalAdjustment(\''+b.id+'\',\''+b.user_id+'\','+(b.kcal_ajustement_valeur_proposee!=null?b.kcal_ajustement_valeur_proposee:0)+',this)">\u2705 Valider l\'ajustement</button>'
+          +'<button class="bc-kcal-btn reject" onclick="rejectKcalAdjustment(\''+b.id+'\',this)">\u274c Rejeter</button>'
+          +'</div>';
+      } else if(status==='approved' || status==='rejected'){
+        actionsHtml = '<div class="bc-kcal-decided">'+(status==='approved'?'\u2705 Ajustement appliqu\u00e9 par l\'administrateur.':'\u274c Ajustement rejet\u00e9 par l\'administrateur, plan inchang\u00e9.')+'</div>';
+      }
       kcalHtml = '<div class="bc-kcal">'
-        +'<div class="bc-kcal-cible"><small>Cible calorique</small>'+(b.kcal_cible_apres!=null?Math.round(b.kcal_cible_apres)+' kcal/j':'\u2014')+'</div>'
+        +'<div class="bc-kcal-cible"><small>Cible calorique '+(status==='pending'?'propos\u00e9e':'')+'</small>'+(b.kcal_cible_apres!=null?Math.round(b.kcal_cible_apres)+' kcal/j':'\u2014')+'</div>'
         +'<div><span class="bc-kcal-badge '+badgeCls+'">'+badgeLbl+'</span>'
         +(b.kcal_ajustement_raison?'<div class="bc-kcal-raison">'+esc(b.kcal_ajustement_raison)+'</div>':'')
-        +'</div></div>';
+        +'</div>'+actionsHtml+'</div>';
     }
 
     // \u2500\u2500 Groupes de champs (pills) \u2500\u2500
@@ -536,6 +568,52 @@ function renderKcalTrendHtml(list){
   }).join('');
 
   return '<div class="kcal-trend"><h3>\ud83d\udcc8 \u00c9volution de la cible calorique</h3><div class="kcal-trend-chart">'+cols+'</div></div>';
+}
+
+// Validation/rejet, par un administrateur, d'un ajustement calorique
+// PROPOS\u00c9 par bilan.html \u2014 le seul chemin par lequel profiles.kcal_adjustment
+// change d\u00e9sormais suite \u00e0 une stagnation/d\u00e9rive de poids. Rien n'est
+// jamais appliqu\u00e9 automatiquement c\u00f4t\u00e9 patient.
+async function approveKcalAdjustment(bilanId, userId, valeurProposee, btnEl){
+  var wrap = btnEl ? btnEl.closest('.bc-kcal-actions') : null;
+  if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+
+  var upd1 = await sb.from('profiles').update({kcal_adjustment: valeurProposee}).eq('id', userId);
+  if(upd1.error){
+    alert('\u00c9chec de la mise \u00e0 jour du profil : '+upd1.error.message);
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+  var upd2 = await sb.from('bilans').update({kcal_ajustement_status:'approved'}).eq('id', bilanId).select();
+  if(upd2.error || !upd2.data || !upd2.data.length){
+    alert('Le profil a \u00e9t\u00e9 mis \u00e0 jour mais le statut du bilan n\'a pas pu \u00eatre enregistr\u00e9 : '+(upd2.error?upd2.error.message:'aucune ligne modifi\u00e9e'));
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.kcal_ajustement_status = 'approved';
+  var u = ALL_USERS.find(function(x){ return x.id===userId; });
+  if(u) u.kcal_adjustment = valeurProposee;
+
+  renderBilans(document.getElementById('user-filter').value);
+}
+
+async function rejectKcalAdjustment(bilanId, btnEl){
+  var wrap = btnEl ? btnEl.closest('.bc-kcal-actions') : null;
+  if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+
+  var upd = await sb.from('bilans').update({kcal_ajustement_status:'rejected'}).eq('id', bilanId).select();
+  if(upd.error || !upd.data || !upd.data.length){
+    alert('\u00c9chec de l\'enregistrement du rejet : '+(upd.error?upd.error.message:'aucune ligne modifi\u00e9e'));
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.kcal_ajustement_status = 'rejected';
+
+  renderBilans(document.getElementById('user-filter').value);
 }
 
 // Exporte les bilans actuellement affich\u00e9s (respecte le filtre utilisateur) en CSV.

@@ -231,9 +231,10 @@ check('19. dashboard.html non modifié', () => {
   const out = execSync('git diff --stat -- dashboard.html', { cwd: REPO }).toString().trim();
   assert.strictEqual(out, '', 'dashboard.html a été modifié: ' + out);
 });
-check('20. Aucune migration Supabase créée pour le moteur nutrition-*.js (seule 20260818000000_add_profile_diet.sql, hors périmètre du moteur, est autorisée), trend-engine.js/trend-definitions.js inchangés', () => {
+check('20. Aucune migration Supabase créée pour le moteur nutrition-*.js (seules les migrations hors périmètre du moteur, déjà connues, sont autorisées), trend-engine.js/trend-definitions.js inchangés', () => {
+  const ALLOWED_NON_ENGINE_MIGRATIONS = ['20260818000000_add_profile_diet.sql', '20260818000001_add_bilan_kcal_approval.sql'];
   const migDir = execSync('git status --short -- supabase/', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
-  const unexpected = migDir.filter((l) => l.indexOf('20260818000000_add_profile_diet.sql') === -1);
+  const unexpected = migDir.filter((l) => !ALLOWED_NON_ENGINE_MIGRATIONS.some((f) => l.indexOf(f) !== -1));
   assert.deepStrictEqual(unexpected, [], 'des fichiers supabase/ inattendus ont changé: ' + JSON.stringify(unexpected));
   ['trend-engine.js', 'trend-definitions.js'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();

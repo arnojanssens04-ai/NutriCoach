@@ -585,7 +585,11 @@ function computeKcalCible(prof, adj){
 // Sauvegarde la d\u00e9cision de la semaine directement sur la ligne du bilan,
 // pour que l'admin (bilan_recap.html) puisse voir jour par jour ce que le
 // programme a fait : rien, -200, +200, et o\u00f9 se situe la cible r\u00e9sultante.
-async function logKcalDecision(bilanId, delta, raison, kcalCible){
+async function logKcalDecision(bilanId, delta, raison, kcalCible, status, valeurProposee){
+  // status : 'none' (rien \u00e0 d\u00e9cider) ou 'pending' (proposition en attente
+  // de validation admin, voir bilan_recap.html \u2014 jamais 'approved'/
+  // 'rejected' depuis ce fichier, ces statuts n'existent que c\u00f4t\u00e9 admin).
+  status = status || 'none';
   if(!bilanId){
     var msg1 = 'logKcalDecision : bilanId manquant \u2014 l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistr\u00e9 pour ce bilan.';
     console.warn('[Cap Sant\u00e9] '+msg1);
@@ -595,7 +599,9 @@ async function logKcalDecision(bilanId, delta, raison, kcalCible){
   var r = await sb.from('bilans').update({
     kcal_ajustement_delta: delta,
     kcal_ajustement_raison: raison,
-    kcal_cible_apres: kcalCible
+    kcal_cible_apres: kcalCible,
+    kcal_ajustement_status: status,
+    kcal_ajustement_valeur_proposee: valeurProposee != null ? valeurProposee : null
   }).eq('id', bilanId).select();
   if(r.error){
     var msg2 = 'logKcalDecision : \u00e9chec de la mise \u00e0 jour \u2014 '+r.error.message;
@@ -664,24 +670,28 @@ async function checkAndAdjustKcal(newWeight, bilanId){
       // mieux vaut des corrections progressives et soutenables dans le temps.
       newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
       msgContext = objectif==='perte'
-        ? 'Votre poids a augment\u00e9 cette semaine alors que votre objectif est la perte. On ajuste votre objectif calorique de \u2212200 kcal/jour pour corriger progressivement la trajectoire.'
-        : 'Votre poids a diminu\u00e9 cette semaine alors que votre objectif est la prise. On ajuste votre objectif calorique de +200 kcal/jour pour corriger progressivement la trajectoire.';
+        ? 'Votre poids a augment\u00e9 cette semaine alors que votre objectif est la perte. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
+        : 'Votre poids a diminu\u00e9 cette semaine alors que votre objectif est la prise. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
       raison = 'Poids en sens inverse de l\'objectif (' + (delta>0?'+':'') + delta.toFixed(1) + 'kg)';
     } else if(stalled){
-      // Poids stable depuis 2 semaines \u2192 nudge de 200 kcal
+      // Poids stable depuis 2 semaines \u2192 proposition de nudge de 200 kcal,
+      // soumise \u00e0 validation admin (voir logKcalDecision plus bas).
       newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
       msgContext = objectif==='perte'
-        ? 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. On r\u00e9duit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
-        : 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.';
+        ? 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour relancer la perte de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
+        : 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour relancer la prise de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
       raison = 'Stagnation du poids depuis 2 semaines';
     }
 
     newAdj = Math.max(-1200, Math.min(2500, newAdj));
-    await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
-    await logKcalDecision(bilanId, newAdj-currentAdj, raison, computeKcalCible(profNow, newAdj));
+    // Plus d'application automatique : la proposition est enregistr\u00e9e en
+    // attente, profiles.kcal_adjustment n'est modifi\u00e9 que si un
+    // administrateur la valide depuis bilan_recap.html, apr\u00e8s avoir
+    // consult\u00e9 le bilan complet.
+    await logKcalDecision(bilanId, newAdj-currentAdj, raison, computeKcalCible(profNow, newAdj), 'pending', newAdj);
 
     banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
-    banner.innerHTML = '<strong>\ud83d\udcca Ajustement automatique</strong><br>' + msgContext + ' Ce changement est appliqu\u00e9 automatiquement \u00e0 votre plan alimentaire.';
+    banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>' + msgContext + ' Cette proposition sera examin\u00e9e par l\'\u00e9quipe apr\u00e8s consultation de votre bilan avant d\'\u00eatre appliqu\u00e9e.';
 
   } else if(objectif==='maintien'){
     // En maintien, on corrige dans le sens OPPOS\u00c9 \u00e0 la d\u00e9rive constat\u00e9e \u2014
@@ -706,13 +716,14 @@ async function checkAndAdjustKcal(newWeight, bilanId){
     var sensPerte = deltaM > 0; // poids mont\u00e9 -> on r\u00e9duit ; poids descendu -> on augmente
     var newAdjM = currentAdj + (sensPerte ? -200 : 200);
     newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
-    await sb.from('profiles').update({kcal_adjustment:newAdjM}).eq('id',USER.id);
-    await logKcalDecision(bilanId, newAdjM-currentAdj, 'D\u00e9rive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', computeKcalCible(profNow, newAdjM));
+    // Plus d'application automatique \u2014 proposition en attente de
+    // validation admin (voir bilan_recap.html).
+    await logKcalDecision(bilanId, newAdjM-currentAdj, 'D\u00e9rive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', computeKcalCible(profNow, newAdjM), 'pending', newAdjM);
 
     banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
-    banner.innerHTML = '<strong>\ud83d\udcca Ajustement automatique</strong><br>Votre poids a '
+    banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>Votre poids a '
       + (sensPerte ? 'augment\u00e9' : 'diminu\u00e9') + ' de '+Math.abs(deltaM).toFixed(1)+'kg cette semaine, alors que votre objectif est le maintien. '
-      + 'On '+(sensPerte?'r\u00e9duit':'augmente')+' votre objectif calorique de 200 kcal/jour pour vous recentrer.';
+      + 'Le programme sugg\u00e8re de '+(sensPerte?'r\u00e9duire':'augmenter')+' votre objectif calorique de 200 kcal/jour pour vous recentrer \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
   }
 }
 </script>
