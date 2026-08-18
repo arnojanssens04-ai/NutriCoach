@@ -30,7 +30,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_iron_sources_v1: {
     id: 'increase_iron_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de fer apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en fer sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -39,7 +39,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_calcium_sources_v1: {
     id: 'increase_calcium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de calcium apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en calcium sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -48,7 +48,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_fiber_sources_v1: {
     id: 'increase_fiber_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de fibres apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en fibres sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -57,7 +57,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_omega3_sources_v1: {
     id: 'increase_omega3_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires d\'oméga-3 apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en oméga-3 sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -66,7 +66,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_magnesium_sources_v1: {
     id: 'increase_magnesium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de magnésium apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en magnésium sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -75,7 +75,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_zinc_sources_v1: {
     id: 'increase_zinc_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de zinc apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en zinc sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -102,7 +102,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_potassium_sources_v1: {
     id: 'increase_potassium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de potassium apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en potassium sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',
@@ -120,7 +120,7 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_protein_sources_v1: {
     id: 'increase_protein_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de protéines apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
+    bodyTemplate: 'L\'apport moyen en protéines sur la période analysée est nettement inférieur à une référence journalière générique. '
       + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
       + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
       + 'à discuter avec un professionnel avant toute mise en œuvre.',

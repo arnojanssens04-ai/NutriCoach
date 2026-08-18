@@ -199,6 +199,114 @@ function computeNutrientSourceRarity(params) {
 }
 
 /* -----------------------------------------------------------------------
+   NUTRIENT_DAILY_TARGETS_REFERENCE
+
+   Repères journaliers de référence, réutilisés TELS QUELS depuis
+   calcTargets() (dashboard.html, branche de repli "plan fixe" — valeurs
+   génériques non personnalisées : o3:2.0, fer:14, cal:900, pot:3500,
+   mg:300, zn:10, fibres:27), jamais inventés ici. dashboard.html n'est
+   pas modifié — ces valeurs sont dupliquées à l'identique, à titre de
+   référence générique pour la simulation.
+
+   `protein_g` est une exception : dashboard.html ne calcule qu'un
+   objectif protéiné personnalisé (poids × g/kg selon activité), sans
+   valeur générique isolée. La valeur ci-dessous (56 g) correspond à un
+   repère nutritionnel générique courant pour un adulte sédentaire
+   (≈0,8 g/kg pour 70 kg) — pas une valeur applicative dupliquée, à
+   traiter avec plus de prudence que les autres.
+
+   Aucune cible n'existe dans le code applicatif pour la vitamine C, la
+   vitamine D, la vitamine B12 ou l'hydratation — ces signaux restent
+   sur le mécanisme de RARETÉ DES SOURCES (computeNutrientSourceRarity),
+   pas de quantité vs référence, pour ne jamais inventer une valeur de
+   repère non sourcée.
+   ----------------------------------------------------------------------- */
+var NUTRIENT_DAILY_TARGETS_REFERENCE = {
+  iron_mg: 14,
+  calcium_mg: 900,
+  potassium_mg: 3500,
+  magnesium_mg: 300,
+  zinc_mg: 10,
+  fiber_g: 27,
+  omega3_g: 2.0,
+  protein_g: 56
+};
+
+/* -----------------------------------------------------------------------
+   computeNutrientIntakeVsTarget(params)
+
+   Signal QUANTITATIF : somme la quantité de nutriment déclarée par jour
+   (champ numérique du journal, ex. `iron_mg`), moyenne sur les jours
+   évalués, et compare à une référence journalière générique. 'present'
+   (état déclencheur) = apport moyen nettement inférieur à la référence
+   (< insufficiencyRatio), de façon SOUTENUE sur la période — jamais un
+   seul jour bas isolé, jamais une affirmation de carence : uniquement
+   un écart par rapport à un repère générique non personnalisé.
+   ----------------------------------------------------------------------- */
+function computeNutrientIntakeVsTarget(params) {
+  var journalEntries = params.journalEntries;
+  var referenceDate = params.referenceDate;
+  var insufficiencyRatio = typeof params.insufficiencyRatio === 'number' ? params.insufficiencyRatio : 0.6;
+
+  if (!Array.isArray(journalEntries) || !isValidIsoDateSignal(referenceDate) || typeof params.dailyTarget !== 'number' || params.dailyTarget <= 0) {
+    return buildSignalErrorResult(params.patternId, params.label);
+  }
+
+  var dateWindow = buildDateWindowSignal(referenceDate, params.observationWindowDays);
+  var byDate = {};
+  journalEntries.forEach(function (e) {
+    if (!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  var analyzableDays = 0, insufficientDays = [], evaluatedDays = 0, totalIntake = 0;
+
+  dateWindow.dates.forEach(function (date) {
+    var dayEntries = byDate[date];
+    if (!dayEntries || dayEntries.length === 0) return;
+    analyzableDays++;
+    var hasUnknown = dayEntries.some(function (e) { return typeof e[params.nutrientField] !== 'number'; });
+    if (hasUnknown) {
+      insufficientDays.push({ date: date, reason: 'Quantité de nutriment inconnue pour une prise alimentaire de ce jour.' });
+      return;
+    }
+    evaluatedDays++;
+    var dayTotal = dayEntries.reduce(function (sum, e) { return sum + e[params.nutrientField]; }, 0);
+    totalIntake += dayTotal;
+  });
+
+  var coverageRate = params.observationWindowDays > 0 ? analyzableDays / params.observationWindowDays : 0;
+  var avgIntake = evaluatedDays > 0 ? totalIntake / evaluatedDays : 0;
+  var ratioToTarget = avgIntake / params.dailyTarget;
+
+  var state;
+  if (evaluatedDays === 0) state = 'insufficient';
+  else if (ratioToTarget < insufficiencyRatio) state = 'present'; // écart soutenu confirmé = état déclencheur
+  else state = 'absent';
+
+  var effectiveRate = state === 'present'
+    ? Math.max(0, Math.min(1, 1 - ratioToTarget))
+    : Math.max(0, Math.min(1, ratioToTarget));
+  var confidence = nutritionSignalConfidence(evaluatedDays, effectiveRate);
+
+  return {
+    patternId: params.patternId, label: params.label, state: state,
+    referenceDate: referenceDate, windowStart: dateWindow.windowStart, windowEnd: dateWindow.windowEnd,
+    calendarDays: params.observationWindowDays, analyzableDays: analyzableDays, coverageRate: coverageRate,
+    occurrenceDays: 0, evaluatedDays: evaluatedDays, occurrenceRate: ratioToTarget,
+    confidence: confidence, insufficientDays: insufficientDays, isConfirmed: false,
+    observationMessage: state === 'insufficient' ? null : params.neutralMessage,
+    insufficientDataMessage: state === 'insufficient' ? params.insufficientDataMessage : null,
+    // Champs additionnels, propres à ce type de signal quantitatif —
+    // n'existent pas sur les signaux de rareté ; utiles pour l'affichage
+    // et les tests, jamais utilisés pour une décision de sécurité.
+    avgIntake: avgIntake,
+    dailyTarget: params.dailyTarget,
+    unit: params.unit || null
+  };
+}
+
+/* -----------------------------------------------------------------------
    computeFoodVarietyRarity(journalEntries, referenceDate)
 
    Signal DESCRIPTIF distinct des nutriments : mesure la variété des
@@ -281,67 +389,79 @@ var NUTRITION_SIGNAL_RESOLVERS = {
     });
   },
   low_source_presence_iron: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_iron',
-      label: 'Sources alimentaires de fer peu présentes',
-      nutrientCode: 'iron',
+      label: 'Apport en fer nettement inférieur à la référence',
+      nutrientField: 'iron_mg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.iron_mg,
+      unit: 'mg',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de fer apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en fer sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
   low_source_presence_calcium: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_calcium',
-      label: 'Sources alimentaires de calcium peu présentes',
-      nutrientCode: 'calcium',
+      label: 'Apport en calcium nettement inférieur à la référence',
+      nutrientField: 'calcium_mg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.calcium_mg,
+      unit: 'mg',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de calcium apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en calcium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
   low_source_presence_fiber: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_fiber',
-      label: 'Sources alimentaires de fibres peu présentes',
-      nutrientCode: 'fiber',
+      label: 'Apport en fibres nettement inférieur à la référence',
+      nutrientField: 'fiber_g',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.fiber_g,
+      unit: 'g',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de fibres apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en fibres sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
   low_source_presence_omega3: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_omega3',
-      label: 'Sources alimentaires d\'oméga-3 peu présentes',
-      nutrientCode: 'omega3',
+      label: 'Apport en oméga-3 nettement inférieur à la référence',
+      nutrientField: 'omega3_g',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.omega3_g,
+      unit: 'g',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires d\'oméga-3 apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en oméga-3 sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
   low_source_presence_magnesium: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_magnesium',
-      label: 'Sources alimentaires de magnésium peu présentes',
-      nutrientCode: 'magnesium',
+      label: 'Apport en magnésium nettement inférieur à la référence',
+      nutrientField: 'magnesium_mg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.magnesium_mg,
+      unit: 'mg',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de magnésium apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en magnésium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
   low_source_presence_zinc: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_zinc',
-      label: 'Sources alimentaires de zinc peu présentes',
-      nutrientCode: 'zinc',
+      label: 'Apport en zinc nettement inférieur à la référence',
+      nutrientField: 'zinc_mg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.zinc_mg,
+      unit: 'mg',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de zinc apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en zinc sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
@@ -369,12 +489,14 @@ var NUTRITION_SIGNAL_RESOLVERS = {
     });
   },
   low_source_presence_potassium: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_potassium',
-      label: 'Sources alimentaires de potassium peu présentes',
-      nutrientCode: 'potassium',
+      label: 'Apport en potassium nettement inférieur à la référence',
+      nutrientField: 'potassium_mg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.potassium_mg,
+      unit: 'mg',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de potassium apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en potassium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
@@ -391,12 +513,14 @@ var NUTRITION_SIGNAL_RESOLVERS = {
     });
   },
   low_source_presence_protein: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_protein',
-      label: 'Sources alimentaires de protéines peu présentes',
-      nutrientCode: 'protein',
+      label: 'Apport en protéines nettement inférieur à la référence',
+      nutrientField: 'protein_g',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.protein_g,
+      unit: 'g',
       observationWindowDays: 7,
-      neutralMessage: 'Les sources alimentaires de protéines apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      neutralMessage: 'L\'apport moyen en protéines sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
