@@ -3,51 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Sant&#233; &#8212; Messages (Admin)</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Cap Sant&#233; &#8212; Discussion (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* WhatsApp Web : sidebar claire + en-t&#234;te vert-teal fonc&#233; par conversation */
 :root {
-  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
-  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
-  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
-  --sage:#4a7a3a; --rose:#8b2a2a; --rose-l:rgba(201,122,110,0.12);
-  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --wa-header:#075e54; --wa-header-d:#054c44; --wa-accent:#25d366;
+  --wa-wallpaper:#e5ddd5; --wa-sent:#dcf8c6; --wa-received:#ffffff;
+  --wa-sidebar:#ffffff; --wa-sidebar-hover:#f5f6f6; --wa-sidebar-active:#f0f2f1;
+  --bg:#f0f2f5; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.08);
+  --gold:#075e54; --rose:#c0392b;
+  --text:#111b21; --text2:#54656f; --text3:#8696a0;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html,body { background:var(--bg); height:100%; }
 body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-.topbar { flex-shrink:0; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 18px; height:58px; display:flex; align-items:center; justify-content:space-between; }
-.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
-.t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
-.t-back:hover { border-color:var(--gold); color:var(--gold); }
+.topbar { flex-shrink:0; background:var(--wa-header); padding:0 16px; height:50px; display:flex; align-items:center; justify-content:space-between; color:#fff; }
+.t-logo { font-size:1rem; font-weight:600; color:#fff; }
+.t-back { font-size:.8rem; color:rgba(255,255,255,0.9); text-decoration:none; padding:6px 13px; border:1px solid rgba(255,255,255,0.35); border-radius:8px; }
+.t-back:hover { background:rgba(255,255,255,0.12); }
 
 .main { flex:1; display:flex; overflow:hidden; }
-.conv-list { width:280px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg2); }
-.conv-item { padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
-.conv-item:hover, .conv-item.active { background:var(--card); }
-.conv-name { font-size:.88rem; font-weight:600; }
-.conv-preview { font-size:.76rem; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.conv-badge { display:inline-block; background:var(--rose); color:#fff; font-size:.65rem; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:6px; }
+.conv-list-wrap { width:300px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--border); background:var(--wa-sidebar); }
+.conv-list { width:100%; flex-shrink:0; overflow-y:auto; background:var(--wa-sidebar); }
+.conv-item { padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; display:flex; align-items:center; gap:11px; }
+.conv-item:hover { background:var(--wa-sidebar-hover); }
+.conv-item.active { background:var(--wa-sidebar-active); }
+.conv-av { width:42px; height:42px; border-radius:50%; background:var(--wa-header); color:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; }
+.conv-body { flex:1; min-width:0; }
+.conv-name { font-size:.9rem; font-weight:600; color:var(--text); }
+.conv-preview { font-size:.8rem; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-badge { display:inline-block; background:var(--wa-accent); color:#fff; font-size:.68rem; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:6px; }
 .empty-list { padding:30px 16px; color:var(--text2); font-size:.82rem; text-align:center; }
 
-.thread-panel { flex:1; display:flex; flex-direction:column; }
-.thread-hdr { padding:14px 18px; border-bottom:1px solid var(--border); font-family:'Lora',serif; font-size:1.1rem; flex-shrink:0; }
-.thread { flex:1; overflow-y:auto; padding:18px; }
-.thread > div { max-width:760px; margin:0 auto; }
-.no-conv { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text2); font-size:.86rem; }
+.thread-panel { flex:1; display:flex; flex-direction:column; background:var(--wa-wallpaper);
+  background-image:
+    radial-gradient(circle at 8% 12%, rgba(0,0,0,0.028) 0, transparent 40%),
+    radial-gradient(circle at 32% 68%, rgba(0,0,0,0.028) 0, transparent 42%),
+    radial-gradient(circle at 78% 22%, rgba(0,0,0,0.028) 0, transparent 40%),
+    radial-gradient(circle at 62% 82%, rgba(0,0,0,0.028) 0, transparent 42%);
+  background-size:220px 220px; }
+.thread-hdr { padding:9px 16px; background:var(--wa-header); color:#fff; font-size:.95rem; font-weight:600; flex-shrink:0; }
+.thread { flex:1; overflow-y:auto; padding:14px 6%; }
+.thread > div { max-width:800px; margin:0 auto; }
+.no-conv { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text2); font-size:.86rem; background:var(--wa-wallpaper); }
 
-.bubble-row { display:flex; margin-bottom:12px; }
+.bubble-row { display:flex; margin-bottom:3px; }
 .bubble-row.from-admin { justify-content:flex-end; }
 .bubble-row.from-user { justify-content:flex-start; }
-.bubble { max-width:65%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; }
-.bubble-emoji-only { background:none!important; border:none!important; padding:2px 0!important; font-size:2rem!important; line-height:1.2!important; }
-.bubble-row.from-user .bubble { background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
-.bubble-row.from-admin .bubble { background:var(--gold); color:#fff; border-bottom-right-radius:4px; }
-.bubble-time { font-size:.65rem; color:var(--text3); margin-top:4px; }
-.msg-edited-tag { font-style:italic; opacity:.75; }
-.bubble-deleted { font-style:italic; color:var(--text3); background:var(--bg2)!important; }
+.bubble { position:relative; max-width:65%; padding:7px 9px 8px; border-radius:8px; font-size:.9rem; line-height:1.42; white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; box-shadow:0 1px 1px rgba(0,0,0,0.08); }
+.bubble-emoji-only { background:none!important; box-shadow:none!important; padding:2px 0!important; font-size:2.4rem!important; line-height:1.2!important; }
+.bubble-row.from-user .bubble { background:var(--wa-received); border-top-left-radius:2px; }
+.bubble-row.from-admin .bubble { background:var(--wa-sent); border-top-right-radius:2px; }
+.bubble-row.from-user .bubble::before {
+  content:''; position:absolute; top:0; left:-7px; width:12px; height:12px;
+  background:var(--wa-received); clip-path:polygon(100% 0, 0 0, 100% 100%);
+}
+.bubble-row.from-admin .bubble::before {
+  content:''; position:absolute; top:0; right:-7px; width:12px; height:12px;
+  background:var(--wa-sent); clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+.bubble-time { font-size:.66rem; color:rgba(0,0,0,0.4); margin-top:2px; float:right; padding-left:8px; }
+.msg-edited-tag { font-style:italic; opacity:.8; }
+.bubble-deleted { font-style:italic; color:var(--text3); background:#f0f0f0!important; }
 .msg-menu-wrap { position:relative; align-self:flex-end; }
 .msg-menu-btn { background:none; border:none; color:var(--text3); font-size:1rem; cursor:pointer; padding:2px 6px; line-height:1; }
 .msg-menu { display:none; position:absolute; right:0; top:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.15); z-index:50; min-width:120px; overflow:hidden; }
@@ -55,24 +75,25 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .msg-menu button { display:block; width:100%; text-align:left; padding:9px 14px; background:none; border:none; font-size:.82rem; color:var(--text); cursor:pointer; }
 .msg-menu button:hover { background:var(--bg2); }
 .msg-menu button.msg-menu-danger { color:var(--rose); }
-.msg-edit-ta { width:100%; min-height:60px; border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:.88rem; resize:vertical; background:var(--bg); color:var(--text); }
+.msg-edit-ta { width:100%; min-height:60px; border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:.88rem; resize:vertical; background:#fff; color:var(--text); }
 .msg-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
 .msg-edit-actions button { padding:6px 12px; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; }
 .msg-edit-cancel { background:var(--bg2); color:var(--text2); }
-.msg-edit-save { background:var(--gold); color:#fff; }
+.msg-edit-save { background:var(--wa-header); color:#fff; }
 
-.input-bar { flex-shrink:0; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:10px; }
-.input-bar textarea { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:14px; color:var(--text); padding:11px 14px; font-family:'Inter',sans-serif; font-size:.88rem; resize:none; outline:none; max-height:160px; overflow-y:auto; line-height:1.4; }
-.send-btn { width:44px; height:44px; border-radius:50%; background:var(--gold); border:none; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+.input-bar { flex-shrink:0; background:var(--bg2); padding:8px 12px 10px; display:flex; gap:10px; align-items:flex-end; }
+.input-bar textarea { flex:1; background:#fff; border:none; border-radius:22px; color:var(--text); padding:11px 16px; font-family:'Inter',sans-serif; font-size:.9rem; resize:none; outline:none; max-height:160px; overflow-y:auto; line-height:1.4; box-shadow:0 1px 1px rgba(0,0,0,0.06); }
+.send-btn { width:42px; height:42px; border-radius:50%; background:var(--wa-accent); border:none; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+.send-btn:hover { background:#1fb955; }
 .denied { display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text2); }
 
-.thread-back { display:none; background:none; border:none; font-size:1.2rem; color:var(--text2); cursor:pointer; padding:4px 10px 4px 0; }
+.thread-back { display:none; background:none; border:none; font-size:1.3rem; color:#fff; cursor:pointer; padding:4px 10px 4px 0; }
 
 /* &#9472;&#9472; Mobile : un seul panneau visible &#224; la fois (liste OU conversation) &#9472;&#9472; */
 @media (max-width: 720px) {
-  .conv-list { width:100%; }
+  .conv-list-wrap { width:100%; }
   .thread-panel { display:none; }
-  .main.show-thread .conv-list { display:none; }
+  .main.show-thread .conv-list-wrap { display:none; }
   .main.show-thread .thread-panel { display:flex; }
   .thread-back { display:inline-block; }
 }
@@ -81,19 +102,19 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Sant&#233;</span> &#183; Messages</div>
+  <div class="t-logo">Cap<span>Sant&#233;</span> &#183; Discussion</div>
   <a href="admin.html" class="t-back">&#8592; Admin</a>
 </header>
 
 <div class="main" id="main" style="display:none">
-  <div class="conv-list-wrap" style="width:280px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border)">
-    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">&#9999;&#65039; Nouveau message</button>
-    <div class="conv-list" id="conv-list" style="border-right:none;flex:1"></div>
+  <div class="conv-list-wrap">
+    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--wa-header);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">&#9999;&#65039; Nouveau message</button>
+    <div class="conv-list" id="conv-list"></div>
   </div>
   <div class="thread-panel">
     <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center;justify-content:space-between">
       <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">&#8592;</button><span id="thread-hdr-txt">S&#233;lectionnez une conversation</span></span>
-      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--text2);white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">&#127807; Mode focus</button>
+      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:999px;padding:5px 11px;cursor:pointer;color:#fff;white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">&#127807; Mode focus</button>
     </div>
     <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation &#224; gauche</div></div>
     <div class="input-bar" id="input-bar" style="display:none">
@@ -190,12 +211,15 @@ function renderConvList(){
   }).sort(function(a,b){ return new Date(b.last.created_at) - new Date(a.last.created_at); });
 
   var el = document.getElementById('conv-list');
-  if(!convs.length){ el.innerHTML = '<div class="empty-list">Aucun message pour le moment.</div>'; return; }
+  if(!convs.length){ el.innerHTML = '<div class="empty-list">Aucune conversation pour le moment.</div>'; return; }
   el.innerHTML = convs.map(function(c){
+    var initial = (userLabel(c.uid)||'?').trim().charAt(0).toUpperCase() || '?';
     return '<div class="conv-item'+(CURRENT_CONV===c.uid?' active':'')+'" onclick="openConv(\''+c.uid+'\')">'
+      +'<div class="conv-av">'+esc(initial)+'</div>'
+      +'<div class="conv-body">'
       +'<div class="conv-name">'+esc(userLabel(c.uid))+(c.unread?'<span class="conv-badge">'+c.unread+'</span>':'')+'</div>'
       +'<div class="conv-preview">'+(c.last.is_admin_sender?'Vous : ':'')+esc(c.last.content)+'</div>'
-      +'</div>';
+      +'</div></div>';
   }).join('');
 }
 

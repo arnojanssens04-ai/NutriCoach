@@ -84,6 +84,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .field input, .field select { width:100%; padding:10px 13px; background:var(--card); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.88rem; outline:none; }
 .field input:focus, .field select:focus { border-color:rgba(45,79,28,0.4); }
 .field input:disabled { opacity:.6; }
+.chk-row { display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text); cursor:pointer; }
+.chk-row input[type="checkbox"] { width:auto; margin:0; flex-shrink:0; }
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 
 .patho-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:6px; }
@@ -123,7 +125,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <header class="topbar">
   <div class="t-logo">Cap<span>Sant&#233;</span> <span class="t-badge">Admin</span></div>
   <div style="display:flex;gap:8px">
-    <a href="chat-admin.html" class="t-back">&#128172; Messages</a>
+    <a href="chat-admin.html" class="t-back">&#128172; Discussion</a>
     <a href="aliments.html" class="t-back">&#127869;&#65039; Aliments</a>
     <a href="bilan_recap.html" class="t-back">&#128202; Bilans</a>
     <a href="maj.html" class="t-back">&#10024; Mises &#224; jour</a>
@@ -192,6 +194,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <div class="row2">
         <div class="field"><label>Poids vis&#233; (kg)</label><input type="number" id="e-poids-vise" step="0.1"></div>
         <div class="field"><label>Objectif kcal/j</label><input type="number" id="e-kcal"></div>
+      </div>
+      <div class="field">
+        <label class="chk-row">
+          <input type="checkbox" id="e-force-kcal">
+          Forcer cet objectif kcal/j (remplace le calcul automatique poids/taille/activit&#233; pour ce patient)
+        </label>
       </div>
       <div class="field"><label>Niveau d'activit&#233;</label>
         <select id="e-activite">
@@ -373,6 +381,11 @@ function openEdit(id){
   document.getElementById('e-poids').value = u.poids||'';
   document.getElementById('e-poids-vise').value = u.poids_vise||'';
   document.getElementById('e-kcal').value = u.kcal_target||'';
+  // Coché seulement si un plan fixe existe déjà, est actif, ET qu'un
+  // objectif kcal est défini — reproduit exactement la condition utilisée
+  // par calcTargets() (dashboard.html/bilan.html/bilan_recap.html) pour
+  // décider si l'objectif fixe prime sur le calcul automatique.
+  document.getElementById('e-force-kcal').checked = !!(u.plan_fixe && u.plan_fixe._active !== false && u.kcal_target);
   document.getElementById('e-activite').value = u.activite||'sedentary';
   document.getElementById('e-jourbilan').value = u.jour_bilan||'dimanche';
   document.getElementById('e-role').value = u.role||'user';
@@ -414,6 +427,15 @@ async function saveUser(){
   var pathos = [];
   document.querySelectorAll('#e-pathos .pc.on').forEach(function(pc){ pathos.push(pc.getAttribute('data-p')); });
 
+  var u = ALL_USERS.find(function(x){return x.id===EDITING_ID;}) || {};
+  var kcalTarget = parseInt(document.getElementById('e-kcal').value)||null;
+  var forceKcal = document.getElementById('e-force-kcal').checked;
+
+  if(forceKcal && !kcalTarget){
+    toast('\u274c Un objectif kcal/j est requis pour forcer un objectif calorique.');
+    return;
+  }
+
   var data = {
     prenom: document.getElementById('e-prenom').value.trim(),
     nom: document.getElementById('e-nom').value.trim(),
@@ -422,12 +444,23 @@ async function saveUser(){
     taille: parseInt(document.getElementById('e-taille').value)||null,
     poids: parseFloat(document.getElementById('e-poids').value)||null,
     poids_vise: parseFloat(document.getElementById('e-poids-vise').value)||null,
-    kcal_target: parseInt(document.getElementById('e-kcal').value)||null,
+    kcal_target: kcalTarget,
     activite: document.getElementById('e-activite').value,
     jour_bilan: document.getElementById('e-jourbilan').value,
     role: document.getElementById('e-role').value,
     pathologies: pathos
   };
+
+  // La case "Forcer cet objectif kcal/j" pilote plan_fixe._active \u2014 seule
+  // condition, avec kcal_target, lue par calcTargets() (dashboard.html,
+  // bilan.html, bilan_recap.html) pour basculer sur l'objectif fixe.
+  // On pr\u00e9serve les repas d\u00e9j\u00e0 choisis par le patient (plan-fixe.html) \u2014
+  // on ne touche jamais qu'\u00e0 _active depuis l'admin.
+  if(forceKcal){
+    data.plan_fixe = Object.assign({}, u.plan_fixe||{}, {_active:true});
+  } else if(u.plan_fixe){
+    data.plan_fixe = Object.assign({}, u.plan_fixe, {_active:false});
+  }
 
   var r = await sb.from('profiles').update(data).eq('id',EDITING_ID);
   if(r.error){ toast('\u274c '+r.error.message); return; }

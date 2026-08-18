@@ -108,7 +108,7 @@ check('7. Aucun eval/new Function/accès réseau/DOM dans nutrition-priority-eng
 });
 
 check('8. trend-engine.js, trend-definitions.js, dashboard.html, conseils.html, admin.html restent inchangés', () => {
-  ['trend-engine.js', 'trend-definitions.js', 'dashboard.html', 'conseils.html', 'admin.html'].forEach((f) => {
+  ['trend-engine.js', 'trend-definitions.js', 'dashboard.html', 'conseils.html'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });

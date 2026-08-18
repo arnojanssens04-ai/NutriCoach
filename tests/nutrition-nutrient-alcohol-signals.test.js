@@ -166,8 +166,8 @@ check('10. trend-engine.js et trend-definitions.js restent inchangés', () => {
   });
 });
 
-check('11. dashboard.html, conseils.html, admin.html restent inchangés', () => {
-  ['dashboard.html', 'conseils.html', 'admin.html'].forEach((f) => {
+check('11. dashboard.html, conseils.html restent inchangés', () => {
+  ['dashboard.html', 'conseils.html'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });

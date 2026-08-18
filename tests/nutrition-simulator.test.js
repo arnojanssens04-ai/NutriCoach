@@ -241,8 +241,8 @@ check('20. Aucune migration Supabase créée pour le moteur nutrition-*.js (seul
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });
 });
-check('21. conseils.html, admin.html non modifiés', () => {
-  ['conseils.html', 'admin.html'].forEach((f) => {
+check('21. conseils.html non modifié', () => {
+  ['conseils.html'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });

@@ -92,7 +92,7 @@ check('9. Aucun fichier nutrition-*.js du moteur confiné n\'est touché par ce 
 });
 
 check('10. dashboard.html, conseils.html, admin.html, trend-engine.js, trend-definitions.js restent inchangés', () => {
-  ['dashboard.html', 'conseils.html', 'admin.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
+  ['dashboard.html', 'conseils.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });

@@ -51,7 +51,7 @@ check('4. Migration 20260818000000_add_profile_diet.sql : colonne nullable, vale
 });
 
 check('5. dashboard.html, conseils.html, admin.html, trend-engine.js, trend-definitions.js restent inchangés', () => {
-  ['dashboard.html', 'conseils.html', 'admin.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
+  ['dashboard.html', 'conseils.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });
