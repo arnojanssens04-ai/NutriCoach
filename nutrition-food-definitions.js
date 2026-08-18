@@ -163,6 +163,40 @@ var NUTRITION_FOOD_LISTS = {
       { code: 'dark_chocolate', label: 'Chocolat noir', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
     ]
   },
+  protein_rich_foods_v1: {
+    id: 'protein_rich_foods_v1',
+    label: 'Sources alimentaires de protéines (v1)',
+    status: 'active',
+    items: [
+      { code: 'chicken_breast', label: 'Blanc de poulet', allergenTags: [], dietTags: ['gluten_free'] },
+      { code: 'lentils', label: 'Lentilles', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'eggs', label: 'Œufs', allergenTags: ['egg'], dietTags: ['vegetarian', 'gluten_free'] },
+      { code: 'tofu', label: 'Tofu', allergenTags: ['soy'], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'plain_yogurt', label: 'Yaourt nature', allergenTags: ['milk'], dietTags: ['vegetarian', 'gluten_free'] }
+    ]
+  },
+  hydration_alternatives_v1: {
+    id: 'hydration_alternatives_v1',
+    label: 'Prises hydratantes alternatives (v1)',
+    status: 'active',
+    items: [
+      { code: 'still_water', label: 'Eau plate', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'sparkling_water_flavored', label: 'Eau pétillante aromatisée', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'herbal_tea', label: 'Infusion', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] }
+    ]
+  },
+  varied_staple_foods_v1: {
+    id: 'varied_staple_foods_v1',
+    label: 'Aliments variés à alterner (v1)',
+    status: 'active',
+    items: [
+      { code: 'quinoa', label: 'Quinoa', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'sweet_potato', label: 'Patate douce', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'chickpeas', label: 'Pois chiches', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'bell_pepper', label: 'Poivron', allergenTags: [], dietTags: ['vegetarian', 'vegan', 'gluten_free'] },
+      { code: 'mackerel', label: 'Maquereau', allergenTags: ['fish'], dietTags: ['gluten_free'] }
+    ]
+  },
   alcohol_free_alternatives_v1: {
     id: 'alcohol_free_alternatives_v1',
     label: 'Alternatives sans alcool (v1)',

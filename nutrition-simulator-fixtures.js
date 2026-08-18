@@ -434,6 +434,85 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     ]
   },
 
+  low_protein_source_presence: {
+    label: 'Profil fictif — sources de protéines peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_protein_sources_v1',
+    profile: {
+      patientId: 'fictif-19',
+      age: 22,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Salade verte', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Pommes de terre', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Blanc de poulet', false), { nutrient_sources: ['protein'] })
+    ]
+  },
+
+  low_hydration_presence: {
+    label: 'Profil fictif — prises hydratantes peu présentes',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_hydration_v1',
+    profile: {
+      patientId: 'fictif-20',
+      age: 40,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Salade composée', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Poulet légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Riz et légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Quinoa légumes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Soupe maison', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Poisson vapeur', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Eau plate', false), { nutrient_sources: ['hydration'] })
+    ]
+  },
+
+  low_food_variety_presence: {
+    label: 'Profil fictif — variété alimentaire faible (même aliment répété)',
+    referenceDate: '2026-08-12',
+    ruleId: 'increase_food_variety_v1',
+    profile: {
+      patientId: 'fictif-21',
+      age: 33,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: null,
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      { date: '2026-08-06', repas: 'lunch', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-06', repas: 'dinner', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-07', repas: 'lunch', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-07', repas: 'dinner', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-08', repas: 'lunch', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-09', repas: 'lunch', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-09', repas: 'dinner', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false },
+      { date: '2026-08-10', repas: 'lunch', aliment: 'Riz et poulet', quantite: 300, kcal: 450, is_ultra_processed: false }
+    ]
+  },
+
   adequate_nutrient_sources_control: {
     label: 'Profil fictif — sources nutritionnelles variées (témoin, aucun signal attendu)',
     referenceDate: '2026-08-12',

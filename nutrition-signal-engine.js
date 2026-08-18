@@ -199,6 +199,71 @@ function computeNutrientSourceRarity(params) {
 }
 
 /* -----------------------------------------------------------------------
+   computeFoodVarietyRarity(journalEntries, referenceDate)
+
+   Signal DESCRIPTIF distinct des nutriments : mesure la variété des
+   ALIMENTS déclarés (pas leur teneur en nutriments), à partir du seul
+   champ `aliment` déjà présent dans le vrai journal (aucun champ fictif
+   supplémentaire nécessaire ici, contrairement aux autres signaux de ce
+   fichier). 'present' = variété faible (peu d'aliments différents sur
+   la période), jamais une affirmation de déséquilibre nutritionnel.
+   ----------------------------------------------------------------------- */
+function computeFoodVarietyRarity(journalEntries, referenceDate) {
+  var entries = journalEntries;
+  var varietyThreshold = 0.5;
+
+  if (!Array.isArray(entries) || !isValidIsoDateSignal(referenceDate)) {
+    return buildSignalErrorResult('low_food_variety', 'Variété alimentaire faible');
+  }
+
+  var dateWindow = buildDateWindowSignal(referenceDate, 7);
+  var byDate = {};
+  entries.forEach(function (e) {
+    if (!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  var analyzableDays = 0, evaluatedDays = 0, occurrenceDays = 0;
+  var alimentsSeen = {};
+  var totalEntriesInWindow = 0;
+
+  dateWindow.dates.forEach(function (date) {
+    var dayEntries = byDate[date];
+    if (!dayEntries || dayEntries.length === 0) return;
+    analyzableDays++;
+    var hasUnknown = dayEntries.some(function (e) { return typeof e.aliment !== 'string' || !e.aliment; });
+    if (hasUnknown) return; // jour non exploitable, ni compté evaluatedDays ni occurrenceDays
+    evaluatedDays++;
+    dayEntries.forEach(function (e) {
+      alimentsSeen[e.aliment] = true;
+      totalEntriesInWindow++;
+    });
+  });
+
+  var uniqueCount = Object.keys(alimentsSeen).length;
+  var varietyRate = totalEntriesInWindow > 0 ? uniqueCount / totalEntriesInWindow : 0;
+
+  var state;
+  if (evaluatedDays === 0) state = 'insufficient';
+  else if (varietyRate < varietyThreshold) state = 'present'; // variété faible confirmée = état déclencheur
+  else state = 'absent';
+
+  var effectiveRate = state === 'present' ? (1 - varietyRate) : varietyRate;
+  var confidence = nutritionSignalConfidence(evaluatedDays, effectiveRate);
+  var coverageRate = 7 > 0 ? analyzableDays / 7 : 0;
+
+  return {
+    patternId: 'low_food_variety', label: 'Variété alimentaire faible', state: state,
+    referenceDate: referenceDate, windowStart: dateWindow.windowStart, windowEnd: dateWindow.windowEnd,
+    calendarDays: 7, analyzableDays: analyzableDays, coverageRate: coverageRate,
+    occurrenceDays: occurrenceDays, evaluatedDays: evaluatedDays, occurrenceRate: varietyRate,
+    confidence: confidence, insufficientDays: [], isConfirmed: false,
+    observationMessage: state === 'insufficient' ? null : 'Un nombre restreint d\'aliments différents a été observé sur la période analysée, par rapport au nombre total d\'entrées enregistrées.',
+    insufficientDataMessage: state === 'insufficient' ? 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.' : null
+  };
+}
+
+/* -----------------------------------------------------------------------
    NUTRITION_SIGNAL_RESOLVERS — table de résolution patternId -> fonction
    (journalEntries, referenceDate) -> TrendCardResult-like. Consommée par
    nutrition-simulator.js, jamais par trend-engine.js.
@@ -324,6 +389,31 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
+  },
+  low_source_presence_protein: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_source_presence_protein',
+      label: 'Sources alimentaires de protéines peu présentes',
+      nutrientCode: 'protein',
+      observationWindowDays: 7,
+      neutralMessage: 'Les sources alimentaires de protéines apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_hydration_presence: function (journalEntries, referenceDate) {
+    return computeNutrientSourceRarity({
+      patternId: 'low_hydration_presence',
+      label: 'Prises hydratantes peu présentes',
+      nutrientCode: 'hydration',
+      observationWindowDays: 7,
+      neutralMessage: 'Les prises hydratantes déclarées (eau, infusions, etc.) apparaissent peu souvent dans le journal enregistré sur la période analysée.',
+      insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
+      journalEntries: journalEntries, referenceDate: referenceDate
+    });
+  },
+  low_food_variety: function (journalEntries, referenceDate) {
+    return computeFoodVarietyRarity(journalEntries, referenceDate);
   },
   repeated_added_sugar_presence: function (journalEntries, referenceDate) {
     return computeBooleanFlagSignal({
