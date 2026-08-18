@@ -86,6 +86,14 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
 .popup-btn.secondary{ background:transparent; color:var(--text2); }
 .popup-none{ text-align:center; font-size:.82rem; color:var(--text3); font-style:italic; padding:10px; }
+
+.priority-list{ display:flex; flex-direction:column; gap:10px; }
+.priority-row{ display:flex; align-items:center; gap:10px; background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:8px 12px; font-size:.82rem; }
+.priority-rank{ width:22px; height:22px; border-radius:50%; background:var(--gold); color:#fff; font-size:.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.priority-rule{ flex:1; }
+.priority-badge{ font-size:.68rem; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:999px; }
+.priority-badge.boosted{ background:var(--sage-l); color:var(--sage); }
+.priority-badge.base{ background:var(--border); color:var(--text2); }
 </style>
 </head>
 <body>
@@ -108,6 +116,13 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
   </p>
 
   <div id="profiles-root"></div>
+
+  <div class="profile-card">
+    <div class="profile-title">Démo — priorité d'affichage entre plusieurs signaux simultanés</div>
+    <div class="profile-id">Profil végétalien fictif déclenchant plusieurs signaux nutriment en même temps</div>
+    <div class="section-lbl">Ordre d'affichage proposé</div>
+    <div id="priority-demo-root"></div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -117,6 +132,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-template-definitions.js"></script>
 <script src="nutrition-rule-definitions.js"></script>
 <script src="nutrition-signal-engine.js"></script>
+<script src="nutrition-priority-engine.js"></script>
 <script src="nutrition-safety.js"></script>
 <script src="nutrition-rule-engine.js"></script>
 <script src="nutrition-food-selector.js"></script>
@@ -268,6 +284,44 @@ function renderProfile(fixtureKey, fixture) {
   return html;
 }
 
+/* -----------------------------------------------------------------------
+   renderMultiSignalPriorityDemo(fixture)
+
+   Montre, pour UN profil déclenchant plusieurs signaux en même temps,
+   dans quel ordre les cartes seraient présentées — jamais une gravité
+   clinique, uniquement une priorité d'affichage dérivée de
+   NUTRIENT_DIET_RELEVANCE (nutrition-priority-engine.js).
+   ----------------------------------------------------------------------- */
+function renderMultiSignalPriorityDemo(fixture) {
+  var sorted = runNutritionSimulationForAllRules({
+    journalEntries: fixture.journalEntries,
+    referenceDate: fixture.referenceDate,
+    profile: fixture.profile,
+    mode: 'simulation',
+    now: fixture.referenceDate + 'T10:00:00Z'
+  });
+
+  if (!sorted.length) {
+    return '<p class="popup-none">Aucun signal déclenché pour ce profil.</p>';
+  }
+
+  var rows = sorted.map(function (entry, i) {
+    var meta = CARD_CATEGORY_BY_RULE[entry.ruleId] || { title: entry.ruleId };
+    var nutrientCode = (typeof NUTRIENT_CODE_BY_RULE_ID !== 'undefined') ? NUTRIENT_CODE_BY_RULE_ID[entry.ruleId] : null;
+    var relevantDiets = nutrientCode && typeof NUTRIENT_DIET_RELEVANCE !== 'undefined' ? NUTRIENT_DIET_RELEVANCE[nutrientCode] : null;
+    var boosted = relevantDiets && fixture.profile.diet && relevantDiets.indexOf(fixture.profile.diet) !== -1;
+    return '<div class="priority-row">'
+      + '<div class="priority-rank">' + (i + 1) + '</div>'
+      + '<div class="priority-rule">' + esc(meta.title) + '</div>'
+      + '<span class="priority-badge ' + (boosted ? 'boosted' : 'base') + '">'
+      + (boosted ? 'Pertinence renforcée (' + esc(fixture.profile.diet) + ')' : 'Priorité standard')
+      + '</span>'
+      + '</div>';
+  }).join('');
+
+  return '<div class="priority-list">' + rows + '</div>';
+}
+
 sb.auth.getSession().then(function (r) {
   if (!r.data || !r.data.session) {
     document.getElementById('access-denied').style.display = 'block';
@@ -285,6 +339,9 @@ sb.auth.getSession().then(function (r) {
     root.innerHTML = Object.keys(NUTRITION_SIMULATOR_FIXTURES).map(function (key) {
       return renderProfile(key, NUTRITION_SIMULATOR_FIXTURES[key]);
     }).join('');
+
+    var priorityRoot = document.getElementById('priority-demo-root');
+    priorityRoot.innerHTML = renderMultiSignalPriorityDemo(NUTRITION_SIMULATOR_FIXTURES.multi_signal_vegan_priority_demo);
   });
 });
 </script>

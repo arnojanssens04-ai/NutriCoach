@@ -405,6 +405,35 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     ]
   },
 
+  multi_signal_vegan_priority_demo: {
+    label: 'Profil fictif — plusieurs signaux simultanés, régime végétalien (démo de priorité)',
+    referenceDate: '2026-08-12',
+    // Utilisé par la simulation multi-règles (runNutritionSimulationForAllRules),
+    // pas par une seule règle — ruleId ci-dessous sert uniquement de valeur
+    // par défaut pour les vues qui n'affichent qu'une règle à la fois.
+    ruleId: 'increase_iron_sources_v1',
+    profile: {
+      patientId: 'fictif-18',
+      age: 29,
+      isPregnantOrBreastfeeding: false,
+      allergies: [],
+      intolerances: [],
+      clinicalContext: [],
+      symptoms: [],
+      diet: 'vegan',
+      eligibleForAutomatedAdvice: true
+    },
+    journalEntries: [
+      Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc et pâtes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pain blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-08', 'lunch', 'Pommes de terre', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-09', 'lunch', 'Riz blanc', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-10', 'lunch', 'Pâtes nature', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-11', 'lunch', 'Biscottes', false), { nutrient_sources: [] }),
+      Object.assign(nsfEntry('2026-08-12', 'lunch', 'Riz blanc et légumes pauvres en fibres', false), { nutrient_sources: [] })
+    ]
+  },
+
   adequate_nutrient_sources_control: {
     label: 'Profil fictif — sources nutritionnelles variées (témoin, aucun signal attendu)',
     referenceDate: '2026-08-12',

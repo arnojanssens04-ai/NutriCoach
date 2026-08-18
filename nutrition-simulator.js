@@ -139,3 +139,42 @@ function runNutritionSimulation(params) {
     })
   };
 }
+
+/* -----------------------------------------------------------------------
+   runNutritionSimulationForAllRules({ journalEntries, referenceDate,
+                                        profile, mode, now })
+
+   Évalue TOUTES les règles de NUTRITION_RULE_REGISTRY pour un même
+   profil/journal, ne garde que les résultats éligibles, et les trie par
+   priorité d'affichage via nutrition-priority-engine.js (jamais une
+   priorité clinique — uniquement un ordre d'affichage entre plusieurs
+   constats déjà validés indépendamment).
+
+   Ne remplace pas runNutritionSimulation() : chaque règle est toujours
+   évaluée séparément, jamais fusionnée (section "Conflit de règles"
+   déjà couverte par les tests existants).
+   ----------------------------------------------------------------------- */
+function runNutritionSimulationForAllRules(params) {
+  params = params || {};
+  var registry = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY : {};
+
+  var eligibleResults = Object.keys(registry).reduce(function (acc, ruleId) {
+    var result = runNutritionSimulation({
+      ruleId: ruleId,
+      journalEntries: params.journalEntries,
+      referenceDate: params.referenceDate,
+      profile: params.profile,
+      mode: params.mode,
+      now: params.now
+    });
+    if (result.eligible) {
+      acc.push({ ruleId: ruleId, result: result });
+    }
+    return acc;
+  }, []);
+
+  if (typeof sortEligibleResultsByPriority === 'function') {
+    return sortEligibleResultsByPriority(eligibleResults, params.profile);
+  }
+  return eligibleResults;
+}
