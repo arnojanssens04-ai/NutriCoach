@@ -1,6 +1,11 @@
 -- ============================================================================
 -- 20260818000000_add_profile_diet.sql
 --
+-- STATUT : MIGRATION DE RÉFÉRENCE — SCHÉMA DÉJÀ APPLIQUÉ (exécutée
+-- manuellement dans l'éditeur SQL Supabase le 2026-08-18, confirmation
+-- "Success"). NE DOIT PAS être réexécutée sur ce projet — la garde
+-- ci-dessous s'en assure de toute façon.
+--
 -- Ajoute une colonne `diet` déclarative à la table `profiles` existante,
 -- pour permettre à une personne d'indiquer un régime végétarien/végétalien
 -- à l'inscription (index.html, formulaire de création de compte).
