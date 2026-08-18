@@ -83,6 +83,29 @@ check('3c. Sources de zinc peu présentes : conseil généré, jamais d\'affirma
   assert(!/(?<!de conclure à une )carence/i.test(res.advice.body), 'le texte affirme une carence hors négation');
 });
 
+check('3d. Sources de vitamine C/D/potassium/B12 peu présentes : conseil généré, jamais d\'affirmation directe de carence', () => {
+  const sandbox = buildSandbox();
+  ['low_vitamin_c_source_presence', 'low_vitamin_d_source_presence', 'low_potassium_source_presence', 'low_vitamin_b12_source_presence'].forEach((key) => {
+    const res = runFixture(sandbox, key);
+    assert.strictEqual(res.eligible, true, key + ': ' + res.blockReason);
+    assert(!/(?<!de conclure à une )carence/i.test(res.advice.body), key + ': le texte affirme une carence hors négation');
+  });
+});
+
+check('3e. Sucre ajouté présent régulièrement : conseil généré, sans affirmation de conséquence santé', () => {
+  const sandbox = buildSandbox();
+  const res = runFixture(sandbox, 'added_sugar_regular_presence');
+  assert.strictEqual(res.eligible, true, res.blockReason);
+  assert(!/provoque|cause|risque de maladie|danger/i.test(res.advice.body), 'le texte affirme une conséquence de santé');
+});
+
+check('3f. Sucre ajouté ponctuel (anniversaire) : aucun conseil, en dessous du seuil de confiance', () => {
+  const sandbox = buildSandbox();
+  const res = runFixture(sandbox, 'added_sugar_occasional_birthday_not_a_trend');
+  assert.strictEqual(res.eligible, false);
+  assert.strictEqual(res.blockReason, 'confidence_below_threshold');
+});
+
 check('4. Profil témoin avec sources nutritionnelles variées : aucun signal déclenché', () => {
   const sandbox = buildSandbox();
   const res = runFixture(sandbox, 'adequate_nutrient_sources_control');
@@ -111,7 +134,8 @@ check('7. Toutes les nouvelles règles restent en "shadow_active", jamais "activ
   const src = fs.readFileSync(REPO + '/nutrition-rule-definitions.js', 'utf8');
   ['increase_iron_sources_v1', 'increase_calcium_sources_v1', 'increase_fiber_sources_v1',
     'increase_omega3_sources_v1', 'increase_magnesium_sources_v1', 'increase_zinc_sources_v1',
-    'reduce_alcohol_v1'].forEach((id) => {
+    'increase_vitamin_c_sources_v1', 'increase_vitamin_d_sources_v1', 'increase_potassium_sources_v1',
+    'increase_vitamin_b12_sources_v1', 'reduce_added_sugar_v1', 'reduce_alcohol_v1'].forEach((id) => {
     const block = src.slice(src.indexOf(id + ': {'), src.indexOf(id + ': {') + 400);
     assert(/status:\s*'shadow_active'/.test(block), id + ' n\'est pas en shadow_active');
   });
@@ -149,9 +173,10 @@ check('11. dashboard.html, conseils.html, admin.html restent inchangés', () => 
   });
 });
 
-check('12. Aucune migration Supabase créée', () => {
-  const out = execSync('git status --short -- supabase/', { cwd: REPO }).toString().trim();
-  assert.strictEqual(out, '', 'des fichiers supabase/ ont changé: ' + out);
+check('12. Aucune migration Supabase créée pour le moteur nutrition-*.js (seule 20260818000000_add_profile_diet.sql, hors périmètre du moteur, est autorisée)', () => {
+  const out = execSync('git status --short -- supabase/', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
+  const unexpected = out.filter((l) => l.indexOf('20260818000000_add_profile_diet.sql') === -1);
+  assert.deepStrictEqual(unexpected, [], 'des fichiers supabase/ inattendus ont changé: ' + JSON.stringify(unexpected));
 });
 
 check('13. La maquette de carte (nutrition-simulator-admin.html) ne référence jamais dashboard.html (hors commentaire documentaire) et ne déclenche aucune action réelle', () => {
