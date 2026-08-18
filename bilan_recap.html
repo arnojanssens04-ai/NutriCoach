@@ -451,16 +451,17 @@ function renderBilans(filterId){
     // \u2500\u2500 Bloc kcal / d\u00e9cision du programme \u2500\u2500
     var kcalHtml;
     if(b.kcal_cible_apres == null && b.kcal_ajustement_delta == null){
-      // On ne peut plus affirmer avec certitude "ant\u00e9rieur \u00e0 cette
-      // fonctionnalit\u00e9" \u2014 un vrai bug de permissions (voir fix_rls_bilans_kcal.sql)
-      // pouvait produire exactement le m\u00eame r\u00e9sultat sur un bilan tout neuf.
-      // Rep\u00e8re par date plut\u00f4t qu'une affirmation cat\u00e9gorique : un bilan tr\u00e8s
-      // r\u00e9cent sans donn\u00e9e kcal est presque s\u00fbrement un \u00e9chec d'enregistrement,
-      // pas un bilan ancien (les bilans sont hebdomadaires).
-      var joursDepuis = Math.round((Date.now() - dt.getTime()) / 86400000);
-      kcalHtml = joursDepuis <= 14
-        ? '<div class="bc-kcal"><span class="bc-kcal-na">\u26a0\ufe0f Suivi kcal non enregistr\u00e9 pour ce bilan r\u00e9cent \u2014 v\u00e9rifier les permissions Supabase (bilans)</span></div>'
-        : '<div class="bc-kcal"><span class="bc-kcal-na">\ud83d\udcca Pas de suivi kcal pour ce bilan (ant\u00e9rieur \u00e0 cette fonctionnalit\u00e9)</span></div>';
+      // Date exacte d'ajout des colonnes de suivi kcal sur `bilans`
+      // (migrations 20260818000001/000002_add_bilan_kcal_*.sql) \u2014 un rep\u00e8re
+      // fiable plut\u00f4t qu'une estimation approximative par anciennet\u00e9. Un
+      // bilan dat\u00e9 d'avant cette date n'a jamais pu recevoir ces donn\u00e9es :
+      // c'est normal, pas un \u00e9chec. Un bilan dat\u00e9 d'apr\u00e8s, en revanche,
+      // m\u00e9rite d'\u00eatre v\u00e9rifi\u00e9 (policy/permissions).
+      var KCAL_TRACKING_LAUNCH_DATE = '2026-08-18';
+      var isBeforeLaunch = b.date < KCAL_TRACKING_LAUNCH_DATE;
+      kcalHtml = isBeforeLaunch
+        ? '<div class="bc-kcal"><span class="bc-kcal-na">\ud83d\udcca Pas de suivi kcal pour ce bilan \u2014 ant\u00e9rieur \u00e0 l\'introduction de cette fonctionnalit\u00e9 (18/08/2026), rien \u00e0 corriger.</span></div>'
+        : '<div class="bc-kcal"><span class="bc-kcal-na">\u26a0\ufe0f Suivi kcal non enregistr\u00e9 pour ce bilan pourtant post\u00e9rieur \u00e0 l\'introduction de la fonctionnalit\u00e9 \u2014 v\u00e9rifier les permissions Supabase (bilans)</span></div>';
     } else {
       var delta = b.kcal_ajustement_delta || 0;
       var status = b.kcal_ajustement_status || 'none';

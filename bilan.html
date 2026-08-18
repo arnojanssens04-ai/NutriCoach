@@ -538,7 +538,19 @@ function showThankYouScreen(){
     +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">\u2190 Retour au tableau de bord</a>'
     +'</div>';
   document.querySelector('.wrap').appendChild(el);
-  setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+
+  // Le bandeau d'ajustement (#adj-banner, ex: stagnation depuis 2 semaines)
+  // reste visible au-dessus de cet \u00e9cran de remerciement \u2014 s'il contient un
+  // vrai message, on laisse la personne le lire \u00e0 son rythme et cliquer
+  // elle-m\u00eame sur "Retour au tableau de bord" plut\u00f4t que de rediriger
+  // automatiquement apr\u00e8s seulement 3,5s, largement insuffisant pour lire
+  // un paragraphe complet. Redirection automatique conserv\u00e9e uniquement
+  // pour une semaine "normale" (aucun message \u00e0 faire lire).
+  var banner = document.getElementById('adj-banner');
+  var hasBannerMessage = banner && banner.classList.contains('show') && banner.textContent.trim().length > 0;
+  if(!hasBannerMessage){
+    setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+  }
 }
 
 // \u2500\u2500 ALGORITHME ADAPTATIF \u2500\u2500
