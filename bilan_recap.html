@@ -477,8 +477,10 @@ function renderBilans(filterId){
       // bilan, jamais d'application automatique du changement calorique.
       var actionsHtml = '';
       if(status==='pending'){
-        actionsHtml = '<div class="bc-kcal-actions">'
-          +'<button class="bc-kcal-btn approve" onclick="approveKcalAdjustment(\''+b.id+'\',\''+b.user_id+'\','+(b.kcal_ajustement_valeur_proposee!=null?b.kcal_ajustement_valeur_proposee:0)+',this)">\u2705 Valider l\'ajustement</button>'
+        var champProp = b.kcal_ajustement_champ || 'kcal_adjustment';
+        var champNote = champProp==='kcal_target' ? '<div class="bc-kcal-raison">\ud83c\udfaf Calories forc\u00e9es pour ce patient \u2014 la validation modifiera directement l\'objectif kcal fixe.</div>' : '';
+        actionsHtml = champNote + '<div class="bc-kcal-actions">'
+          +'<button class="bc-kcal-btn approve" onclick="approveKcalAdjustment(\''+b.id+'\',\''+b.user_id+'\','+(b.kcal_ajustement_valeur_proposee!=null?b.kcal_ajustement_valeur_proposee:0)+',\''+champProp+'\',this)">\u2705 Valider l\'ajustement</button>'
           +'<button class="bc-kcal-btn reject" onclick="rejectKcalAdjustment(\''+b.id+'\',this)">\u274c Rejeter</button>'
           +'</div>';
       } else if(status==='approved' || status==='rejected'){
@@ -574,11 +576,18 @@ function renderKcalTrendHtml(list){
 // PROPOS\u00c9 par bilan.html \u2014 le seul chemin par lequel profiles.kcal_adjustment
 // change d\u00e9sormais suite \u00e0 une stagnation/d\u00e9rive de poids. Rien n'est
 // jamais appliqu\u00e9 automatiquement c\u00f4t\u00e9 patient.
-async function approveKcalAdjustment(bilanId, userId, valeurProposee, btnEl){
+async function approveKcalAdjustment(bilanId, userId, valeurProposee, champ, btnEl){
+  // champ : 'kcal_adjustment' (mode dynamique, cas normal) ou
+  // 'kcal_target' (le patient a des calories forc\u00e9es \u2014 voir admin.html \u2014
+  // auquel cas calcTargets() ignore kcal_adjustment, donc la validation
+  // doit modifier kcal_target pour avoir un effet r\u00e9el).
+  champ = champ || 'kcal_adjustment';
   var wrap = btnEl ? btnEl.closest('.bc-kcal-actions') : null;
   if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
 
-  var upd1 = await sb.from('profiles').update({kcal_adjustment: valeurProposee}).eq('id', userId);
+  var patch = {};
+  patch[champ] = valeurProposee;
+  var upd1 = await sb.from('profiles').update(patch).eq('id', userId);
   if(upd1.error){
     alert('\u00c9chec de la mise \u00e0 jour du profil : '+upd1.error.message);
     if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
@@ -594,7 +603,7 @@ async function approveKcalAdjustment(bilanId, userId, valeurProposee, btnEl){
   var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
   if(b) b.kcal_ajustement_status = 'approved';
   var u = ALL_USERS.find(function(x){ return x.id===userId; });
-  if(u) u.kcal_adjustment = valeurProposee;
+  if(u) u[champ] = valeurProposee;
 
   renderBilans(document.getElementById('user-filter').value);
 }

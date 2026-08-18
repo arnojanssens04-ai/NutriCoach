@@ -69,7 +69,7 @@ check('7. bilan_recap.html : les boutons valider/rejeter ne sont rendus que pour
   const src = fs.readFileSync(REPO + '/bilan_recap.html', 'utf8');
   const idx = src.indexOf("if(status==='pending'){");
   assert(idx !== -1, 'condition de rendu conditionnel sur "pending" introuvable');
-  const block = src.slice(idx, idx + 400);
+  const block = src.slice(idx, idx + 900);
   assert(/approveKcalAdjustment/.test(block));
   assert(/rejectKcalAdjustment/.test(block));
 });

@@ -585,11 +585,17 @@ function computeKcalCible(prof, adj){
 // Sauvegarde la d\u00e9cision de la semaine directement sur la ligne du bilan,
 // pour que l'admin (bilan_recap.html) puisse voir jour par jour ce que le
 // programme a fait : rien, -200, +200, et o\u00f9 se situe la cible r\u00e9sultante.
-async function logKcalDecision(bilanId, delta, raison, kcalCible, status, valeurProposee){
+async function logKcalDecision(bilanId, delta, raison, kcalCible, status, valeurProposee, champ){
   // status : 'none' (rien \u00e0 d\u00e9cider) ou 'pending' (proposition en attente
   // de validation admin, voir bilan_recap.html \u2014 jamais 'approved'/
   // 'rejected' depuis ce fichier, ces statuts n'existent que c\u00f4t\u00e9 admin).
+  // champ : quel champ profiles la validation admin doit modifier \u2014
+  // 'kcal_adjustment' (mode dynamique) ou 'kcal_target' (calories forc\u00e9es
+  // par un admin, voir admin.html \u2014 dans ce mode, calcTargets() ignore
+  // kcal_adjustment, donc une proposition doit agir sur kcal_target pour
+  // avoir un effet r\u00e9el une fois valid\u00e9e).
   status = status || 'none';
+  champ = champ || 'kcal_adjustment';
   if(!bilanId){
     var msg1 = 'logKcalDecision : bilanId manquant \u2014 l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistr\u00e9 pour ce bilan.';
     console.warn('[Cap Sant\u00e9] '+msg1);
@@ -601,7 +607,8 @@ async function logKcalDecision(bilanId, delta, raison, kcalCible, status, valeur
     kcal_ajustement_raison: raison,
     kcal_cible_apres: kcalCible,
     kcal_ajustement_status: status,
-    kcal_ajustement_valeur_proposee: valeurProposee != null ? valeurProposee : null
+    kcal_ajustement_valeur_proposee: valeurProposee != null ? valeurProposee : null,
+    kcal_ajustement_champ: champ
   }).eq('id', bilanId).select();
   if(r.error){
     var msg2 = 'logKcalDecision : \u00e9chec de la mise \u00e0 jour \u2014 '+r.error.message;
@@ -619,6 +626,26 @@ async function checkAndAdjustKcal(newWeight, bilanId){
   var banner = document.getElementById('adj-banner');
   var currentAdj = PROF.kcal_adjustment || 0;
   var profNow = Object.assign({}, PROF, {poids:newWeight}); // profil avec le poids fra\u00eechement saisi
+
+  // Calories forc\u00e9es par un admin (admin.html, case "Forcer cet objectif
+  // kcal/j") : calcTargets() retourne alors kcal_target directement et
+  // IGNORE kcal_adjustment. Une proposition doit donc porter sur
+  // kcal_target dans ce mode, sinon sa validation n'aurait aucun effet
+  // r\u00e9el \u2014 la stagnation de poids doit continuer \u00e0 \u00eatre d\u00e9tect\u00e9e et
+  // propos\u00e9e \u00e0 l'admin m\u00eame quand les calories sont forc\u00e9es.
+  var isForced = !!(PROF.plan_fixe && PROF.plan_fixe._active !== false && PROF.kcal_target);
+  var currentTarget = PROF.kcal_target || computeKcalCible(profNow, currentAdj);
+
+  function proposeNudge(direction){
+    // direction : -1 (r\u00e9duire) ou +1 (augmenter), toujours un pas de 200 kcal.
+    if(isForced){
+      return { champ:'kcal_target', valeur: Math.max(1200, Math.min(5000, currentTarget + direction*200)) };
+    }
+    return { champ:'kcal_adjustment', valeur: Math.max(-1200, Math.min(2500, currentAdj + direction*200)) };
+  }
+  function cibleApres(prop){
+    return prop.champ==='kcal_target' ? prop.valeur : computeKcalCible(profNow, prop.valeur);
+  }
 
   // Garde-fou n\u00b01 : le ressenti g\u00e9n\u00e9ral de la semaine.
   var score = qualiteBilanScore(); // sur 14 (7 champs \u00d7 2 pts max)
@@ -660,7 +687,7 @@ async function checkAndAdjustKcal(newWeight, bilanId){
       return;
     }
 
-    var newAdj = currentAdj;
+    var prop = { champ:'kcal_adjustment', valeur:currentAdj };
     var msgContext = '';
     var raison = '';
 
@@ -668,7 +695,7 @@ async function checkAndAdjustKcal(newWeight, bilanId){
       // Poids part dans la mauvaise direction \u2014 m\u00eame ajustement de 200 kcal que
       // pour une stagnation : les changements brusques sont contre-productifs,
       // mieux vaut des corrections progressives et soutenables dans le temps.
-      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      prop = proposeNudge(objectif==='perte' ? -1 : 1);
       msgContext = objectif==='perte'
         ? 'Votre poids a augment\u00e9 cette semaine alors que votre objectif est la perte. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
         : 'Votre poids a diminu\u00e9 cette semaine alors que votre objectif est la prise. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
@@ -676,19 +703,19 @@ async function checkAndAdjustKcal(newWeight, bilanId){
     } else if(stalled){
       // Poids stable depuis 2 semaines \u2192 proposition de nudge de 200 kcal,
       // soumise \u00e0 validation admin (voir logKcalDecision plus bas).
-      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      prop = proposeNudge(objectif==='perte' ? -1 : 1);
       msgContext = objectif==='perte'
         ? 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour relancer la perte de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
         : 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour relancer la prise de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
       raison = 'Stagnation du poids depuis 2 semaines';
     }
 
-    newAdj = Math.max(-1200, Math.min(2500, newAdj));
     // Plus d'application automatique : la proposition est enregistr\u00e9e en
-    // attente, profiles.kcal_adjustment n'est modifi\u00e9 que si un
-    // administrateur la valide depuis bilan_recap.html, apr\u00e8s avoir
-    // consult\u00e9 le bilan complet.
-    await logKcalDecision(bilanId, newAdj-currentAdj, raison, computeKcalCible(profNow, newAdj), 'pending', newAdj);
+    // attente, profiles.kcal_adjustment (ou kcal_target si les calories
+    // sont forc\u00e9es) n'est modifi\u00e9 que si un administrateur la valide
+    // depuis bilan_recap.html, apr\u00e8s avoir consult\u00e9 le bilan complet.
+    var deltaLog = prop.champ==='kcal_target' ? (prop.valeur-currentTarget) : (prop.valeur-currentAdj);
+    await logKcalDecision(bilanId, deltaLog, raison, cibleApres(prop), 'pending', prop.valeur, prop.champ);
 
     banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
     banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>' + msgContext + ' Cette proposition sera examin\u00e9e par l\'\u00e9quipe apr\u00e8s consultation de votre bilan avant d\'\u00eatre appliqu\u00e9e.';
@@ -714,11 +741,11 @@ async function checkAndAdjustKcal(newWeight, bilanId){
     }
 
     var sensPerte = deltaM > 0; // poids mont\u00e9 -> on r\u00e9duit ; poids descendu -> on augmente
-    var newAdjM = currentAdj + (sensPerte ? -200 : 200);
-    newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
+    var propM = proposeNudge(sensPerte ? -1 : 1);
     // Plus d'application automatique \u2014 proposition en attente de
     // validation admin (voir bilan_recap.html).
-    await logKcalDecision(bilanId, newAdjM-currentAdj, 'D\u00e9rive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', computeKcalCible(profNow, newAdjM), 'pending', newAdjM);
+    var deltaLogM = propM.champ==='kcal_target' ? (propM.valeur-currentTarget) : (propM.valeur-currentAdj);
+    await logKcalDecision(bilanId, deltaLogM, 'D\u00e9rive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', cibleApres(propM), 'pending', propM.valeur, propM.champ);
 
     banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
     banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>Votre poids a '
