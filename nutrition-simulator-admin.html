@@ -61,6 +61,31 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 
 .audit-box{ font-size:.78rem; color:var(--text2); background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:10px 14px; margin-top:8px; white-space:pre-wrap; word-break:break-word; }
 .visibility-tag{ display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--red); background:var(--red-l); padding:2px 8px; border-radius:999px; margin-top:8px; }
+
+/* ── Aperçu de carte popup (maquette visuelle uniquement) ──────────────
+   Reproduit à quoi ressemblerait la carte SI elle était un jour affichée
+   sur le tableau de bord — mais reste rendue uniquement dans cette page
+   admin, jamais chargée par dashboard.html. Bien marquée comme aperçu. */
+.popup-preview-wrap{ background:repeating-linear-gradient(135deg, var(--card2), var(--card2) 10px, var(--bg2) 10px, var(--bg2) 20px); border:1px dashed var(--border2); border-radius:12px; padding:20px; margin-top:8px; }
+.popup-preview-label{ font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--red); margin-bottom:10px; text-align:center; }
+.popup-card{ max-width:380px; margin:0 auto; background:var(--card); border-radius:16px; box-shadow:0 8px 24px rgba(26,25,22,0.12); overflow:hidden; }
+.popup-card-head{ display:flex; align-items:center; gap:10px; padding:14px 16px 10px; }
+.popup-icon{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; flex-shrink:0; }
+.popup-icon.cat-alcohol{ background:var(--red-l); color:var(--red); }
+.popup-icon.cat-ultra_processed{ background:var(--amber-l); color:var(--amber); }
+.popup-icon.cat-nutrient{ background:var(--sage-l); color:var(--sage); }
+.popup-head-text{ flex:1; }
+.popup-title{ font-weight:700; font-size:.92rem; }
+.popup-subtitle{ font-size:.72rem; color:var(--text3); }
+.popup-dismiss{ font-size:1.1rem; color:var(--text3); line-height:1; cursor:pointer; padding:2px 4px; }
+.popup-body{ padding:0 16px 14px; font-size:.85rem; line-height:1.55; color:var(--text); }
+.popup-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 14px; }
+.popup-chip{ font-size:.75rem; background:var(--gold-l); color:var(--gold); padding:4px 10px; border-radius:999px; }
+.popup-actions{ display:flex; gap:8px; padding:0 16px 16px; }
+.popup-btn{ flex:1; font-size:.78rem; font-weight:600; padding:9px 10px; border-radius:8px; text-align:center; border:1px solid var(--border2); cursor:default; }
+.popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
+.popup-btn.secondary{ background:transparent; color:var(--text2); }
+.popup-none{ text-align:center; font-size:.82rem; color:var(--text3); font-style:italic; padding:10px; }
 </style>
 </head>
 <body>
@@ -148,6 +173,70 @@ function renderResult(result) {
     + '<span class="visibility-tag">' + esc(result.advice.visibility) + '</span>';
 }
 
+var CARD_CATEGORY_BY_RULE = {
+  reduce_ultra_processed_foods_v1: { category: 'ultra_processed', icon: 'UT', title: 'Aliments ultra-transformés' },
+  reduce_alcohol_v1: { category: 'alcohol', icon: 'AL', title: 'Alcool' },
+  increase_iron_sources_v1: { category: 'nutrient', icon: 'Fe', title: 'Fer' },
+  increase_calcium_sources_v1: { category: 'nutrient', icon: 'Ca', title: 'Calcium' },
+  increase_fiber_sources_v1: { category: 'nutrient', icon: 'Fi', title: 'Fibres' },
+  increase_omega3_sources_v1: { category: 'nutrient', icon: 'Ω3', title: 'Oméga-3' },
+  increase_magnesium_sources_v1: { category: 'nutrient', icon: 'Mg', title: 'Magnésium' },
+  increase_zinc_sources_v1: { category: 'nutrient', icon: 'Zn', title: 'Zinc' }
+};
+
+function foodLabelsForCodes(eligibleFoodListId, codes) {
+  var list = (typeof NUTRITION_FOOD_LISTS !== 'undefined') ? NUTRITION_FOOD_LISTS[eligibleFoodListId] : null;
+  if (!list || !Array.isArray(list.items)) return [];
+  var byCode = {};
+  list.items.forEach(function (i) { byCode[i.code] = i.label; });
+  return (codes || []).map(function (c) { return byCode[c] || c; });
+}
+
+/* -----------------------------------------------------------------------
+   renderPopupPreview(ruleId, result)
+
+   MAQUETTE VISUELLE uniquement : montre à quoi ressemblerait la carte si
+   elle était un jour affichée dans un vrai tableau de bord. Rendue
+   exclusivement dans cette page admin — ne charge ni ne référence
+   dashboard.html. Les actions ("Discuter avec un professionnel", "Plus
+   tard") sont purement visuelles, aucun comportement réel n'y est
+   attaché.
+   ----------------------------------------------------------------------- */
+function renderPopupPreview(ruleId, result) {
+  var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
+
+  var inner;
+  if (!result.eligible) {
+    inner = '<p class="popup-none">Aucune carte ne serait affichée pour ce profil (' + esc(describeBlockReason(result.blockReason)) + ').</p>';
+  } else {
+    var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
+    var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes);
+    var chips = foods.map(function (f) { return '<span class="popup-chip">' + esc(f) + '</span>'; }).join('');
+
+    inner = '<div class="popup-card">'
+      + '<div class="popup-card-head">'
+      + '<div class="popup-icon cat-' + esc(meta.category) + '">' + esc(meta.icon) + '</div>'
+      + '<div class="popup-head-text">'
+      + '<div class="popup-title">' + esc(meta.title) + '</div>'
+      + '<div class="popup-subtitle">Observation sur votre journal</div>'
+      + '</div>'
+      + '<div class="popup-dismiss">&times;</div>'
+      + '</div>'
+      + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
+      + (chips ? '<div class="popup-chips">' + chips + '</div>' : '')
+      + '<div class="popup-actions">'
+      + '<div class="popup-btn secondary">Plus tard</div>'
+      + '<div class="popup-btn primary">En discuter</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  return '<div class="popup-preview-wrap">'
+    + '<div class="popup-preview-label">Aperçu maquette — jamais affiché à un patient réel</div>'
+    + inner
+    + '</div>';
+}
+
 function renderAudit(audit) {
   return '<div class="audit-box">' + esc(JSON.stringify(audit, null, 2)) + '</div>';
 }
@@ -167,6 +256,7 @@ function renderProfile(fixtureKey, fixture) {
     + '<div class="profile-id">Règle simulée : ' + esc(fixture.ruleId) + '</div>';
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
+  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result);
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
 
   html += '</div>';

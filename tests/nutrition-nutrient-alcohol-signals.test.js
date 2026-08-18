@@ -154,6 +154,18 @@ check('12. Aucune migration Supabase créée', () => {
   assert.strictEqual(out, '', 'des fichiers supabase/ ont changé: ' + out);
 });
 
+check('13. La maquette de carte (nutrition-simulator-admin.html) ne référence jamais dashboard.html (hors commentaire documentaire) et ne déclenche aucune action réelle', () => {
+  const src = fs.readFileSync(REPO + '/nutrition-simulator-admin.html', 'utf8');
+  const scriptOnly = src.split('<script>').slice(-1)[0];
+  const codeOnly = scriptOnly.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert(!/dashboard\.html/.test(codeOnly), 'référence exécutable à dashboard.html trouvée');
+  assert(!/<script[^>]*src=["']dashboard\.html/.test(src), 'chargement de dashboard.html trouvé');
+  assert(/Aperçu maquette — jamais affiché à un patient réel/.test(src), 'le libellé d\'avertissement de maquette est absent');
+  // Les boutons visuels ne doivent porter aucun gestionnaire d'événement
+  // (onclick, addEventListener) — purement décoratifs à ce stade.
+  assert(!/popup-btn[\s\S]{0,80}onclick/.test(src), 'un bouton de la maquette porte un gestionnaire onclick');
+});
+
 console.log('\n--- RÉSUMÉ ---');
 console.log('Réussis: ' + passed + ' / ' + (passed + failed));
 if (failed > 0) { console.log('ÉCHECS: ' + failed); process.exitCode = 1; }
