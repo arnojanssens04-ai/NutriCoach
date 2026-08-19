@@ -43,3 +43,29 @@ function selectCompatibleFoods(rule, profile, foodLists) {
   var max = (rule && typeof rule.maxSelectedFoods === 'number') ? rule.maxSelectedFoods : compatible.length;
   return { selected: compatible.slice(0, max), blockReason: null };
 }
+
+/* -----------------------------------------------------------------------
+   selectFoodsForRule(rule, profile, foodLists, flaggedFoodNames)
+
+   Point d'entrée unique utilisé par nutrition-simulator.js. Pour les
+   règles marquées useKeywordSubstitution (voir
+   nutrition-ultra-processed-substitutions.js), tente d'abord une
+   correspondance ciblée par mot-clé sur les aliments réellement repérés
+   dans le journal ; si aucune correspondance n'a été trouvée pour aucun
+   d'entre eux, retombe sur selectCompatibleFoods() (liste générique) —
+   jamais un résultat vide silencieux là où le mécanisme générique aurait
+   pu en fournir un. Pour toute autre règle, appelle directement
+   selectCompatibleFoods() sans changement de comportement.
+   ----------------------------------------------------------------------- */
+function selectFoodsForRule(rule, profile, foodLists, flaggedFoodNames) {
+  if (rule && rule.useKeywordSubstitution && typeof selectUltraProcessedKeywordAlternatives === 'function') {
+    var keywordMatches = selectUltraProcessedKeywordAlternatives(flaggedFoodNames, profile);
+    if (keywordMatches.length > 0) {
+      var max = (rule && typeof rule.maxSelectedFoods === 'number') ? rule.maxSelectedFoods : keywordMatches.length;
+      return { selected: keywordMatches.slice(0, max), blockReason: null, matchedByKeyword: true };
+    }
+  }
+  var fallback = selectCompatibleFoods(rule, profile, foodLists);
+  fallback.matchedByKeyword = false;
+  return fallback;
+}

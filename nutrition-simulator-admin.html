@@ -135,6 +135,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-priority-engine.js"></script>
 <script src="nutrition-safety.js"></script>
 <script src="nutrition-rule-engine.js"></script>
+<script src="nutrition-ultra-processed-substitutions.js"></script>
 <script src="nutrition-food-selector.js"></script>
 <script src="nutrition-advice-renderer.js"></script>
 <script src="nutrition-audit.js"></script>
@@ -169,7 +170,8 @@ var BLOCK_REASON_LABELS = {
   invalid_mode: 'Mode d\'exécution invalide',
   clinical_conflict: 'Conflit avec un contexte clinique déclaré',
   relevant_symptom_declared: 'Symptôme déclaré pertinent pour cette règle',
-  diet_not_supported_by_rule: 'Régime alimentaire non couvert par cette règle'
+  diet_not_supported_by_rule: 'Régime alimentaire non couvert par cette règle',
+  flagged_foods_unavailable: 'Aucun aliment nommément repéré dans le journal sur la période analysée'
 };
 
 function describeBlockReason(reason) {
@@ -208,11 +210,20 @@ var CARD_CATEGORY_BY_RULE = {
   increase_food_variety_v1: { category: 'nutrient', icon: 'Vr', title: 'Variété alimentaire' }
 };
 
-function foodLabelsForCodes(eligibleFoodListId, codes) {
-  var list = (typeof NUTRITION_FOOD_LISTS !== 'undefined') ? NUTRITION_FOOD_LISTS[eligibleFoodListId] : null;
-  if (!list || !Array.isArray(list.items)) return [];
+function foodLabelsForCodes(eligibleFoodListId, codes, matchedByKeyword) {
   var byCode = {};
-  list.items.forEach(function (i) { byCode[i.code] = i.label; });
+
+  if (matchedByKeyword && typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES !== 'undefined') {
+    Object.keys(ULTRA_PROCESSED_CATEGORY_ALTERNATIVES).forEach(function (cat) {
+      ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[cat].forEach(function (i) { byCode[i.code] = i.label; });
+    });
+  } else {
+    var list = (typeof NUTRITION_FOOD_LISTS !== 'undefined') ? NUTRITION_FOOD_LISTS[eligibleFoodListId] : null;
+    if (list && Array.isArray(list.items)) {
+      list.items.forEach(function (i) { byCode[i.code] = i.label; });
+    }
+  }
+
   return (codes || []).map(function (c) { return byCode[c] || c; });
 }
 
@@ -234,8 +245,11 @@ function renderPopupPreview(ruleId, result) {
     inner = '<p class="popup-none">Aucune carte ne serait affichée pour ce profil (' + esc(describeBlockReason(result.blockReason)) + ').</p>';
   } else {
     var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
-    var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes);
+    var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
     var chips = foods.map(function (f) { return '<span class="popup-chip">' + esc(f) + '</span>'; }).join('');
+    var matchTag = result.audit.matchedByKeyword
+      ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
+      : '';
 
     inner = '<div class="popup-card">'
       + '<div class="popup-card-head">'
@@ -247,6 +261,7 @@ function renderPopupPreview(ruleId, result) {
       + '<div class="popup-dismiss">&times;</div>'
       + '</div>'
       + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
+      + matchTag
       + (chips ? '<div class="popup-chips">' + chips + '</div>' : '')
       + '<div class="popup-actions">'
       + '<div class="popup-btn secondary">Plus tard</div>'

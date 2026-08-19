@@ -39,9 +39,20 @@ var NUTRITION_RULE_REGISTRY = {
     minConfidence: 'moderate', // 'unknown' < 'low' < 'moderate' < 'high'
     minCoverageRate: 0.7,
 
-    // Sélection alimentaire — jamais improvisée.
+    // Sélection alimentaire — jamais improvisée. Liste générique utilisée
+    // en repli si aucune correspondance par mot-clé n'est trouvée (voir
+    // useKeywordSubstitution ci-dessous).
     eligibleFoodListId: 'staple_whole_foods_v1',
     maxSelectedFoods: 3,
+
+    // Active la correspondance ciblée par mot-clé (nutrition-ultra-
+    // processed-substitutions.js) sur les noms d'aliments réellement
+    // repérés dans le journal, avant repli sur eligibleFoodListId.
+    // Fenêtre d'extraction alignée sur trend-definitions.js
+    // (repeated_ultra_processed_foods.observationWindowDays).
+    useKeywordSubstitution: true,
+    flaggedFoodField: 'is_ultra_processed',
+    flaggedFoodWindowDays: 7,
 
     // Gabarit de formulation validé.
     templateId: 'reduce_ultra_processed_v1',

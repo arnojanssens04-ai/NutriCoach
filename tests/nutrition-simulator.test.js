@@ -17,8 +17,8 @@ const REPO = path.resolve(__dirname, '..');
 const FILES = [
   'trend-definitions.js', 'trend-engine.js',
   'nutrition-food-definitions.js', 'nutrition-template-definitions.js',
-  'nutrition-rule-definitions.js', 'nutrition-safety.js',
-  'nutrition-rule-engine.js', 'nutrition-food-selector.js',
+  'nutrition-rule-definitions.js', 'nutrition-signal-engine.js', 'nutrition-safety.js',
+  'nutrition-rule-engine.js', 'nutrition-ultra-processed-substitutions.js', 'nutrition-food-selector.js',
   'nutrition-advice-renderer.js', 'nutrition-audit.js', 'nutrition-simulator.js'
 ];
 

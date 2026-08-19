@@ -31,13 +31,15 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       eligibleForAutomatedAdvice: true
     },
     journalEntries: [
-      nsfEntry('2026-08-06', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-07', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-08', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-09', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-10', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-11', 'lunch', 'Plat préparé industriel', true),
-      nsfEntry('2026-08-12', 'lunch', 'Plat préparé industriel', true)
+      nsfEntry('2026-08-06', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-06', 'breakfast', 'Mousse au chocolat', true),
+      nsfEntry('2026-08-07', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-08', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-08', 'breakfast', 'Mousse au chocolat', true),
+      nsfEntry('2026-08-09', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-10', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-11', 'dinner', 'Frites', true),
+      nsfEntry('2026-08-12', 'dinner', 'Frites', true)
     ]
   },
 

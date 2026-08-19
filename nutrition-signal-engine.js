@@ -551,3 +551,43 @@ var NUTRITION_SIGNAL_RESOLVERS = {
     });
   }
 };
+
+/* -----------------------------------------------------------------------
+   extractFlaggedFoodNames(params)
+
+   Fonction PURE, indépendante de trend-engine.js : relève les noms
+   d'aliments (champ `aliment`, déjà présent dans le journal réel — voir
+   dashboard.html, is_ultra_processed posé par le score NOVA au moment du
+   scan) associés à un flag booléen vrai (ex. is_ultra_processed) sur la
+   fenêtre d'observation. Ne déduit, n'invente ni ne complète aucun nom —
+   ne restitue que ce qui est littéralement présent dans journalEntries.
+   Dédoublonne par nom exact ; l'ordre de première apparition est
+   conservé (déterministe, non trié par fréquence).
+   ----------------------------------------------------------------------- */
+function extractFlaggedFoodNames(params) {
+  params = params || {};
+  var journalEntries = params.journalEntries;
+  var referenceDate = params.referenceDate;
+  var flagField = params.flagField;
+  var observationWindowDays = params.observationWindowDays;
+
+  if (!Array.isArray(journalEntries) || !isValidIsoDateSignal(referenceDate) || !flagField || !observationWindowDays) {
+    return [];
+  }
+
+  var dateWindow = buildDateWindowSignal(referenceDate, observationWindowDays);
+  var windowSet = {};
+  dateWindow.dates.forEach(function (d) { windowSet[d] = true; });
+
+  var seen = {};
+  var names = [];
+  journalEntries.forEach(function (e) {
+    if (!e || !windowSet[e.date]) return;
+    if (e[flagField] !== true) return;
+    if (!e.aliment) return;
+    if (seen[e.aliment]) return;
+    seen[e.aliment] = true;
+    names.push(e.aliment);
+  });
+  return names;
+}

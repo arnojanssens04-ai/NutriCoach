@@ -88,7 +88,23 @@ function runNutritionSimulation(params) {
   }
 
   var foodLists = (typeof NUTRITION_FOOD_LISTS !== 'undefined') ? NUTRITION_FOOD_LISTS : {};
-  var selection = selectCompatibleFoods(rule, params.profile, foodLists);
+
+  // Aliments réellement repérés dans le journal (jamais recalculé par
+  // trend-engine.js — extraction indépendante, voir nutrition-signal-
+  // engine.js). Uniquement utilisé par les règles useKeywordSubstitution.
+  var flaggedFoodNames = [];
+  if (rule.useKeywordSubstitution && typeof extractFlaggedFoodNames === 'function') {
+    flaggedFoodNames = extractFlaggedFoodNames({
+      journalEntries: params.journalEntries,
+      referenceDate: params.referenceDate,
+      flagField: rule.flaggedFoodField,
+      observationWindowDays: rule.flaggedFoodWindowDays
+    });
+  }
+
+  var selection = (typeof selectFoodsForRule === 'function')
+    ? selectFoodsForRule(rule, params.profile, foodLists, flaggedFoodNames)
+    : selectCompatibleFoods(rule, params.profile, foodLists);
 
   if (selection.blockReason) {
     return {
@@ -105,7 +121,7 @@ function runNutritionSimulation(params) {
 
   var templates = (typeof NUTRITION_ADVICE_TEMPLATES !== 'undefined') ? NUTRITION_ADVICE_TEMPLATES : {};
   var template = templates[rule.templateId];
-  var rendered = renderNutritionAdvice(template, selection.selected);
+  var rendered = renderNutritionAdvice(template, selection.selected, flaggedFoodNames);
 
   if (rendered.blockReason) {
     return {
@@ -135,6 +151,7 @@ function runNutritionSimulation(params) {
       mode: mode, ruleId: rule.id, ruleVersion: rule.version, patternId: rule.triggerPatternId,
       observationSnapshot: trendResult, profileId: params.profile && params.profile.patientId,
       eligible: true, blockReason: null, selectedFoodCodes: selectedFoodCodes,
+      flaggedFoodNames: flaggedFoodNames, matchedByKeyword: !!selection.matchedByKeyword,
       generatedBody: rendered.body, now: now
     })
   };

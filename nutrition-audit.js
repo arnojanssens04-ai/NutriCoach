@@ -29,6 +29,8 @@ function buildAuditRecord(params) {
     eligible: !!params.eligible,
     blockReason: params.blockReason || null,
     selectedFoodCodes: Array.isArray(params.selectedFoodCodes) ? params.selectedFoodCodes : [],
+    flaggedFoodNames: Array.isArray(params.flaggedFoodNames) ? params.flaggedFoodNames : [],
+    matchedByKeyword: !!params.matchedByKeyword,
     generatedBody: params.generatedBody || null,
     visibility: 'admin_simulator_only', // valeur fixe — aucun autre chemin de visibilité n'existe dans ce module
     occurredAt: params.now || null

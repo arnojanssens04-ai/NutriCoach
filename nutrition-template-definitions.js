@@ -16,11 +16,13 @@ var NUTRITION_ADVICE_TEMPLATES = {
   reduce_ultra_processed_v1: {
     id: 'reduce_ultra_processed_v1',
     status: 'active',
-    // Placeholder unique : {{foods}}. Aucun autre champ interpolé.
-    bodyTemplate: 'Une présence répétée d\'aliments ultra-transformés a été observée sur la période analysée. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être proposés en échange, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
-    allowedVariables: ['foods']
+    // Placeholders : {{flagged_foods}} (aliments réellement repérés dans
+    // le journal, substitué seulement si des noms ont été relevés) et
+    // {{foods}}. Aucun autre champ interpolé.
+    bodyTemplate: 'Une présence répétée d\'aliments ultra-transformés a été observée sur la période analysée, '
+      + 'notamment : {{flagged_foods}}. Parmi les aliments habituellement disponibles, {{foods}} pourraient être '
+      + 'proposés en échange, à discuter avec un professionnel avant toute mise en œuvre.',
+    allowedVariables: ['flagged_foods', 'foods']
   },
 
   // Gabarits ajoutés pour les signaux nutriment/alcool — même contrainte :
