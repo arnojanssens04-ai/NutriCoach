@@ -3,60 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Messages (Admin)</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Cap Sant&#233; &#8212; Discussion (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* WhatsApp Web : sidebar claire + en-t&#234;te vert-teal fonc&#233; par conversation */
 :root {
-  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
-  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
-  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
-  --sage:#4a7a3a; --rose:#8b2a2a; --rose-l:rgba(201,122,110,0.12);
-  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --wa-header:#075e54; --wa-header-d:#054c44; --wa-accent:#25d366;
+  --wa-wallpaper:#e5ddd5; --wa-sent:#dcf8c6; --wa-received:#ffffff;
+  --wa-sidebar:#ffffff; --wa-sidebar-hover:#f5f6f6; --wa-sidebar-active:#f0f2f1;
+  --bg:#f0f2f5; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.08);
+  --gold:#075e54; --rose:#c0392b;
+  --text:#111b21; --text2:#54656f; --text3:#8696a0;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html,body { background:var(--bg); height:100%; }
 body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-.topbar { flex-shrink:0; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 18px; height:58px; display:flex; align-items:center; justify-content:space-between; }
-.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
-.t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
-.t-back:hover { border-color:var(--gold); color:var(--gold); }
+.topbar { flex-shrink:0; background:var(--wa-header); padding:0 16px; height:50px; display:flex; align-items:center; justify-content:space-between; color:#fff; }
+.t-logo { font-size:1rem; font-weight:600; color:#fff; }
+.t-back { font-size:.8rem; color:rgba(255,255,255,0.9); text-decoration:none; padding:6px 13px; border:1px solid rgba(255,255,255,0.35); border-radius:8px; }
+.t-back:hover { background:rgba(255,255,255,0.12); }
 
 .main { flex:1; display:flex; overflow:hidden; }
-.conv-list { width:280px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; background:var(--bg2); }
-.conv-item { padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
-.conv-item:hover, .conv-item.active { background:var(--card); }
-.conv-name { font-size:.88rem; font-weight:600; }
-.conv-preview { font-size:.76rem; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.conv-badge { display:inline-block; background:var(--rose); color:#fff; font-size:.65rem; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:6px; }
+.conv-list-wrap { width:300px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--border); background:var(--wa-sidebar); }
+.conv-list { width:100%; flex-shrink:0; overflow-y:auto; background:var(--wa-sidebar); }
+.conv-item { padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; display:flex; align-items:center; gap:11px; }
+.conv-item:hover { background:var(--wa-sidebar-hover); }
+.conv-item.active { background:var(--wa-sidebar-active); }
+.conv-av { width:42px; height:42px; border-radius:50%; background:var(--wa-header); color:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; }
+.conv-body { flex:1; min-width:0; }
+.conv-name { font-size:.9rem; font-weight:600; color:var(--text); }
+.conv-preview { font-size:.8rem; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-badge { display:inline-block; background:var(--wa-accent); color:#fff; font-size:.68rem; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:6px; }
 .empty-list { padding:30px 16px; color:var(--text2); font-size:.82rem; text-align:center; }
 
-.thread-panel { flex:1; display:flex; flex-direction:column; }
-.thread-hdr { padding:14px 18px; border-bottom:1px solid var(--border); font-family:'Lora',serif; font-size:1.1rem; flex-shrink:0; }
-.thread { flex:1; overflow-y:auto; padding:18px; }
-.no-conv { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text2); font-size:.86rem; }
+.thread-panel { flex:1; display:flex; flex-direction:column; background:var(--wa-wallpaper);
+  background-image:
+    radial-gradient(circle at 8% 12%, rgba(0,0,0,0.028) 0, transparent 40%),
+    radial-gradient(circle at 32% 68%, rgba(0,0,0,0.028) 0, transparent 42%),
+    radial-gradient(circle at 78% 22%, rgba(0,0,0,0.028) 0, transparent 40%),
+    radial-gradient(circle at 62% 82%, rgba(0,0,0,0.028) 0, transparent 42%);
+  background-size:220px 220px; }
+.thread-hdr { padding:9px 16px; background:var(--wa-header); color:#fff; font-size:.95rem; font-weight:600; flex-shrink:0; }
+.thread { flex:1; overflow-y:auto; padding:14px 6%; }
+.thread > div { max-width:800px; margin:0 auto; }
+.no-conv { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text2); font-size:.86rem; background:var(--wa-wallpaper); }
 
-.bubble-row { display:flex; margin-bottom:12px; }
+.bubble-row { display:flex; margin-bottom:3px; }
 .bubble-row.from-admin { justify-content:flex-end; }
 .bubble-row.from-user { justify-content:flex-start; }
-.bubble { max-width:65%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
-.bubble-row.from-user .bubble { background:var(--card); border:1px solid var(--border); border-bottom-left-radius:4px; }
-.bubble-row.from-admin .bubble { background:var(--gold); color:#fff; border-bottom-right-radius:4px; }
-.bubble-time { font-size:.65rem; color:var(--text3); margin-top:4px; }
+.bubble { position:relative; max-width:65%; padding:7px 9px 8px; border-radius:8px; font-size:.9rem; line-height:1.42; white-space:pre-wrap; overflow-wrap:break-word; word-break:normal; box-shadow:0 1px 1px rgba(0,0,0,0.08); }
+.bubble-emoji-only { background:none!important; box-shadow:none!important; padding:2px 0!important; font-size:2.4rem!important; line-height:1.2!important; }
+.bubble-row.from-user .bubble { background:var(--wa-received); border-top-left-radius:2px; }
+.bubble-row.from-admin .bubble { background:var(--wa-sent); border-top-right-radius:2px; }
+.bubble-row.from-user .bubble::before {
+  content:''; position:absolute; top:0; left:-7px; width:12px; height:12px;
+  background:var(--wa-received); clip-path:polygon(100% 0, 0 0, 100% 100%);
+}
+.bubble-row.from-admin .bubble::before {
+  content:''; position:absolute; top:0; right:-7px; width:12px; height:12px;
+  background:var(--wa-sent); clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+.bubble-time { font-size:.66rem; color:rgba(0,0,0,0.4); margin-top:2px; float:right; padding-left:8px; }
+.msg-edited-tag { font-style:italic; opacity:.8; }
+.bubble-deleted { font-style:italic; color:var(--text3); background:#f0f0f0!important; }
+.msg-menu-wrap { position:relative; align-self:flex-end; }
+.msg-menu-btn { background:none; border:none; color:var(--text3); font-size:1rem; cursor:pointer; padding:2px 6px; line-height:1; }
+.msg-menu { display:none; position:absolute; right:0; top:100%; background:var(--card); border:1px solid var(--border2); border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.15); z-index:50; min-width:120px; overflow:hidden; }
+.msg-menu.open { display:block; }
+.msg-menu button { display:block; width:100%; text-align:left; padding:9px 14px; background:none; border:none; font-size:.82rem; color:var(--text); cursor:pointer; }
+.msg-menu button:hover { background:var(--bg2); }
+.msg-menu button.msg-menu-danger { color:var(--rose); }
+.msg-edit-ta { width:100%; min-height:60px; border:1px solid var(--border2); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:.88rem; resize:vertical; background:#fff; color:var(--text); }
+.msg-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+.msg-edit-actions button { padding:6px 12px; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; }
+.msg-edit-cancel { background:var(--bg2); color:var(--text2); }
+.msg-edit-save { background:var(--wa-header); color:#fff; }
 
-.input-bar { flex-shrink:0; border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:10px; }
-.input-bar textarea { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:14px; color:var(--text); padding:11px 14px; font-family:'Inter',sans-serif; font-size:.88rem; resize:none; outline:none; max-height:160px; overflow-y:auto; line-height:1.4; }
-.send-btn { width:44px; height:44px; border-radius:50%; background:var(--gold); border:none; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+.input-bar { flex-shrink:0; background:var(--bg2); padding:8px 12px 10px; display:flex; gap:10px; align-items:flex-end; }
+.input-bar textarea { flex:1; background:#fff; border:none; border-radius:22px; color:var(--text); padding:11px 16px; font-family:'Inter',sans-serif; font-size:.9rem; resize:none; outline:none; max-height:160px; overflow-y:auto; line-height:1.4; box-shadow:0 1px 1px rgba(0,0,0,0.06); }
+.send-btn { width:42px; height:42px; border-radius:50%; background:var(--wa-accent); border:none; color:#fff; font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+.send-btn:hover { background:#1fb955; }
 .denied { display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text2); }
 
-.thread-back { display:none; background:none; border:none; font-size:1.2rem; color:var(--text2); cursor:pointer; padding:4px 10px 4px 0; }
+.thread-back { display:none; background:none; border:none; font-size:1.3rem; color:#fff; cursor:pointer; padding:4px 10px 4px 0; }
 
-/* ── Mobile : un seul panneau visible à la fois (liste OU conversation) ── */
+/* &#9472;&#9472; Mobile : un seul panneau visible &#224; la fois (liste OU conversation) &#9472;&#9472; */
 @media (max-width: 720px) {
-  .conv-list { width:100%; }
+  .conv-list-wrap { width:100%; }
   .thread-panel { display:none; }
-  .main.show-thread .conv-list { display:none; }
+  .main.show-thread .conv-list-wrap { display:none; }
   .main.show-thread .thread-panel { display:flex; }
   .thread-back { display:inline-block; }
 }
@@ -65,35 +102,35 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Santé</span> · Messages</div>
-  <a href="admin.html" class="t-back">← Admin</a>
+  <div class="t-logo">Cap<span>Sant&#233;</span> &#183; Discussion</div>
+  <a href="admin.html" class="t-back">&#8592; Admin</a>
 </header>
 
 <div class="main" id="main" style="display:none">
-  <div class="conv-list-wrap" style="width:280px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border)">
-    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">✏️ Nouveau message</button>
-    <div class="conv-list" id="conv-list" style="border-right:none;flex:1"></div>
+  <div class="conv-list-wrap">
+    <button onclick="openNewMsgPicker()" style="margin:10px;padding:10px;background:var(--wa-header);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer">&#9999;&#65039; Nouveau message</button>
+    <div class="conv-list" id="conv-list"></div>
   </div>
   <div class="thread-panel">
     <div class="thread-hdr" id="thread-hdr" style="display:flex;align-items:center;justify-content:space-between">
-      <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">←</button><span id="thread-hdr-txt">Sélectionnez une conversation</span></span>
-      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--text2);white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">🌿 Mode focus</button>
+      <span style="display:flex;align-items:center"><button class="thread-back" onclick="backToList()">&#8592;</button><span id="thread-hdr-txt">S&#233;lectionnez une conversation</span></span>
+      <button id="focus-mode-btn" onclick="toggleUserFocusMode()" style="display:none;font-size:.72rem;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:999px;padding:5px 11px;cursor:pointer;color:#fff;white-space:nowrap" title="Masquer/afficher le chiffre exact de calories pour cet utilisateur">&#127807; Mode focus</button>
     </div>
-    <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation à gauche</div></div>
+    <div class="thread" id="thread"><div class="no-conv">Choisissez une conversation &#224; gauche</div></div>
     <div class="input-bar" id="input-bar" style="display:none">
-      <textarea id="msg-input" placeholder="Répondre..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
-      <button class="send-btn" onclick="sendReply()">➤</button>
+      <textarea id="msg-input" placeholder="R&#233;pondre..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+      <button class="send-btn" onclick="sendReply()">&#10148;</button>
     </div>
   </div>
 </div>
 
-<!-- Sélecteur "Nouveau message" — permet d'écrire à n'importe quel
-     utilisateur, pas seulement ceux ayant déjà une conversation active. -->
+<!-- S&#233;lecteur "Nouveau message" &#8212; permet d'&#233;crire &#224; n'importe quel
+     utilisateur, pas seulement ceux ayant d&#233;j&#224; une conversation active. -->
 <div id="new-msg-ov" style="display:none;position:fixed;inset:0;background:rgba(22,36,27,0.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:8vh" onclick="if(event.target===this)closeNewMsgPicker()">
   <div style="background:var(--card);border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:70vh;display:flex;flex-direction:column">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-weight:700;font-size:1rem">Écrire à un utilisateur</div>
-      <button onclick="closeNewMsgPicker()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">✕</button>
+      <div style="font-weight:700;font-size:1rem">&#201;crire &#224; un utilisateur</div>
+      <button onclick="closeNewMsgPicker()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">&#10005;</button>
     </div>
     <input type="text" id="new-msg-search" placeholder="Rechercher par nom ou email..." oninput="filterNewMsgUsers(this.value)" style="padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:.9rem;margin-bottom:10px;outline:none">
     <div id="new-msg-user-list" style="overflow-y:auto;flex:1"></div>
@@ -108,7 +145,18 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER=null, ALL_USERS={}, CURRENT_CONV=null, ALL_MSGS=[];
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtTime(ts){ var d=new Date(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+' à '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}); }
+// Supabase renvoie parfois created_at SANS indicateur de fuseau (ex:
+// "2026-08-05T06:55:32.38"), que JavaScript interpr\u00e8te alors comme une
+// heure LOCALE au lieu d'UTC \u2014 d\u00e9calage d'environ 2h en \u00e9t\u00e9 (CEST). Cette
+// fonction force l'interpr\u00e9tation UTC dans tous les cas, qu'il y ait d\u00e9j\u00e0
+// un "Z"/d\u00e9calage ou non.
+function parseUTC(ts){
+  if(!ts) return new Date(NaN);
+  var s = String(ts);
+  if(!/[Zz]|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+  return new Date(s);
+}
+function fmtTime(ts){ var d=parseUTC(ts); return d.toLocaleDateString('fr-BE',{day:'numeric',month:'short',timeZone:'Europe/Brussels'})+' \u00e0 '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Brussels'}); }
 
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
@@ -119,7 +167,7 @@ sb.auth.getSession().then(function(r){
 async function checkAdminAndLoad(){
   var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
   if(!pr.data || pr.data.role!=='admin'){
-    document.body.innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    document.body.innerHTML = '<div class="denied">Acc\u00e8s r\u00e9serv\u00e9 aux administrateurs.</div>';
     return;
   }
   document.getElementById('main').style.display='flex';
@@ -131,7 +179,7 @@ async function checkAdminAndLoad(){
   subscribeRealtime();
 
   // Deep-link : chat-admin.html?u=<user_id> ouvre directement la conversation
-  // (utilisé par le bouton "Contacter" depuis bilan_recap.html)
+  // (utilis\u00e9 par le bouton "Contacter" depuis bilan_recap.html)
   var uidParam = new URLSearchParams(window.location.search).get('u');
   if(uidParam) openConv(uidParam);
 }
@@ -146,7 +194,7 @@ async function loadAllMessages(){
 function userLabel(uid){
   var u = ALL_USERS[uid];
   if(!u) return 'Utilisateur inconnu';
-  return (u.prenom||'')+' '+(u.nom||'')||u.email||'—';
+  return (u.prenom||'')+' '+(u.nom||'')||u.email||'\u2014';
 }
 
 function renderConvList(){
@@ -163,12 +211,15 @@ function renderConvList(){
   }).sort(function(a,b){ return new Date(b.last.created_at) - new Date(a.last.created_at); });
 
   var el = document.getElementById('conv-list');
-  if(!convs.length){ el.innerHTML = '<div class="empty-list">Aucun message pour le moment.</div>'; return; }
+  if(!convs.length){ el.innerHTML = '<div class="empty-list">Aucune conversation pour le moment.</div>'; return; }
   el.innerHTML = convs.map(function(c){
+    var initial = (userLabel(c.uid)||'?').trim().charAt(0).toUpperCase() || '?';
     return '<div class="conv-item'+(CURRENT_CONV===c.uid?' active':'')+'" onclick="openConv(\''+c.uid+'\')">'
+      +'<div class="conv-av">'+esc(initial)+'</div>'
+      +'<div class="conv-body">'
       +'<div class="conv-name">'+esc(userLabel(c.uid))+(c.unread?'<span class="conv-badge">'+c.unread+'</span>':'')+'</div>'
       +'<div class="conv-preview">'+(c.last.is_admin_sender?'Vous : ':'')+esc(c.last.content)+'</div>'
-      +'</div>';
+      +'</div></div>';
   }).join('');
 }
 
@@ -176,7 +227,7 @@ async function openConv(uid){
   CURRENT_CONV = uid;
   document.getElementById('thread-hdr-txt').textContent = userLabel(uid);
   document.getElementById('input-bar').style.display = 'flex';
-  document.getElementById('main').classList.add('show-thread'); // mobile : bascule en plein écran
+  document.getElementById('main').classList.add('show-thread'); // mobile : bascule en plein \u00e9cran
   renderThread(uid);
   renderConvList();
   await sb.from('messages').update({read_by_admin:true}).eq('user_id',uid).eq('is_admin_sender',false).eq('read_by_admin',false);
@@ -188,13 +239,13 @@ async function openConv(uid){
   focusBtn.classList.toggle('on', u && u.hide_exact_kcal === true);
   focusBtn.style.background = (u && u.hide_exact_kcal===true) ? 'var(--gold-l)' : 'var(--card2)';
   focusBtn.style.color = (u && u.hide_exact_kcal===true) ? 'var(--gold)' : 'var(--text2)';
-  focusBtn.textContent = (u && u.hide_exact_kcal===true) ? '🌿 Mode focus (actif)' : '🌿 Mode focus';
+  focusBtn.textContent = (u && u.hide_exact_kcal===true) ? '\ud83c\udf3f Mode focus (actif)' : '\ud83c\udf3f Mode focus';
 }
 
-// Permet au diététicien d'activer le mode focus pour un utilisateur
-// directement depuis sa conversation, s'il repère un rapport trop
-// comptable aux calories dans ses messages — sans devoir attendre que la
-// personne le fasse elle-même.
+// Permet au di\u00e9t\u00e9ticien d'activer le mode focus pour un utilisateur
+// directement depuis sa conversation, s'il rep\u00e8re un rapport trop
+// comptable aux calories dans ses messages \u2014 sans devoir attendre que la
+// personne le fasse elle-m\u00eame.
 async function toggleUserFocusMode(){
   if(!CURRENT_CONV) return;
   var u = ALL_USERS[CURRENT_CONV];
@@ -202,7 +253,7 @@ async function toggleUserFocusMode(){
   var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',CURRENT_CONV);
   if(r.error){ alert('Erreur : '+r.error.message); return; }
   ALL_USERS[CURRENT_CONV].hide_exact_kcal = newVal;
-  openConv(CURRENT_CONV); // rafraîchit l'apparence du bouton
+  openConv(CURRENT_CONV); // rafra\u00eechit l'apparence du bouton
 }
 function backToList(){
   document.getElementById('main').classList.remove('show-thread');
@@ -230,7 +281,7 @@ function renderNewMsgUsers(list){
     return userLabel(a.id).localeCompare(userLabel(b.id));
   });
   var el = document.getElementById('new-msg-user-list');
-  if(!list.length){ el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:.85rem">Aucun utilisateur trouvé.</div>'; return; }
+  if(!list.length){ el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:.85rem">Aucun utilisateur trouv\u00e9.</div>'; return; }
   el.innerHTML = list.map(function(u){
     return '<div onclick="pickNewMsgUser(\''+u.id+'\')" style="padding:11px 10px;border-radius:9px;cursor:pointer" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'transparent\'">'
       +'<div style="font-weight:600;font-size:.9rem">'+esc(userLabel(u.id))+'</div>'
@@ -248,21 +299,103 @@ function renderThread(uid){
   var el = document.getElementById('thread');
   el.innerHTML = msgs.map(function(m){
     var side = m.is_admin_sender ? 'from-admin' : 'from-user';
+    var isMine = m.sender_id===USER.id;
+    var isDeleted = !!m.deleted_at;
+    var withinEditWindow = isMine && !isDeleted && (Date.now()-parseUTC(m.created_at).getTime()) < 5*60*1000;
+    var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
+
+    if(isDeleted){
+      return '<div class="bubble-row '+side+'"><div>'
+        +'<div class="bubble bubble-deleted">Message supprim\u00e9</div>'
+        +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
+        +'</div></div>';
+    }
+
+    var attachHtml = m.attachment_url
+      ? '<a href="'+esc(m.attachment_url)+'" target="_blank" rel="noopener"><img src="'+esc(m.attachment_url)+'" alt="Pi\u00e8ce jointe" style="max-width:220px;border-radius:10px;margin-top:6px;display:block;cursor:zoom-in"></a>'
+      : '';
+    // Le texte "\ud83d\udcf7 Photo" est le texte de secours quand une photo est
+    // envoy\u00e9e sans l\u00e9gende (voir chat.html) \u2014 inutile de l'afficher en plus
+    // de l'image elle-m\u00eame, sinon \u00e7a fait doublon.
+    var textHtml = (m.content && m.content!=='\ud83d\udcf7 Photo') ? esc(m.content) : '';
+    // Message compos\u00e9 UNIQUEMENT d'emoji(s) (ex: "\ud83d\ude4f" tout seul) \u2192 affich\u00e9 en
+    // grand, sans fond de bulle, comme dans WhatsApp/iMessage. Volontairement
+    // strict (pas de texte du tout \u00e0 c\u00f4t\u00e9) pour ne jamais mal classer un
+    // message texte qui contient juste un emoji en plus de mots.
+    var isEmojiOnly = !!m.content && !m.attachment_url && /^(?:\s*(?:\p{Extended_Pictographic}|\u200d|\ufe0f)\s*)+$/u.test(m.content);
+    var bubbleCls = 'bubble' + (isEmojiOnly ? ' bubble-emoji-only' : '');
+
+    var menuHtml = isMine ? (
+      '<div class="msg-menu-wrap">'
+        +'<button class="msg-menu-btn" onclick="toggleMsgMenu(\''+m.id+'\')">\u22ef</button>'
+        +'<div class="msg-menu" id="msg-menu-'+m.id+'">'
+          +(withinEditWindow ? '<button onclick="startEditMessage(\''+m.id+'\')">Modifier</button>' : '')
+          +'<button onclick="deleteMessage(\''+m.id+'\')" class="msg-menu-danger">Supprimer</button>'
+        +'</div>'
+      +'</div>'
+    ) : '';
+
     return '<div class="bubble-row '+side+'"><div>'
-      +'<div class="bubble">'+esc(m.content)+'</div>'
-      +'<div class="bubble-time">'+fmtTime(m.created_at)+'</div>'
-      +'</div></div>';
+      +'<div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+textHtml+attachHtml+'</div>'
+      +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+'</div>'
+      +'</div>'+menuHtml+'</div>';
   }).join('');
   el.scrollTop = el.scrollHeight;
+}
+
+function toggleMsgMenu(id){
+  var allMenus = document.querySelectorAll('.msg-menu.open');
+  allMenus.forEach(function(el){ if(el.id!=='msg-menu-'+id) el.classList.remove('open'); });
+  var menu = document.getElementById('msg-menu-'+id);
+  if(menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.msg-menu-wrap')){
+    document.querySelectorAll('.msg-menu.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+
+function startEditMessage(id){
+  toggleMsgMenu(id);
+  var bubbleEl = document.getElementById('bubble-content-'+id);
+  var currentText = bubbleEl.textContent;
+  bubbleEl.innerHTML = '<textarea id="edit-ta-'+id+'" class="msg-edit-ta">'+esc(currentText)+'</textarea>'
+    +'<div class="msg-edit-actions">'
+      +'<button onclick="cancelEditMessage()" class="msg-edit-cancel">Annuler</button>'
+      +'<button onclick="saveEditMessage(\''+id+'\')" class="msg-edit-save">Enregistrer</button>'
+    +'</div>';
+  document.getElementById('edit-ta-'+id).focus();
+}
+function cancelEditMessage(){
+  renderThread(CURRENT_CONV);
+}
+async function saveEditMessage(id){
+  var ta = document.getElementById('edit-ta-'+id);
+  var newContent = ta.value.trim();
+  if(!newContent) return;
+  var r = await sb.from('messages').update({content:newContent, edited_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ alert('Modification impossible : '+r.error.message); return; }
+  var msgInList = ALL_MSGS.find(function(m){ return m.id===id; });
+  if(msgInList){ msgInList.content = newContent; msgInList.edited_at = new Date().toISOString(); }
+  renderThread(CURRENT_CONV);
+}
+async function deleteMessage(id){
+  toggleMsgMenu(id);
+  if(!confirm('Supprimer ce message ?')) return;
+  var r = await sb.from('messages').update({deleted_at:new Date().toISOString()}).eq('id',id);
+  if(r.error){ alert('Suppression impossible : '+r.error.message); return; }
+  var msgInList = ALL_MSGS.find(function(m){ return m.id===id; });
+  if(msgInList){ msgInList.deleted_at = new Date().toISOString(); }
+  renderThread(CURRENT_CONV);
 }
 
 function handleKey(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendReply(); }
 }
 
-// Le champ grandit avec le texte tapé (jusqu'à max-height défini en CSS,
-// au-delà ça défile normalement) — avant, le champ restait figé à 1 ligne
-// et le texte défilait hors de vue pendant la frappe.
+// Le champ grandit avec le texte tap\u00e9 (jusqu'\u00e0 max-height d\u00e9fini en CSS,
+// au-del\u00e0 \u00e7a d\u00e9file normalement) \u2014 avant, le champ restait fig\u00e9 \u00e0 1 ligne
+// et le texte d\u00e9filait hors de vue pendant la frappe.
 function autoGrow(el){
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
@@ -281,8 +414,8 @@ async function sendReply(){
   loadAllMessages();
 }
 
-// Déclenche l'email de notification (admin ↔ utilisateur) sans jamais
-// bloquer l'interface — un échec d'envoi ne doit pas gêner la conversation.
+// D\u00e9clenche l'email de notification (admin \u2194 utilisateur) sans jamais
+// bloquer l'interface \u2014 un \u00e9chec d'envoi ne doit pas g\u00eaner la conversation.
 async function notifyByEmail(messageId){
   try{
     var session = await sb.auth.getSession();
@@ -292,7 +425,7 @@ async function notifyByEmail(messageId){
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body: JSON.stringify({ message_id: messageId })
     });
-  }catch(e){ console.warn('[Cap Santé] notification email non envoyée:', e); }
+  }catch(e){ console.warn('[Cap Sant\u00e9] notification email non envoy\u00e9e:', e); }
 }
 
 function subscribeRealtime(){

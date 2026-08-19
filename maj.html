@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Sant&#233; &#8212; Mises &#224; jour (Admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:90px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.5rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:620px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px; box-shadow:var(--sh); }
+.card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.card-hdr span { font-family:'Lora',serif; font-size:1.05rem; }
+.card-body { padding:16px 18px; }
+
+.field { margin-bottom:13px; }
+.field label { display:block; font-size:.7rem; font-weight:500; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.6px; }
+.field input, .field textarea { width:100%; padding:10px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:.9rem; outline:none; font-family:inherit; }
+.field input:focus, .field textarea:focus { border-color:rgba(45,79,28,0.4); }
+.field textarea { min-height:140px; resize:vertical; line-height:1.6; }
+.field-hint { font-size:.72rem; color:var(--text3); margin-top:4px; line-height:1.5; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+
+.emoji-picker { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.emoji-btn { background:var(--card2); border:1px solid var(--border); border-radius:8px; font-size:1.05rem; padding:5px 9px; cursor:pointer; line-height:1; }
+.emoji-btn:hover { border-color:var(--gold); }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:11px 13px; background:var(--card2); border:1px solid var(--border); border-radius:9px; margin-bottom:13px; }
+.toggle-row .lbl { font-size:.85rem; font-weight:500; }
+.toggle-row .sub { font-size:.72rem; color:var(--text3); margin-top:1px; }
+.switch { position:relative; width:42px; height:24px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider { position:absolute; inset:0; background:var(--border2); border-radius:999px; cursor:pointer; transition:.2s; }
+.switch .slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.switch input:checked + .slider { background:var(--gold); }
+.switch input:checked + .slider:before { transform:translateX(18px); }
+
+.btn { padding:12px 20px; border-radius:10px; border:none; font-family:'Lora',serif; font-size:.95rem; font-weight:600; cursor:pointer; width:100%; }
+.btn-gold { background:var(--gold); color:#fff; }
+.btn-ghost { background:var(--card2); color:var(--text); border:1px solid var(--border2); margin-top:8px; }
+.btn-row { display:flex; gap:9px; margin-top:8px; }
+.btn-row .btn { margin-top:0; }
+
+.entry-item { padding:13px 0; border-bottom:1px solid var(--border); }
+.entry-item:last-child { border-bottom:none; }
+.entry-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.entry-v { font-weight:600; font-size:.9rem; }
+.entry-date { font-size:.74rem; color:var(--text3); margin-top:1px; }
+.entry-badge { font-size:.65rem; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+.entry-badge.pub { background:var(--sage-l); color:var(--sage); }
+.entry-badge.draft { background:rgba(160,156,148,0.15); color:var(--text3); }
+.entry-items { margin:8px 0 0; padding-left:18px; }
+.entry-items li { font-size:.82rem; color:var(--text2); line-height:1.6; margin-bottom:2px; }
+.entry-actions { display:flex; gap:6px; margin-top:9px; }
+.entry-actions button { background:var(--card2); border:1px solid var(--border); color:var(--text2); border-radius:7px; padding:5px 11px; font-size:.74rem; cursor:pointer; }
+.entry-actions button:hover { border-color:var(--gold); color:var(--gold); }
+.entry-actions button.danger:hover { border-color:var(--rose); color:var(--rose); }
+
+.empty { text-align:center; padding:30px 16px; color:var(--text2); font-size:.84rem; }
+.denied { text-align:center; padding:60px 20px; color:var(--text2); }
+
+/* Apercu -- reprend exactement le style de la popup "Quoi de neuf" du dashboard */
+.preview-ov { position:fixed; inset:0; background:rgba(26,25,22,0.5); z-index:998; display:flex; align-items:center; justify-content:center; padding:20px; }
+.preview-sheet { background:var(--card); border:1px solid var(--border2); border-radius:18px; padding:26px 24px; max-width:380px; max-height:80vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,.25); }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--card2); border:1px solid var(--border2); color:var(--text); padding:10px 18px; border-radius:999px; font-size:.82rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:500; opacity:0; transition:all .25s; pointer-events:none; max-width:88vw; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Sant&#233;</span></div>
+  <a href="admin.html" class="t-back">&#8592; Admin</a>
+</header>
+
+<div class="wrap" id="wrap">
+  <div class="hero">
+    <h1>Mises &#224; jour</h1>
+    <p>Ce que vous publiez ici appara&#238;t automatiquement dans le "Quoi de neuf" affich&#233; aux utilisateurs &#224; leur prochaine connexion &#8212; une seule fois par version, comme avant.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span id="form-title">Nouvelle mise &#224; jour</span></div>
+    <div class="card-body">
+      <div class="grid2">
+        <div class="field"><label>Version</label><input type="text" id="f-version" placeholder="Ex: 0.9.0"></div>
+        <div class="field"><label>Date affich&#233;e</label><input type="text" id="f-date" placeholder="Ex: 6 ao&#251;t 2026"></div>
+      </div>
+
+      <div class="field">
+        <label>Texte (une ligne = un point affich&#233;)</label>
+        <div class="emoji-picker" id="emoji-picker"></div>
+        <textarea id="f-items" placeholder="Score Sant&#233; revu en profondeur...
+Nouveau sur chaque repas...
+Un vrai lien de d&#233;sabonnement..."></textarea>
+        <div class="field-hint">Cliquez un emoji pour l'ins&#233;rer au d&#233;but de la ligne en cours. Une ligne vide est ignor&#233;e.</div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">Publier imm&#233;diatement</div><div class="sub">D&#233;sactiv&#233; = brouillon, invisible pour les utilisateurs</div></div>
+        <label class="switch"><input type="checkbox" id="f-published" checked><span class="slider"></span></label>
+      </div>
+
+      <button class="btn btn-gold" onclick="saveEntry()" id="save-btn">Publier cette mise &#224; jour</button>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="previewEntry()">&#128065;&#65039; Aper&#231;u</button>
+        <button class="btn btn-ghost" onclick="cancelEdit()" id="cancel-btn" style="display:none">Annuler la modification</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span>Historique</span></div>
+    <div class="card-body" id="entry-list"><div class="empty">Chargement&#8230;</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER=null;
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+var toastT=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  checkAdminAndLoad();
+});
+
+async function checkAdminAndLoad(){
+  var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
+  if(!pr.data || pr.data.role!=='admin'){
+    document.getElementById('wrap').innerHTML = '<div class="denied">Acc\u00e8s r\u00e9serv\u00e9 aux administrateurs.</div>';
+    return;
+  }
+  buildEmojiPicker();
+  prefillDefaults();
+  loadEntries();
+}
+
+// Petite palette de raccourcis -- pas obligatoire (l'admin peut taper
+// n'importe quel emoji au clavier), juste un confort pour rester coh\u00e9rent
+// avec le style d\u00e9j\u00e0 utilis\u00e9 dans les mises \u00e0 jour pr\u00e9c\u00e9dentes.
+var EMOJI_SET = ['\ud83e\ude7a','\ud83e\ude78','\ud83d\udc9a','\ud83d\udce7','\ud83e\udee7','\u2728','\ud83e\udd57','\ud83c\udf7d\ufe0f','\ud83d\udcf7','\u2705','\ud83d\udcac','\u2696\ufe0f','\ud83d\udd01','\ud83d\udcca','\u270f\ufe0f','\ud83d\udc68\u200d\ud83c\udf73','\ud83c\udf77','\ud83d\udc45'];
+function buildEmojiPicker(){
+  var el = document.getElementById('emoji-picker');
+  el.innerHTML = EMOJI_SET.map(function(e){
+    return '<button type="button" class="emoji-btn" onclick="insertEmoji(\''+e+'\')">'+e+'</button>';
+  }).join('');
+}
+function insertEmoji(emoji){
+  var ta = document.getElementById('f-items');
+  var pos = ta.selectionStart || 0;
+  // Trouve le debut de la ligne courante pour inserer l'emoji juste devant,
+  // meme si le curseur est plus loin dans la ligne.
+  var before = ta.value.slice(0, pos);
+  var lineStart = before.lastIndexOf('\n') + 1;
+  ta.value = ta.value.slice(0, lineStart) + emoji + ' ' + ta.value.slice(lineStart);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = lineStart + emoji.length + 1;
+}
+
+function frenchDateToday(){
+  var mois = ['janvier','f\u00e9vrier','mars','avril','mai','juin','juillet','ao\u00fbt','septembre','octobre','novembre','d\u00e9cembre'];
+  var d = new Date();
+  return d.getDate()+' '+mois[d.getMonth()]+' '+d.getFullYear();
+}
+
+function nextVersionGuess(entries){
+  if(!entries.length) return '0.1.0';
+  var latest = entries[0]; // deja trie par date desc
+  var parts = String(latest.version).split('.').map(Number);
+  parts[1] = (parts[1]||0) + 1;
+  parts[2] = 0;
+  return parts.join('.');
+}
+
+function prefillDefaults(){
+  document.getElementById('f-date').value = frenchDateToday();
+}
+
+var EDITING_ID = null;
+var CURRENT_ENTRIES = [];
+
+async function loadEntries(){
+  var r = await sb.from('changelog').select('*').order('created_at',{ascending:false});
+  CURRENT_ENTRIES = r.data || [];
+  if(!document.getElementById('f-version').value){
+    document.getElementById('f-version').value = nextVersionGuess(CURRENT_ENTRIES);
+  }
+  var el = document.getElementById('entry-list');
+  if(!CURRENT_ENTRIES.length){ el.innerHTML = '<div class="empty">Aucune mise \u00e0 jour publi\u00e9e pour le moment.</div>'; return; }
+  el.innerHTML = CURRENT_ENTRIES.map(function(c){
+    return '<div class="entry-item">'
+      +'<div class="entry-top"><div>'
+        +'<div class="entry-v">v'+esc(c.version)+'</div>'
+        +'<div class="entry-date">'+esc(c.date_label)+'</div>'
+      +'</div><span class="entry-badge '+(c.published?'pub':'draft')+'">'+(c.published?'Publi\u00e9':'Brouillon')+'</span></div>'
+      +'<ul class="entry-items">'+(c.items||[]).map(function(it){ return '<li>'+esc(it)+'</li>'; }).join('')+'</ul>'
+      +'<div class="entry-actions">'
+        +'<button onclick="editEntry(\''+c.id+'\')">\u270f\ufe0f Modifier</button>'
+        +'<button onclick="togglePublish(\''+c.id+'\','+(!c.published)+')">'+(c.published?'\ud83d\udc41\ufe0f Repasser en brouillon':'\ud83d\ude80 Publier')+'</button>'
+        +'<button onclick="deleteEntry(\''+c.id+'\')" class="danger">\u2715 Supprimer</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function editEntry(id){
+  var c = CURRENT_ENTRIES.find(function(x){ return x.id===id; });
+  if(!c) return;
+  EDITING_ID = id;
+  document.getElementById('f-version').value = c.version;
+  document.getElementById('f-date').value = c.date_label;
+  document.getElementById('f-items').value = (c.items||[]).join('\n');
+  document.getElementById('f-published').checked = !!c.published;
+  document.getElementById('form-title').textContent = 'Modifier v'+c.version;
+  document.getElementById('save-btn').textContent = 'Enregistrer les modifications';
+  document.getElementById('cancel-btn').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function cancelEdit(){
+  EDITING_ID = null;
+  document.getElementById('f-version').value = nextVersionGuess(CURRENT_ENTRIES);
+  document.getElementById('f-date').value = frenchDateToday();
+  document.getElementById('f-items').value = '';
+  document.getElementById('f-published').checked = true;
+  document.getElementById('form-title').textContent = 'Nouvelle mise \u00e0 jour';
+  document.getElementById('save-btn').textContent = 'Publier cette mise \u00e0 jour';
+  document.getElementById('cancel-btn').style.display = 'none';
+}
+
+function currentItemsArray(){
+  return document.getElementById('f-items').value
+    .split('\n')
+    .map(function(l){ return l.trim(); })
+    .filter(function(l){ return l.length>0; });
+}
+
+async function saveEntry(){
+  var version = document.getElementById('f-version').value.trim();
+  var dateLabel = document.getElementById('f-date').value.trim();
+  var items = currentItemsArray();
+  var published = document.getElementById('f-published').checked;
+
+  if(!version){ toast('Indiquez un num\u00e9ro de version'); return; }
+  if(!dateLabel){ toast('Indiquez une date'); return; }
+  if(!items.length){ toast('Ajoutez au moins une ligne de texte'); return; }
+
+  var data = { version:version, date_label:dateLabel, items:items, published:published };
+  var r;
+  if(EDITING_ID){
+    r = await sb.from('changelog').update(data).eq('id',EDITING_ID);
+  } else {
+    r = await sb.from('changelog').insert(data);
+  }
+  if(r.error){ toast('Erreur : '+r.error.message); return; }
+  toast(published ? '\u2728 Mise \u00e0 jour publi\u00e9e' : 'Brouillon enregistr\u00e9');
+  cancelEdit();
+  loadEntries();
+}
+
+async function togglePublish(id, newState){
+  var r = await sb.from('changelog').update({published:newState}).eq('id',id);
+  if(r.error){ toast('Erreur : '+r.error.message); return; }
+  toast(newState ? '\ud83d\ude80 Publi\u00e9' : '\ud83d\udc41\ufe0f Repass\u00e9 en brouillon');
+  loadEntries();
+}
+
+async function deleteEntry(id){
+  if(!confirm('Supprimer d\u00e9finitivement cette mise \u00e0 jour ?')) return;
+  var r = await sb.from('changelog').delete().eq('id',id);
+  if(r.error){ toast('Erreur : '+r.error.message); return; }
+  toast('Supprim\u00e9');
+  if(EDITING_ID===id) cancelEdit();
+  loadEntries();
+}
+
+// Reprend EXACTEMENT le HTML/CSS de la popup "Quoi de neuf" de
+// dashboard.html -- si l'un des deux change de style, penser \u00e0 r\u00e9percuter
+// sur l'autre pour ne pas les d\u00e9synchroniser.
+function previewEntry(){
+  var version = document.getElementById('f-version').value.trim() || '(version)';
+  var dateLabel = document.getElementById('f-date').value.trim() || '(date)';
+  var items = currentItemsArray();
+  if(!items.length){ toast('Ajoutez du texte pour pr\u00e9visualiser'); return; }
+
+  var ov = document.createElement('div');
+  ov.className = 'preview-ov';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML = '<div class="preview-sheet">'
+    +'<div style="font-size:1.6rem;margin-bottom:8px">\u2728</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.25rem;font-weight:700;margin-bottom:14px">Quoi de neuf</div>'
+    +'<div style="margin-bottom:14px"><div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">'+esc(dateLabel)+'</div>'
+      +'<ul style="padding-left:18px;margin:0">'+items.map(function(it){ return '<li style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:4px">'+esc(it)+'</li>'; }).join('')+'</ul></div>'
+    +'<div style="font-size:.85rem;color:var(--text2);margin:16px 0 4px;text-align:center">Bonne journ\u00e9e sur Cap Sant\u00e9 \ud83d\udc4b</div>'
+    +'<button onclick="this.closest(\'.preview-ov\').remove()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px">Compris !</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+</script>
+</body>
+</html>

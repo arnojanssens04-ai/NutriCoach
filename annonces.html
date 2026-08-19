@@ -142,6 +142,16 @@ textarea#a-contenu:focus, input#a-titre:focus { border-color:rgba(45,79,28,0.4);
       <textarea id="a-contenu" placeholder="Écrivez votre message, conseil ou citation du jour..."></textarea>
     </div>
 
+    <div class="field-wrap">
+      <label class="field-lbl">Image (optionnel)</label>
+      <div id="a-image-preview" style="display:none;margin-bottom:8px;position:relative">
+        <img id="a-image-preview-img" style="width:100%;border-radius:10px;display:block">
+        <button onclick="clearAnnonceImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem">✕</button>
+      </div>
+      <button onclick="document.getElementById('a-image-input').click()" style="width:100%;padding:10px;border-radius:9px;border:1px dashed var(--border2);background:var(--card2);color:var(--text2);font-size:.85rem;cursor:pointer" id="a-image-btn">📷 Ajouter une image</button>
+      <input type="file" id="a-image-input" accept="image/*" style="display:none" onchange="onAnnonceImageSelected(this)">
+    </div>
+
     <div class="row2">
       <div class="field-wrap">
         <label class="field-lbl">Signé par</label>
@@ -288,6 +298,7 @@ function renderAnnonces(){
       +'</div>'
       +(split.titre ? '<div class="annonce-titre">'+esc(split.titre)+'</div>' : '')
       +'<div class="annonce-txt">'+esc(split.contenu)+'</div>'
+      +(a.image_url ? '<img src="'+esc(a.image_url)+'" alt="" style="width:100%;border-radius:12px;margin-bottom:14px;display:block">' : '')
       +'<div class="reactions-wrap">'
         +'<div class="reactions">'+reactionsHtml
           +'<button class="react-add-btn" onclick="togglePicker(\''+a.id+'\')">+ 😊</button>'
@@ -324,6 +335,26 @@ function toggleSendEmail(){
   document.getElementById('a-email-box').classList.toggle('on', SEND_EMAIL);
 }
 
+var PENDING_ANNONCE_IMAGE = null;
+function onAnnonceImageSelected(input){
+  var file = input.files[0];
+  if(!file) return;
+  PENDING_ANNONCE_IMAGE = file;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    document.getElementById('a-image-preview-img').src = e.target.result;
+    document.getElementById('a-image-preview').style.display = 'block';
+    document.getElementById('a-image-btn').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearAnnonceImage(){
+  PENDING_ANNONCE_IMAGE = null;
+  document.getElementById('a-image-input').value = '';
+  document.getElementById('a-image-preview').style.display = 'none';
+  document.getElementById('a-image-btn').style.display = 'block';
+}
+
 async function publishAnnonce(){
   var titre = document.getElementById('a-titre').value.trim();
   var contenu = document.getElementById('a-contenu').value.trim();
@@ -331,9 +362,22 @@ async function publishAnnonce(){
   var auteurRole = document.getElementById('a-auteur-role').value.trim();
   if(!contenu){ alert('Écrivez un message avant de publier.'); return; }
 
+  var imageUrl = null;
+  if(PENDING_ANNONCE_IMAGE){
+    var path = USER.id+'/'+Date.now()+'_'+PENDING_ANNONCE_IMAGE.name;
+    var upl = await sb.storage.from('annonces-images').upload(path, PENDING_ANNONCE_IMAGE);
+    if(!upl.error){
+      var pub = sb.storage.from('annonces-images').getPublicUrl(path);
+      imageUrl = pub.data.publicUrl;
+    } else {
+      alert('L\'image n\'a pas pu être envoyée (annonce publiée sans image) : '+upl.error.message);
+    }
+  }
+
   var r = await sb.from('annonces').insert({
     contenu:contenu, titre: titre||null, categorie: PICKED_CAT,
     auteur_nom: auteurNom||null, auteur_role: auteurRole||null,
+    image_url: imageUrl,
     created_by:USER.id
   }).select().single();
   if(r.error){ alert('Erreur : '+r.error.message); return; }
@@ -342,6 +386,7 @@ async function publishAnnonce(){
   document.getElementById('a-contenu').value='';
   document.getElementById('a-auteur-nom').value='';
   document.getElementById('a-auteur-role').value='';
+  clearAnnonceImage();
   closeDrawer();
 
   if(SEND_EMAIL){
