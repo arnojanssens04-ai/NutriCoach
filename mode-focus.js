@@ -19,6 +19,38 @@
 var SATIETY_TODAY = false; // vrai si "Je suis rassasi\u00e9(e)" a \u00e9t\u00e9 valid\u00e9 aujourd'hui
 
 
+// \u2500\u2500 GUIDANCE MODE FOCUS \u2014 "puis-je continuer \u00e0 manger ?" \u2500\u2500
+// Sans le chiffre exact, une personne en Mode Focus n'avait plus AUCUN
+// rep\u00e8re pour savoir si elle pouvait continuer \u00e0 manger ou si elle avait
+// d\u00e9j\u00e0 bien mang\u00e9 -- risque r\u00e9el de cr\u00e9er l'exact anxi\u00e9t\u00e9 que le mode est
+// cens\u00e9 \u00e9viter (se retenir par incertitude). Ce message donne un rep\u00e8re
+// qualitatif, JAMAIS un chiffre ni une plage de calories -- et renvoie
+// toujours en dernier lieu \u00e0 la sensation r\u00e9elle (le bouton "rassasi\u00e9(e)"
+// juste en dessous), jamais \u00e0 une r\u00e8gle externe \u00e0 respecter.
+function renderFocusGuidance(T, tgt){
+  var el = document.getElementById('focus-guidance-zone');
+  if(!el) return;
+  // En test \u2014 r\u00e9serv\u00e9 \u00e0 l'admin pour l'instant, le temps de valider les
+  // seuils (50/85/115%) en conditions r\u00e9elles avant l'ouverture \u00e0 tous.
+  if(!(PROF && PROF.role==='admin')){ el.innerHTML=''; return; }
+  if(!T || !tgt || !tgt.kcal){ el.innerHTML=''; return; }
+  if(SATIETY_TODAY){ el.innerHTML=''; return; } // d\u00e9j\u00e0 tranch\u00e9 par la sati\u00e9t\u00e9, pas besoin d'en rajouter
+
+  var ratio = T.kcal / tgt.kcal;
+  var msg;
+  if(ratio < 0.5){
+    msg = { ico:'\ud83c\udf31', txt:'Encore plein de place pour aujourd\'hui. Mangez ce dont vous avez envie, sans vous poser de questions.' };
+  } else if(ratio < 0.85){
+    msg = { ico:'\ud83d\udc4d', txt:'Vous \u00eates sur une belle lanc\u00e9e aujourd\'hui \u2014 continuez \u00e0 suivre votre faim, un repas \u00e0 la fois.' };
+  } else if(ratio < 1.15){
+    msg = { ico:'\u2696\ufe0f', txt:'Vous \u00eates pile dans votre zone du jour. Encore un petit creux ? Allez-y sans h\u00e9siter. Le ventre plein ? C\'est peut-\u00eatre le signal qu\'il faut \u00e9couter maintenant.' };
+  } else {
+    msg = { ico:'\ud83c\udf3f', txt:'Vous avez d\u00e9j\u00e0 bien nourri votre journ\u00e9e. Si la faim est encore l\u00e0, elle a le droit d\'\u00eatre \u00e9cout\u00e9e \u2014 sinon, votre corps vous dit peut-\u00eatre que c\'est bon pour aujourd\'hui.' };
+  }
+
+  el.innerHTML = '<div class="focus-guidance-card"><span class="focus-guidance-ico">'+msg.ico+'</span><span>'+msg.txt+'</span></div>';
+}
+
 // \u2500\u2500 SATIETY OVERRIDE \u2500\u2500
 // Valide la journ\u00e9e sur la base de la sensation r\u00e9elle de sati\u00e9t\u00e9, plut\u00f4t
 // que d'un niveau th\u00e9orique de calories atteint. Une fois valid\u00e9e, les
@@ -133,6 +165,19 @@ async function togglePreviewKcal(){
   document.getElementById('preview-kcal-switch').classList.toggle('on', newVal);
   toast(newVal ? '\ud83d\udd0d Pr\u00e9visualisation activ\u00e9e' : 'Retour \u00e0 l\'ancien affichage');
   refreshDash();
+}
+
+// Suivi du cycle menstruel dans le bilan hebdomadaire -- desactive par
+// defaut pour tout le monde, uniquement visible dans le bilan si la
+// personne choisit elle-meme de l'activer ici.
+async function toggleCycleTracking(){
+  var newVal = !(PROF && PROF.suivi_cycle_actif === true);
+  var r = await sb.from('profiles').update({suivi_cycle_actif:newVal}).eq('id',USER.id);
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  PROF.suivi_cycle_actif = newVal;
+  var el = document.getElementById('cycle-tracking-switch');
+  if(el) el.classList.toggle('on', newVal);
+  toast(newVal ? '\ud83c\udf19 Suivi du cycle activ\u00e9 \u2014 la question appara\u00eetra dans vos prochains bilans' : 'Suivi du cycle d\u00e9sactiv\u00e9');
 }
 
 
@@ -296,6 +341,75 @@ var SAFE_FLEX_REGEX = /cracker|craquelin|biscotte|pomme|banane|orange|poire|kiwi
 
 function normalizeTxt(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
+var FRUIT_REGEX = /pomme|banane|orange|poire|kiwi|fraise|fruit|ananas|mangue|raisin|pasteque|melon|peche|abricot|prune|cerise|figue|avocat|citron|lime|grenade|papaye|coing|litchi|mandarine|clementine|pamplemousse|framboise|myrtille|mure|groseille|cassis|goji|datte|maracuja|coco/;
+var LEGUMINEUSE_REGEX = /pois|haricot|lentille|soja|edamame|pois chiche|pois chiches|fava|feve|f\u00e8ves|garbanzo|kidney|bean|beans|lupin|legumineuse/;
+var VEGETABLE_REGEX = /legume|legumes|brocoli|carotte|courgette|concombre|tomate|salade|epinard|champignon|aubergine|poivron|celeri|navet|betterave|radis|courge|oignon|ail|patate douce|haricot vert|haricots verts|piment|fenouil|chou|endive|artichaut|poireau|cresson|petit pois/;
+
+function isLegume(value){
+  var n = normalizeTxt(value||'');
+  return /legume|legumes|haricot|pois|lentille|soja|edamame|pois chiche|pois chiches|fava|feve|f\u00e8ves|garbanzo|kidney|bean|beans|lupin|legumineuse/.test(n);
+}
+
+// Cibles en GRAMMES ABSOLUS pour la journ\u00e9e enti\u00e8re, partag\u00e9es entre la
+// carte du jour et la tendance hebdomadaire \u2014 avant, chacune avait sa
+// propre logique (l'une en grammes r\u00e9alistes, l'autre en pourcentages
+// relatifs \u00e0 l'ancien syst\u00e8me), ce qui pouvait donner des verdicts
+// contradictoires sur les m\u00eames journ\u00e9es. Les cibles partent des VRAIS
+// besoins en nutriments (tgt.prot, tgt.gluc, tgt.lip) puis sont RAMEN\u00c9ES
+// \u00e0 un poids alimentaire total r\u00e9aliste pour la journ\u00e9e, pour que 100%
+// sur chaque cat\u00e9gorie reste un objectif atteignable plut\u00f4t que
+// math\u00e9matiquement impossible.
+function getPlateGramTargets(){
+  var tgt = calcTargets();
+  var rawProt = tgt.prot / 0.23;   // ~23% de prot\u00e9ines en moyenne dans les aliments de cette cat\u00e9gorie (poulet, poisson, \u0153ufs, tofu)
+  var rawStarch = tgt.gluc / 0.22; // ~22% de glucides en moyenne dans p\u00e2tes/riz/pain cuits
+  var rawFat = tgt.lip / 0.55;     // ~55% de lipides en moyenne (m\u00e9lange huile pure et sources moins denses comme l'avocat/les noix)
+  var rawVeg = 400;                // rep\u00e8re OMS (400g fruits+l\u00e9gumes/jour) comme point de d\u00e9part
+
+  var rawSum = rawProt + rawStarch + rawFat + rawVeg;
+  var realisticTotal = tgt.kcal * 0.55; // poids alimentaire total r\u00e9aliste/jour
+  var scaleFactor = rawSum>0 ? realisticTotal/rawSum : 1;
+
+  return {
+    veg: rawVeg * scaleFactor,
+    prot: rawProt * scaleFactor,
+    starch: rawStarch * scaleFactor,
+    fat: rawFat * scaleFactor
+  };
+}
+
+function classifyPlateEntry(entry){
+  var n = normalizeTxt(entry.aliment || '');
+  var w = entry.quantite || 0;
+  if(w<=0) return {category:'none', weight:0, fallback:false};
+
+  var carbG = (entry.food_gluc_100 || 0) * w / 100;
+  var protG = (entry.food_prot_100 || 0) * w / 100;
+  var fatG = (entry.food_lip_100 || 0) * w / 100;
+  var maxG = Math.max(carbG, protG, fatG);
+
+  if(maxG<=0){
+    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:true};
+    if(PROTEIN_SRC_REGEX.test(n)) return {category:'prot', weight:w, fallback:true};
+    if(STARCH_REGEX.test(n)) return {category:'starch', weight:w, fallback:true};
+    if(FAT_SRC_REGEX.test(n)) return {category:'fat', weight:w, fallback:true};
+    return {category:'unknown', weight:w, fallback:true};
+  }
+
+  if(carbG > protG && carbG >= fatG){
+    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:false};
+    return {category:'starch', weight:w, fallback:false};
+  }
+  if(protG > carbG && protG >= fatG){
+    return {category:'prot', weight:w, fallback:false};
+  }
+  if(fatG > carbG && fatG > protG){
+    if(FAT_SRC_REGEX.test(n) || fatG >= carbG * 1.5) return {category:'fat', weight:w, fallback:false};
+    return {category:'starch', weight:w, fallback:false};
+  }
+  return {category:'starch', weight:w, fallback:false};
+}
+
 // Ajuste les quantit\u00e9s d'un combo "classique" pour se rapprocher du
 // besoin calorique du repas \u2014 seulement \u00e0 la hausse, seulement sur les
 // aliments qui s'y pr\u00eatent, jamais sur les portions \u00e0 taille naturelle
@@ -393,40 +507,39 @@ async function renderWeeklyTrend(){
   var allEntries = r.data || [];
   if(!allEntries.length){ card.style.display='none'; return; }
 
+  var gramTgt = getPlateGramTargets();
   var dayStatus = days.map(function(dateStr){
     var dayEntries = allEntries.filter(function(e){ return e.date===dateStr; });
     if(!dayEntries.length) return 'none';
     var vegW=0, protW=0, starchW=0, fatW=0;
     dayEntries.forEach(function(e){
-      var n = normalizeTxt(e.aliment);
       var w = e.quantite||0;
       if(w<=0) return;
-      var carbG = (e.food_gluc_100||0)*w/100;
-      var protG = (e.food_prot_100||0)*w/100;
-      var fatG  = (e.food_lip_100||0)*w/100;
-      var maxG = Math.max(carbG, protG, fatG);
-      if(maxG<=0){
-        if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW+=w;
-        else if(PROTEIN_SRC_REGEX.test(n)) protW+=w;
-        else if(STARCH_REGEX.test(n)) starchW+=w;
-        else if(FAT_SRC_REGEX.test(n)) fatW+=w;
-        return;
-      }
-      if(carbG===maxG){
-        if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW+=w;
-        else starchW+=w;
-      } else if(protG===maxG){
-        protW+=w;
-      } else {
-        fatW+=w;
-      }
+      var classification = classifyPlateEntry({
+        aliment:e.aliment,
+        quantite:w,
+        food_gluc_100:e.food_gluc_100||0,
+        food_prot_100:e.food_prot_100||0,
+        food_lip_100:e.food_lip_100||0
+      });
+      if(classification.category==='veg') vegW+=classification.weight;
+      else if(classification.category==='prot') protW+=classification.weight;
+      else if(classification.category==='starch') starchW+=classification.weight;
+      else if(classification.category==='fat') fatW+=classification.weight;
     });
     var totalW = vegW+protW+starchW+fatW;
     if(totalW<250) return 'none'; // pas assez mang\u00e9 ce jour-l\u00e0 pour juger la structure avec confiance
-    var vegPct=vegW/totalW*100, protPct=protW/totalW*100, starchPct=starchW/totalW*100, fatPct=100-vegPct-protPct-starchPct;
-    var plateTgt = getPlateTargets();
-    var deviation = Math.abs(vegPct-plateTgt.veg)+Math.abs(protPct-plateTgt.prot)+Math.abs(starchPct-plateTgt.starch)+Math.abs(fatPct-plateTgt.fat);
-    return deviation<=32 ? 'good' : deviation<=52 ? 'mid' : 'low';
+    // M\u00eame logique que la carte du jour \u2014 progression vers la cible en
+    // grammes de chaque cat\u00e9gorie (plafonn\u00e9e \u00e0 100%), pas une proportion
+    // relative compar\u00e9e \u00e0 un pourcentage cible. Avant, les deux cartes
+    // utilisaient des syst\u00e8mes diff\u00e9rents et pouvaient se contredire sur
+    // la m\u00eame journ\u00e9e.
+    var vegBarPct = Math.min(100, gramTgt.veg>0 ? vegW/gramTgt.veg*100 : 0);
+    var protBarPct = Math.min(100, gramTgt.prot>0 ? protW/gramTgt.prot*100 : 0);
+    var starchBarPct = Math.min(100, gramTgt.starch>0 ? starchW/gramTgt.starch*100 : 0);
+    var fatBarPct = Math.min(100, gramTgt.fat>0 ? fatW/gramTgt.fat*100 : 0);
+    var avgShortfall = ((100-vegBarPct)+(100-protBarPct)+(100-starchBarPct)+(100-fatBarPct))/4;
+    return avgShortfall<=25 ? 'good' : avgShortfall<=45 ? 'mid' : 'low';
   });
 
   var goodCount = dayStatus.filter(function(s){ return s==='good'; }).length;
@@ -521,33 +634,21 @@ function renderBalancedPlate(entries){
   var vegW=0, protW=0, starchW=0, fatW=0;
   var fallbackCount=0, fallbackNames=[];
   today_.forEach(function(e){
-    var n = normalizeTxt(e.aliment);
     var w = e.quantite||0;
     if(w<=0) return;
-    var carbG = (e.food_gluc_100||0)*w/100;
-    var protG = (e.food_prot_100||0)*w/100;
-    var fatG  = (e.food_lip_100||0)*w/100;
-    var maxG = Math.max(carbG, protG, fatG);
+    var classification = classifyPlateEntry({
+      aliment:e.aliment,
+      quantite:w,
+      food_gluc_100:e.food_gluc_100||0,
+      food_prot_100:e.food_prot_100||0,
+      food_lip_100:e.food_lip_100||0
+    });
 
-    if(maxG<=0){
-      // Aucune donn\u00e9e nutritionnelle exploitable (rare) \u2014 on retombe sur
-      // l'ancien filet de mots-cl\u00e9s plut\u00f4t que d'ignorer l'aliment.
-      fallbackCount++; fallbackNames.push(e.aliment);
-      if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW += w;
-      else if(PROTEIN_SRC_REGEX.test(n)) protW += w;
-      else if(STARCH_REGEX.test(n)) starchW += w;
-      else if(FAT_SRC_REGEX.test(n)) fatW += w;
-      return;
-    }
-
-    if(carbG===maxG){
-      if(isLegume(e.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n)) vegW += w;
-      else starchW += w;
-    } else if(protG===maxG){
-      protW += w;
-    } else {
-      fatW += w;
-    }
+    if(classification.fallback){ fallbackCount++; fallbackNames.push(e.aliment); }
+    if(classification.category==='veg') vegW += classification.weight;
+    else if(classification.category==='prot') protW += classification.weight;
+    else if(classification.category==='starch') starchW += classification.weight;
+    else if(classification.category==='fat') fatW += classification.weight;
   });
   if(PROF && PROF.role==='admin' && fallbackCount>0){
     toast('\u26a0\ufe0f '+fallbackCount+'/'+today_.length+' aliment(s) sans donn\u00e9es nutri (filet utilis\u00e9) : '+fallbackNames.slice(0,3).join(', '));
@@ -577,23 +678,7 @@ function renderBalancedPlate(entries){
   // ne veut pas dire que les besoins en v\u00e9g\u00e9taux de toute la journ\u00e9e sont
   // couverts. Avec une vraie cible en grammes, la barre progresse
   // naturellement au fil des repas, sans jamais se figer pr\u00e9matur\u00e9ment.
-  //
-  // IMPORTANT \u2014 les cibles sont d\u00e9sormais calcul\u00e9es \u00e0 partir des VRAIS
-  // besoins en nutriments (tgt.prot, tgt.gluc, tgt.lip, d\u00e9j\u00e0 calcul\u00e9s
-  // ailleurs dans l'app) plut\u00f4t qu'une formule g\u00e9n\u00e9rique de poids total
-  // \u00d7 pourcentage, qui donnait des cibles d\u00e9connect\u00e9es de la r\u00e9alit\u00e9 (ex:
-  // il fallait 512g de viande/poisson pour atteindre 100% en "Prot\u00e9ines",
-  // alors qu'un vrai d\u00e9passement du besoin en nutriment ne donnait que
-  // 88%). On part du nutriment r\u00e9el, divis\u00e9 par une densit\u00e9 moyenne
-  // r\u00e9aliste du groupe d'aliments correspondant, pour obtenir un poids
-  // d'aliment cible qui correspond vraiment \u00e0 "couvrir le besoin".
-  var tgt = calcTargets();
-  var gramTgt = {
-    veg: 400, // rep\u00e8re OMS (400g fruits+l\u00e9gumes/jour), stable quel que soit le profil
-    prot: tgt.prot / 0.23,   // ~23% de protéines en moyenne dans les aliments de cette catégorie (poulet, poisson, œufs, tofu)
-    starch: tgt.gluc / 0.22, // ~22% de glucides en moyenne dans pâtes/riz/pain cuits
-    fat: tgt.lip / 0.55      // ~55% de lipides en moyenne (mélange huile pure et sources moins denses comme l'avocat/les noix)
-  };
+  var gramTgt = getPlateGramTargets();
   function gramBarPct(actualW, targetG){
     if(targetG<=0) return 0;
     return Math.min(100, Math.round(actualW/targetG*100));
@@ -631,13 +716,15 @@ function renderBalancedPlate(entries){
   var starchPct = Math.round(starchW/totalW*100);
   var fatPct = Math.round(fatW/totalW*100);
 
-  // \u00c9cart par rapport au rep\u00e8re ajust\u00e9 au niveau d'activit\u00e9 (voir
-  // getPlateTargets) \u2014 statut qualitatif doux, jamais un chiffre \u00e0
-  // atteindre au pourcentage pr\u00e8s. La structure peut \u00eatre parfaite sur le
-  // papier (poids) tout en \u00e9tant tr\u00e8s transform\u00e9e dans les faits (pizza,
-  // p\u00e2tisserie...) \u2014 le verdict "tr\u00e8s \u00e9quilibr\u00e9e" est donc r\u00e9serv\u00e9 aux
-  // journ\u00e9es qui le sont vraiment sur les deux plans.
-  var deviation = Math.abs(vegPct-plateTgt.veg)+Math.abs(protPct-plateTgt.prot)+Math.abs(starchPct-plateTgt.starch)+Math.abs(fatPct-plateTgt.fat);
+  // \u00c9cart par rapport aux cibles en grammes (les m\u00eames que celles
+  // affich\u00e9es sur les barres juste au-dessus) \u2014 avant, ce verdict
+  // utilisait un calcul en pourcentages relatifs s\u00e9par\u00e9, ce qui pouvait
+  // donner un texte contredisant ce que montraient les barres. La
+  // structure peut \u00eatre parfaite sur le papier (poids) tout en \u00e9tant
+  // tr\u00e8s transform\u00e9e dans les faits (pizza, p\u00e2tisserie...) \u2014 le verdict
+  // "tr\u00e8s \u00e9quilibr\u00e9e" est donc r\u00e9serv\u00e9 aux journ\u00e9es qui le sont vraiment
+  // sur les deux plans.
+  var avgShortfall = ((100-vegBarPct)+(100-protBarPct)+(100-starchBarPct)+(100-fatBarPct))/4;
   var statusTxt;
   if(totalW < 250){
     // Trop peu mang\u00e9 pour se prononcer avec confiance \u2014 un seul aliment
@@ -645,9 +732,9 @@ function renderBalancedPlate(entries){
     // jusqu'ici sans que \u00e7a dise grand-chose de la journ\u00e9e enti\u00e8re.
     statusTxt = 'D\u00e9but de journ\u00e9e \u2014 la structure se pr\u00e9cisera au fil de vos repas.';
   } else {
-    statusTxt = (deviation<=27 && ultraN<=1) ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
-      : (deviation<=27 && ultraN>=2) ? 'Bonne r\u00e9partition des familles, mais plusieurs aliments transform\u00e9s aujourd\'hui \u2014 la qualit\u00e9 compte autant que la structure.'
-      : deviation<=48 ? 'Structure de l\'assiette : plut\u00f4t \u00e9quilibr\u00e9e.'
+    statusTxt = (avgShortfall<=25 && ultraN<=1) ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
+      : (avgShortfall<=25 && ultraN>=2) ? 'Bonne r\u00e9partition des familles, mais plusieurs aliments transform\u00e9s aujourd\'hui \u2014 la qualit\u00e9 compte autant que la structure.'
+      : avgShortfall<=45 ? 'Structure de l\'assiette : plut\u00f4t \u00e9quilibr\u00e9e.'
       : vegPct<30 ? 'Une portion de l\u00e9gumes ou de fruits en plus donnerait plus de place aux v\u00e9g\u00e9taux.'
       : 'Continuez \u00e0 varier les trois familles \u00e0 chaque repas.';
   }
