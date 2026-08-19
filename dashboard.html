@@ -1066,10 +1066,23 @@ body {
   <div class="prof-card">
     <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s</span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:12px">Autorisez l'analyse de votre journal alimentaire pour recevoir des suggestions personnalis&#233;es (ex&#160;: sources d'un nutriment, alternatives &#224; un aliment repr&#233;sentent souvent). Distinct du consentement li&#233; &#224; vos pathologies &#8212; cette fonctionnalit&#233; n'est pas encore activ&#233;e sur votre compte, ce r&#233;glage pr&#233;pare simplement votre choix pour quand elle le sera.</p>
+      <p style="margin-bottom:14px">Consentements distincts, par finalit&#233; &#8212; aucun n'active de fonctionnalit&#233; pour l'instant sur votre compte (le moteur reste en phase de pr&#233;paration), ils enregistrent simplement votre choix pour quand chaque usage sera activ&#233;. Chacun peut &#234;tre retir&#233; ind&#233;pendamment &#224; tout moment.</p>
+
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Autoriser l'analyse de mon journal &#224; cette fin</span>
+        <span style="font-weight:600;color:var(--text)">Analyse de mon journal (sources de nutriments, alternatives alimentaires)</span>
         <div class="switch" id="nutrition-advice-consent-switch" onclick="toggleNutritionAdviceConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mes pathologies d&#233;clar&#233;es</span>
+        <div class="switch" id="nutrition-advice-pathology-consent-switch" onclick="toggleNutritionAdvicePathologyConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mon activit&#233; sportive d&#233;clar&#233;e</span>
+        <div class="switch" id="nutrition-advice-sport-consent-switch" onclick="toggleNutritionAdviceSportConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
         </div>
       </div>
     </div>
@@ -5897,6 +5910,10 @@ function renderProfile(){
   if(cycleSwitch) cycleSwitch.classList.toggle('on', p.suivi_cycle_actif === true);
   var nutritionConsentSwitch = document.getElementById('nutrition-advice-consent-switch');
   if(nutritionConsentSwitch) nutritionConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
+  var nutritionPathologyConsentSwitch = document.getElementById('nutrition-advice-pathology-consent-switch');
+  if(nutritionPathologyConsentSwitch) nutritionPathologyConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_pathology === true);
+  var nutritionSportConsentSwitch = document.getElementById('nutrition-advice-sport-consent-switch');
+  if(nutritionSportConsentSwitch) nutritionSportConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_sport === true);
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');

@@ -199,6 +199,40 @@ async function toggleNutritionAdviceConsent(){
   toast(newVal ? '\ud83c\udf3f Consentement enregistr\u00e9' : 'Consentement retir\u00e9');
 }
 
+// Consentement distinct pour l'adaptation des conseils aux pathologies
+// d\u00e9clar\u00e9es \u2014 finalit\u00e9 diff\u00e9rente du consentement sant\u00e9 existant
+// (celui-ci personnalise les objectifs kcal/macros ; celui-ci autoriserait
+// le moteur de conseils \u00e0 croiser les pathologies). S\u00e9par\u00e9 volontairement
+// : automatisation class\u00e9e "sensible" (voir docs/GOVERNANCE_QUESTIONS.md).
+async function toggleNutritionAdvicePathologyConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice_pathology === true);
+  var patch = { consent_nutrition_advice_pathology: newVal };
+  if(newVal) patch.consent_nutrition_advice_pathology_at = new Date().toISOString();
+  var r = await sb.from('profiles').update(patch).eq('id',USER.id);
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  PROF.consent_nutrition_advice_pathology = newVal;
+  if(newVal) PROF.consent_nutrition_advice_pathology_at = patch.consent_nutrition_advice_pathology_at;
+  var el = document.getElementById('nutrition-advice-pathology-consent-switch');
+  if(el) el.classList.toggle('on', newVal);
+  toast(newVal ? '\ud83c\udf3f Consentement enregistr\u00e9' : 'Consentement retir\u00e9');
+}
+
+// Consentement distinct pour l'adaptation des conseils \u00e0 l'activit\u00e9
+// sportive d\u00e9clar\u00e9e (activite/activite_met_kcal, d\u00e9j\u00e0 collect\u00e9es pour le
+// calcul kcal \u2014 aucune nouvelle donn\u00e9e, seulement une finalit\u00e9 nouvelle).
+async function toggleNutritionAdviceSportConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice_sport === true);
+  var patch = { consent_nutrition_advice_sport: newVal };
+  if(newVal) patch.consent_nutrition_advice_sport_at = new Date().toISOString();
+  var r = await sb.from('profiles').update(patch).eq('id',USER.id);
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  PROF.consent_nutrition_advice_sport = newVal;
+  if(newVal) PROF.consent_nutrition_advice_sport_at = patch.consent_nutrition_advice_sport_at;
+  var el = document.getElementById('nutrition-advice-sport-consent-switch');
+  if(el) el.classList.toggle('on', newVal);
+  toast(newVal ? '\ud83c\udf3f Consentement enregistr\u00e9' : 'Consentement retir\u00e9');
+}
+
 
 // \u2500\u2500 SUIVI \u00c9NERGIE / DIGESTION POST-REPAS \u2500\u2500
 // Une \u00e9valuation rapide en un tap, propos\u00e9e dans le journal une fois qu'un

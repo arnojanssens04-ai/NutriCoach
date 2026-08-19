@@ -158,3 +158,65 @@ actuel (`nutrition-audit.js`) contient déjà tout le nécessaire
 (observationSnapshot, blockReason, selectedFoodCodes, flaggedFoodNames).
 Question : ce niveau de détail doit-il être exposable au patient
 lui-même, ou seulement à l'équipe Cap Santé sur demande ?
+
+---
+
+## Analyse externe reçue le 2026-08-19 — consentement par finalité
+
+L'utilisateur a transmis une analyse externe (source non précisée dans
+cette session — traitée comme une contribution à évaluer, pas comme un
+avis juridique formellement engagé pour ce projet) recommandant une
+architecture de consentement structurée par finalité plutôt qu'une case
+générique unique, avec le principe suivant : *"le consentement ne
+transforme pas une collecte illimitée en collecte conforme"* — le RGPD
+exige des finalités précises, une minimisation documentée, et des
+consentements distincts, prouvables, aussi faciles à retirer qu'à donner.
+
+Cette analyse recommandait aussi une distinction entre automatisations à
+faible risque (résumé du journal, détection d'habitudes) et
+automatisations sensibles (adaptation à une pathologie, filtrage selon
+une allergie) nécessitant chacune une DPIA, une analyse art. 22, une
+procédure d'intervention humaine et une revue MDR séparée si la finalité
+devient médicale — cohérent avec les décisions déjà prises aux points 1
+et 2 ci-dessus.
+
+> **DÉCISION (2026-08-19)** : plutôt que le schéma générique à 8 blocs
+> proposé (qui inclut des finalités — sport, stress, confiance, budget —
+> dont les données ne sont pas toutes collectées aujourd'hui par
+> l'application réelle), architecture pragmatique retenue, alignée sur
+> les données réellement présentes dans `profiles` :
+> 1. **Consentement santé** (existant, `toggleHealthConsent()`) —
+>    inchangé, personnalise déjà les objectifs kcal/macros.
+> 2. **`consent_nutrition_advice`** (finalité générale) — analyse du
+>    journal pour des suggestions non liées aux pathologies (sources de
+>    nutriments, alternatives aux aliments ultra-transformés).
+> 3. **`consent_nutrition_advice_pathology`** (nouveau, finalité
+>    sensible séparée) — adaptation de ces conseils aux pathologies
+>    déclarées. Distinct du consentement santé existant car la finalité
+>    change (personnalisation kcal/macros vs. moteur de conseils
+>    automatisé) — c'est précisément l'automatisation classée "sensible"
+>    par l'analyse externe.
+> 4. **`consent_nutrition_advice_sport`** (nouveau) — adaptation de ces
+>    conseils à l'activité sportive déclarée (`activite`,
+>    `activite_met_kcal`, déjà collectées pour le calcul kcal — aucune
+>    nouvelle donnée collectée, seulement une nouvelle finalité
+>    consentie).
+>
+> **Exclu explicitement** : aucune adaptation des conseils selon les
+> horaires de repas — ni collecte dédiée à cette fin, ni logique dans le
+> moteur ne doit s'appuyer sur l'heure des prises alimentaires pour
+> personnaliser quoi que ce soit (vérifié : `nutrition-*.js` ne référence
+> aucun champ horaire à ce jour).
+>
+> **Non retenu pour l'instant** : consentements pour stress/confiance/
+> budget/temps — ces données ne sont pas collectées par l'application
+> réelle ; construire un consentement pour une donnée non recueillie
+> serait prématuré et source de confusion. À réévaluer si ces données
+> sont un jour effectivement ajoutées au profil patient.
+>
+> Rappel : cette analyse externe, comme la mienne, reste une contribution
+> à évaluer — la détermination formelle de la base légale (art. 6), de
+> l'exception applicable pour les données de santé (art. 9), et du rôle
+> exact de l'éditeur vs. d'un éventuel professionnel de santé impliqué,
+> reste à faire trancher par un DPO/avocat qualifié avant toute
+> production réelle.
