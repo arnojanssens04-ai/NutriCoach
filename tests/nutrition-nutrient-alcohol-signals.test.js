@@ -190,6 +190,11 @@ check('13. La maquette de carte (nutrition-simulator-admin.html) ne référence 
   // Les boutons visuels ne doivent porter aucun gestionnaire d'événement
   // (onclick, addEventListener) — purement décoratifs à ce stade.
   assert(!/popup-btn[\s\S]{0,80}onclick/.test(src), 'un bouton de la maquette porte un gestionnaire onclick');
+  // Les boutons du panneau de revue (review-btn) sont interactifs
+  // (setReviewDecision), mais uniquement pour un état visuel local —
+  // aucun ne doit déclencher d'écriture Supabase (insert/update/delete).
+  const setReviewDecisionBody = codeOnly.slice(codeOnly.indexOf('function setReviewDecision'), codeOnly.indexOf('function setReviewDecision') + 800);
+  assert(!/sb\.from\([^)]*\)\.(insert|update|delete|upsert)/.test(setReviewDecisionBody), 'setReviewDecision() déclenche une écriture Supabase réelle');
 });
 
 console.log('\n--- RÉSUMÉ ---');

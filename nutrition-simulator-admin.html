@@ -14,12 +14,16 @@
 
   - est réservée aux administrateurs (même garde de rôle que
     nutrition-observation-admin-prototype.html) ;
-  - n'affiche des conseils générés QUE pour des profils 100% fictifs
-    (nutrition-simulator-fixtures.js), jamais de donnée réelle ;
-  - n'est liée depuis aucune autre page (ni conseils.html, ni
-    dashboard.html, ni admin.html — aucun de ces fichiers n'est modifié) ;
-  - ne fait aucun accès réseau au-delà de la garde de session Supabase
-    (auth uniquement) ;
+  - affiche des conseils générés pour des profils 100% fictifs
+    (nutrition-simulator-fixtures.js), ET, en lecture seule, pour le
+    journal de l'admin connecté lui-même (jamais un autre patient,
+    jamais une écriture) ;
+  - est liée depuis admin.html (bouton "Simulateur de cartes") ; jamais
+    depuis conseils.html ni dashboard.html, qui restent non modifiés
+    pour ce moteur ;
+  - accède au réseau au-delà de la garde de session : lecture du propre
+    journal/profil de l'admin connecté (sb.from('journal'|'profiles'),
+    filtré par son propre id, jamais d'insert/update/delete) ;
   - n'achemine jamais un résultat vers un patient : chaque simulation est
     annotée visibility: 'admin_simulator_only' par nutrition-audit.js ;
   - n'active jamais une règle au statut 'active' — nutrition-rule-engine.js
@@ -113,9 +117,16 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .review-tag.to_verify{ background:var(--amber-l); color:var(--amber); }
 .review-tag.none{ font-size:.78rem; color:var(--text3); font-style:italic; }
 .review-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
-.review-btn{ font-size:.78rem; font-weight:600; padding:8px 14px; border-radius:8px; border:1px solid var(--border2); cursor:default; background:var(--card2); color:var(--text2); }
+.review-btn{ font-size:.78rem; font-weight:600; padding:8px 14px; border-radius:8px; border:1px solid var(--border2); cursor:pointer; background:var(--card2); color:var(--text2); transition:transform .1s; }
+.review-btn:hover{ transform:translateY(-1px); }
+.review-btn:active{ transform:translateY(0); }
 .review-btn.approve{ background:var(--sage-l); color:var(--sage); border-color:rgba(74,122,58,0.3); }
 .review-btn.reject{ background:var(--red-l); color:var(--red); border-color:rgba(138,47,47,0.25); }
+.review-status:empty{ display:none; }
+.review-decision-badge{ font-size:.82rem; font-weight:700; padding:8px 12px; border-radius:9px; margin-top:12px; }
+.review-decision-badge.approved{ background:var(--sage-l); color:var(--sage); }
+.review-decision-badge.rejected{ background:var(--red-l); color:var(--red); }
+.review-decision-badge.pending{ background:var(--amber-l); color:var(--amber); }
 </style>
 </head>
 <body>
@@ -136,6 +147,14 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
     <code>simulation</code> sur des données de test, pour observer le comportement des règles, du filtrage de
     sécurité et de la génération de texte — jamais affiché à un patient réel, aucune persistance.
   </p>
+
+  <div class="profile-card" id="real-journal-card">
+    <div class="profile-title">Ton vrai journal (toi, admin, en lecture seule)</div>
+    <div class="profile-id">Lecture de tes 7 derniers jours réels — jamais une autre personne, jamais écrit nulle part, toujours confiné à cette page admin.</div>
+    <div id="real-journal-root">
+      <div class="result-box blocked" id="real-journal-status">Chargement…</div>
+    </div>
+  </div>
 
   <div id="profiles-root"></div>
 
@@ -332,8 +351,9 @@ function renderAllergyIntoleranceTags(list) {
    sans ce contexte. Aucune action ici n'a d'effet réel, aucune donnée
    n'est persistée.
    ----------------------------------------------------------------------- */
-function renderReviewPanel(ruleId, result, fixture) {
+function renderReviewPanel(ruleId, result, fixture, panelId) {
   if (!result.eligible) return '';
+  var safeId = String(panelId).replace(/[^a-zA-Z0-9_-]/g, '');
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
   var obs = result.audit.observationSnapshot || {};
   var profile = fixture.profile || {};
@@ -368,16 +388,47 @@ function renderReviewPanel(ruleId, result, fixture) {
   return '<div class="review-panel">'
     + '<div class="review-panel-label">Panneau de revue — contexte complet avant validation, jamais un bouton isolé</div>'
     + '<div class="review-block"><div class="review-block-title">Pourquoi ce conseil est proposé</div>' + obsHtml + '</div>'
-    + '<div class="review-block"><div class="review-block-title">Profil du patient (fictif)</div>' + profileHtml + '</div>'
+    + '<div class="review-block"><div class="review-block-title">Profil du patient</div>' + profileHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Sélection alimentaire</div>' + selectionHtml + '</div>'
-    + '<div class="review-actions">'
-    + '<div class="review-btn approve">✅ Valider</div>'
-    + '<div class="review-btn">✏️ Modifier le texte</div>'
-    + '<div class="review-btn">🍽️ Modifier les aliments</div>'
-    + '<div class="review-btn">❓ Demander des informations</div>'
-    + '<div class="review-btn reject">❌ Rejeter</div>'
+    + '<div class="review-status" id="review-status-' + safeId + '"></div>'
+    + '<div class="review-actions" id="review-actions-' + safeId + '">'
+    + '<div class="review-btn approve" onclick="setReviewDecision(\'' + safeId + '\',\'approved\')">✅ Valider</div>'
+    + '<div class="review-btn" onclick="setReviewDecision(\'' + safeId + '\',\'edit_text\')">✏️ Modifier le texte</div>'
+    + '<div class="review-btn" onclick="setReviewDecision(\'' + safeId + '\',\'edit_foods\')">🍽️ Modifier les aliments</div>'
+    + '<div class="review-btn" onclick="setReviewDecision(\'' + safeId + '\',\'more_info\')">❓ Demander des informations</div>'
+    + '<div class="review-btn reject" onclick="setReviewDecision(\'' + safeId + '\',\'rejected\')">❌ Rejeter</div>'
     + '</div>'
     + '</div>';
+}
+
+/* -----------------------------------------------------------------------
+   setReviewDecision(panelId, decision)
+
+   Change purement visuelle, en mémoire du navigateur uniquement — aucun
+   appel réseau, aucune écriture Supabase, rien n'est persisté. Sert
+   seulement à donner un retour immédiat dans cette page admin ; disparaît
+   au rechargement. Le workflow réel (statuts pending_professional_review
+   / approved_for_patient, traçabilité qui/quand/quelles données —
+   recommandation juridique du 2026-08-19) reste à construire quand la
+   connexion réelle sera autorisée, voir docs/GOVERNANCE_QUESTIONS.md.
+   ----------------------------------------------------------------------- */
+var REVIEW_DECISION_LABELS = {
+  approved: { icon: '✅', text: 'Marqué "Validé" (local, non enregistré)', cls: 'approved' },
+  rejected: { icon: '❌', text: 'Marqué "Rejeté" (local, non enregistré)', cls: 'rejected' },
+  edit_text: { icon: '✏️', text: 'Modification du texte demandée (aucun éditeur réel dans cette maquette)', cls: 'pending' },
+  edit_foods: { icon: '🍽️', text: 'Modification des aliments demandée (aucun éditeur réel dans cette maquette)', cls: 'pending' },
+  more_info: { icon: '❓', text: 'Informations complémentaires demandées (local, non transmis)', cls: 'pending' }
+};
+function setReviewDecision(panelId, decision) {
+  var statusEl = document.getElementById('review-status-' + panelId);
+  var actionsEl = document.getElementById('review-actions-' + panelId);
+  if (!statusEl) return;
+  var meta = REVIEW_DECISION_LABELS[decision];
+  if (!meta) return;
+  statusEl.innerHTML = '<div class="review-decision-badge ' + meta.cls + '">' + meta.icon + ' ' + esc(meta.text) + '</div>';
+  if (decision === 'approved' || decision === 'rejected') {
+    if (actionsEl) actionsEl.style.display = 'none';
+  }
 }
 
 function renderProfile(fixtureKey, fixture) {
@@ -396,7 +447,7 @@ function renderProfile(fixtureKey, fixture) {
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
   html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result);
-  var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture);
+  var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture, fixtureKey);
   if (reviewHtml) html += '<div class="section-lbl">Revue admin — pourquoi ce conseil ?</div>' + reviewHtml;
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
 
@@ -442,18 +493,76 @@ function renderMultiSignalPriorityDemo(fixture) {
   return '<div class="priority-list">' + rows + '</div>';
 }
 
+function shiftDateStrSim(referenceDate, offsetDays) {
+  var d = new Date(referenceDate + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+}
+function todayIsoSim() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/* -----------------------------------------------------------------------
+   loadRealJournalForAdmin(uid, adminProfile)
+
+   Lecture SEULE, restreinte à l'utilisateur connecté (uid === son propre
+   id, jamais un autre patient), colonnes limitées — même garde de
+   sécurité que le chemin réel déjà validé dans conseils.html
+   (loadRealJournalAndRender). Aucune écriture, aucune donnée transmise
+   ailleurs que dans cette page.
+   ----------------------------------------------------------------------- */
+function loadRealJournalForAdmin(uid, adminProfile) {
+  var referenceDate = todayIsoSim();
+  var windowStart = shiftDateStrSim(referenceDate, -6);
+
+  sb.from('journal')
+    .select('date, repas, aliment, quantite, kcal, is_ultra_processed')
+    .eq('user_id', uid)
+    .gte('date', windowStart)
+    .lte('date', referenceDate)
+    .then(function (res) {
+      var statusEl = document.getElementById('real-journal-status');
+      if (res.error) {
+        statusEl.textContent = 'Erreur de lecture du journal : ' + res.error.message;
+        return;
+      }
+      var journal = res.data || [];
+      var fixture = {
+        label: 'Ton vrai journal (7 derniers jours)',
+        referenceDate: referenceDate,
+        ruleId: 'reduce_ultra_processed_foods_v1',
+        profile: {
+          patientId: uid,
+          age: adminProfile && adminProfile.age || null,
+          isPregnantOrBreastfeeding: false,
+          allergies: [],
+          intolerances: [],
+          clinicalContext: [],
+          symptoms: [],
+          diet: (adminProfile && adminProfile.diet) || null,
+          eligibleForAutomatedAdvice: true
+        },
+        journalEntries: journal
+      };
+      document.getElementById('real-journal-root').innerHTML = renderProfile('real_journal', fixture);
+    });
+}
+
 sb.auth.getSession().then(function (r) {
   if (!r.data || !r.data.session) {
     document.getElementById('access-denied').style.display = 'block';
     return;
   }
   var uid = r.data.session.user.id;
-  sb.from('profiles').select('role').eq('id', uid).single().then(function (res) {
+  sb.from('profiles').select('role, age, diet').eq('id', uid).single().then(function (res) {
     if (!res.data || res.data.role !== 'admin') {
       document.getElementById('access-denied').style.display = 'block';
       return;
     }
     document.getElementById('app-root').style.display = 'block';
+
+    loadRealJournalForAdmin(uid, res.data);
 
     var root = document.getElementById('profiles-root');
     root.innerHTML = Object.keys(NUTRITION_SIMULATOR_FIXTURES).map(function (key) {
