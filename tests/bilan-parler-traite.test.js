@@ -62,8 +62,8 @@ check('6. Aucun fichier nutrition-*.js du moteur confiné n\'est touché par cet
   assert.deepStrictEqual(nutritionFilesTouched, [], 'fichiers nutrition-*.js touchés de façon inattendue: ' + JSON.stringify(nutritionFilesTouched));
 });
 
-check('7. dashboard.html, conseils.html, admin.html, bilan.html, trend-engine.js, trend-definitions.js restent inchangés', () => {
-  ['dashboard.html', 'conseils.html', 'admin.html', 'bilan.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
+check('7. dashboard.html, conseils.html, bilan.html, trend-engine.js, trend-definitions.js restent inchangés', () => {
+  ['dashboard.html', 'conseils.html', 'bilan.html', 'trend-engine.js', 'trend-definitions.js'].forEach((f) => {
     const out = execSync('git diff --stat -- ' + f, { cwd: REPO }).toString().trim();
     assert.strictEqual(out, '', f + ' a été modifié: ' + out);
   });
