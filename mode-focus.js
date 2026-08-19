@@ -180,6 +180,25 @@ async function toggleCycleTracking(){
   toast(newVal ? '\ud83c\udf19 Suivi du cycle activ\u00e9 \u2014 la question appara\u00eetra dans vos prochains bilans' : 'Suivi du cycle d\u00e9sactiv\u00e9');
 }
 
+// Consentement d\u00e9di\u00e9 pour l'usage du journal alimentaire par un futur
+// moteur de conseils personnalis\u00e9s \u2014 distinct du consentement sant\u00e9
+// (pathologies). Ce r\u00e9glage n'active aucune fonctionnalit\u00e9 pour
+// l'instant (le moteur reste confin\u00e9 \u00e0 la simulation admin) : il
+// pr\u00e9pare le choix du patient pour quand la connexion r\u00e9elle sera
+// autoris\u00e9e (voir docs/GOVERNANCE_QUESTIONS.md, question 5).
+async function toggleNutritionAdviceConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice === true);
+  var patch = { consent_nutrition_advice: newVal };
+  if(newVal) patch.consent_nutrition_advice_at = new Date().toISOString();
+  var r = await sb.from('profiles').update(patch).eq('id',USER.id);
+  if(r.error){ toast('\u274c '+r.error.message); return; }
+  PROF.consent_nutrition_advice = newVal;
+  if(newVal) PROF.consent_nutrition_advice_at = patch.consent_nutrition_advice_at;
+  var el = document.getElementById('nutrition-advice-consent-switch');
+  if(el) el.classList.toggle('on', newVal);
+  toast(newVal ? '\ud83c\udf3f Consentement enregistr\u00e9' : 'Consentement retir\u00e9');
+}
+
 
 // \u2500\u2500 SUIVI \u00c9NERGIE / DIGESTION POST-REPAS \u2500\u2500
 // Une \u00e9valuation rapide en un tap, propos\u00e9e dans le journal une fois qu'un

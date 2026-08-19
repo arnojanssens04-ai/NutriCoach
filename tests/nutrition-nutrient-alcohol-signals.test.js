@@ -174,7 +174,7 @@ check('11. dashboard.html, conseils.html restent inchangés', () => {
 });
 
 check('12. Aucune migration Supabase créée pour le moteur nutrition-*.js (seules les migrations hors périmètre du moteur, déjà connues, sont autorisées)', () => {
-  const ALLOWED_NON_ENGINE_MIGRATIONS = ['20260818000000_add_profile_diet.sql', '20260818000001_add_bilan_kcal_approval.sql', '20260818000002_add_bilan_kcal_champ.sql', '20260818000003_add_bilan_parler_traite.sql', '20260814000000_clinical_context_reference.sql', 'clinical_context_rls_test.sql'];
+  const ALLOWED_NON_ENGINE_MIGRATIONS = ['20260818000000_add_profile_diet.sql', '20260818000001_add_bilan_kcal_approval.sql', '20260818000002_add_bilan_kcal_champ.sql', '20260818000003_add_bilan_parler_traite.sql', '20260814000000_clinical_context_reference.sql', 'clinical_context_rls_test.sql', '20260819000000_add_profile_nutrition_advice_consent.sql'];
   const out = execSync('git status --short -- supabase/', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
   const unexpected = out.filter((l) => !ALLOWED_NON_ENGINE_MIGRATIONS.some((f) => l.indexOf(f) !== -1));
   assert.deepStrictEqual(unexpected, [], 'des fichiers supabase/ inattendus ont changé: ' + JSON.stringify(unexpected));

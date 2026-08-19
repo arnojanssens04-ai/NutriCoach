@@ -1064,6 +1064,17 @@ body {
     </div>
   </div>
   <div class="prof-card">
+    <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s</span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Autorisez l'analyse de votre journal alimentaire pour recevoir des suggestions personnalis&#233;es (ex&#160;: sources d'un nutriment, alternatives &#224; un aliment repr&#233;sentent souvent). Distinct du consentement li&#233; &#224; vos pathologies &#8212; cette fonctionnalit&#233; n'est pas encore activ&#233;e sur votre compte, ce r&#233;glage pr&#233;pare simplement votre choix pour quand elle le sera.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;color:var(--text)">Autoriser l'analyse de mon journal &#224; cette fin</span>
+        <div class="switch" id="nutrition-advice-consent-switch" onclick="toggleNutritionAdviceConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-card">
     <div class="prof-card-hdr"><span>&#9881;&#65039; Compte</span></div>
     <div class="prof-card-body">
       <button class="btn-full-g" onclick="openSetup()">Modifier mon profil</button>
@@ -5884,6 +5895,8 @@ function renderProfile(){
   if(previewSwitch) previewSwitch.classList.toggle('on', p.preview_new_kcal === true);
   var cycleSwitch = document.getElementById('cycle-tracking-switch');
   if(cycleSwitch) cycleSwitch.classList.toggle('on', p.suivi_cycle_actif === true);
+  var nutritionConsentSwitch = document.getElementById('nutrition-advice-consent-switch');
+  if(nutritionConsentSwitch) nutritionConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
