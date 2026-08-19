@@ -30,9 +30,13 @@ var NUTRITION_RULE_REGISTRY = {
     version: 1,
     status: 'shadow_active',
 
-    // Déclencheur — référence une observation déjà calculée par
-    // trend-engine.js, jamais recalculée ici.
-    triggerPatternId: 'repeated_ultra_processed_foods',
+    // Déclencheur — signal calculé par nutrition-ultra-processed-
+    // substitutions.js (via NUTRITION_SIGNAL_RESOLVERS), séparé de
+    // trend-engine.js/'repeated_ultra_processed_foods' (jamais modifié,
+    // toujours utilisé tel quel ailleurs, ex. conseils.html). Seuils par
+    // catégorie d'aliment ultra-transformé (frites/confiseries plus
+    // sensibles que pâtisserie industrielle) plutôt qu'un seuil global.
+    triggerPatternId: 'repeated_ultra_processed_foods_by_category',
     requiredState: 'present',
 
     // Seuils obligatoires (section 5 de la spécification validée).

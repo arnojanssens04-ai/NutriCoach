@@ -130,7 +130,7 @@ check('7. Aucun aliment repéré dans la fenêtre malgré un état "present" : b
 
 check('8. matchUltraProcessedCategory() : mot-clé à un seul mot exige un token entier, jamais une sous-chaîne ("cola" dans "chocolat" ne matche pas)', () => {
   const sandbox = buildSandbox();
-  assert.strictEqual(vm.runInContext('matchUltraProcessedCategory("Mousse au chocolat")', sandbox), 'sugary_dessert');
+  assert.strictEqual(vm.runInContext('matchUltraProcessedCategory("Mousse au chocolat")', sandbox), 'sugary_dessert_pastry');
   assert.strictEqual(vm.runInContext('matchUltraProcessedCategory("Soda")', sandbox), 'sugary_drink');
   assert.strictEqual(vm.runInContext('matchUltraProcessedCategory("Pomme")', sandbox), null);
 });

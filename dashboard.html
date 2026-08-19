@@ -1063,10 +1063,10 @@ body {
       </div>
     </div>
   </div>
-  <div class="prof-card">
-    <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s</span></div>
+  <div class="prof-card" id="nutrition-advice-consent-card" style="display:none">
+    <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:14px">Consentements distincts, par finalit&#233; &#8212; aucun n'active de fonctionnalit&#233; pour l'instant sur votre compte (le moteur reste en phase de pr&#233;paration), ils enregistrent simplement votre choix pour quand chaque usage sera activ&#233;. Chacun peut &#234;tre retir&#233; ind&#233;pendamment &#224; tout moment.</p>
+      <p style="margin-bottom:14px">Visible uniquement pour vous en tant qu'admin, pendant la p&#233;riode de test. Consentements distincts, par finalit&#233; &#8212; aucun n'active de fonctionnalit&#233; pour l'instant sur votre compte (le moteur reste en phase de pr&#233;paration), ils enregistrent simplement votre choix pour quand chaque usage sera activ&#233;. Chacun peut &#234;tre retir&#233; ind&#233;pendamment &#224; tout moment.</p>
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
         <span style="font-weight:600;color:var(--text)">Analyse de mon journal (sources de nutriments, alternatives alimentaires)</span>
@@ -5908,6 +5908,8 @@ function renderProfile(){
   if(previewSwitch) previewSwitch.classList.toggle('on', p.preview_new_kcal === true);
   var cycleSwitch = document.getElementById('cycle-tracking-switch');
   if(cycleSwitch) cycleSwitch.classList.toggle('on', p.suivi_cycle_actif === true);
+  var nutritionConsentCard = document.getElementById('nutrition-advice-consent-card');
+  if(nutritionConsentCard) nutritionConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
   var nutritionConsentSwitch = document.getElementById('nutrition-advice-consent-switch');
   if(nutritionConsentSwitch) nutritionConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
   var nutritionPathologyConsentSwitch = document.getElementById('nutrition-advice-pathology-consent-switch');
