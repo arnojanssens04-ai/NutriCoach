@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Bilan hebdomadaire</title>
+<title>Cap Sant&#233; &#8212; Bilan hebdomadaire</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -47,6 +47,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 
 .pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.pill-row-wrap { display:flex; flex-wrap:wrap; gap:8px; }
+.pill-row-wrap .pill { flex:1 1 auto; min-width:calc(33% - 6px); }
+.switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.switch.on { background:var(--gold) !important; }
+.switch.on::after { left:23px; }
 .pill { padding:13px 6px; border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; font-size:.8rem; font-weight:500; color:var(--text2); background:var(--card2); transition:all .15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; }
 .pill:hover { border-color:var(--border2); }
 .pill.on-bien { border-color:var(--sage); background:var(--sage-l); color:var(--sage); }
@@ -93,8 +98,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Santé</span></div>
-  <a href="dashboard.html" class="t-back">← Tableau de bord</a>
+  <div class="t-logo">Cap<span>Sant&#233;</span></div>
+  <a href="dashboard.html" class="t-back">&#8592; Tableau de bord</a>
 </header>
 
 <div class="wrap">
@@ -106,7 +111,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="adj-banner" id="adj-banner"></div>
 
   <div class="card" id="history-card" style="display:none">
-    <div class="card-hdr"><span class="card-hdr-ico">📈</span><span>Évolution du poids</span></div>
+    <div class="card-hdr"><span class="card-hdr-ico">&#128200;</span><span>&#201;volution du poids</span></div>
     <div class="card-body">
       <div class="weight-chart" id="weight-chart"></div>
       <div id="history-list"></div>
@@ -115,7 +120,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
   <form id="bilan-form">
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">📏</span><span>Mensurations</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#128207;</span><span>Mensurations</span></div>
       <div class="card-body">
         <div class="row3">
           <div class="field"><label>Poids (kg)</label><input type="number" id="b-poids" step="0.1" required></div>
@@ -125,35 +130,65 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
-    <!-- BLOC 1 — Alimentation -->
+    <!-- BLOC 0 &#8212; Contexte de la semaine (recontextualise tout le reste) -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">🍽️</span><span>Alimentation</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#128203;</span><span>Contexte de la semaine</span></div>
+      <div class="card-body">
+        <div class="field"><label>Un &#233;v&#233;nement particulier cette semaine ?</label>
+          <div class="pill-row pill-row-wrap" data-field="contexte_semaine">
+            <div class="pill" data-val="Rien de particulier">Rien de particulier</div>
+            <div class="pill" data-val="Voyage ou d&#233;placement">Voyage</div>
+            <div class="pill" data-val="&#201;v&#233;nement social">&#201;v&#233;nement social</div>
+            <div class="pill" data-val="Malade cette semaine">Malade</div>
+            <div class="pill" data-val="P&#233;riode de r&#232;gles">P&#233;riode de r&#232;gles</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 1 &#8212; Alimentation -->
+    <div class="card">
+      <div class="card-hdr"><span class="card-hdr-ico">&#127869;&#65039;</span><span>Alimentation</span></div>
       <div class="card-body">
         <div class="field"><label>Respect du plan alimentaire cette semaine</label>
           <div class="pill-row" data-field="respect_plan">
-            <div class="pill" data-val="Bien">Bien respecté</div>
+            <div class="pill" data-val="Bien">Bien respect&#233;</div>
             <div class="pill" data-val="Moyen">Moyennement</div>
             <div class="pill" data-val="Difficile">Difficile</div>
           </div>
         </div>
-        <div class="field"><label>Envies incontrôlables de manger cette semaine ?</label>
+        <div class="field"><label>Envies incontr&#244;lables de manger cette semaine ?</label>
           <div class="pill-row" data-field="envies_sucrees">
             <div class="pill" data-val="Non">Non</div>
             <div class="pill" data-val="Moyen">Parfois</div>
             <div class="pill" data-val="Difficile">Souvent</div>
           </div>
         </div>
-        <div class="field"><label>Écarts alimentaires (optionnel)</label>
+        <div class="field"><label>Faim entre les repas cette semaine ?</label>
+          <div class="pill-row" data-field="faim_entre_repas">
+            <div class="pill" data-val="Jamais">Jamais</div>
+            <div class="pill" data-val="Parfois">Parfois</div>
+            <div class="pill" data-val="Souvent">Souvent</div>
+          </div>
+        </div>
+        <div class="field"><label>Facile d'acc&#233;der &#224; une alimentation saine cette semaine ?</label>
+          <div class="pill-row" data-field="acces_alimentation">
+            <div class="pill" data-val="Oui">Oui</div>
+            <div class="pill" data-val="Un peu compliqu&#233;">Un peu compliqu&#233;</div>
+            <div class="pill" data-val="Difficile">Difficile</div>
+          </div>
+        </div>
+        <div class="field"><label>&#201;carts alimentaires (optionnel)</label>
           <textarea id="b-ecart" placeholder="Ex: un peu plus de sucreries cette semaine..."></textarea>
         </div>
       </div>
     </div>
 
-    <!-- BLOC 2 — Activité physique -->
+    <!-- BLOC 2 &#8212; Activit&#233; physique -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">🏃</span><span>Activité physique</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#127939;</span><span>Activit&#233; physique</span></div>
       <div class="card-body">
-        <div class="field"><label>Comment s'est passée votre activité physique cette semaine ?</label>
+        <div class="field"><label>Comment s'est pass&#233;e votre activit&#233; physique cette semaine ?</label>
           <div class="pill-row" data-field="activite_semaine">
             <div class="pill" data-val="Bien">Bien</div>
             <div class="pill" data-val="Moyen">Moyen</div>
@@ -163,39 +198,54 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
-    <!-- BLOC 3 — Digestion & sommeil -->
+    <!-- BLOC 3 &#8212; Digestion & sommeil -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">🌀</span><span>Digestion & sommeil</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#127744;</span><span>Digestion & sommeil</span></div>
       <div class="card-body">
-        <div class="field"><label>Qualité digestive</label>
+        <div class="field"><label>Qualit&#233; digestive</label>
           <div class="pill-row" data-field="troubles_digestifs">
             <div class="pill" data-val="Bonne">Bonne</div>
             <div class="pill" data-val="Moyenne">Moyenne</div>
             <div class="pill" data-val="Mauvaise">Mauvaise</div>
           </div>
         </div>
-        <div class="field"><label>Qualité du sommeil</label>
+        <div class="field"><label>Qualit&#233; du sommeil</label>
           <div class="pill-row" data-field="sommeil">
             <div class="pill" data-val="Bon">Bon</div>
             <div class="pill" data-val="Moyen">Moyen</div>
             <div class="pill" data-val="Mauvais">Mauvais</div>
           </div>
         </div>
+        <div class="field"><label>Ballonnements / r&#233;tention d'eau ressentis ?</label>
+          <div class="pill-row" data-field="retention_eau">
+            <div class="pill" data-val="Pas ressenti">Pas ressenti</div>
+            <div class="pill" data-val="L&#233;ger">L&#233;ger</div>
+            <div class="pill" data-val="Marqu&#233;">Marqu&#233;</div>
+          </div>
+        </div>
+        <div class="field" id="cycle-field" style="display:none"><label>O&#249; en &#234;tes-vous dans votre cycle ?</label>
+          <div class="pill-row" data-field="cycle_phase">
+            <div class="pill" data-val="Avant les r&#232;gles">Avant les r&#232;gles</div>
+            <div class="pill" data-val="Pendant les r&#232;gles">Pendant les r&#232;gles</div>
+            <div class="pill" data-val="Apr&#232;s les r&#232;gles">Apr&#232;s les r&#232;gles</div>
+            <div class="pill" data-val="Non concern&#233;(e)">Non concern&#233;(e)</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- BLOC 4 — Énergie & bien-être -->
+    <!-- BLOC 4 &#8212; &#201;nergie & bien-&#234;tre -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">💭</span><span>Énergie & bien-être</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#128173;</span><span>&#201;nergie & bien-&#234;tre</span></div>
       <div class="card-body">
-        <div class="field"><label>Niveau d'énergie cette semaine</label>
+        <div class="field"><label>Niveau d'&#233;nergie cette semaine</label>
           <div class="pill-row" data-field="niveau_energie">
-            <div class="pill" data-val="Bien">Élevé</div>
+            <div class="pill" data-val="Bien">&#201;lev&#233;</div>
             <div class="pill" data-val="Moyen">Normal</div>
             <div class="pill" data-val="Difficile">Faible</div>
           </div>
         </div>
-        <div class="field"><label>Humeur générale cette semaine</label>
+        <div class="field"><label>Humeur g&#233;n&#233;rale cette semaine</label>
           <div class="pill-row" data-field="humeur_semaine">
             <div class="pill" data-val="Bien">Bonne</div>
             <div class="pill" data-val="Moyen">Neutre</div>
@@ -205,21 +255,26 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       </div>
     </div>
 
-    <!-- BLOC 5 — Questions spécifiques aux pathologies (conditionnelles) -->
+    <!-- BLOC 5 &#8212; Questions sp&#233;cifiques aux pathologies (conditionnelles) -->
     <div class="card" id="bloc-patho" style="display:none">
-      <div class="card-hdr"><span class="card-hdr-ico">🩺</span><span>Suivi de votre santé</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#129658;</span><span>Suivi de votre sant&#233;</span></div>
       <div class="card-body" id="bloc-patho-body"></div>
     </div>
 
-    <!-- BLOC 6 — Objectifs & commentaire libre -->
+    <!-- BLOC 6 &#8212; Objectifs & commentaire libre -->
     <div class="card">
-      <div class="card-hdr"><span class="card-hdr-ico">🎯</span><span>Semaine prochaine</span></div>
+      <div class="card-hdr"><span class="card-hdr-ico">&#127919;</span><span>Semaine prochaine</span></div>
       <div class="card-body">
         <div class="field"><label>Objectifs pour la semaine prochaine</label>
-          <textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une séance de sport..."></textarea>
+          <textarea id="b-objectifs" placeholder="Ex: boire plus d'eau, ajouter une s&#233;ance de sport..."></textarea>
         </div>
-        <div class="field"><label>Un commentaire à partager avec votre équipe ? (optionnel)</label>
-          <textarea id="b-commentaire" placeholder="Exprimez librement ce que les réponses ci-dessus ne capturent pas..."></textarea>
+        <div class="field"><label>Un commentaire &#224; partager avec votre &#233;quipe ? (optionnel)</label>
+          <textarea id="b-commentaire" placeholder="Exprimez librement ce que les r&#233;ponses ci-dessus ne capturent pas..."></textarea>
+        </div>
+        <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card2);padding:12px 14px;border-radius:10px;margin-top:4px">
+          <label style="margin:0;font-weight:600;font-size:.85rem">&#128075; J'aimerais qu'on en parle au prochain &#233;change</label>
+          <div class="switch" id="parler-switch" onclick="this.classList.toggle('on')" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+          </div>
         </div>
       </div>
     </div>
@@ -239,8 +294,8 @@ var sb = supabase.createClient(SURL, SKEY);
 var USER=null, PROF=null;
 var pillValues = {};
 
-// Génère les questions spécifiques à la pathologie (Bloc 5) — n'affiche
-// que ce que le patient peut vraiment observer lui-même sans matériel médical.
+// G\u00e9n\u00e8re les questions sp\u00e9cifiques \u00e0 la pathologie (Bloc 5) \u2014 n'affiche
+// que ce que le patient peut vraiment observer lui-m\u00eame sans mat\u00e9riel m\u00e9dical.
 function renderPathoBloc(pathos){
   var bloc = document.getElementById('bloc-patho');
   var body = document.getElementById('bloc-patho-body');
@@ -248,12 +303,12 @@ function renderPathoBloc(pathos){
 
   if(pathos.indexOf('diabetes')>=0){
     questions.push({
-      label: 'Fatigabilité après les repas cette semaine ?',
+      label: 'Fatigabilit\u00e9 apr\u00e8s les repas cette semaine ?',
       field: 'diabetes_fatigue',
       opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
     });
     questions.push({
-      label: 'Envies de sucre importantes (au-delà des envies habituelles) ?',
+      label: 'Envies de sucre importantes (au-del\u00e0 des envies habituelles) ?',
       field: 'diabetes_envies_sucre',
       opts: [['Non','Non'],['Moyen','Parfois'],['Difficile','Souvent']]
     });
@@ -261,12 +316,12 @@ function renderPathoBloc(pathos){
 
   if(pathos.indexOf('hypertension')>=0){
     questions.push({
-      label: 'Avez-vous limité votre consommation de sel cette semaine ?',
+      label: 'Avez-vous limit\u00e9 votre consommation de sel cette semaine ?',
       field: 'hta_sel',
       opts: [['Bien','Oui, attentif(ve)'],['Moyen','Moyennement'],['Difficile','Non']]
     });
     questions.push({
-      label: 'Maux de tête ou vertiges notés cette semaine ?',
+      label: 'Maux de t\u00eate ou vertiges not\u00e9s cette semaine ?',
       field: 'hta_symptomes',
       opts: [['Bien','Non'],['Moyen','Parfois'],['Difficile','Oui, souvent']]
     });
@@ -288,15 +343,15 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
-// ── Pills interactifs ── délégation sur le formulaire entier plutôt que
+// \u2500\u2500 Pills interactifs \u2500\u2500 d\u00e9l\u00e9gation sur le formulaire entier plut\u00f4t que
 // sur chaque pastille individuellement : plus robuste sur mobile, et
-// continue de fonctionner même si une partie du formulaire est régénérée.
+// continue de fonctionner m\u00eame si une partie du formulaire est r\u00e9g\u00e9n\u00e9r\u00e9e.
 // Chaque pastille a sa propre formulation (Bien/Bonne/Bon/Oui/Faible...),
-// mais ne représente toujours que 3 états visuels : bon, moyen, mauvais.
+// mais ne repr\u00e9sente toujours que 3 \u00e9tats visuels : bon, moyen, mauvais.
 var PILL_STATE = {
-  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien',
+  bien:'bien', bonne:'bien', bon:'bien', oui:'bien', faible:'bien', jamais:'bien',
   moyen:'moyen', moyenne:'moyen', moyennement:'moyen',
-  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', élevée:'difficile'
+  difficile:'difficile', mauvaise:'difficile', mauvais:'difficile', non:'difficile', elevee:'difficile', \u00e9lev\u00e9e:'difficile', souvent:'difficile'
 };
 document.getElementById('bilan-form').addEventListener('click', function(e){
   var p = e.target.closest('.pill');
@@ -310,7 +365,7 @@ document.getElementById('bilan-form').addEventListener('click', function(e){
   pillValues[field] = val;
 });
 
-// ── AUTH ──
+// \u2500\u2500 AUTH \u2500\u2500
 sb.auth.getSession().then(function(r){
   if(!r.data||!r.data.session){ window.location.href='index.html'; return; }
   USER = r.data.session.user;
@@ -328,8 +383,8 @@ async function loadProfileAndHistory(){
     return;
   }
 
-  // Empêche de remplir plusieurs fois le même jour — un bilan hebdomadaire
-  // n'a de sens qu'une fois par semaine, pas répété à volonté.
+  // Emp\u00eache de remplir plusieurs fois le m\u00eame jour \u2014 un bilan hebdomadaire
+  // n'a de sens qu'une fois par semaine, pas r\u00e9p\u00e9t\u00e9 \u00e0 volont\u00e9.
   var already = await sb.from('bilans').select('id').eq('user_id',USER.id).eq('date',todayStr()).limit(1);
   if(already.data && already.data.length){
     showAlreadyDoneScreen();
@@ -340,8 +395,12 @@ async function loadProfileAndHistory(){
     (PROF.prenom ? 'Bonjour '+PROF.prenom+', ' : '') + "faisons le point sur votre semaine.";
   if(PROF.poids) document.getElementById('b-poids').value = PROF.poids;
 
-  // Bloc 5 — questions conditionnelles selon les pathologies
+  // Bloc 5 \u2014 questions conditionnelles selon les pathologies
   renderPathoBloc(PROF.pathologies || []);
+
+  // Question cycle \u2014 uniquement si activ\u00e9e volontairement dans le profil
+  var cycleField = document.getElementById('cycle-field');
+  if(cycleField) cycleField.style.display = (PROF.suivi_cycle_actif===true) ? 'block' : 'none';
 
   var res = await sb.from('bilans').select('*').eq('user_id',USER.id).order('date',{ascending:false}).limit(8);
   var bilans = (res.data||[]).reverse(); // ordre chronologique pour le graphique
@@ -357,16 +416,16 @@ function nextBilanDate(jourBilan){
 }
 
 function showAlreadyDoneScreen(){
-  document.getElementById('hero-sub').textContent = 'Bilan déjà complété cette semaine.';
+  document.getElementById('hero-sub').textContent = 'Bilan d\u00e9j\u00e0 compl\u00e9t\u00e9 cette semaine.';
   document.getElementById('bilan-form').style.display = 'none';
   document.getElementById('history-card').style.display = 'none';
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">✅</div>'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">\u2705</div>'
     +'<div style="font-family:\'Lora\',serif;font-size:1.2rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
-    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez déjà complété votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
-    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Vous avez d\u00e9j\u00e0 compl\u00e9t\u00e9 votre bilan cette semaine. Rendez-vous '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">\u2190 Retour au tableau de bord</a>'
     +'</div>';
   document.querySelector('.wrap').appendChild(el);
 }
@@ -374,16 +433,16 @@ function showAlreadyDoneScreen(){
 function showWrongDayScreen(){
   var jb = PROF.jour_bilan||'dimanche';
   var jourLbl = jb.charAt(0).toUpperCase()+jb.slice(1);
-  document.getElementById('hero-sub').textContent = 'Votre bilan est prévu un autre jour.';
+  document.getElementById('hero-sub').textContent = 'Votre bilan est pr\u00e9vu un autre jour.';
   document.getElementById('bilan-form').style.display = 'none';
   document.getElementById('history-card').style.display = 'none';
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">📅</div>'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">\ud83d\udcc5</div>'
     +'<div style="font-family:\'Lora\',serif;font-size:1.2rem;margin-bottom:8px">Rendez-vous '+jourLbl+'</div>'
-    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est prévu le '+jourLbl+'. Revenez ce jour-là pour faire le point sur votre semaine.</p>'
-    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">Votre bilan hebdomadaire est pr\u00e9vu le '+jourLbl+'. Revenez ce jour-l\u00e0 pour faire le point sur votre semaine.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">\u2190 Retour au tableau de bord</a>'
     +'<a href="dashboard.html" style="display:block;margin-top:12px;font-size:.76rem;color:var(--text3);text-decoration:underline">Ce jour ne vous convient plus ? Modifiez-le dans votre profil</a>'
     +'</div>';
   document.querySelector('.wrap').appendChild(el);
@@ -415,12 +474,12 @@ function renderHistory(bilans){
       deltaHtml = '<span class="hi-delta '+cls+'">'+(d>0?'+':'')+d.toFixed(1)+'kg</span>';
     }
     var dt = new Date(b.date);
-    listHtml += '<div class="history-item"><span class="hi-date">'+dt.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+'</span><span><span class="hi-weight">'+(b.poids||'—')+'kg</span>'+deltaHtml+'</span></div>';
+    listHtml += '<div class="history-item"><span class="hi-date">'+dt.toLocaleDateString('fr-BE',{day:'numeric',month:'short'})+'</span><span><span class="hi-weight">'+(b.poids||'\u2014')+'kg</span>'+deltaHtml+'</span></div>';
   }
   document.getElementById('history-list').innerHTML = listHtml;
 }
 
-// ── SOUMISSION ──
+// \u2500\u2500 SOUMISSION \u2500\u2500
 document.getElementById('bilan-form').addEventListener('submit', async function(e){
   e.preventDefault();
   var poids = parseFloat(document.getElementById('b-poids').value);
@@ -434,12 +493,17 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     poids: poids,
     tour_taille: parseFloat(document.getElementById('b-taille').value)||null,
     tour_hanche: parseFloat(document.getElementById('b-hanche').value)||null,
+    contexte_semaine: pillValues.contexte_semaine||null,
     respect_plan: pillValues.respect_plan||null,
     envies_sucrees: pillValues.envies_sucrees||null,
+    faim_entre_repas: pillValues.faim_entre_repas||null,
+    acces_alimentation: pillValues.acces_alimentation||null,
     ecart_alimentaire: document.getElementById('b-ecart').value.trim()||null,
     activite_semaine: pillValues.activite_semaine||null,
     troubles_digestifs: pillValues.troubles_digestifs||null,
     sommeil: pillValues.sommeil||null,
+    retention_eau: pillValues.retention_eau||null,
+    cycle_phase: pillValues.cycle_phase||null,
     niveau_energie: pillValues.niveau_energie||null,
     humeur_semaine: pillValues.humeur_semaine||null,
     diabetes_fatigue: pillValues.diabetes_fatigue||null,
@@ -447,13 +511,14 @@ document.getElementById('bilan-form').addEventListener('submit', async function(
     hta_sel: pillValues.hta_sel||null,
     hta_symptomes: pillValues.hta_symptomes||null,
     objectifs_notes: document.getElementById('b-objectifs').value.trim()||null,
-    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null
+    commentaire_libre: document.getElementById('b-commentaire').value.trim()||null,
+    souhaite_en_parler: document.getElementById('parler-switch').classList.contains('on')
   };
 
   var r = await sb.from('bilans').insert(data).select().single();
-  if(r.error){ toast('❌ '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
+  if(r.error){ toast('\u274c '+r.error.message); btn.disabled=false; btn.textContent='Valider mon bilan'; return; }
 
-  // Met aussi à jour le poids courant du profil
+  // Met aussi \u00e0 jour le poids courant du profil
   await sb.from('profiles').update({poids:poids}).eq('id',USER.id);
 
   await checkAndAdjustKcal(poids, r.data.id);
@@ -467,25 +532,37 @@ function showThankYouScreen(){
   var el = document.createElement('div');
   el.className = 'card';
   el.innerHTML = '<div class="card-body" style="text-align:center;padding:32px 18px">'
-    +'<div style="font-size:2.2rem;margin-bottom:10px">🙏</div>'
+    +'<div style="font-size:2.2rem;margin-bottom:10px">\ud83d\ude4f</div>'
     +'<div style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:8px">Merci d\'avoir rempli votre bilan</div>'
-    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">À bientôt '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
-    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">← Retour au tableau de bord</a>'
+    +'<p style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:18px">\u00c0 bient\u00f4t '+nextBilanDate(PROF.jour_bilan)+' pour le prochain.</p>'
+    +'<a href="dashboard.html" class="btn btn-gold" style="display:block;text-decoration:none;box-sizing:border-box">\u2190 Retour au tableau de bord</a>'
     +'</div>';
   document.querySelector('.wrap').appendChild(el);
-  setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+
+  // Le bandeau d'ajustement (#adj-banner, ex: stagnation depuis 2 semaines)
+  // reste visible au-dessus de cet \u00e9cran de remerciement \u2014 s'il contient un
+  // vrai message, on laisse la personne le lire \u00e0 son rythme et cliquer
+  // elle-m\u00eame sur "Retour au tableau de bord" plut\u00f4t que de rediriger
+  // automatiquement apr\u00e8s seulement 3,5s, largement insuffisant pour lire
+  // un paragraphe complet. Redirection automatique conserv\u00e9e uniquement
+  // pour une semaine "normale" (aucun message \u00e0 faire lire).
+  var banner = document.getElementById('adj-banner');
+  var hasBannerMessage = banner && banner.classList.contains('show') && banner.textContent.trim().length > 0;
+  if(!hasBannerMessage){
+    setTimeout(function(){ window.location.href='dashboard.html'; }, 3500);
+  }
 }
 
-// ── ALGORITHME ADAPTATIF ──
+// \u2500\u2500 ALGORITHME ADAPTATIF \u2500\u2500
 // Deux garde-fous avant tout ajustement automatique :
-// 1. Le ressenti qualitatif du bilan compte AVANT le poids — si la semaine
-//    a été majoritairement difficile, bouger les calories ne réglerait pas
-//    le vrai problème (l'adhésion au plan), donc on n'ajuste rien et on
-//    encourage plutôt à se remobiliser.
-// 2. Le sens de l'ajustement dépend de l'objectif : perte/prise poussent
+// 1. Le ressenti qualitatif du bilan compte AVANT le poids \u2014 si la semaine
+//    a \u00e9t\u00e9 majoritairement difficile, bouger les calories ne r\u00e9glerait pas
+//    le vrai probl\u00e8me (l'adh\u00e9sion au plan), donc on n'ajuste rien et on
+//    encourage plut\u00f4t \u00e0 se remobiliser.
+// 2. Le sens de l'ajustement d\u00e9pend de l'objectif : perte/prise poussent
 //    plus fort si la tendance est stagnante ; le maintien corrige dans le
-//    sens opposé si le poids a dévié de façon notable.
-var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'élevée':0,elevee:0};
+//    sens oppos\u00e9 si le poids a d\u00e9vi\u00e9 de fa\u00e7on notable.
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'\u00e9lev\u00e9e':0,elevee:0};
 
 function qualiteBilanScore(){
   var champs = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
@@ -494,12 +571,12 @@ function qualiteBilanScore(){
     var v = pillValues[c];
     if(v){ var pts=PILL_SCORE[v.toLowerCase()]; total += (pts!==undefined?pts:1); compte++; }
   });
-  return compte>0 ? total : null; // null si rien n'a été rempli (ne devrait pas arriver)
+  return compte>0 ? total : null; // null si rien n'a \u00e9t\u00e9 rempli (ne devrait pas arriver)
 }
 
 // Reproduit la portion "kcal" de calcTargets() (dashboard.html) pour pouvoir
-// calculer, ici aussi, la cible calorique résultante après un ajustement.
-// ⚠️ Si la formule de calcTargets() change côté dashboard, la répercuter ici.
+// calculer, ici aussi, la cible calorique r\u00e9sultante apr\u00e8s un ajustement.
+// \u26a0\ufe0f Si la formule de calcTargets() change c\u00f4t\u00e9 dashboard, la r\u00e9percuter ici.
 function computeKcalCible(prof, adj){
   var p = prof || {};
   if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target) return Math.round(p.kcal_target);
@@ -517,23 +594,42 @@ function computeKcalCible(prof, adj){
   return Math.max(1200, Math.min(5000, Math.round(kcal)));
 }
 
-// Sauvegarde la décision de la semaine directement sur la ligne du bilan,
+// Sauvegarde la d\u00e9cision de la semaine directement sur la ligne du bilan,
 // pour que l'admin (bilan_recap.html) puisse voir jour par jour ce que le
-// programme a fait : rien, -200, +200, et où se situe la cible résultante.
-async function logKcalDecision(bilanId, delta, raison, kcalCible){
+// programme a fait : rien, -200, +200, et o\u00f9 se situe la cible r\u00e9sultante.
+async function logKcalDecision(bilanId, delta, raison, kcalCible, status, valeurProposee, champ){
+  // status : 'none' (rien \u00e0 d\u00e9cider) ou 'pending' (proposition en attente
+  // de validation admin, voir bilan_recap.html \u2014 jamais 'approved'/
+  // 'rejected' depuis ce fichier, ces statuts n'existent que c\u00f4t\u00e9 admin).
+  // champ : quel champ profiles la validation admin doit modifier \u2014
+  // 'kcal_adjustment' (mode dynamique) ou 'kcal_target' (calories forc\u00e9es
+  // par un admin, voir admin.html \u2014 dans ce mode, calcTargets() ignore
+  // kcal_adjustment, donc une proposition doit agir sur kcal_target pour
+  // avoir un effet r\u00e9el une fois valid\u00e9e).
+  status = status || 'none';
+  champ = champ || 'kcal_adjustment';
   if(!bilanId){
-    console.warn('[Cap Santé] logKcalDecision : bilanId manquant — l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistré pour ce bilan.');
+    var msg1 = 'logKcalDecision : bilanId manquant \u2014 l\'insertion du bilan n\'a probablement pas pu relire son id (policy SELECT manquante sur bilans ?). Le suivi kcal ne sera pas enregistr\u00e9 pour ce bilan.';
+    console.warn('[Cap Sant\u00e9] '+msg1);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg1);
     return;
   }
   var r = await sb.from('bilans').update({
     kcal_ajustement_delta: delta,
     kcal_ajustement_raison: raison,
-    kcal_cible_apres: kcalCible
+    kcal_cible_apres: kcalCible,
+    kcal_ajustement_status: status,
+    kcal_ajustement_valeur_proposee: valeurProposee != null ? valeurProposee : null,
+    kcal_ajustement_champ: champ
   }).eq('id', bilanId).select();
   if(r.error){
-    console.warn('[Cap Santé] logKcalDecision : échec de la mise à jour —', r.error.message);
+    var msg2 = 'logKcalDecision : \u00e9chec de la mise \u00e0 jour \u2014 '+r.error.message;
+    console.warn('[Cap Sant\u00e9] '+msg2);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg2);
   } else if(!r.data || !r.data.length){
-    console.warn('[Cap Santé] logKcalDecision : la mise à jour n\'a touché aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId);
+    var msg3 = 'logKcalDecision : la mise \u00e0 jour n\'a touch\u00e9 aucune ligne (policy UPDATE manquante sur bilans ?), bilanId='+bilanId;
+    console.warn('[Cap Sant\u00e9] '+msg3);
+    if(PROF && PROF.role==='admin' && typeof toast==='function') toast('\u26a0\ufe0f '+msg3);
   }
 }
 
@@ -541,17 +637,37 @@ async function checkAndAdjustKcal(newWeight, bilanId){
   var objectif = PROF.objectif;
   var banner = document.getElementById('adj-banner');
   var currentAdj = PROF.kcal_adjustment || 0;
-  var profNow = Object.assign({}, PROF, {poids:newWeight}); // profil avec le poids fraîchement saisi
+  var profNow = Object.assign({}, PROF, {poids:newWeight}); // profil avec le poids fra\u00eechement saisi
 
-  // Garde-fou n°1 : le ressenti général de la semaine.
-  var score = qualiteBilanScore(); // sur 14 (7 champs × 2 pts max)
+  // Calories forc\u00e9es par un admin (admin.html, case "Forcer cet objectif
+  // kcal/j") : calcTargets() retourne alors kcal_target directement et
+  // IGNORE kcal_adjustment. Une proposition doit donc porter sur
+  // kcal_target dans ce mode, sinon sa validation n'aurait aucun effet
+  // r\u00e9el \u2014 la stagnation de poids doit continuer \u00e0 \u00eatre d\u00e9tect\u00e9e et
+  // propos\u00e9e \u00e0 l'admin m\u00eame quand les calories sont forc\u00e9es.
+  var isForced = !!(PROF.plan_fixe && PROF.plan_fixe._active !== false && PROF.kcal_target);
+  var currentTarget = PROF.kcal_target || computeKcalCible(profNow, currentAdj);
+
+  function proposeNudge(direction){
+    // direction : -1 (r\u00e9duire) ou +1 (augmenter), toujours un pas de 200 kcal.
+    if(isForced){
+      return { champ:'kcal_target', valeur: Math.max(1200, Math.min(5000, currentTarget + direction*200)) };
+    }
+    return { champ:'kcal_adjustment', valeur: Math.max(-1200, Math.min(2500, currentAdj + direction*200)) };
+  }
+  function cibleApres(prop){
+    return prop.champ==='kcal_target' ? prop.valeur : computeKcalCible(profNow, prop.valeur);
+  }
+
+  // Garde-fou n\u00b01 : le ressenti g\u00e9n\u00e9ral de la semaine.
+  var score = qualiteBilanScore(); // sur 14 (7 champs \u00d7 2 pts max)
   if(score !== null && score < 7){
     banner.className = 'adj-banner show adj-down';
-    banner.innerHTML = '<strong>💛 Un mot avant tout</strong><br>'
-      + 'Cette semaine semble avoir été difficile sur plusieurs points. Plutôt que de changer encore les chiffres, '
-      + 'si vous désirez atteindre votre objectif, reprenez-vous en main — vous en êtes capable. '
-      + 'Le plan reste inchangé cette semaine ; concentrons-nous sur la régularité avant d\'ajuster quoi que ce soit.';
-    await logKcalDecision(bilanId, 0, 'Semaine difficile (ressenti) — plan maintenu inchangé', computeKcalCible(profNow, currentAdj));
+    banner.innerHTML = '<strong>\ud83d\udc9b Un mot avant tout</strong><br>'
+      + 'Cette semaine semble avoir \u00e9t\u00e9 difficile sur plusieurs points. Plut\u00f4t que de changer encore les chiffres, '
+      + 'si vous d\u00e9sirez atteindre votre objectif, reprenez-vous en main \u2014 vous en \u00eates capable. '
+      + 'Le plan reste inchang\u00e9 cette semaine ; concentrons-nous sur la r\u00e9gularit\u00e9 avant d\'ajuster quoi que ce soit.';
+    await logKcalDecision(bilanId, 0, 'Semaine difficile (ressenti) \u2014 plan maintenu inchang\u00e9', computeKcalCible(profNow, currentAdj));
     return;
   }
 
@@ -562,86 +678,91 @@ async function checkAndAdjustKcal(newWeight, bilanId){
       .gte('date', d1.toISOString().slice(0,10)).lte('date', d2.toISOString().slice(0,10))
       .order('date',{ascending:true}).limit(1);
     if(!res.data || !res.data.length || !res.data[0].poids){
-      await logKcalDecision(bilanId, 0, 'Historique insuffisant (moins de 2 semaines de bilans) — aucun ajustement possible', computeKcalCible(profNow, currentAdj));
+      await logKcalDecision(bilanId, 0, 'Historique insuffisant (moins de 2 semaines de bilans) \u2014 aucun ajustement possible', computeKcalCible(profNow, currentAdj));
       return;
     }
 
     var oldWeight = res.data[0].poids;
-    var delta = newWeight - oldWeight; // positif = prise, négatif = perte
+    var delta = newWeight - oldWeight; // positif = prise, n\u00e9gatif = perte
 
     // Trois situations possibles :
-    // 1. Bonne progression (poids évolue dans le bon sens) → rien à faire
-    // 2. Stagnation (< 0.3kg de différence) → nudge de -200kcal (perte) ou +200 (prise)
-    // 3. Mauvaise direction (poids augmente sur perte, ou diminue sur prise) → correction
-    //    plus marquée car la situation est plus urgente qu'une simple stagnation.
+    // 1. Bonne progression (poids \u00e9volue dans le bon sens) \u2192 rien \u00e0 faire
+    // 2. Stagnation (< 0.3kg de diff\u00e9rence) \u2192 nudge de -200kcal (perte) ou +200 (prise)
+    // 3. Mauvaise direction (poids augmente sur perte, ou diminue sur prise) \u2192 correction
+    //    plus marqu\u00e9e car la situation est plus urgente qu'une simple stagnation.
     var goodProgress = (objectif==='perte' && delta < -0.3) || (objectif==='prise' && delta > 0.3);
     var stalled     = Math.abs(delta) < 0.3;
     var wrongWay    = (objectif==='perte' && delta > 0.5) || (objectif==='prise' && delta < -0.5);
 
     if(goodProgress){
-      await logKcalDecision(bilanId, 0, 'Bonne progression du poids — aucun ajustement nécessaire', computeKcalCible(profNow, currentAdj));
+      await logKcalDecision(bilanId, 0, 'Bonne progression du poids \u2014 aucun ajustement n\u00e9cessaire', computeKcalCible(profNow, currentAdj));
       return;
     }
 
-    var newAdj = currentAdj;
+    var prop = { champ:'kcal_adjustment', valeur:currentAdj };
     var msgContext = '';
     var raison = '';
 
     if(wrongWay){
-      // Poids part dans la mauvaise direction — même ajustement de 200 kcal que
+      // Poids part dans la mauvaise direction \u2014 m\u00eame ajustement de 200 kcal que
       // pour une stagnation : les changements brusques sont contre-productifs,
       // mieux vaut des corrections progressives et soutenables dans le temps.
-      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      prop = proposeNudge(objectif==='perte' ? -1 : 1);
       msgContext = objectif==='perte'
-        ? 'Votre poids a augmenté cette semaine alors que votre objectif est la perte. On ajuste votre objectif calorique de −200 kcal/jour pour corriger progressivement la trajectoire.'
-        : 'Votre poids a diminué cette semaine alors que votre objectif est la prise. On ajuste votre objectif calorique de +200 kcal/jour pour corriger progressivement la trajectoire.';
+        ? 'Votre poids a augment\u00e9 cette semaine alors que votre objectif est la perte. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
+        : 'Votre poids a diminu\u00e9 cette semaine alors que votre objectif est la prise. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour corriger progressivement la trajectoire \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
       raison = 'Poids en sens inverse de l\'objectif (' + (delta>0?'+':'') + delta.toFixed(1) + 'kg)';
     } else if(stalled){
-      // Poids stable depuis 2 semaines → nudge de 200 kcal
-      newAdj = currentAdj + (objectif==='perte' ? -200 : 200);
+      // Poids stable depuis 2 semaines \u2192 proposition de nudge de 200 kcal,
+      // soumise \u00e0 validation admin (voir logKcalDecision plus bas).
+      prop = proposeNudge(objectif==='perte' ? -1 : 1);
       msgContext = objectif==='perte'
-        ? 'Votre poids n\'a pas bougé depuis 2 semaines. On réduit votre objectif calorique de 200 kcal/jour pour relancer la perte de poids.'
-        : 'Votre poids n\'a pas bougé depuis 2 semaines. On augmente votre objectif calorique de 200 kcal/jour pour relancer la prise de poids.';
+        ? 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re de r\u00e9duire votre objectif calorique de 200 kcal/jour pour relancer la perte de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.'
+        : 'Votre poids n\'a pas boug\u00e9 depuis 2 semaines. Le programme sugg\u00e8re d\'augmenter votre objectif calorique de 200 kcal/jour pour relancer la prise de poids \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
       raison = 'Stagnation du poids depuis 2 semaines';
     }
 
-    newAdj = Math.max(-1200, Math.min(2500, newAdj));
-    await sb.from('profiles').update({kcal_adjustment:newAdj}).eq('id',USER.id);
-    await logKcalDecision(bilanId, newAdj-currentAdj, raison, computeKcalCible(profNow, newAdj));
+    // Plus d'application automatique : la proposition est enregistr\u00e9e en
+    // attente, profiles.kcal_adjustment (ou kcal_target si les calories
+    // sont forc\u00e9es) n'est modifi\u00e9 que si un administrateur la valide
+    // depuis bilan_recap.html, apr\u00e8s avoir consult\u00e9 le bilan complet.
+    var deltaLog = prop.champ==='kcal_target' ? (prop.valeur-currentTarget) : (prop.valeur-currentAdj);
+    await logKcalDecision(bilanId, deltaLog, raison, cibleApres(prop), 'pending', prop.valeur, prop.champ);
 
     banner.className = 'adj-banner show ' + (objectif==='perte' ? 'adj-down' : 'adj-up');
-    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>' + msgContext + ' Ce changement est appliqué automatiquement à votre plan alimentaire.';
+    banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>' + msgContext + ' Cette proposition sera examin\u00e9e par l\'\u00e9quipe apr\u00e8s consultation de votre bilan avant d\'\u00eatre appliqu\u00e9e.';
 
   } else if(objectif==='maintien'){
-    // En maintien, on corrige dans le sens OPPOSÉ à la dérive constatée —
-    // comparaison sur la semaine écoulée (1 bilan en arrière), pas 2.
+    // En maintien, on corrige dans le sens OPPOS\u00c9 \u00e0 la d\u00e9rive constat\u00e9e \u2014
+    // comparaison sur la semaine \u00e9coul\u00e9e (1 bilan en arri\u00e8re), pas 2.
     var d1m = new Date(); d1m.setDate(d1m.getDate()-9);
     var d2m = new Date(); d2m.setDate(d2m.getDate()-5);
     var resM = await sb.from('bilans').select('*').eq('user_id',USER.id)
       .gte('date', d1m.toISOString().slice(0,10)).lte('date', d2m.toISOString().slice(0,10))
       .order('date',{ascending:true}).limit(1);
     if(!resM.data || !resM.data.length || !resM.data[0].poids){
-      await logKcalDecision(bilanId, 0, 'Historique insuffisant — aucun ajustement possible', computeKcalCible(profNow, currentAdj));
+      await logKcalDecision(bilanId, 0, 'Historique insuffisant \u2014 aucun ajustement possible', computeKcalCible(profNow, currentAdj));
       return;
     }
 
     var oldWeightM = resM.data[0].poids;
     var deltaM = newWeight - oldWeightM;
     if(Math.abs(deltaM) < 0.5){
-      await logKcalDecision(bilanId, 0, 'Poids stable — cohérent avec l\'objectif maintien', computeKcalCible(profNow, currentAdj));
-      return; // dérive normale, rien à corriger
+      await logKcalDecision(bilanId, 0, 'Poids stable \u2014 coh\u00e9rent avec l\'objectif maintien', computeKcalCible(profNow, currentAdj));
+      return; // d\u00e9rive normale, rien \u00e0 corriger
     }
 
-    var sensPerte = deltaM > 0; // poids monté -> on réduit ; poids descendu -> on augmente
-    var newAdjM = currentAdj + (sensPerte ? -200 : 200);
-    newAdjM = Math.max(-1200, Math.min(2500, newAdjM));
-    await sb.from('profiles').update({kcal_adjustment:newAdjM}).eq('id',USER.id);
-    await logKcalDecision(bilanId, newAdjM-currentAdj, 'Dérive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', computeKcalCible(profNow, newAdjM));
+    var sensPerte = deltaM > 0; // poids mont\u00e9 -> on r\u00e9duit ; poids descendu -> on augmente
+    var propM = proposeNudge(sensPerte ? -1 : 1);
+    // Plus d'application automatique \u2014 proposition en attente de
+    // validation admin (voir bilan_recap.html).
+    var deltaLogM = propM.champ==='kcal_target' ? (propM.valeur-currentTarget) : (propM.valeur-currentAdj);
+    await logKcalDecision(bilanId, deltaLogM, 'D\u00e9rive du poids en maintien (' + (deltaM>0?'+':'') + deltaM.toFixed(1) + 'kg)', cibleApres(propM), 'pending', propM.valeur, propM.champ);
 
     banner.className = 'adj-banner show ' + (sensPerte ? 'adj-down' : 'adj-up');
-    banner.innerHTML = '<strong>📊 Ajustement automatique</strong><br>Votre poids a '
-      + (sensPerte ? 'augmenté' : 'diminué') + ' de '+Math.abs(deltaM).toFixed(1)+'kg cette semaine, alors que votre objectif est le maintien. '
-      + 'On '+(sensPerte?'réduit':'augmente')+' votre objectif calorique de 200 kcal/jour pour vous recentrer.';
+    banner.innerHTML = '<strong>\ud83d\udcca Suggestion d\'ajustement</strong><br>Votre poids a '
+      + (sensPerte ? 'augment\u00e9' : 'diminu\u00e9') + ' de '+Math.abs(deltaM).toFixed(1)+'kg cette semaine, alors que votre objectif est le maintien. '
+      + 'Le programme sugg\u00e8re de '+(sensPerte?'r\u00e9duire':'augmenter')+' votre objectif calorique de 200 kcal/jour pour vous recentrer \u2014 l\'administrateur validera apr\u00e8s consultation du bilan si cette adaptation est n\u00e9cessaire.';
   }
 }
 </script>

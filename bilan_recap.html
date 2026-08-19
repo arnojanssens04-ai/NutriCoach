@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Récapitulatif des bilans (Admin)</title>
+<title>Cap Sant&#233; &#8212; R&#233;capitulatif des bilans (Admin)</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -37,7 +37,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .bc-weight { font-size:.85rem; color:var(--gold); font-weight:600; text-align:right; }
 .bc-weight .bc-mensu { display:block; font-size:.7rem; color:var(--text3); font-weight:400; margin-top:2px; }
 
-/* ── Bloc kcal / programme ── */
+/* &#9472;&#9472; Bloc kcal / programme &#9472;&#9472; */
 .bc-kcal { background:var(--gold-l); border:1px solid rgba(45,79,28,0.15); border-radius:9px; padding:11px 13px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
 .bc-kcal-cible { font-family:'Lora',serif; font-size:1.15rem; font-weight:700; color:var(--gold); }
 .bc-kcal-cible small { font-family:'Inter',sans-serif; font-size:.68rem; font-weight:500; color:var(--text2); display:block; }
@@ -45,8 +45,35 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .badge-none { background:var(--card2); color:var(--text3); }
 .badge-down { background:rgba(45,79,28,0.1); color:var(--gold); }
 .badge-up { background:rgba(74,122,58,0.12); color:var(--sage); }
+
+.ws-block { border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:12px 0; margin:10px 0; }
+.ws-loading, .ws-empty { font-size:.78rem; color:var(--text3); font-style:italic; }
+.ws-kcal { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.ws-kcal-pill { font-size:.72rem; font-weight:700; padding:4px 11px; border-radius:999px; }
+.ws-kcal-pill.ws-low { background:rgba(61,107,153,0.1); color:#3D6B99; }
+.ws-kcal-pill.ws-ok { background:rgba(45,90,67,0.1); color:var(--cap); }
+.ws-kcal-pill.ws-high { background:rgba(179,38,30,0.1); color:var(--needle); }
+.ws-kcal-detail { font-size:.76rem; color:var(--text2); }
+.ws-ultra-none { font-size:.78rem; color:var(--cap); }
+.ws-ultra-count { font-size:.78rem; font-weight:600; color:var(--needle); margin-bottom:6px; }
+.ws-ultra-list { display:flex; flex-direction:column; gap:4px; }
+.ws-ultra-item { display:flex; gap:8px; font-size:.76rem; color:var(--text2); }
+.ws-ultra-day { font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:var(--text3); flex-shrink:0; width:50px; }
 .bc-kcal-raison { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; }
 .bc-kcal-na { font-size:.72rem; color:var(--text3); font-style:italic; }
+
+/* ── Validation admin d'un ajustement calorique proposé ── */
+.badge-pending { background:rgba(122,92,30,0.12); color:#7a5c1e; }
+.badge-approved { background:rgba(45,90,67,0.1); color:var(--cap); }
+.badge-rejected { background:rgba(179,38,30,0.1); color:var(--needle); }
+.bc-kcal-actions { display:flex; gap:8px; width:100%; margin-top:4px; }
+.bc-kcal-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:7px 10px; border-radius:8px; font-size:.75rem; font-weight:700; border:none; cursor:pointer; }
+.bc-kcal-btn.approve { background:var(--cap); color:#fff; }
+.bc-kcal-btn.approve:hover { background:#254733; }
+.bc-kcal-btn.reject { background:var(--needle); color:#fff; }
+.bc-kcal-btn.reject:hover { background:#8a1f19; }
+.bc-kcal-btn:disabled { opacity:.6; cursor:default; }
+.bc-kcal-decided { width:100%; font-size:.72rem; color:var(--text2); margin-top:2px; font-style:italic; }
 
 .bc-section-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin:12px 0 6px; }
 .bc-section-lbl:first-of-type { margin-top:0; }
@@ -66,22 +93,25 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .empty { text-align:center; padding:40px 16px; color:var(--text2); font-size:.86rem; }
 .denied { text-align:center; padding:60px 20px; color:var(--text2); }
 
-/* ── Toolbar (sélecteur + export) ── */
+/* &#9472;&#9472; Toolbar (s&#233;lecteur + export) &#9472;&#9472; */
 .toolbar { display:flex; gap:10px; margin-bottom:14px; }
 .toolbar .user-select { margin-bottom:0; flex:1; }
 .btn-export { flex-shrink:0; padding:11px 16px; background:var(--card); border:1px solid var(--border); border-radius:10px; color:var(--text2); font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap; }
 .btn-export:hover { border-color:var(--gold); color:var(--gold); }
 
-/* ── Bandeau utilisateurs à risque ── */
+/* &#9472;&#9472; Bandeau utilisateurs &#224; risque &#9472;&#9472; */
 .risk-banner { background:rgba(139,42,42,0.06); border:1px solid rgba(139,42,42,0.18); border-radius:var(--r); padding:14px 16px; margin-bottom:18px; }
+.parler-banner { background:rgba(45,79,28,0.06); border:1px solid rgba(45,79,28,0.18); border-radius:var(--r); padding:14px 16px; margin-bottom:18px; }
+.parler-banner .risk-banner-hdr { color:var(--cap); }
 .risk-banner-hdr { font-size:.85rem; font-weight:700; color:var(--rose); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
 .risk-user-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:.82rem; border-top:1px solid rgba(139,42,42,0.1); }
 .risk-user-row:first-of-type { border-top:none; }
 .risk-contact-link { font-size:.74rem; color:var(--rose); text-decoration:none; font-weight:600; padding:4px 10px; border:1px solid rgba(139,42,42,0.3); border-radius:7px; }
 .risk-contact-link:hover { background:rgba(139,42,42,0.08); }
 .bc-flag { font-size:.9rem; margin-left:6px; }
+.bc-contexte-badge { display:inline-block; font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--card2); color:var(--text2); border:1px solid var(--border); }
 
-/* ── Mini-graphique tendance kcal (mono-utilisateur) ── */
+/* &#9472;&#9472; Mini-graphique tendance kcal (mono-utilisateur) &#9472;&#9472; */
 .kcal-trend { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:18px; box-shadow:var(--sh); }
 .kcal-trend h3 { font-family:'Lora',serif; font-size:.95rem; margin-bottom:12px; }
 .kcal-trend-chart { display:flex; align-items:flex-end; gap:8px; height:90px; }
@@ -92,7 +122,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .kt-date { font-size:.62rem; color:var(--text3); }
 .kcal-trend-empty { font-size:.8rem; color:var(--text3); text-align:center; padding:10px 0; }
 
-/* ── Bouton contact sur chaque carte ── */
+/* &#9472;&#9472; Bouton contact sur chaque carte &#9472;&#9472; */
 .bc-contact { font-size:.72rem; color:var(--text2); text-decoration:none; padding:5px 11px; border:1px solid var(--border2); border-radius:7px; white-space:nowrap; }
 .bc-contact:hover { border-color:var(--gold); color:var(--gold); }
 </style>
@@ -100,16 +130,17 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Santé</span></div>
-  <a href="admin.html" class="t-back">← Admin</a>
+  <div class="t-logo">Cap<span>Sant&#233;</span></div>
+  <a href="admin.html" class="t-back">&#8592; Admin</a>
 </header>
 
 <div class="wrap">
   <div class="hero">
-    <h1>Récapitulatif des bilans</h1>
+    <h1>R&#233;capitulatif des bilans</h1>
     <p>Vue d'ensemble des bilans hebdomadaires de tous les utilisateurs.</p>
   </div>
   <div id="risk-banner-zone"></div>
+  <div id="parler-banner-zone"></div>
   <div id="kcal-trend-zone"></div>
   <div id="content"></div>
 </div>
@@ -132,11 +163,11 @@ sb.auth.getSession().then(function(r){
 async function checkAdminAndLoad(){
   var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
   if(!pr.data || pr.data.role!=='admin'){
-    document.getElementById('content').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
+    document.getElementById('content').innerHTML = '<div class="denied">Acc\u00e8s r\u00e9serv\u00e9 aux administrateurs.</div>';
     return;
   }
 
-  var usersRes = await sb.from('profiles').select('id,prenom,nom,email').order('prenom');
+  var usersRes = await sb.from('profiles').select('id,prenom,nom,email,poids,taille,age,sexe,activite,objectif,kcal_adjustment,kcal_target,plan_fixe,activite_met_kcal,pathologies').order('prenom');
   ALL_USERS = usersRes.data || [];
 
   var bilansRes = await sb.from('bilans').select('*').order('date',{ascending:false});
@@ -144,6 +175,7 @@ async function checkAdminAndLoad(){
 
   renderUserSelect();
   renderRiskBanner();
+  renderParlerBanner();
   renderBilans('all');
 }
 
@@ -155,7 +187,7 @@ function renderUserSelect(){
     +'<option value="all">Tous les utilisateurs</option>'
     +ALL_USERS.map(function(u){ return '<option value="'+u.id+'">'+esc(userLabel(u))+'</option>'; }).join('')
     +'</select>'
-    +'<button class="btn-export" onclick="exportCsv()">⬇ Export CSV</button>'
+    +'<button class="btn-export" onclick="exportCsv()">\u2b07 Export CSV</button>'
     +'</div>';
   var sel = document.createElement('div');
   sel.innerHTML = html;
@@ -163,40 +195,53 @@ function renderUserSelect(){
 }
 
 // Normalise une valeur de pill (qui varie selon le champ : Bien/Bonne/Bon/Non...)
-// vers un état de couleur unique : bon (vert) / moyen (jaune) / mauvais (rouge).
-function pillColor(val){
+// vers un \u00e9tat de couleur unique : bon (vert) / moyen (jaune) / mauvais (rouge).
+function pillColor(val, colorMap){
   if(!val) return null;
   var v = String(val).toLowerCase();
+  if(colorMap) return colorMap[v] || null; // r\u00e8gle sp\u00e9cifique au champ, prioritaire
   if(['bien','bonne','bon','non'].indexOf(v)>=0) return 'bon';
   if(['moyen','moyenne'].indexOf(v)>=0) return 'moyen';
   if(['difficile','mauvaise','mauvais'].indexOf(v)>=0) return 'mauvais';
   return null;
 }
 
-// Groupes de champs affichés dans l'ordre du formulaire bilan.html
+// Groupes de champs affich\u00e9s dans l'ordre du formulaire bilan.html.
+// Le 3e \u00e9l\u00e9ment optionnel (colorMap) sert quand la m\u00eame valeur texte (ex:
+// "oui") doit \u00eatre color\u00e9e diff\u00e9remment selon la question -- sans \u00e7a,
+// "oui" pour l'acc\u00e8s \u00e0 une alimentation saine (bon signe) et "oui" pour un
+// autre champ pourraient se contredire visuellement avec la seule logique
+// g\u00e9n\u00e9rique de pillColor().
 var FIELD_GROUPS = [
-  { lbl:'Alimentation', fields:[
-    ['respect_plan','Respect du plan'], ['envies_sucrees','Envies incontrôlables']
+  { lbl:'Contexte', fields:[
+    ['contexte_semaine','\u00c9v\u00e9nement particulier', {}]
   ]},
-  { lbl:'Activité physique', fields:[
-    ['activite_semaine','Activité']
+  { lbl:'Alimentation', fields:[
+    ['respect_plan','Respect du plan'], ['envies_sucrees','Envies incontr\u00f4lables'],
+    ['faim_entre_repas','Faim entre les repas', {jamais:'bon', parfois:'moyen', souvent:'mauvais'}],
+    ['acces_alimentation','Acc\u00e8s \u00e0 une alim. saine', {oui:'bon', 'un peu compliqu\u00e9':'moyen', difficile:'mauvais'}]
+  ]},
+  { lbl:'Activit\u00e9 physique', fields:[
+    ['activite_semaine','Activit\u00e9']
   ]},
   { lbl:'Digestion & sommeil', fields:[
-    ['troubles_digestifs','Digestion'], ['sommeil','Sommeil']
+    ['troubles_digestifs','Digestion'], ['sommeil','Sommeil'],
+    ['retention_eau','Ballonnements / r\u00e9tention d\'eau', {'pas ressenti':'bon', 'l\u00e9ger':'moyen', 'marqu\u00e9':'mauvais'}],
+    ['cycle_phase','Cycle', {}]
   ]},
-  { lbl:'Énergie & bien-être', fields:[
-    ['niveau_energie','Énergie'], ['humeur_semaine','Humeur']
+  { lbl:'\u00c9nergie & bien-\u00eatre', fields:[
+    ['niveau_energie','\u00c9nergie'], ['humeur_semaine','Humeur']
   ]},
-  { lbl:'Suivi de santé (pathologies)', fields:[
-    ['diabetes_fatigue','Fatigabilité post-repas'], ['diabetes_envies_sucre','Envies de sucre'],
-    ['hta_sel','Sel limité'], ['hta_symptomes','Maux de tête / vertiges']
+  { lbl:'Suivi de sant\u00e9 (pathologies)', fields:[
+    ['diabetes_fatigue','Fatigabilit\u00e9 post-repas'], ['diabetes_envies_sucre','Envies de sucre'],
+    ['hta_sel','Sel limit\u00e9'], ['hta_symptomes','Maux de t\u00eate / vertiges']
   ]}
 ];
 
-// ── Score qualitatif d'un bilan (même logique que qualiteBilanScore() côté bilan.html) ──
-var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'élevée':0,elevee:0};
+// \u2500\u2500 Score qualitatif d'un bilan (m\u00eame logique que qualiteBilanScore() c\u00f4t\u00e9 bilan.html) \u2500\u2500
+var PILL_SCORE = {bien:2,bonne:2,bon:2,oui:2,faible:2,non:2, moyen:1,moyenne:1,moyennement:1, difficile:0,mauvaise:0,mauvais:0,'\u00e9lev\u00e9e':0,elevee:0};
 var SCORE_FIELDS = ['respect_plan','envies_sucrees','activite_semaine','troubles_digestifs','sommeil','niveau_energie','humeur_semaine'];
-var SCORE_THRESHOLD = 7; // sur 14 (7 champs × 2 pts max) — même seuil que bilan.html
+var SCORE_THRESHOLD = 7; // sur 14 (7 champs \u00d7 2 pts max) \u2014 m\u00eame seuil que bilan.html
 
 function bilanScore(b){
   var total=0, compte=0;
@@ -207,8 +252,8 @@ function bilanScore(b){
   return compte>0 ? total : null;
 }
 
-// Détecte les utilisateurs dont les 2 derniers bilans sont tous deux sous le
-// seuil qualitatif — signal de décrochage potentiel à surveiller de près.
+// D\u00e9tecte les utilisateurs dont les 2 derniers bilans sont tous deux sous le
+// seuil qualitatif \u2014 signal de d\u00e9crochage potentiel \u00e0 surveiller de pr\u00e8s.
 function computeAtRiskUsers(){
   var byUser = {};
   ALL_BILANS.forEach(function(b){
@@ -233,13 +278,170 @@ function renderRiskBanner(){
   if(!atRisk.length){ zone.innerHTML = ''; return; }
 
   zone.innerHTML = '<div class="risk-banner">'
-    +'<div class="risk-banner-hdr">⚠️ '+atRisk.length+' utilisateur'+(atRisk.length>1?'s':'')+' à surveiller — 2 bilans consécutifs difficiles</div>'
+    +'<div class="risk-banner-hdr">\u26a0\ufe0f '+atRisk.length+' utilisateur'+(atRisk.length>1?'s':'')+' \u00e0 surveiller \u2014 2 bilans cons\u00e9cutifs difficiles</div>'
     +atRisk.map(function(r){
       var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
       return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
-        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">💬 Contacter</a></div>';
+        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a></div>';
     }).join('')
     +'</div>';
+}
+
+// Liste les utilisateurs dont le bilan LE PLUS RECENT demande explicitement
+// un \u00e9change. Deux fa\u00e7ons de sortir de cette liste :
+// 1) l'admin clique "Marqu\u00e9 comme trait\u00e9" (imm\u00e9diat, voir markParlerTraite) ;
+// 2) \u00e0 d\u00e9faut, le patient soumet un nouveau bilan sans recocher la case
+//    (une semaine plus tard).
+function renderParlerBanner(){
+  var zone = document.getElementById('parler-banner-zone');
+  var byUser = {};
+  ALL_BILANS.forEach(function(b){
+    if(!byUser[b.user_id]) byUser[b.user_id] = [];
+    byUser[b.user_id].push(b);
+  });
+  var wantsToTalk = [];
+  Object.keys(byUser).forEach(function(uid){
+    var bilans = byUser[uid].slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+    if(bilans[0] && bilans[0].souhaite_en_parler && !bilans[0].parler_traite){
+      wantsToTalk.push({ uid:uid, date:bilans[0].date, bilanId:bilans[0].id });
+    }
+  });
+  if(!wantsToTalk.length){ zone.innerHTML = ''; return; }
+
+  zone.innerHTML = '<div class="parler-banner">'
+    +'<div class="risk-banner-hdr">\ud83d\ude4b '+wantsToTalk.length+' utilisateur'+(wantsToTalk.length>1?'s ont':' a')+' demand\u00e9 \u00e0 en parler</div>'
+    +wantsToTalk.map(function(r){
+      var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
+      return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
+        +'<span style="display:flex;gap:8px">'
+        +'<a class="risk-contact-link" href="chat-admin.html?u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a>'
+        +'<button class="risk-contact-link" style="border:none;cursor:pointer;background:none" onclick="markParlerTraite(\''+r.bilanId+'\')">\u2705 Marqu\u00e9 comme trait\u00e9</button>'
+        +'</span></div>';
+    }).join('')
+    +'</div>';
+}
+
+// Retire imm\u00e9diatement une demande "en parler" de la liste, une fois
+// l'\u00e9change effectu\u00e9 \u2014 sans attendre le prochain bilan hebdomadaire.
+async function markParlerTraite(bilanId){
+  var r = await sb.from('bilans').update({parler_traite:true}).eq('id', bilanId).select();
+  if(r.error || !r.data || !r.data.length){
+    alert('\u00c9chec de la mise \u00e0 jour : '+(r.error?r.error.message:'aucune ligne modifi\u00e9e'));
+    return;
+  }
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.parler_traite = true;
+  renderParlerBanner();
+}
+
+// \u2500\u2500 R\u00c9SUM\u00c9 ALIMENTAIRE HEBDOMADAIRE (nouveau) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Calcule un objectif kcal simplifi\u00e9 (juste le kcal, pas les macros) \u2014
+// reprend le m\u00eame calcul que calcTargets() dans dashboard.html, mais r\u00e9duit
+// \u00e0 ce dont on a besoin ici. ATTENTION : cette page n'a pas de module
+// partag\u00e9 avec dashboard.html (pages HTML ind\u00e9pendantes) -- si la formule
+// change dans calcTargets(), il faut penser \u00e0 la r\u00e9percuter ici \u00e0 la main.
+function estimateWeeklyKcalTarget(p){
+  p = p || {};
+  if(p.plan_fixe && p.plan_fixe._active !== false && p.kcal_target){
+    return p.kcal_target * 7;
+  }
+  var w=p.poids||70, h=p.taille||170, a=p.age||35, g=p.sexe||'F';
+  var act=p.activite||'sedentary', pathos=p.pathologies||[];
+  var bmr = g==='M' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  var af = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, sportif:1.9};
+  var hasMetData = p.activite_met_kcal && p.activite_met_kcal > 0;
+  var tdee = hasMetData ? bmr*1.2 + p.activite_met_kcal : bmr*(af[act]||1.2);
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal = tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  kcal += (p.kcal_adjustment||0);
+  kcal = Math.max(1200, Math.min(5000, Math.round(kcal)));
+  return kcal * 7;
+}
+
+// D\u00e9tection ultra-transform\u00e9 -- copie de ULTRA_PROCESSED_PATTERNS
+// (dashboard.html). M\u00eame avertissement : \u00e0 resynchroniser \u00e0 la main si la
+// liste change l\u00e0-bas.
+var ULTRA_PROCESSED_PATTERNS = [
+  // "preemball" retir\u00e9 -- trop large (voir dashboard.html pour le d\u00e9tail).
+  'industriel\\b',
+  'soda','coca','cola','pepsi','fanta','sprite','oasis','ice tea','schweppes',
+  'boisson energisante|energy drink|redbull|red bull|monster energy','sirop.*(grenadine|menthe)',
+  'chips','tuc\\b','crackers?','biscuits? aperitif','pringles','cacahuetes? (grillees?|salees?|aromatisees?)',
+  'bonbon','confiserie','chewing.?gum','guimauve','reglisse','dragee','caramel.*industri',
+  'barre.*chocolat','kinder','snickers|twix|kitkat|mars\\b|bounty|milka|lion\\b','nutella','pate a tartiner',
+  'biscuit','cake\\b','gateau.*industri','viennoiserie','donut|beignet','pain au chocolat industri','patisserie.*industri','frites?\\b',
+  'muesli.*chocolat|cereales?.*chocolat|corn ?flakes.*chocolat',
+  'plat.*(cuisine|prepare)','surgele.*(pane|pret)','cordon bleu','nugget','panne\\b','quenelle',
+  'lasagne.*industri','pizza.*surgel','quiche.*industri','soupe.*(brique|deshydrat|instantan)',
+  'charcuterie','saucisse','merguez','jambon.*reconstit','bacon','lardons?.*fume','knacki','chorizo.*industri','mortadelle','surimi',
+  'mcdo|burger king|kfc|quick\\b','burger\\b','hot.?dog','kebab','tacos.*(fast|frit)',
+  'cereales?.*sucre','chocapic','frosties','miel pops','granola.*industri','barre.*cereale',
+  'mayonnaise.*industri','ketchup','sauce.*(industri|bouteille|preemball)',
+  'yaourt.*(aromatise|sucre)','dessert lacte','flan.*industri','mousse.*chocolat.*industri','creme dessert','danette','petit suisse.*aromatise',
+  'glace\\b','sorbet','esquimau','magnum\\b','cornetto',
+  'pain de mie.*industri','pain.*burger','biscotte',
+  'nouilles? instantane','soupe instantane','puree.*(flocons|instantane)','snack\\b'
+];
+var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
+
+function isEntryUltraProcessed(e){
+  if(e.is_ultra_processed === true) return true;
+  if(e.is_ultra_processed === false) return false;
+  var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return ULTRA_PROCESSED_REGEX.test(n);
+}
+
+var WEEKDAY_SHORT = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+// Charge et affiche le r\u00e9sum\u00e9 des 7 jours menant au bilan (born\u00e9 inclus) :
+// kcal totale vs objectif de la semaine, et le d\u00e9tail des aliments
+// ultra-transform\u00e9s consomm\u00e9s (quoi, quel jour).
+async function loadWeeklySummary(bilan, user){
+  var el = document.getElementById('ws-'+bilan.id);
+  if(!el) return;
+
+  var endDate = new Date(bilan.date+'T00:00:00');
+  var startDate = new Date(endDate); startDate.setDate(startDate.getDate()-6);
+  var startStr = startDate.toISOString().slice(0,10);
+  var endStr = endDate.toISOString().slice(0,10);
+
+  var r = await sb.from('journal').select('date,aliment,kcal,is_ultra_processed')
+    .eq('user_id', bilan.user_id).gte('date', startStr).lte('date', endStr);
+
+  if(r.error || !r.data){ el.innerHTML = ''; return; }
+  var entries = r.data;
+  if(!entries.length){ el.innerHTML = '<div class="ws-empty">Aucun repas enregistr\u00e9 sur cette p\u00e9riode.</div>'; return; }
+
+  var totalKcal = entries.reduce(function(s,e){ return s+(e.kcal||0); }, 0);
+  var weeklyTarget = estimateWeeklyKcalTarget(user);
+  var ratio = weeklyTarget>0 ? totalKcal/weeklyTarget : null;
+
+  var kcalLabel, kcalCls;
+  if(ratio===null){ kcalLabel='Objectif indisponible'; kcalCls=''; }
+  else if(ratio < 0.85){ kcalLabel='Nettement en dessous de l\u2019objectif'; kcalCls='ws-low'; }
+  else if(ratio > 1.15){ kcalLabel='Nettement au-dessus de l\u2019objectif'; kcalCls='ws-high'; }
+  else { kcalLabel='Dans la zone attendue'; kcalCls='ws-ok'; }
+
+  var ultraEntries = entries.filter(isEntryUltraProcessed).map(function(e){
+    var d = new Date(e.date+'T00:00:00');
+    return { nom:e.aliment, jour:WEEKDAY_SHORT[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1) };
+  });
+
+  var ultraHtml;
+  if(!ultraEntries.length){
+    ultraHtml = '<div class="ws-ultra-none">\ud83c\udf3f Aucun aliment ultra-transform\u00e9 cette semaine</div>';
+  } else {
+    ultraHtml = '<div class="ws-ultra-count">'+ultraEntries.length+' aliment'+(ultraEntries.length>1?'s':'')+' ultra-transform\u00e9'+(ultraEntries.length>1?'s':'')+' cette semaine</div>'
+      +'<div class="ws-ultra-list">'+ultraEntries.map(function(u){
+        return '<div class="ws-ultra-item"><span class="ws-ultra-day">'+u.jour+'</span><span>'+esc(u.nom)+'</span></div>';
+      }).join('')+'</div>';
+  }
+
+  el.innerHTML = '<div class="ws-kcal"><span class="ws-kcal-pill '+kcalCls+'">'+kcalLabel+'</span>'
+    +'<span class="ws-kcal-detail">'+Math.round(totalKcal)+' kcal sur la semaine'+(ratio!==null?' (objectif \u2248 '+Math.round(weeklyTarget)+' kcal)':'')+'</span></div>'
+    +ultraHtml;
 }
 
 function renderBilans(filterId){
@@ -247,10 +449,10 @@ function renderBilans(filterId){
   var el = document.getElementById('content');
   var trendZone = document.getElementById('kcal-trend-zone');
 
-  // Graphique de tendance kcal : uniquement pertinent pour un utilisateur précis
+  // Graphique de tendance kcal : uniquement pertinent pour un utilisateur pr\u00e9cis
   trendZone.innerHTML = filterId!=='all' ? renderKcalTrendHtml(list) : '';
 
-  if(!list.length){ el.innerHTML = '<div class="empty">Aucun bilan enregistré pour le moment.</div>'; return; }
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucun bilan enregistr\u00e9 pour le moment.</div>'; return; }
 
   var riskBilanIds = {};
   computeAtRiskUsers().forEach(function(r){ r.bilanIds.forEach(function(id){ riskBilanIds[id]=true; }); });
@@ -259,60 +461,116 @@ function renderBilans(filterId){
     var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
     var dt = new Date(b.date);
 
-    // ── Mensurations ──
+    // \u2500\u2500 Mensurations \u2500\u2500
     var mensu = [];
     if(b.tour_taille) mensu.push('taille '+b.tour_taille+'cm');
     if(b.tour_hanche) mensu.push('hanche '+b.tour_hanche+'cm');
 
-    // ── Bloc kcal / décision du programme ──
+    // \u2500\u2500 Bloc kcal / d\u00e9cision du programme \u2500\u2500
     var kcalHtml;
     if(b.kcal_cible_apres == null && b.kcal_ajustement_delta == null){
-      kcalHtml = '<div class="bc-kcal"><span class="bc-kcal-na">📊 Pas de suivi kcal pour ce bilan (antérieur à cette fonctionnalité)</span></div>';
+      // Date exacte d'ajout des colonnes de suivi kcal sur `bilans`
+      // (migrations 20260818000001/000002_add_bilan_kcal_*.sql) \u2014 un rep\u00e8re
+      // fiable plut\u00f4t qu'une estimation approximative par anciennet\u00e9. Un
+      // bilan dat\u00e9 d'avant cette date n'a jamais pu recevoir ces donn\u00e9es :
+      // c'est normal, pas un \u00e9chec. Un bilan dat\u00e9 d'apr\u00e8s, en revanche,
+      // m\u00e9rite d'\u00eatre v\u00e9rifi\u00e9 (policy/permissions).
+      var KCAL_TRACKING_LAUNCH_DATE = '2026-08-18';
+      var isBeforeLaunch = b.date < KCAL_TRACKING_LAUNCH_DATE;
+      kcalHtml = isBeforeLaunch
+        ? '<div class="bc-kcal"><span class="bc-kcal-na">\ud83d\udcca Pas de suivi kcal pour ce bilan \u2014 ant\u00e9rieur \u00e0 l\'introduction de cette fonctionnalit\u00e9 (18/08/2026), rien \u00e0 corriger.</span></div>'
+        : '<div class="bc-kcal"><span class="bc-kcal-na">\u26a0\ufe0f Suivi kcal non enregistr\u00e9 pour ce bilan pourtant post\u00e9rieur \u00e0 l\'introduction de la fonctionnalit\u00e9 \u2014 v\u00e9rifier les permissions Supabase (bilans)</span></div>';
     } else {
       var delta = b.kcal_ajustement_delta || 0;
-      var badgeCls = delta===0 ? 'badge-none' : (delta<0 ? 'badge-down' : 'badge-up');
-      var badgeLbl = delta===0 ? 'Aucun changement' : (delta>0?'+':'')+delta+' kcal';
+      var status = b.kcal_ajustement_status || 'none';
+      var badgeCls = status==='pending' ? 'badge-pending'
+        : status==='approved' ? 'badge-approved'
+        : status==='rejected' ? 'badge-rejected'
+        : (delta===0 ? 'badge-none' : (delta<0 ? 'badge-down' : 'badge-up'));
+      var badgeLbl = status==='pending' ? 'En attente de validation'
+        : status==='approved' ? 'Ajustement valid\u00e9'
+        : status==='rejected' ? 'Ajustement rejet\u00e9'
+        : (delta===0 ? 'Aucun changement' : (delta>0?'+':'')+delta+' kcal');
+      // Boutons de validation admin \u2014 uniquement pour un ajustement en
+      // attente (status 'pending'). L'admin d\u00e9cide apr\u00e8s consultation du
+      // bilan, jamais d'application automatique du changement calorique.
+      var actionsHtml = '';
+      if(status==='pending'){
+        var champProp = b.kcal_ajustement_champ || 'kcal_adjustment';
+        var champNote = champProp==='kcal_target' ? '<div class="bc-kcal-raison">\ud83c\udfaf Calories forc\u00e9es pour ce patient \u2014 la validation modifiera directement l\'objectif kcal fixe.</div>' : '';
+        actionsHtml = champNote + '<div class="bc-kcal-actions">'
+          +'<button class="bc-kcal-btn approve" onclick="approveKcalAdjustment(\''+b.id+'\',\''+b.user_id+'\','+(b.kcal_ajustement_valeur_proposee!=null?b.kcal_ajustement_valeur_proposee:0)+',\''+champProp+'\',this)">\u2705 Valider l\'ajustement</button>'
+          +'<button class="bc-kcal-btn reject" onclick="rejectKcalAdjustment(\''+b.id+'\',this)">\u274c Rejeter</button>'
+          +'</div>';
+      } else if(status==='approved' || status==='rejected'){
+        actionsHtml = '<div class="bc-kcal-decided">'+(status==='approved'?'\u2705 Ajustement appliqu\u00e9 par l\'administrateur.':'\u274c Ajustement rejet\u00e9 par l\'administrateur, plan inchang\u00e9.')+'</div>';
+      }
       kcalHtml = '<div class="bc-kcal">'
-        +'<div class="bc-kcal-cible"><small>Cible calorique</small>'+(b.kcal_cible_apres!=null?Math.round(b.kcal_cible_apres)+' kcal/j':'—')+'</div>'
+        +'<div class="bc-kcal-cible"><small>Cible calorique '+(status==='pending'?'propos\u00e9e':'')+'</small>'+(b.kcal_cible_apres!=null?Math.round(b.kcal_cible_apres)+' kcal/j':'\u2014')+'</div>'
         +'<div><span class="bc-kcal-badge '+badgeCls+'">'+badgeLbl+'</span>'
         +(b.kcal_ajustement_raison?'<div class="bc-kcal-raison">'+esc(b.kcal_ajustement_raison)+'</div>':'')
-        +'</div></div>';
+        +'</div>'+actionsHtml+'</div>';
     }
 
-    // ── Groupes de champs (pills) ──
+    // \u2500\u2500 Groupes de champs (pills) \u2500\u2500
     var groupsHtml = FIELD_GROUPS.map(function(g){
       var rows = g.fields.filter(function(f){ return b[f[0]]; }).map(function(f){
         var val = b[f[0]];
-        var color = pillColor(val);
+        var color = pillColor(val, f[2]);
         return '<div class="bc-row"><span>'+f[1]+'</span><span class="bc-pill'+(color?' pill-'+color:'')+'">'+esc(val)+'</span></div>';
       });
       if(!rows.length) return '';
       return '<div class="bc-section-lbl">'+g.lbl+'</div><div class="bc-grid">'+rows.join('')+'</div>';
     }).join('');
 
-    // ── Notes libres ──
+    // \u2500\u2500 Notes libres \u2500\u2500
     var notes = [];
-    if(b.ecart_alimentaire) notes.push('<div><b>Écarts alimentaires</b>'+esc(b.ecart_alimentaire)+'</div>');
+    if(b.ecart_alimentaire) notes.push('<div><b>\u00c9carts alimentaires</b>'+esc(b.ecart_alimentaire)+'</div>');
     if(b.objectifs_notes) notes.push('<div><b>Objectifs semaine prochaine</b>'+esc(b.objectifs_notes)+'</div>');
     if(b.commentaire_libre) notes.push('<div><b>Commentaire libre</b>'+esc(b.commentaire_libre)+'</div>');
 
+    // \u2500\u2500 Badge de contexte \u2014 visible d'embl\u00e9e, pour lire le reste du bilan
+    // avec le bon recul (des \u00e9carts pendant un voyage n'ont pas le m\u00eame sens
+    // qu'une semaine "normale" qui d\u00e9raille).
+    var CONTEXTE_ICONS = {
+      'voyage ou d\u00e9placement': '\ud83e\uddf3', '\u00e9v\u00e9nement social': '\ud83c\udf89',
+      'malade cette semaine': '\ud83e\udd12', 'p\u00e9riode de r\u00e8gles': '\ud83e\udea9'
+    };
+    var contexteBadge = '';
+    if(b.contexte_semaine && b.contexte_semaine!=='Rien de particulier'){
+      var ico = CONTEXTE_ICONS[b.contexte_semaine.toLowerCase()] || '\ud83d\udccc';
+      contexteBadge = '<span class="bc-contexte-badge">'+ico+' '+esc(b.contexte_semaine)+'</span>';
+    }
+
     return '<div class="bilan-card">'
       +'<div class="bc-hdr"><div>'
-        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')+(riskBilanIds[b.id]?'<span class="bc-flag" title="Semaine difficile, à surveiller">⚠️</span>':'')+'</div>'
+        +'<div class="bc-date">'+esc(u?userLabel(u):'Utilisateur inconnu')
+          +(riskBilanIds[b.id]?'<span class="bc-flag" title="Semaine difficile, \u00e0 surveiller">\u26a0\ufe0f</span>':'')
+          +(b.souhaite_en_parler?'<span class="bc-flag" title="Souhaite en parler au prochain \u00e9change">\ud83d\ude4b</span>':'')
+        +'</div>'
         +'<div style="font-size:.74rem;color:var(--text3)">'+dt.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'
+        +(contexteBadge?'<div style="margin-top:6px">'+contexteBadge+'</div>':'')
       +'</div><div style="text-align:right">'
-        +'<div class="bc-weight">'+(b.poids||'—')+' kg'+(mensu.length?'<span class="bc-mensu">'+mensu.join(' · ')+'</span>':'')+'</div>'
-        +(u?'<a class="bc-contact" href="chat-admin.html?u='+b.user_id+'" target="_blank">💬 Contacter</a>':'')
+        +'<div class="bc-weight">'+(b.poids||'\u2014')+' kg'+(mensu.length?'<span class="bc-mensu">'+mensu.join(' \u00b7 ')+'</span>':'')+'</div>'
+        +(u?'<a class="bc-contact" href="chat-admin.html?u='+b.user_id+'" target="_blank">\ud83d\udcac Contacter</a>':'')
       +'</div></div>'
       +kcalHtml
+      +'<div class="ws-block" id="ws-'+b.id+'"><span class="ws-loading">Chargement du r\u00e9sum\u00e9 de la semaine\u2026</span></div>'
       +groupsHtml
       +(notes.length?'<div class="bc-notes">'+notes.join('')+'</div>':'')
       +'</div>';
   }).join('');
+
+  // Charg\u00e9 apr\u00e8s coup, un bilan \u00e0 la fois -- \u00e9vite de bloquer l'affichage
+  // initial de la liste le temps que chaque r\u00e9sum\u00e9 hebdomadaire se calcule.
+  list.forEach(function(b){
+    var u = ALL_USERS.find(function(x){ return x.id===b.user_id; });
+    loadWeeklySummary(b, u);
+  });
 }
 
 // Construit le HTML du mini-graphique de tendance de la cible calorique,
-// pour un utilisateur donné (liste déjà filtrée, triée du plus ancien au plus récent).
+// pour un utilisateur donn\u00e9 (liste d\u00e9j\u00e0 filtr\u00e9e, tri\u00e9e du plus ancien au plus r\u00e9cent).
 function renderKcalTrendHtml(list){
   var withKcal = list.filter(function(b){ return b.kcal_cible_apres!=null; })
     .slice().sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
@@ -330,10 +588,63 @@ function renderKcalTrendHtml(list){
       +'<div class="kt-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div></div>';
   }).join('');
 
-  return '<div class="kcal-trend"><h3>📈 Évolution de la cible calorique</h3><div class="kcal-trend-chart">'+cols+'</div></div>';
+  return '<div class="kcal-trend"><h3>\ud83d\udcc8 \u00c9volution de la cible calorique</h3><div class="kcal-trend-chart">'+cols+'</div></div>';
 }
 
-// Exporte les bilans actuellement affichés (respecte le filtre utilisateur) en CSV.
+// Validation/rejet, par un administrateur, d'un ajustement calorique
+// PROPOS\u00c9 par bilan.html \u2014 le seul chemin par lequel profiles.kcal_adjustment
+// change d\u00e9sormais suite \u00e0 une stagnation/d\u00e9rive de poids. Rien n'est
+// jamais appliqu\u00e9 automatiquement c\u00f4t\u00e9 patient.
+async function approveKcalAdjustment(bilanId, userId, valeurProposee, champ, btnEl){
+  // champ : 'kcal_adjustment' (mode dynamique, cas normal) ou
+  // 'kcal_target' (le patient a des calories forc\u00e9es \u2014 voir admin.html \u2014
+  // auquel cas calcTargets() ignore kcal_adjustment, donc la validation
+  // doit modifier kcal_target pour avoir un effet r\u00e9el).
+  champ = champ || 'kcal_adjustment';
+  var wrap = btnEl ? btnEl.closest('.bc-kcal-actions') : null;
+  if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+
+  var patch = {};
+  patch[champ] = valeurProposee;
+  var upd1 = await sb.from('profiles').update(patch).eq('id', userId);
+  if(upd1.error){
+    alert('\u00c9chec de la mise \u00e0 jour du profil : '+upd1.error.message);
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+  var upd2 = await sb.from('bilans').update({kcal_ajustement_status:'approved'}).eq('id', bilanId).select();
+  if(upd2.error || !upd2.data || !upd2.data.length){
+    alert('Le profil a \u00e9t\u00e9 mis \u00e0 jour mais le statut du bilan n\'a pas pu \u00eatre enregistr\u00e9 : '+(upd2.error?upd2.error.message:'aucune ligne modifi\u00e9e'));
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.kcal_ajustement_status = 'approved';
+  var u = ALL_USERS.find(function(x){ return x.id===userId; });
+  if(u) u[champ] = valeurProposee;
+
+  renderBilans(document.getElementById('user-filter').value);
+}
+
+async function rejectKcalAdjustment(bilanId, btnEl){
+  var wrap = btnEl ? btnEl.closest('.bc-kcal-actions') : null;
+  if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+
+  var upd = await sb.from('bilans').update({kcal_ajustement_status:'rejected'}).eq('id', bilanId).select();
+  if(upd.error || !upd.data || !upd.data.length){
+    alert('\u00c9chec de l\'enregistrement du rejet : '+(upd.error?upd.error.message:'aucune ligne modifi\u00e9e'));
+    if(wrap) wrap.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    return;
+  }
+
+  var b = ALL_BILANS.find(function(x){ return x.id===bilanId; });
+  if(b) b.kcal_ajustement_status = 'rejected';
+
+  renderBilans(document.getElementById('user-filter').value);
+}
+
+// Exporte les bilans actuellement affich\u00e9s (respecte le filtre utilisateur) en CSV.
 function exportCsv(){
   var filterId = document.getElementById('user-filter').value;
   var list = filterId==='all' ? ALL_BILANS : ALL_BILANS.filter(function(b){ return b.user_id===filterId; });
