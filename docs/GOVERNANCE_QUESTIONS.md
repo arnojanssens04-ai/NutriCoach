@@ -79,6 +79,53 @@ les calories (bilan_recap.html) est un précédent direct réutilisable ici.
 > documenter cette logique explicitement dans les CGU avant mise en
 > production réelle.
 
+> **DÉCISION RÉVISÉE (2026-08-19, après retour du juriste)** : la
+> décision ci-dessus est remplacée. Le juriste recommande un workflow de
+> revue humaine RÉELLE avant tout affichage patient pour les règles
+> liées à une pathologie, un symptôme ou un contexte médical :
+>
+> ```
+> données patient → observation → proposition générée
+>   → revue par un professionnel autorisé
+>   → modification ou rejet éventuel → validation → affichage au patient
+> ```
+>
+> Point clé : cette revue ne doit pas être un bouton "Approuver"
+> mécanique — le réviseur doit pouvoir consulter l'observation complète
+> (période, couverture du journal), les allergies/intolérances
+> (confirmées et non vérifiées), comprendre la règle utilisée, modifier
+> le texte ou les aliments proposés, rejeter, ou demander des
+> informations complémentaires. Une approbation sans ce contexte peut
+> être vue comme une intervention fictive plutôt que réelle — donc sans
+> effet protecteur vis-à-vis de l'art. 22 RGPD.
+>
+> Rôles distincts recommandés par le juriste (admin technique / diététicien
+> autorisé / professionnel référent / superviseur clinique / patient) —
+> **non implémentés tels quels pour l'instant** : l'application n'a
+> aujourd'hui qu'un seul rôle admin (`profiles.role`), pas de distinction
+> diététicien/superviseur. Cette distinction de rôles reste une évolution
+> future, pas un prérequis immédiat — mais le principe "un admin
+> technique ne valide pas une recommandation liée à une pathologie
+> simplement parce qu'il a un accès admin" est noté comme garde-fou à
+> construire quand cette distinction de rôles existera.
+>
+> **Effet MDR rappelé par le juriste** : la revue humaine réduit le
+> risque opérationnel et peut soutenir l'argument "pas une décision
+> exclusivement automatisée" (art. 22), mais ne retire PAS
+> automatiquement la qualification MDR — celle-ci dépend de la
+> destination du logiciel, pas de la présence d'une supervision. Voir
+> `docs/MDR_QUALIFICATION_BRIEF.md`.
+>
+> **Étape concrète retenue pour cette session** : construire, dans le
+> simulateur admin confiné (jamais connecté à un patient réel), un
+> panneau de revue qui donne à l'admin le contexte complet nécessaire
+> pour comprendre *pourquoi* un conseil est proposé (observation, seuils
+> franchis, aliments détectés, alternatives sélectionnées, garde-fous
+> déclenchés) avant toute action d'approbation/rejet — pas encore les
+> statuts de workflow complets (`pending_professional_review`, etc.) ni
+> la distinction de rôles, qui restent des évolutions futures à
+> construire quand la connexion réelle sera autorisée.
+
 ## 3. Chaîne de responsabilité professionnelle
 
 **La question** : en cas de conseil inadapté (ex. suggestion incompatible

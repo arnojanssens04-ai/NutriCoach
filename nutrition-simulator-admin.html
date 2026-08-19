@@ -94,6 +94,28 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .priority-badge{ font-size:.68rem; font-weight:700; text-transform:uppercase; padding:2px 8px; border-radius:999px; }
 .priority-badge.boosted{ background:var(--sage-l); color:var(--sage); }
 .priority-badge.base{ background:var(--border); color:var(--text2); }
+
+/* ── Panneau de revue — donne au réviseur le contexte complet pour
+   comprendre "pourquoi" un conseil est proposé, pas un bouton
+   Approuver aveugle (recommandation juridique du 2026-08-19). Maquette
+   uniquement : les actions n'ont aucun effet réel, rien n'est persisté. */
+.review-panel{ background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:16px 18px; margin-top:8px; }
+.review-panel-label{ font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--red); margin-bottom:12px; }
+.review-block{ margin-bottom:14px; }
+.review-block:last-of-type{ margin-bottom:0; }
+.review-block-title{ font-size:.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.review-row{ display:flex; justify-content:space-between; gap:10px; font-size:.83rem; padding:4px 0; border-bottom:1px solid var(--border); }
+.review-row:last-child{ border-bottom:none; }
+.review-row-lbl{ color:var(--text2); }
+.review-row-val{ font-weight:600; text-align:right; }
+.review-tag{ display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; margin:2px 4px 2px 0; }
+.review-tag.confirmed{ background:var(--red-l); color:var(--red); }
+.review-tag.to_verify{ background:var(--amber-l); color:var(--amber); }
+.review-tag.none{ font-size:.78rem; color:var(--text3); font-style:italic; }
+.review-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+.review-btn{ font-size:.78rem; font-weight:600; padding:8px 14px; border-radius:8px; border:1px solid var(--border2); cursor:default; background:var(--card2); color:var(--text2); }
+.review-btn.approve{ background:var(--sage-l); color:var(--sage); border-color:rgba(74,122,58,0.3); }
+.review-btn.reject{ background:var(--red-l); color:var(--red); border-color:rgba(138,47,47,0.25); }
 </style>
 </head>
 <body>
@@ -280,6 +302,84 @@ function renderAudit(audit) {
   return '<div class="audit-box">' + esc(JSON.stringify(audit, null, 2)) + '</div>';
 }
 
+/* -----------------------------------------------------------------------
+   renderAllergyIntoleranceTags(list)
+
+   Affiche le statut réel (confirmed/to_verify) de chaque allergie ou
+   intolérance déclarée — jamais réduit à "présent/absent", car le
+   moteur bloque aussi bien sur une donnée confirmée que non vérifiée
+   (voir nutrition-safety.js).
+   ----------------------------------------------------------------------- */
+function renderAllergyIntoleranceTags(list) {
+  if (!Array.isArray(list) || list.length === 0) return '<span class="review-tag none">Aucune déclarée</span>';
+  return list.map(function (entry) {
+    var cls = (entry.status === 'confirmed' || entry.status === 'to_verify') ? entry.status : 'none';
+    var lbl = entry.status === 'confirmed' ? ' (confirmée)' : entry.status === 'to_verify' ? ' (non vérifiée)' : '';
+    return '<span class="review-tag ' + cls + '">' + esc(entry.code) + esc(lbl) + '</span>';
+  }).join('');
+}
+
+/* -----------------------------------------------------------------------
+   renderReviewPanel(ruleId, result, fixture)
+
+   MAQUETTE VISUELLE uniquement, comme renderPopupPreview() — donne au
+   réviseur (admin) le contexte complet nécessaire pour comprendre
+   POURQUOI ce conseil est proposé avant toute action d'approbation,
+   conformément à la recommandation reçue le 2026-08-19 : une revue doit
+   permettre de consulter l'observation, la couverture du journal, les
+   allergies/intolérances (confirmées et non vérifiées), et de
+   comprendre la règle utilisée — jamais un bouton "Approuver" isolé
+   sans ce contexte. Aucune action ici n'a d'effet réel, aucune donnée
+   n'est persistée.
+   ----------------------------------------------------------------------- */
+function renderReviewPanel(ruleId, result, fixture) {
+  if (!result.eligible) return '';
+  var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
+  var obs = result.audit.observationSnapshot || {};
+  var profile = fixture.profile || {};
+
+  var obsRows = [
+    ['Motif observé', obs.label || ruleId],
+    ['État', obs.state || '—'],
+    ['Confiance obtenue / requise', (obs.confidence || '—') + ' / ' + (rule && rule.minConfidence || '—')],
+    ['Couverture du journal', (typeof obs.coverageRate === 'number' ? Math.round(obs.coverageRate * 100) + '%' : '—') + ' (seuil requis : ' + (rule && rule.minCoverageRate != null ? Math.round(rule.minCoverageRate * 100) + '%' : '—') + ')'],
+    ['Période analysée', (obs.windowStart || '—') + ' → ' + (obs.windowEnd || '—')]
+  ];
+  if (obs.triggeredCategories && obs.triggeredCategories.length) {
+    obsRows.push(['Catégories ayant déclenché le seuil', obs.triggeredCategories.map(function (c) { return c + ' (' + obs.categoryCounts[c] + 'x)'; }).join(', ')]);
+  }
+  if (typeof obs.avgIntake === 'number') {
+    obsRows.push(['Apport moyen observé / référence', obs.avgIntake.toFixed(1) + ' / ' + obs.dailyTarget + ' ' + (obs.unit || '')]);
+  }
+
+  var obsHtml = obsRows.map(function (r) {
+    return '<div class="review-row"><span class="review-row-lbl">' + esc(r[0]) + '</span><span class="review-row-val">' + esc(r[1]) + '</span></div>';
+  }).join('');
+
+  var profileHtml = '<div class="review-row"><span class="review-row-lbl">Régime déclaré</span><span class="review-row-val">' + esc(profile.diet || 'aucun') + '</span></div>'
+    + '<div class="review-row"><span class="review-row-lbl">Allergies</span><span class="review-row-val">' + renderAllergyIntoleranceTags(profile.allergies) + '</span></div>'
+    + '<div class="review-row"><span class="review-row-lbl">Intolérances</span><span class="review-row-val">' + renderAllergyIntoleranceTags(profile.intolerances) + '</span></div>'
+    + '<div class="review-row"><span class="review-row-lbl">Contexte clinique déclaré</span><span class="review-row-val">' + renderAllergyIntoleranceTags(profile.clinicalContext) + '</span></div>';
+
+  var selectionHtml = '<div class="review-row"><span class="review-row-lbl">Aliments repérés (ultra-transformés)</span><span class="review-row-val">' + esc((result.audit.flaggedFoodNames || []).join(', ') || '—') + '</span></div>'
+    + '<div class="review-row"><span class="review-row-lbl">Alternatives sélectionnées</span><span class="review-row-val">' + esc((result.audit.selectedFoodCodes || []).join(', ') || '—') + '</span></div>'
+    + '<div class="review-row"><span class="review-row-lbl">Correspondance par mot-clé (vs. liste générique)</span><span class="review-row-val">' + (result.audit.matchedByKeyword ? 'Oui, ciblée' : 'Non, générique') + '</span></div>';
+
+  return '<div class="review-panel">'
+    + '<div class="review-panel-label">Panneau de revue — contexte complet avant validation, jamais un bouton isolé</div>'
+    + '<div class="review-block"><div class="review-block-title">Pourquoi ce conseil est proposé</div>' + obsHtml + '</div>'
+    + '<div class="review-block"><div class="review-block-title">Profil du patient (fictif)</div>' + profileHtml + '</div>'
+    + '<div class="review-block"><div class="review-block-title">Sélection alimentaire</div>' + selectionHtml + '</div>'
+    + '<div class="review-actions">'
+    + '<div class="review-btn approve">✅ Valider</div>'
+    + '<div class="review-btn">✏️ Modifier le texte</div>'
+    + '<div class="review-btn">🍽️ Modifier les aliments</div>'
+    + '<div class="review-btn">❓ Demander des informations</div>'
+    + '<div class="review-btn reject">❌ Rejeter</div>'
+    + '</div>'
+    + '</div>';
+}
+
 function renderProfile(fixtureKey, fixture) {
   var result = runNutritionSimulation({
     ruleId: fixture.ruleId,
@@ -296,6 +396,8 @@ function renderProfile(fixtureKey, fixture) {
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
   html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result);
+  var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture);
+  if (reviewHtml) html += '<div class="section-lbl">Revue admin — pourquoi ce conseil ?</div>' + reviewHtml;
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
 
   html += '</div>';
