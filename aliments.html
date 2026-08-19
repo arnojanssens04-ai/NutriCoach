@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Sant&#233; &#8212; Aliments personnalis&#233;s (Admin)</title>
+<title>Cap Santé — Aliments personnalisés (Admin)</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -62,14 +62,14 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <body>
 
 <header class="topbar">
-  <div class="t-logo">Cap<span>Sant&#233;</span></div>
-  <a href="admin.html" class="t-back">&#8592; Admin</a>
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="admin.html" class="t-back">← Admin</a>
 </header>
 
 <div class="wrap" id="wrap">
   <div class="hero">
-    <h1>Aliments personnalis&#233;s</h1>
-    <p>Ajoutez un aliment absent de Ciqual ou Open Food Facts &#8212; il devient imm&#233;diatement cherchable partout dans l'app (Journal, Recettes, Plan fixe), exactement comme un aliment Ciqual classique.</p>
+    <h1>Aliments personnalisés</h1>
+    <p>Ajoutez un aliment absent de Ciqual ou Open Food Facts — il devient immédiatement cherchable partout dans l'app (Journal, Recettes, Plan fixe), exactement comme un aliment Ciqual classique.</p>
   </div>
 
   <div class="card">
@@ -77,23 +77,23 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div class="card-body">
       <div class="field"><label>Nom</label><input type="text" id="f-nom" placeholder="Ex: Galette de pois chiches maison"></div>
       <div class="field"><label>Code-barres (optionnel)</label><input type="text" id="f-barcode" placeholder="Ex: 5400113744122" inputmode="numeric">
-        <div class="field-hint">Si renseign&#233;, ce produit sera reconnu automatiquement la prochaine fois qu'il sera scann&#233;.</div>
+        <div class="field-hint">Si renseigné, ce produit sera reconnu automatiquement la prochaine fois qu'il sera scanné.</div>
       </div>
 
       <div class="section-lbl">Pour 100g</div>
       <div class="grid3">
         <div class="field"><label>Calories (kcal)</label><input type="number" id="f-kcal" step="0.1"></div>
-        <div class="field"><label>Prot&#233;ines (g)</label><input type="number" id="f-prot" step="0.1"></div>
+        <div class="field"><label>Protéines (g)</label><input type="number" id="f-prot" step="0.1"></div>
         <div class="field"><label>Glucides (g)</label><input type="number" id="f-gluc" step="0.1"></div>
       </div>
       <div class="grid3">
         <div class="field">
-          <label>dont Sucres (g) <span style="font-size:.65rem;color:var(--sage);font-weight:500">&#127807; diab&#232;te</span></label>
+          <label>dont Sucres (g) <span style="font-size:.65rem;color:var(--sage);font-weight:500">🌿 diabète</span></label>
           <input type="number" id="f-sucres" step="0.1">
-          <div style="font-size:.67rem;color:var(--text3);margin-top:3px">Sur l'&#233;tiquette : "dont sucres"</div>
+          <div style="font-size:.67rem;color:var(--text3);margin-top:3px">Sur l'étiquette : "dont sucres"</div>
         </div>
         <div class="field"><label>Lipides (g)</label><input type="number" id="f-lip" step="0.1"></div>
-        <div class="field"><label>dont satur&#233;es (g)</label><input type="number" id="f-ags" step="0.1"></div>
+        <div class="field"><label>dont saturées (g)</label><input type="number" id="f-ags" step="0.1"></div>
       </div>
       <div class="grid3">
         <div class="field"><label>Fibres (g)</label><input type="number" id="f-fibres" step="0.1"></div>
@@ -106,21 +106,10 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
         <div class="field"><label>Potassium (mg)</label><input type="number" id="f-pot" step="0.1"></div>
       </div>
       <div class="grid3">
-        <div class="field"><label>Magn&#233;sium (mg)</label><input type="number" id="f-mg" step="0.1"></div>
+        <div class="field"><label>Magnésium (mg)</label><input type="number" id="f-mg" step="0.1"></div>
         <div class="field"><label>Sodium (mg)</label><input type="number" id="f-na" step="0.1"></div>
         <div class="field"><label>Zinc (mg)</label><input type="number" id="f-zn" step="0.01"></div>
       </div>
-
-      <div class="section-lbl">Lipides d&#233;taill&#233;s &amp; vitamine C (optionnel) <span style="font-size:.65rem;color:var(--sage);font-weight:500">&#129728; cardiovasculaire</span></div>
-      <div class="grid3">
-        <div class="field"><label>dont mono-insatur&#233;es &#8212; AGMI (g)</label><input type="number" id="f-mono" step="0.1"></div>
-        <div class="field"><label>dont Om&#233;ga-3 (g)</label><input type="number" id="f-o3" step="0.01"></div>
-        <div class="field"><label>dont Om&#233;ga-6 (g)</label><input type="number" id="f-o6" step="0.01"></div>
-      </div>
-      <div class="grid3">
-        <div class="field"><label>Vitamine C (mg)</label><input type="number" id="f-vitc" step="0.1"></div>
-      </div>
-      <div class="field-hint" style="margin:-6px 0 13px">Ces valeurs se trouvent rarement sur un emballage classique &#8212; laissez &#224; 0 si vous ne les connaissez pas, ce n'est pas bloquant.</div>
 
       <button class="btn btn-gold" id="save-btn" onclick="saveFood()" style="margin-top:8px">Ajouter cet aliment</button>
       <button class="btn" id="cancel-btn" onclick="cancelEdit()" style="margin-top:8px;display:none;background:none;border:1px solid var(--border);color:var(--text2)">Annuler la modification</button>
@@ -128,7 +117,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   </div>
 
   <div class="card">
-    <div class="card-hdr"><span>Aliments d&#233;j&#224; ajout&#233;s</span></div>
+    <div class="card-hdr"><span>Aliments déjà ajoutés</span></div>
     <div class="card-body" id="food-list"></div>
   </div>
 </div>
@@ -155,19 +144,19 @@ sb.auth.getSession().then(function(r){
 async function checkAdminAndLoad(){
   var pr = await sb.from('profiles').select('role').eq('id',USER.id).single();
   if(!pr.data || pr.data.role!=='admin'){
-    document.getElementById('wrap').innerHTML = '<div class="denied">Acc\u00e8s r\u00e9serv\u00e9 aux administrateurs.</div>';
+    document.getElementById('wrap').innerHTML = '<div class="denied">Accès réservé aux administrateurs.</div>';
     return;
   }
   loadFoods();
 
-  // Arriv\u00e9e depuis un scan sans r\u00e9sultat \u2014 le code-barres est d\u00e9j\u00e0 connu,
+  // Arrivée depuis un scan sans résultat — le code-barres est déjà connu,
   // pas besoin de le retaper.
   var params = new URLSearchParams(window.location.search);
   var barcode = params.get('barcode');
   if(barcode){
     document.getElementById('f-barcode').value = barcode;
     document.getElementById('f-nom').focus();
-    toast('Code-barres pr\u00e9-rempli \u2014 indiquez le nom et les valeurs nutritionnelles');
+    toast('Code-barres pré-rempli — indiquez le nom et les valeurs nutritionnelles');
   }
 }
 
@@ -178,19 +167,19 @@ async function loadFoods(){
   var r = await sb.from('aliments_custom').select('*').order('created_at',{ascending:false});
   CURRENT_FOODS = r.data || [];
   var el = document.getElementById('food-list');
-  if(!CURRENT_FOODS.length){ el.innerHTML = '<div class="empty">Aucun aliment personnalis\u00e9 pour le moment.</div>'; return; }
+  if(!CURRENT_FOODS.length){ el.innerHTML = '<div class="empty">Aucun aliment personnalisé pour le moment.</div>'; return; }
   el.innerHTML = CURRENT_FOODS.map(function(f){
     return '<div class="food-item"><div>'
       +'<div class="food-name">'+esc(f.nom)+'</div>'
-      +'<div class="food-meta">'+Math.round(f.kcal)+' kcal \u00b7 P:'+f.prot+'g \u00b7 G:'+f.gluc+'g \u00b7 L:'+f.lip+'g /100g</div>'
+      +'<div class="food-meta">'+Math.round(f.kcal)+' kcal · P:'+f.prot+'g · G:'+f.gluc+'g · L:'+f.lip+'g /100g</div>'
       +'</div><div style="display:flex;gap:6px">'
-      +'<button class="food-del" onclick="editFood(\''+f.id+'\')" style="background:var(--gold-l);border-color:rgba(45,79,28,0.3);color:var(--gold)">\u270f\ufe0f</button>'
-      +'<button class="food-del" onclick="deleteFood(\''+f.id+'\')">\u2715</button>'
+      +'<button class="food-del" onclick="editFood(\''+f.id+'\')" style="background:var(--gold-l);border-color:rgba(45,79,28,0.3);color:var(--gold)">✏️</button>'
+      +'<button class="food-del" onclick="deleteFood(\''+f.id+'\')">✕</button>'
       +'</div></div>';
   }).join('');
 }
 
-var FORM_FIELDS = ['f-nom','f-barcode','f-kcal','f-prot','f-gluc','f-sucres','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn','f-mono','f-o3','f-o6','f-vitc'];
+var FORM_FIELDS = ['f-nom','f-barcode','f-kcal','f-prot','f-gluc','f-sucres','f-lip','f-ags','f-fibres','f-fer','f-cal','f-pot','f-mg','f-na','f-zn'];
 
 function editFood(id){
   var f = CURRENT_FOODS.find(function(x){ return x.id===id; });
@@ -211,10 +200,6 @@ function editFood(id){
   document.getElementById('f-mg').value = f.mg||0;
   document.getElementById('f-na').value = f.na||0;
   document.getElementById('f-zn').value = f.zn||0;
-  document.getElementById('f-mono').value = f.mono||0;
-  document.getElementById('f-o3').value = f.o3||0;
-  document.getElementById('f-o6').value = f.o6||0;
-  document.getElementById('f-vitc').value = f.vitc||0;
   document.getElementById('form-card-title').textContent = 'Modifier : '+f.nom;
   document.getElementById('save-btn').textContent = 'Enregistrer les modifications';
   document.getElementById('cancel-btn').style.display = 'block';
@@ -240,8 +225,7 @@ async function saveFood(){
     sucres: numVal('f-sucres'),
     lip: numVal('f-lip'), ags: numVal('f-ags'), fibres: numVal('f-fibres'),
     fer: numVal('f-fer'), cal: numVal('f-cal'), pot: numVal('f-pot'),
-    mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn'),
-    mono: numVal('f-mono'), o3: numVal('f-o3'), o6: numVal('f-o6'), vitc: numVal('f-vitc')
+    mg: numVal('f-mg'), na: numVal('f-na'), zn: numVal('f-zn')
   };
 
   var r;
@@ -251,17 +235,17 @@ async function saveFood(){
     data.created_by = USER.id;
     r = await sb.from('aliments_custom').insert(data);
   }
-  if(r.error){ toast('\u274c '+r.error.message); return; }
-  toast(EDITING_ID ? '\u2705 "'+nom+'" modifi\u00e9' : '\u2705 "'+nom+'" ajout\u00e9 \u2014 d\u00e9j\u00e0 cherchable dans toute l\'app');
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast(EDITING_ID ? '✅ "'+nom+'" modifié' : '✅ "'+nom+'" ajouté — déjà cherchable dans toute l\'app');
   cancelEdit();
   loadFoods();
 }
 
 async function deleteFood(id){
   var r = await sb.from('aliments_custom').delete().eq('id',id);
-  if(r.error){ toast('\u274c '+r.error.message); return; }
+  if(r.error){ toast('❌ '+r.error.message); return; }
   if(EDITING_ID===id) cancelEdit();
-  toast('Aliment supprim\u00e9');
+  toast('Aliment supprimé');
   loadFoods();
 }
 </script>

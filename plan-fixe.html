@@ -142,7 +142,7 @@ function toggleMaster(){
 }
 
 function loadDB(){
-  fetch('ciqual.json').then(function(r){return r.json();}).then(function(raw){
+  fetch('data/ciqual.json').then(function(r){return r.json();}).then(function(raw){
     DB = raw.map(function(r){ return {nom:r[1],kcal:pN(r[2]),prot:pN(r[3]),gluc:pN(r[4]),lip:pN(r[5]),fibres:pN(r[14]),pot:pN(r[13]),cal:pN(r[12]),fer:pN(r[11]),mg:pN(r[15]),zn:pN(r[17])}; });
     loadCustomFoods();
   }).catch(function(){ console.warn('Ciqual non chargé'); loadCustomFoods(); });

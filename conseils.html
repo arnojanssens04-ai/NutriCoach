@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cap Santé — Observation (Admin, démo)</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="trend-card-styles.css">
 <style>
 :root {
   --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
@@ -99,8 +98,6 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
     <div id="patterns-zone"></div>
     <div id="synthese-neutre"></div>
     <div id="missing-info"></div>
-    <div id="trend-cards-zone"></div>
-    <div id="trend-dialogs-zone"></div>
 
   </div>
 </div>
@@ -131,10 +128,6 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   patients et lecture du journal filtrée par user_id).
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="trend-definitions.js"></script>
-<script src="trend-engine.js"></script>
-<script src="trend-card-render.js"></script>
-<script src="trend-card-interactions.js"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -621,9 +614,6 @@ function runDemo(){
   var pattern = detectPatternFromRegistry('repeated_ultra_processed_foods', observationWindow, DEMO_JOURNAL);
 
   renderObservationPage(observationWindow, pattern, energyByDay);
-
-  var trendResult = computeTrendResult('repeated_ultra_processed_foods', DEMO_JOURNAL, DEMO_REFERENCE_DATE);
-  renderTrendCardsZone([trendResult]);
 }
 
 // Affichée uniquement si assertDemoMode() échoue. Message volontairement
@@ -663,35 +653,6 @@ function clearObservationZones(){
   document.getElementById('patterns-zone').innerHTML = '';
   document.getElementById('synthese-neutre').innerHTML = '';
   document.getElementById('missing-info').innerHTML = '';
-  var cardsZone = document.getElementById('trend-cards-zone');
-  if(cardsZone) cardsZone.innerHTML = '';
-  var dialogsZone = document.getElementById('trend-dialogs-zone');
-  if(dialogsZone) dialogsZone.innerHTML = '';
-}
-
-// Bootstrap factorisé de la zone des cartes de tendance — appelé depuis
-// runDemo() et loadRealJournalAndRender(). Ne contient aucun calcul
-// métier (TrendCardResult est déjà calculé par computeTrendResult avant
-// l'appel) et aucune branche par état : le détail de chaque état est
-// géré exclusivement par trend-card-render.js. N'insère que du HTML déjà
-// échappé par renderCompactCard()/renderDialog() — aucune donnée brute de
-// journal n'est concaténée ici.
-function renderTrendCardsZone(results){
-  var cardsZone = document.getElementById('trend-cards-zone');
-  var dialogsZone = document.getElementById('trend-dialogs-zone');
-  if(!cardsZone || !dialogsZone) return;
-  cardsZone.innerHTML = results.map(function(r, i){
-    return renderCompactCard(r, 'trend-dialog-' + i, 'trend-btn-' + i);
-  }).join('');
-  dialogsZone.innerHTML = results.map(function(r, i){
-    return renderDialog(r, 'trend-dialog-' + i, 'trend-title-' + i);
-  }).join('');
-  wireTrendDialogs(results.map(function(r, i){
-    return {
-      buttonEl: document.getElementById('trend-btn-' + i),
-      dialogEl: document.getElementById('trend-dialog-' + i)
-    };
-  }));
 }
 
 function renderLoadingState(){
@@ -794,9 +755,6 @@ function loadRealJournalAndRender(patientId){
       var pattern = detectPatternFromRegistry('repeated_ultra_processed_foods', observationWindow, journal);
 
       renderObservationPage(observationWindow, pattern, energyByDay);
-
-      var trendResult = computeTrendResult('repeated_ultra_processed_foods', journal, referenceDate);
-      renderTrendCardsZone([trendResult]);
     });
 }
 </script>

@@ -431,14 +431,6 @@ footer a { color: var(--ink3); text-decoration: underline; }
         <input type="password" id="s-pwd" placeholder="Min. 8 caractères" autocomplete="new-password"
                onkeydown="if(event.key==='Enter')signup()">
       </div>
-      <div class="field">
-        <label for="s-diet">Régime alimentaire (facultatif)</label>
-        <select id="s-diet">
-          <option value="">Aucune restriction particulière</option>
-          <option value="vegetarian">Végétarien</option>
-          <option value="vegan">Végétalien</option>
-        </select>
-      </div>
       <button class="btn" id="sb" onclick="signup()">Créer mon compte</button>
     </div>
 
@@ -551,7 +543,6 @@ async function signup() {
   var nom = document.getElementById('s-nom').value.trim();
   var e   = document.getElementById('s-email').value.trim();
   var p   = document.getElementById('s-pwd').value;
-  var diet = document.getElementById('s-diet').value || null; // '' => null (aucune restriction déclarée)
   if (!pre || !nom || !e || !p) { showMsg('se', 'Remplissez tous les champs.'); return; }
   if (p.length < 8) { showMsg('se', 'Mot de passe trop court (8 caractères min).'); return; }
   var btn = document.getElementById('sb');
@@ -568,7 +559,7 @@ async function signup() {
     var sendAt = new Date(Date.now() + delayMinutes*60000).toISOString();
     var variant = 1 + Math.floor(Math.random()*3);
     await sb.from('profiles').upsert({
-      id: r.data.user.id, prenom: pre, nom: nom, diet: diet,
+      id: r.data.user.id, prenom: pre, nom: nom,
       welcome_send_at: sendAt, welcome_msg_variant: variant, welcome_message_sent: false
     });
     var loginR = await sb.auth.signInWithPassword({ email: e, password: p });
