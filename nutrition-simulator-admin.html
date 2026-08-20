@@ -443,9 +443,75 @@ function computeObservationFreshness(result, fixture) {
    décision descriptive par candidat — jamais une correction automatique
    du conseil, seulement des éléments pour la revue admin.
    ----------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------
+   computeMealDominance(flaggedFoodNames, journalEntries, freshness)
+
+   Descriptif uniquement — décide si un seul mealType concentre assez
+   d'occurrences pour être proposé comme axe unique, ou si plusieurs
+   repas restent concernés (auquel cas on ne choisit jamais à la place
+   de la personne). Règle validée le 2026-08-20 :
+
+   Dominant si TOUTES les conditions sont réunies :
+   - ratio d'occurrences >= 0.60 (threshold) ;
+   - au moins 3 occurrences (minimumOccurrences) ;
+   - occurrences réparties sur au moins 2 jours distincts
+     (minimumDistinctDays) ;
+   - couverture globale de l'observation suffisante (fraîcheur non
+     "stale" ET au moins minimumDistinctDays jours renseignés au total).
+
+   Sinon : 'insufficient_data' si aucune occurrence, si le total est
+   sous minimumOccurrences, ou si la couverture globale est
+   insuffisante ; sinon 'multiple_meals' — jamais un choix arbitraire.
+   ----------------------------------------------------------------------- */
+function computeMealDominance(flaggedFoodNames, journalEntries, freshness) {
+  var threshold = 0.60, minimumOccurrences = 3, minimumDistinctDays = 2;
+  var names = flaggedFoodNames || [];
+  var byMealType = {};
+  (journalEntries || []).forEach(function (e) {
+    if (!e || !e.aliment || !e.repas || !e.date || names.indexOf(e.aliment) === -1) return;
+    if (!byMealType[e.repas]) byMealType[e.repas] = { count: 0, days: {} };
+    byMealType[e.repas].count += 1;
+    byMealType[e.repas].days[e.date] = true;
+  });
+
+  var mealBreakdown = Object.keys(byMealType).map(function (mt) {
+    return { mealType: mt, count: byMealType[mt].count, distinctDays: Object.keys(byMealType[mt].days).length };
+  }).sort(function (a, b) { return b.count - a.count; });
+
+  var totalOccurrences = mealBreakdown.reduce(function (sum, m) { return sum + m.count; }, 0);
+
+  var coverageSufficient = !!freshness && freshness.status !== 'stale'
+    && typeof freshness.analyzableDays === 'number' && freshness.analyzableDays >= minimumDistinctDays;
+
+  var top = mealBreakdown.length > 0 ? mealBreakdown[0] : null;
+  var dominantRatio = top && totalOccurrences > 0 ? top.count / totalOccurrences : null;
+
+  var status, dominantMealType = null;
+  if (totalOccurrences === 0 || totalOccurrences < minimumOccurrences || !coverageSufficient) {
+    status = 'insufficient_data';
+  } else if (top && dominantRatio >= threshold && top.count >= minimumOccurrences && top.distinctDays >= minimumDistinctDays) {
+    status = 'dominant';
+    dominantMealType = top.mealType;
+  } else {
+    status = 'multiple_meals';
+  }
+
+  return {
+    status: status,
+    dominantMealType: dominantMealType,
+    dominantRatio: dominantRatio,
+    totalOccurrences: totalOccurrences,
+    mealBreakdown: mealBreakdown,
+    distinctDays: top ? top.distinctDays : 0,
+    threshold: threshold,
+    minimumOccurrences: minimumOccurrences,
+    minimumDistinctDays: minimumDistinctDays
+  };
+}
+
 function computeMealPatternWarnings(ruleId, result, fixture) {
   if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof classifyFoodAgainstMealPattern !== 'function') {
-    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null, mealPatternForType: null, nonRecurringMeal: false, insufficientCoverage: false };
+    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null, mealPatternForType: null, nonRecurringMeal: false, insufficientCoverage: false, mealDominance: null };
   }
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
   var labels = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
@@ -513,10 +579,13 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
   // meal-pattern-detector.js) — jamais un jugement sur le repas lui-même.
   var insufficientCoverage = !!mealPatternForType && mealPatternForType.confidence === 'unknown';
 
+  var mealDominance = computeMealDominance(flaggedNames, fixture.journalEntries, freshness);
+
   return {
     mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness,
     clarifyingQuestion: clarifyingQuestion, mealPatternForType: mealPatternForType,
-    nonRecurringMeal: nonRecurringMeal, insufficientCoverage: insufficientCoverage
+    nonRecurringMeal: nonRecurringMeal, insufficientCoverage: insufficientCoverage,
+    mealDominance: mealDominance
   };
 }
 
