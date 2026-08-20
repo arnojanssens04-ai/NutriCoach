@@ -340,6 +340,114 @@ check('15. Absence de réseau, d\'IA et de vocabulaire clinique dans renderPopup
   assert(!/clinicalContext|symptom|pathologie|patholog|diagnostic/i.test(fnBody));
 });
 
+// ── Synthèse groupée (mealDominance 'multiple_meals') ──────────────────
+// Scénario avec plusieurs repas concernés et 4 catégories distinctes
+// d'aliments ultra-transformés (12 occurrences) — aucun mealType
+// n'atteint le seuil de dominance (ratio max 5/12 ≈ 0.42 < 0.60).
+const DAYS = ['2026-08-12', '2026-08-13', '2026-08-14', '2026-08-15', '2026-08-16', '2026-08-17', '2026-08-18'];
+function buildMultiMealFixture() {
+  const journal = [];
+  [DAYS[0], DAYS[1], DAYS[2]].forEach((d) => journal.push(entry(d, 'breakfast', 'Mousse au chocolat', 100, true)));
+  [DAYS[0], DAYS[1], DAYS[2]].forEach((d) => journal.push(entry(d, 'lunch', 'Frites surgelées', 150, true)));
+  [DAYS[3], DAYS[4]].forEach((d) => journal.push(entry(d, 'dinner', 'Soda cola', 330, true)));
+  [DAYS[5], DAYS[6]].forEach((d) => journal.push(entry(d, 'dinner', 'Burger industriel', 250, true)));
+  [DAYS[5], DAYS[6]].forEach((d) => journal.push(entry(d, 'breakfast', 'Jambon industriel', 40, true)));
+  return { ruleId: 'reduce_ultra_processed_foods_v1', referenceDate: DAYS[6], journalEntries: journal, profile: { patientId: 'x', age: 30, isPregnantOrBreastfeeding: false, allergies: [], intolerances: [], clinicalContext: [], symptoms: [], diet: null, eligibleForAutomatedAdvice: true } };
+}
+
+check('16. Synthèse groupée : au moins 4 catégories détectées, mais jamais plus de 3 groupes affichés dans la vue principale', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  assert.strictEqual(result.eligible, true, result.blockReason);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  assert.strictEqual(warnings.mealDominance.status, 'multiple_meals');
+  assert(warnings.categoryBreakdown.length >= 4, 'au moins 4 catégories attendues, obtenu : ' + warnings.categoryBreakdown.length);
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  const mainSection = html.split('popup-details-panel')[0];
+  const groupMatches = mainSection.match(/<li>[^<]*: \d+ occurrence/g) || [];
+  assert(groupMatches.length <= 3, 'au plus 3 groupes attendus dans la vue principale, obtenu : ' + groupMatches.length);
+});
+
+check('17. Synthèse groupée : le total d\'occurrences et le nombre de groupes sont corrects, "autres_elements" utilisé en repli', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  assert.strictEqual(warnings.mealDominance.totalOccurrences, 12);
+  const totalFromGroups = warnings.categoryBreakdown.reduce((s, g) => s + g.occurrenceCount, 0);
+  assert.strictEqual(totalFromGroups, 12);
+  const fallback = warnings.categoryBreakdown.filter((g) => g.categoryCode === 'autres_elements')[0];
+  assert(fallback, 'Mousse au chocolat devrait tomber dans la catégorie de repli autres_elements');
+  assert.strictEqual(fallback.categoryLabel, 'Autres éléments enregistrés');
+});
+
+check('18. Synthèse groupée : "Prochaine étape" remplace "OPTIONS", jamais de section contradictoire ("aucune option pertinente" affichée comme un choix)', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  assert(html.includes('Prochaine étape'));
+  assert(html.includes('Quel repas souhaitez-vous améliorer en premier'));
+  assert(!/popup-section-title">Options</.test(html), 'la section "Options" ne doit pas apparaître pour ce scénario');
+});
+
+check('19. Synthèse groupée : une option de choix de repas par mealType présent, plus "Je préfère en discuter", jamais un choix automatique', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  assert(html.includes('Petit-déjeuner'));
+  assert(html.includes('Déjeuner'));
+  assert(html.includes('Dîner'));
+  assert(html.includes('Je préfère en discuter'));
+});
+
+check('20. Synthèse groupée : la carte principale n\'affiche plus les 12 aliments individuellement (au plus les libellés de catégories)', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  const mainSection = html.split('popup-details-panel')[0];
+  // Le nom individuel d'un aliment (ex. "Burger industriel") ne doit
+  // apparaître QUE dans le panneau de détails, jamais dans la synthèse.
+  assert(!mainSection.includes('Burger industriel'), 'la synthèse ne doit pas citer un aliment individuel');
+  assert(html.includes('Burger industriel'), 'le détail doit rester accessible dans le panneau de détails');
+});
+
+check('21. Détails : le panneau "Voir les aliments pris en compte" contient les 12 éléments regroupés et le texte brut du conseil', () => {
+  const sandbox = buildSandbox();
+  const fixture = buildMultiMealFixture();
+  const result = runSimulation(sandbox, fixture);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  assert(html.includes('Voir les aliments pris en compte'));
+  assert(html.includes('12 éléments pris en compte') || html.includes('12 élément'));
+  assert(html.includes(esc_(result.advice.body)) || html.includes(result.advice.body.slice(0, 20)));
+});
+
+function esc_(s) { return String(s); }
+
+check('22. Régression après branchement de la synthèse : le scénario mono-repas (muesli/yaourt/banane/avoine) reste inchangé — composition + compréhension affichées, pas de "Prochaine étape"', () => {
+  const sandbox = buildSandbox();
+  const journal = [];
+  DAYS.forEach((d) => journal.push(entry(d, 'breakfast', 'Cereales sucrees industrielles', 60, true)));
+  DAYS.forEach((d) => journal.push(entry(d, 'breakfast', 'Yaourt nature', 125, false)));
+  DAYS.forEach((d) => journal.push(entry(d, 'breakfast', 'Banane', 100, false)));
+  [DAYS[0], DAYS[2], DAYS[4]].forEach((d) => journal.push(entry(d, 'breakfast', 'Flocons d\'avoine', 30, false)));
+  const fixture = { ruleId: 'reduce_ultra_processed_foods_v1', referenceDate: DAYS[6], journalEntries: journal, profile: { patientId: 'x', age: 30, isPregnantOrBreastfeeding: false, allergies: [], intolerances: [], clinicalContext: [], symptoms: [], diet: null, eligibleForAutomatedAdvice: true } };
+  const result = runSimulation(sandbox, fixture);
+  assert.strictEqual(result.eligible, true, result.blockReason);
+  const warnings = computeWarnings(sandbox, fixture.ruleId, result, fixture);
+  assert.strictEqual(warnings.mealDominance.status, 'dominant');
+  const html = renderCard(sandbox, fixture.ruleId, result, warnings);
+  assert(html.includes('Composition habituelle'));
+  assert(!html.includes('Prochaine étape'));
+});
+
 console.log('\n--- RÉSUMÉ ---');
 console.log('Réussis: ' + passed + ' / ' + (passed + failed));
 if (failed > 0) { console.log('ÉCHECS: ' + failed); process.exitCode = 1; }
