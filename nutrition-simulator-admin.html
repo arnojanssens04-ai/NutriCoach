@@ -120,6 +120,22 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
 .popup-btn.secondary{ background:transparent; color:var(--text2); }
 .popup-none{ text-align:center; font-size:.82rem; color:var(--text3); font-style:italic; padding:10px; }
+.popup-meta{ padding:0 16px 12px; display:flex; flex-direction:column; gap:4px; }
+.popup-meta-row{ display:flex; justify-content:space-between; gap:10px; font-size:.74rem; color:var(--text2); }
+.popup-meta-lbl{ color:var(--text3); }
+.popup-freshness-badge{ font-weight:700; }
+.popup-freshness-badge.status-recent{ color:var(--sage); }
+.popup-freshness-badge.status-aging{ color:var(--amber); }
+.popup-freshness-badge.status-stale{ color:var(--red); }
+.popup-stale-block{ margin:0 16px 16px; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; }
+.popup-stale-title{ font-weight:700; font-size:.86rem; margin-bottom:6px; }
+.popup-stale-text{ font-size:.8rem; color:var(--text2); line-height:1.5; }
+.popup-section{ padding:0 16px 14px; }
+.popup-section-title{ font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text3); margin-bottom:6px; }
+.popup-none-inline{ font-size:.78rem; color:var(--text3); font-style:italic; margin:0; }
+.popup-understand-row{ display:flex; justify-content:space-between; gap:10px; font-size:.78rem; padding:3px 0; }
+.popup-understand-reason{ color:var(--text2); text-align:right; }
+.popup-details-link{ text-align:center; font-size:.74rem; color:var(--text3); text-decoration:underline; padding:0 16px 12px; cursor:default; }
 
 .priority-list{ display:flex; flex-direction:column; gap:10px; }
 .priority-row{ display:flex; align-items:center; gap:10px; background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:8px 12px; font-size:.82rem; }
@@ -367,23 +383,42 @@ function daysBetweenIsoDates(a, b) {
    Descriptif uniquement — lit les données déjà chargées (journalEntries,
    observationSnapshot), n'en collecte aucune nouvelle. Ne conclut jamais
    sur la validité du conseil, seulement sur l'ancienneté de la dernière
-   donnée disponible dans la fenêtre déjà analysée par le moteur.
+   donnée disponible par rapport à la date de référence de l'analyse
+   (fixture.referenceDate) — jamais par rapport à "aujourd'hui" au sens
+   du navigateur, pour rester reproductible dans les fixtures figées.
+
+   Seuils (recalibrés le 2026-08-20, validés) :
+   recent : 0 à 2 jours ; aging : 3 à 14 jours ; stale : plus de 14 jours,
+   ou aucune donnée dans la période analysée.
    ----------------------------------------------------------------------- */
 function computeObservationFreshness(result, fixture) {
   var obs = result.audit && result.audit.observationSnapshot;
   if (!obs || !obs.windowStart || !obs.windowEnd) return null;
+
+  var referenceDate = fixture.referenceDate;
 
   var lastDataDate = (fixture.journalEntries || []).reduce(function (max, e) {
     if (!e || !e.date || e.date < obs.windowStart || e.date > obs.windowEnd) return max;
     return (!max || e.date > max) ? e.date : max;
   }, null);
 
-  var status = 'stale';
-  var staleWarning = null;
-  if (lastDataDate) {
-    var gapDays = daysBetweenIsoDates(lastDataDate, obs.windowEnd);
-    status = gapDays <= 0 ? 'recent' : (gapDays <= 3 ? 'aging' : 'stale');
+  // daysBetweenIsoDates parse chaque date en UTC minuit avant de
+  // soustraire — jamais une comparaison de chaînes ni un new Date() sans
+  // fuseau explicite, qui dériverait selon le fuseau d'exécution.
+  var ageInDays = lastDataDate ? daysBetweenIsoDates(lastDataDate, referenceDate) : null;
+
+  var status;
+  if (ageInDays === null) {
+    status = 'stale';
+  } else if (ageInDays <= 2) {
+    status = 'recent';
+  } else if (ageInDays <= 14) {
+    status = 'aging';
+  } else {
+    status = 'stale';
   }
+
+  var staleWarning = null;
   if (status !== 'recent') {
     staleWarning = lastDataDate
       ? 'Dernière donnée utilisée le ' + lastDataDate + ' — tendance potentiellement ancienne.'
@@ -391,9 +426,9 @@ function computeObservationFreshness(result, fixture) {
   }
 
   return {
+    referenceDate: referenceDate, lastDataDate: lastDataDate, ageInDays: ageInDays, status: status,
     windowStart: obs.windowStart, windowEnd: obs.windowEnd,
-    analyzableDays: obs.analyzableDays, lastDataDate: lastDataDate,
-    status: status, staleWarning: staleWarning
+    analyzableDays: obs.analyzableDays, staleWarning: staleWarning
   };
 }
 
@@ -410,7 +445,7 @@ function computeObservationFreshness(result, fixture) {
    ----------------------------------------------------------------------- */
 function computeMealPatternWarnings(ruleId, result, fixture) {
   if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof classifyFoodAgainstMealPattern !== 'function') {
-    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null };
+    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null, mealPatternForType: null, nonRecurringMeal: false, insufficientCoverage: false };
   }
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
   var labels = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
@@ -465,60 +500,164 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
 
   var freshness = computeObservationFreshness(result, fixture);
 
-  return { mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness, clarifyingQuestion: clarifyingQuestion };
+  // Repas non récurrent : un aliment repéré a bien été rattaché à un
+  // créneau (mealType), mais aucune composition habituelle n'a atteint
+  // le seuil de récurrence dans meal-pattern-detector.js (aucun pattern
+  // émis pour ce créneau) — jamais confondu avec "aucune donnée du tout".
+  var mealPatternForType = mealType ? mealPatterns.filter(function (p) { return p.mealType === mealType; })[0] || null : null;
+  var nonRecurringMeal = !!mealType && !mealPatternForType;
+
+  // Couverture insuffisante : un pattern existe mais avec trop peu de
+  // jours renseignés pour être qualifié (confidence 'unknown', voir
+  // MEAL_PATTERN_CONFIDENCE_THRESHOLDS.minAnalyzableDaysForKnown dans
+  // meal-pattern-detector.js) — jamais un jugement sur le repas lui-même.
+  var insufficientCoverage = !!mealPatternForType && mealPatternForType.confidence === 'unknown';
+
+  return {
+    mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness,
+    clarifyingQuestion: clarifyingQuestion, mealPatternForType: mealPatternForType,
+    nonRecurringMeal: nonRecurringMeal, insufficientCoverage: insufficientCoverage
+  };
 }
 
+var FRESHNESS_BADGE_META = {
+  recent: { icon: '🟢', label: 'Récente' },
+  aging: { icon: '🟡', label: 'À actualiser' },
+  stale: { icon: '🔴', label: 'Ancienne' }
+};
+
+/* -----------------------------------------------------------------------
+   renderPopupPreview(ruleId, result, mealWarnings)
+
+   MAQUETTE VISUELLE uniquement, comme renderReviewPanel(). Structure
+   fixe : titre du repas → période et jours renseignés → badge de
+   fraîcheur → dernière donnée → observation → composition habituelle →
+   compréhension du repas → options ou question → détails → discussion.
+
+   Ne génère jamais de texte nouveau : le corps (result.advice.body)
+   n'est jamais réécrit, aucune réponse personnalisée n'est produite
+   après sélection (mock visuel uniquement, voir setReviewDecision), et
+   meal-pattern-clarifying-questions.js n'est ni modifié ni contourné.
+
+   États : stale → observation historique seule, sans option ; couverture
+   insuffisante → aucune option quelle que soit la fraîcheur ; repas non
+   récurrent → composition habituelle absente ; aucune option pertinente
+   → question fixe (avec "garder ce repas tel quel" si le catalogue la
+   prévoit) ; sinon carte complète (badge "À actualiser" si aging).
+   ----------------------------------------------------------------------- */
 function renderPopupPreview(ruleId, result, mealWarnings) {
   var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
+  var mw = mealWarnings || {};
   var candidateByCode = {};
-  (mealWarnings && mealWarnings.candidates || []).forEach(function (c) { candidateByCode[c.code] = c; });
+  (mw.candidates || []).forEach(function (c) { candidateByCode[c.code] = c; });
 
   var inner;
   if (!result.eligible) {
     inner = '<p class="popup-none">Aucune carte ne serait affichée pour ce profil (' + esc(describeBlockReason(result.blockReason)) + ').</p>';
   } else {
-    var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
-    var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
-    var chips = foods.map(function (f, i) {
-      var code = result.audit.selectedFoodCodes[i];
-      var candidate = candidateByCode[code];
-      var actionClass = candidate ? ' action-' + candidate.action : '';
-      var icon = candidate && candidate.action === 'exclude' ? '⛔ ' : candidate && candidate.action === 'deprioritize' ? '⚠️ ' : candidate && candidate.action === 'allow_as_variation' ? '🔄 ' : '';
-      return '<span class="popup-chip' + actionClass + '">' + icon + esc(f) + '</span>';
-    }).join('');
-    var matchTag = result.audit.matchedByKeyword
-      ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
-      : '';
+    var freshness = mw.freshness;
+    var isStale = !!freshness && freshness.status === 'stale';
+    var noOptions = isStale || mw.insufficientCoverage;
 
-    var clarifyingHtml = '';
-    var cq = mealWarnings && mealWarnings.clarifyingQuestion;
-    if (cq) {
-      var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
-      clarifyingHtml = '<div class="clarify-block">'
-        + '<div class="clarify-note">Aucune option pertinente ne reste parmi les alternatives proposées — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
-        + '<div class="clarify-question">' + esc(cq.text) + '</div>'
-        + optionsHtml
-        + '</div>';
-    }
-
-    inner = '<div class="popup-card">'
-      + '<div class="popup-card-head">'
+    var headHtml = '<div class="popup-card-head">'
       + '<div class="popup-icon cat-' + esc(meta.category) + '">' + esc(meta.icon) + '</div>'
       + '<div class="popup-head-text">'
       + '<div class="popup-title">' + esc(meta.title) + '</div>'
       + '<div class="popup-subtitle">Observation sur votre journal</div>'
       + '</div>'
       + '<div class="popup-dismiss">&times;</div>'
-      + '</div>'
-      + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
-      + matchTag
-      + (chips ? '<div class="popup-chips">' + chips + '</div>' : '')
-      + clarifyingHtml
-      + '<div class="popup-actions">'
-      + '<div class="popup-btn secondary">Plus tard</div>'
-      + '<div class="popup-btn primary">En discuter</div>'
-      + '</div>'
       + '</div>';
+
+    var metaHtml = '';
+    if (freshness) {
+      var badgeMeta = FRESHNESS_BADGE_META[freshness.status] || { icon: '', label: freshness.status };
+      metaHtml = '<div class="popup-meta">'
+        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Période analysée</span><span>' + esc(freshness.windowStart) + ' → ' + esc(freshness.windowEnd) + ' (' + esc(freshness.analyzableDays) + ' j renseigné' + (freshness.analyzableDays > 1 ? 's' : '') + ')</span></div>'
+        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Fraîcheur</span><span class="popup-freshness-badge status-' + esc(freshness.status) + '">' + badgeMeta.icon + ' ' + esc(badgeMeta.label) + '</span></div>'
+        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Dernière donnée</span><span>' + esc(freshness.lastDataDate || 'aucune dans la période') + '</span></div>'
+        + '</div>';
+    }
+
+    if (isStale) {
+      inner = '<div class="popup-card">'
+        + headHtml + metaHtml
+        + '<div class="popup-stale-block">'
+        + '<div class="popup-stale-title">Observation ancienne</div>'
+        + '<div class="popup-stale-text">Cette analyse date de plus de 14 jours. Ajoutez des repas récents pour obtenir une vue actuelle.</div>'
+        + '</div>'
+        + '</div>';
+    } else {
+      var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
+      var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
+
+      // Composition habituelle — jamais affichée pour un repas non
+      // récurrent (aucun pattern émis) ni en cas de couverture
+      // insuffisante (trop peu de jours pour être qualifiée).
+      var compositionHtml = '';
+      if (mw.mealPatternForType && !mw.insufficientCoverage) {
+        var compositionItems = mw.mealPatternForType.foods.map(function (f) {
+          return '<span class="popup-chip">' + esc(f.name) + ' · ' + esc(f.frequency) + 'x</span>';
+        }).join('');
+        compositionHtml = '<div class="popup-section"><div class="popup-section-title">Composition habituelle</div><div class="popup-chips">' + compositionItems + '</div></div>';
+      } else if (mw.nonRecurringMeal) {
+        compositionHtml = '<div class="popup-section"><div class="popup-section-title">Composition habituelle</div><p class="popup-none-inline">Aucune composition récurrente détectée pour ce repas.</p></div>';
+      }
+
+      // Compréhension du repas — ce que meal-pattern-role-matching.js a
+      // classifié pour chaque alternative envisagée, jamais une
+      // conclusion nutritionnelle.
+      var understandingHtml = '';
+      if ((mw.candidates || []).length > 0 && !mw.insufficientCoverage) {
+        var understandingItems = mw.candidates.map(function (c) {
+          return '<div class="popup-understand-row"><span>' + esc(c.label) + '</span><span class="popup-understand-reason">' + esc(c.reason) + '</span></div>';
+        }).join('');
+        understandingHtml = '<div class="popup-section"><div class="popup-section-title">Ce que nous avons compris</div>' + understandingItems + '</div>';
+      }
+
+      var chips = foods.map(function (f, i) {
+        var code = result.audit.selectedFoodCodes[i];
+        var candidate = candidateByCode[code];
+        var actionClass = candidate ? ' action-' + candidate.action : '';
+        var icon = candidate && candidate.action === 'exclude' ? '⛔ ' : candidate && candidate.action === 'deprioritize' ? '⚠️ ' : candidate && candidate.action === 'allow_as_variation' ? '🔄 ' : '';
+        return '<span class="popup-chip' + actionClass + '">' + icon + esc(f) + '</span>';
+      }).join('');
+      var matchTag = result.audit.matchedByKeyword
+        ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
+        : '';
+
+      var clarifyingHtml = '';
+      var cq = mw.clarifyingQuestion;
+      if (cq && !noOptions) {
+        var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
+        clarifyingHtml = '<div class="clarify-block">'
+          + '<div class="clarify-note">Aucune option pertinente ne reste parmi les alternatives proposées — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
+          + '<div class="clarify-question">' + esc(cq.text) + '</div>'
+          + optionsHtml
+          + '</div>';
+      }
+
+      var optionsBlockHtml;
+      if (noOptions) {
+        optionsBlockHtml = '<p class="popup-none-inline">Couverture insuffisante — aucune option affichée pour ce repas.</p>';
+      } else if (clarifyingHtml) {
+        optionsBlockHtml = clarifyingHtml;
+      } else {
+        optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' : '');
+      }
+
+      inner = '<div class="popup-card">'
+        + headHtml + metaHtml
+        + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
+        + compositionHtml
+        + understandingHtml
+        + '<div class="popup-section"><div class="popup-section-title">Options</div>' + optionsBlockHtml + '</div>'
+        + '<div class="popup-details-link">Voir les détails</div>'
+        + '<div class="popup-actions">'
+        + '<div class="popup-btn secondary">Plus tard</div>'
+        + '<div class="popup-btn primary">En discuter</div>'
+        + '</div>'
+        + '</div>';
+    }
   }
 
   return '<div class="popup-preview-wrap">'
