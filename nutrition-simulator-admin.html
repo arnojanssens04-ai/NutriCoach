@@ -86,6 +86,10 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 14px; }
 .popup-chip{ font-size:.75rem; background:var(--gold-l); color:var(--gold); padding:4px 10px; border-radius:999px; }
 .popup-chip.warn{ background:var(--amber-l); color:var(--amber); }
+.clarify-block{ margin:0 16px 14px; padding:12px 14px; background:var(--amber-l); border:1px dashed rgba(122,92,30,0.3); border-radius:10px; }
+.clarify-note{ font-size:.7rem; color:var(--amber); margin-bottom:8px; }
+.clarify-question{ font-weight:700; font-size:.86rem; margin-bottom:8px; }
+.clarify-option{ font-size:.82rem; color:var(--text2); padding:4px 0; }
 .popup-actions{ display:flex; gap:8px; padding:0 16px 16px; }
 .popup-btn{ flex:1; font-size:.78rem; font-weight:600; padding:9px 10px; border-radius:8px; text-align:center; border:1px solid var(--border2); cursor:default; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
@@ -190,6 +194,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="meal-food-roles.js"></script>
 <script src="meal-pattern-detector.js"></script>
 <script src="meal-pattern-exclusion.js"></script>
+<script src="meal-pattern-clarifying-questions.js"></script>
 <script>
 'use strict';
 
@@ -327,7 +332,22 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
     });
   }
 
-  return { warnings: warnings, mealType: mealType, mealPatterns: mealPatterns };
+  // Question de clarification fixe (meal-pattern-clarifying-questions.js)
+  // — seulement quand TOUTES les alternatives proposées sont déjà
+  // couvertes par la routine détectée (suggestion résiduelle faible) :
+  // dans ce cas, poser une question plutôt que d'insister sur une
+  // alternative redondante. Jamais générée, toujours choisie dans le
+  // catalogue fixe.
+  var clarifyingQuestion = null;
+  if (typeof selectClarifyingQuestion === 'function' && labels.length > 0 && warnings.length === labels.length) {
+    var mealPatternForType = mealPatterns.filter(function (p) { return p.mealType === mealType; })[0];
+    clarifyingQuestion = selectClarifyingQuestion({
+      hasRedundantSuggestions: true,
+      recurringFoodCount: mealPatternForType ? mealPatternForType.foods.length : 0
+    });
+  }
+
+  return { warnings: warnings, mealType: mealType, mealPatterns: mealPatterns, clarifyingQuestion: clarifyingQuestion };
 }
 
 function renderPopupPreview(ruleId, result, mealWarnings) {
@@ -348,6 +368,17 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
       : '';
 
+    var clarifyingHtml = '';
+    var cq = mealWarnings && mealWarnings.clarifyingQuestion;
+    if (cq) {
+      var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
+      clarifyingHtml = '<div class="clarify-block">'
+        + '<div class="clarify-note">Toutes les alternatives proposées sont déjà présentes dans ce repas — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
+        + '<div class="clarify-question">' + esc(cq.text) + '</div>'
+        + optionsHtml
+        + '</div>';
+    }
+
     inner = '<div class="popup-card">'
       + '<div class="popup-card-head">'
       + '<div class="popup-icon cat-' + esc(meta.category) + '">' + esc(meta.icon) + '</div>'
@@ -360,6 +391,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
       + matchTag
       + (chips ? '<div class="popup-chips">' + chips + '</div>' : '')
+      + clarifyingHtml
       + '<div class="popup-actions">'
       + '<div class="popup-btn secondary">Plus tard</div>'
       + '<div class="popup-btn primary">En discuter</div>'

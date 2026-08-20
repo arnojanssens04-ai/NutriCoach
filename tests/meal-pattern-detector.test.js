@@ -18,7 +18,7 @@ const assert = require('assert');
 const { execSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
-const FILES = ['meal-food-roles.js', 'meal-pattern-detector.js', 'meal-pattern-exclusion.js'];
+const FILES = ['meal-food-roles.js', 'meal-pattern-detector.js', 'meal-pattern-exclusion.js', 'meal-pattern-clarifying-questions.js'];
 
 function buildSandbox() {
   const sandbox = { console };
@@ -184,7 +184,20 @@ check('11. Aucune conclusion nutritionnelle : ni "suffisant"/"insuffisant"/"care
   assert.strictEqual(out, '', 'des fichiers du moteur nutrition-*.js/html ont été modifiés par ce chantier: ' + out);
 });
 
-check('12. Intégration (nutrition-simulator-admin.html) : computeMealPatternWarnings signale les alternatives déjà présentes dans le même repas, sans jamais modifier le texte généré', () => {
+check('12. selectClarifyingQuestion() : retourne null hors contexte redondant, choisit une question fixe du catalogue sinon, jamais un texte généré', () => {
+  const sandbox = buildSandbox();
+  const noQuestion = vm.runInContext('selectClarifyingQuestion({hasRedundantSuggestions:false})', sandbox);
+  assert.strictEqual(noQuestion, null);
+  const q1 = vm.runInContext('selectClarifyingQuestion({hasRedundantSuggestions:true, recurringFoodCount:2})', sandbox);
+  assert.strictEqual(q1.id, 'goal_clarification');
+  const q2 = vm.runInContext('selectClarifyingQuestion({hasRedundantSuggestions:true, recurringFoodCount:4})', sandbox);
+  assert.strictEqual(q2.id, 'keep_or_adjust');
+  const catalogue = vm.runInContext('MEAL_PATTERN_CLARIFYING_QUESTIONS', sandbox);
+  assert(Array.from(Object.keys(catalogue)).indexOf(q1.id) !== -1, 'la question retournée doit venir du catalogue fixe');
+  assert(Array.isArray(q1.options) && q1.options.length > 1, 'une question doit toujours avoir des options fermées');
+});
+
+check('13. Intégration (nutrition-simulator-admin.html) : computeMealPatternWarnings signale les alternatives déjà présentes dans le même repas, sans jamais modifier le texte généré', () => {
   const src = fs.readFileSync(REPO + '/nutrition-simulator-admin.html', 'utf8');
   const scriptOnly = src.split('<script>').slice(-1)[0];
   const codeOnly = scriptOnly.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
@@ -193,6 +206,14 @@ check('12. Intégration (nutrition-simulator-admin.html) : computeMealPatternWar
   // généré par nutrition-advice-renderer.js, jamais modifié ici).
   assert(!/result\.advice\.body\s*=/.test(codeOnly), 'le texte du conseil est réécrit — devrait rester une alerte, jamais une correction automatique');
   assert(/already_present_in_same_meal|w\.presence/.test(codeOnly), 'le panneau de revue ne semble pas exploiter la raison already_present_in_same_meal');
+});
+
+check('14. Intégration : la question de clarification n\'est proposée QUE quand toutes les alternatives sont redondantes, jamais par défaut', () => {
+  const src = fs.readFileSync(REPO + '/nutrition-simulator-admin.html', 'utf8');
+  const scriptOnly = src.split('<script>').slice(-1)[0];
+  const codeOnly = scriptOnly.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert(/selectClarifyingQuestion/.test(codeOnly), 'selectClarifyingQuestion() n\'est jamais appelée dans nutrition-simulator-admin.html');
+  assert(/warnings\.length === labels\.length/.test(codeOnly), 'la question ne semble pas conditionnée à la redondance totale des alternatives');
 });
 
 console.log('\n--- RÉSUMÉ ---');
