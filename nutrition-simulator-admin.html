@@ -85,6 +85,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-body{ padding:0 16px 14px; font-size:.85rem; line-height:1.55; color:var(--text); }
 .popup-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 14px; }
 .popup-chip{ font-size:.75rem; background:var(--gold-l); color:var(--gold); padding:4px 10px; border-radius:999px; }
+.popup-chip.warn{ background:var(--amber-l); color:var(--amber); }
 .popup-actions{ display:flex; gap:8px; padding:0 16px 16px; }
 .popup-btn{ flex:1; font-size:.78rem; font-weight:600; padding:9px 10px; border-radius:8px; text-align:center; border:1px solid var(--border2); cursor:default; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
@@ -182,6 +183,13 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-audit.js"></script>
 <script src="nutrition-simulator.js"></script>
 <script src="nutrition-simulator-fixtures.js"></script>
+<!-- Chantier séparé (meal-pattern-*.js) — jamais chargé par les fichiers
+     nutrition-*.js ci-dessus, jamais l'inverse : le filtrage qu'il permet
+     est appliqué en POST-TRAITEMENT ici, dans cette page admin, sans
+     modifier aucun des fichiers du moteur confiné. -->
+<script src="meal-food-roles.js"></script>
+<script src="meal-pattern-detector.js"></script>
+<script src="meal-pattern-exclusion.js"></script>
 <script>
 'use strict';
 
@@ -278,8 +286,53 @@ function foodLabelsForCodes(eligibleFoodListId, codes, matchedByKeyword) {
    tard") sont purement visuelles, aucun comportement réel n'y est
    attaché.
    ----------------------------------------------------------------------- */
-function renderPopupPreview(ruleId, result) {
+/* -----------------------------------------------------------------------
+   computeMealPatternWarnings(ruleId, result, fixture)
+
+   Chantier SÉPARÉ (meal-pattern-*.js) appliqué en POST-TRAITEMENT ici
+   uniquement — ne modifie jamais le texte déjà généré par le moteur
+   confiné (nutrition-advice-renderer.js), ne réécrit rien. Signale
+   seulement, pour la revue admin, quelles alternatives proposées font
+   déjà partie de la composition habituelle du même repas — jamais une
+   correction automatique du conseil, seulement une alerte à destination
+   du réviseur (voir renderReviewPanel).
+   ----------------------------------------------------------------------- */
+function computeMealPatternWarnings(ruleId, result, fixture) {
+  if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof evaluateFoodPresenceInMealPatterns !== 'function') {
+    return { warnings: [], mealType: null, mealPatterns: [] };
+  }
+  var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
+  var labels = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
+
+  var mealPatterns = detectMealPatterns({ journalEntries: fixture.journalEntries, referenceDate: fixture.referenceDate });
+
+  // Créneau des aliments repérés — le plus fréquent parmi les entrées
+  // correspondant aux noms relevés par extractFlaggedFoodNames().
+  var flaggedNames = result.audit.flaggedFoodNames || [];
+  var mealTypeCounts = {};
+  (fixture.journalEntries || []).forEach(function (e) {
+    if (e && e.aliment && e.repas && flaggedNames.indexOf(e.aliment) !== -1) {
+      mealTypeCounts[e.repas] = (mealTypeCounts[e.repas] || 0) + 1;
+    }
+  });
+  var mealType = Object.keys(mealTypeCounts).sort(function (a, b) { return mealTypeCounts[b] - mealTypeCounts[a]; })[0] || null;
+
+  var warnings = [];
+  if (mealType) {
+    labels.forEach(function (label, i) {
+      var evaluation = evaluateFoodPresenceInMealPatterns(label, mealType, mealPatterns);
+      if (evaluation.excluded) {
+        warnings.push({ code: result.audit.selectedFoodCodes[i], label: label, presence: evaluation.presence, mealType: mealType });
+      }
+    });
+  }
+
+  return { warnings: warnings, mealType: mealType, mealPatterns: mealPatterns };
+}
+
+function renderPopupPreview(ruleId, result, mealWarnings) {
   var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
+  var warnedCodes = (mealWarnings && mealWarnings.warnings || []).map(function (w) { return w.code; });
 
   var inner;
   if (!result.eligible) {
@@ -287,7 +340,10 @@ function renderPopupPreview(ruleId, result) {
   } else {
     var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
     var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
-    var chips = foods.map(function (f) { return '<span class="popup-chip">' + esc(f) + '</span>'; }).join('');
+    var chips = foods.map(function (f, i) {
+      var isWarned = warnedCodes.indexOf(result.audit.selectedFoodCodes[i]) !== -1;
+      return '<span class="popup-chip' + (isWarned ? ' warn' : '') + '">' + (isWarned ? '⚠️ ' : '') + esc(f) + '</span>';
+    }).join('');
     var matchTag = result.audit.matchedByKeyword
       ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
       : '';
@@ -351,7 +407,7 @@ function renderAllergyIntoleranceTags(list) {
    sans ce contexte. Aucune action ici n'a d'effet réel, aucune donnée
    n'est persistée.
    ----------------------------------------------------------------------- */
-function renderReviewPanel(ruleId, result, fixture, panelId) {
+function renderReviewPanel(ruleId, result, fixture, panelId, mealWarnings) {
   if (!result.eligible) return '';
   var safeId = String(panelId).replace(/[^a-zA-Z0-9_-]/g, '');
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
@@ -385,11 +441,24 @@ function renderReviewPanel(ruleId, result, fixture, panelId) {
     + '<div class="review-row"><span class="review-row-lbl">Alternatives sélectionnées</span><span class="review-row-val">' + esc((result.audit.selectedFoodCodes || []).join(', ') || '—') + '</span></div>'
     + '<div class="review-row"><span class="review-row-lbl">Correspondance par mot-clé (vs. liste générique)</span><span class="review-row-val">' + (result.audit.matchedByKeyword ? 'Oui, ciblée' : 'Non, générique') + '</span></div>';
 
+  var warnings = (mealWarnings && mealWarnings.warnings) || [];
+  var mealWarningHtml = '';
+  if (warnings.length > 0) {
+    var warningRows = warnings.map(function (w) {
+      var presenceLbl = w.presence === 'unknown_quantity' ? 'déjà présent (quantité non renseignée)' : 'déjà présent';
+      return '<div class="review-row"><span class="review-row-lbl">⚠️ ' + esc(w.label) + '</span><span class="review-row-val">' + esc(presenceLbl) + ' au créneau "' + esc(w.mealType) + '"</span></div>';
+    }).join('');
+    mealWarningHtml = '<div class="review-block"><div class="review-block-title" style="color:var(--amber)">Déjà dans la routine — à retirer avant validation (meal-pattern-*.js)</div>'
+      + '<p style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Ces aliments font déjà partie de la composition habituelle de ce repas — les reproposer serait redondant. Le texte du conseil n\'a pas été modifié automatiquement : au réviseur de retirer manuellement ces éléments ("🍽️ Modifier les aliments") avant validation.</p>'
+      + warningRows + '</div>';
+  }
+
   return '<div class="review-panel">'
     + '<div class="review-panel-label">Panneau de revue — contexte complet avant validation, jamais un bouton isolé</div>'
     + '<div class="review-block"><div class="review-block-title">Pourquoi ce conseil est proposé</div>' + obsHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Profil du patient</div>' + profileHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Sélection alimentaire</div>' + selectionHtml + '</div>'
+    + mealWarningHtml
     + '<div class="review-status" id="review-status-' + safeId + '"></div>'
     + '<div class="review-actions" id="review-actions-' + safeId + '">'
     + '<div class="review-btn approve" onclick="setReviewDecision(\'' + safeId + '\',\'approved\')">✅ Valider</div>'
@@ -441,13 +510,15 @@ function renderProfile(fixtureKey, fixture) {
     now: fixture.referenceDate + 'T10:00:00Z'
   });
 
+  var mealWarnings = computeMealPatternWarnings(fixture.ruleId, result, fixture);
+
   var html = '<div class="profile-card">'
     + '<div class="profile-title">' + esc(fixture.label) + '</div>'
     + '<div class="profile-id">Règle simulée : ' + esc(fixture.ruleId) + '</div>';
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
-  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result);
-  var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture, fixtureKey);
+  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result, mealWarnings);
+  var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture, fixtureKey, mealWarnings);
   if (reviewHtml) html += '<div class="section-lbl">Revue admin — pourquoi ce conseil ?</div>' + reviewHtml;
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
 

@@ -173,9 +173,26 @@ check('11. Aucune conclusion nutritionnelle : ni "suffisant"/"insuffisant"/"care
     assert(!/\bsuffisant\b|\binsuffisant\b|\bcarence\b/i.test(stringLiterals), f + ' contient une conclusion nutritionnelle interdite dans un texte généré');
     assert(!/nutrition-[a-z-]+\.(js|html)/.test(codeOnly), f + ' référence de façon exécutable un fichier du moteur confiné nutrition-*.js');
   });
-  const trackedNutritionFiles = execSync('git ls-files "nutrition-*.js" "nutrition-*.html"', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
+  // nutrition-simulator-admin.html est le point d'intégration désigné
+  // (branchement demandé explicitement, post-traitement uniquement,
+  // aucun fichier du moteur lui-même n'est modifié) — exclu de cette
+  // garde ; tous les autres fichiers nutrition-*.js/html doivent rester
+  // intacts.
+  const trackedNutritionFiles = execSync('git ls-files "nutrition-*.js" "nutrition-*.html"', { cwd: REPO }).toString().trim().split('\n').filter(Boolean)
+    .filter((f) => f !== 'nutrition-simulator-admin.html');
   const out = execSync('git status --short -- ' + trackedNutritionFiles.map((f) => '"' + f + '"').join(' '), { cwd: REPO }).toString().trim();
-  assert.strictEqual(out, '', 'des fichiers nutrition-*.js/html ont été modifiés par ce chantier: ' + out);
+  assert.strictEqual(out, '', 'des fichiers du moteur nutrition-*.js/html ont été modifiés par ce chantier: ' + out);
+});
+
+check('12. Intégration (nutrition-simulator-admin.html) : computeMealPatternWarnings signale les alternatives déjà présentes dans le même repas, sans jamais modifier le texte généré', () => {
+  const src = fs.readFileSync(REPO + '/nutrition-simulator-admin.html', 'utf8');
+  const scriptOnly = src.split('<script>').slice(-1)[0];
+  const codeOnly = scriptOnly.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  assert(/function computeMealPatternWarnings/.test(codeOnly), 'computeMealPatternWarnings() est absente de nutrition-simulator-admin.html');
+  // Ne doit jamais réécrire result.advice.body (le texte reste celui
+  // généré par nutrition-advice-renderer.js, jamais modifié ici).
+  assert(!/result\.advice\.body\s*=/.test(codeOnly), 'le texte du conseil est réécrit — devrait rester une alerte, jamais une correction automatique');
+  assert(/already_present_in_same_meal|w\.presence/.test(codeOnly), 'le panneau de revue ne semble pas exploiter la raison already_present_in_same_meal');
 });
 
 console.log('\n--- RÉSUMÉ ---');
