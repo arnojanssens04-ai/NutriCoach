@@ -205,15 +205,20 @@ check('13. Intégration (nutrition-simulator-admin.html) : computeMealPatternWar
   // Ne doit jamais réécrire result.advice.body (le texte reste celui
   // généré par nutrition-advice-renderer.js, jamais modifié ici).
   assert(!/result\.advice\.body\s*=/.test(codeOnly), 'le texte du conseil est réécrit — devrait rester une alerte, jamais une correction automatique');
-  assert(/already_present_in_same_meal|w\.presence/.test(codeOnly), 'le panneau de revue ne semble pas exploiter la raison already_present_in_same_meal');
+  // Depuis feature/meal-pattern-role-integration, la comparaison passe
+  // par classifyFoodAgainstMealPattern() (meal-pattern-role-matching.js),
+  // une classification plus fine que le simple booléen
+  // already_present_in_same_meal d'origine (meal-pattern-exclusion.js,
+  // toujours intact mais plus appelé depuis ce point précis).
+  assert(/classifyFoodAgainstMealPattern/.test(codeOnly), 'le panneau de revue ne semble pas exploiter classifyFoodAgainstMealPattern (famille/rôle/fonction)');
 });
 
-check('14. Intégration : la question de clarification n\'est proposée QUE quand toutes les alternatives sont redondantes, jamais par défaut', () => {
+check('14. Intégration : la question de clarification n\'est proposée QUE quand aucune option pertinente ne reste, jamais par défaut', () => {
   const src = fs.readFileSync(REPO + '/nutrition-simulator-admin.html', 'utf8');
   const scriptOnly = src.split('<script>').slice(-1)[0];
   const codeOnly = scriptOnly.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
   assert(/selectClarifyingQuestion/.test(codeOnly), 'selectClarifyingQuestion() n\'est jamais appelée dans nutrition-simulator-admin.html');
-  assert(/warnings\.length === labels\.length/.test(codeOnly), 'la question ne semble pas conditionnée à la redondance totale des alternatives');
+  assert(/hasRelevantOption/.test(codeOnly), 'la question ne semble pas conditionnée à l\'absence d\'option pertinente (eligible/allow_as_variation)');
 });
 
 console.log('\n--- RÉSUMÉ ---');

@@ -86,6 +86,31 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 14px; }
 .popup-chip{ font-size:.75rem; background:var(--gold-l); color:var(--gold); padding:4px 10px; border-radius:999px; }
 .popup-chip.warn{ background:var(--amber-l); color:var(--amber); }
+.popup-chip.action-exclude{ background:var(--red-l); color:var(--red); text-decoration:line-through; }
+.popup-chip.action-deprioritize{ background:var(--amber-l); color:var(--amber); }
+.popup-chip.action-allow_as_variation{ background:rgba(30,90,122,0.1); color:#1e5a7a; }
+.popup-chip.action-unknown{ background:var(--border); color:var(--text3); }
+
+.role-match-table{ display:flex; flex-direction:column; gap:6px; }
+.role-match-row{ display:grid; grid-template-columns:1.1fr .9fr 1fr .8fr 1.4fr .7fr; gap:8px; align-items:center; font-size:.76rem; padding:7px 8px; background:var(--card2); border-radius:8px; }
+.role-match-row.header{ font-weight:700; text-transform:uppercase; letter-spacing:.3px; font-size:.62rem; color:var(--text2); background:none; padding:0 8px; }
+.role-match-food{ font-weight:600; }
+.role-match-relation{ font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:999px; text-align:center; }
+.role-match-relation.exact_same_food{ background:var(--red-l); color:var(--red); }
+.role-match-relation.same_food_family{ background:var(--amber-l); color:var(--amber); }
+.role-match-relation.same_nutrition_role{ background:var(--amber-l); color:var(--amber); }
+.role-match-relation.same_meal_function{ background:rgba(30,90,122,0.1); color:#1e5a7a; }
+.role-match-relation.unrelated{ background:var(--sage-l); color:var(--sage); }
+.role-match-relation.unknown{ background:var(--border); color:var(--text3); }
+.role-match-action{ font-size:.68rem; font-weight:700; text-transform:uppercase; }
+.role-match-action.exclude{ color:var(--red); }
+.role-match-action.deprioritize{ color:var(--amber); }
+.role-match-action.allow_as_variation{ color:#1e5a7a; }
+.role-match-action.eligible{ color:var(--sage); }
+.role-match-action.unknown{ color:var(--text3); }
+.role-match-reason{ color:var(--text2); }
+.role-match-evidence{ color:var(--text3); font-size:.7rem; }
+.freshness-badge{ font-weight:700; }
 .clarify-block{ margin:0 16px 14px; padding:12px 14px; background:var(--amber-l); border:1px dashed rgba(122,92,30,0.3); border-radius:10px; }
 .clarify-note{ font-size:.7rem; color:var(--amber); margin-bottom:8px; }
 .clarify-question{ font-weight:700; font-size:.86rem; margin-bottom:8px; }
@@ -194,6 +219,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="meal-food-roles.js"></script>
 <script src="meal-pattern-detector.js"></script>
 <script src="meal-pattern-exclusion.js"></script>
+<script src="meal-pattern-role-matching.js"></script>
 <script src="meal-pattern-clarifying-questions.js"></script>
 <script>
 'use strict';
@@ -302,9 +328,89 @@ function foodLabelsForCodes(eligibleFoodListId, codes, matchedByKeyword) {
    correction automatique du conseil, seulement une alerte à destination
    du réviseur (voir renderReviewPanel).
    ----------------------------------------------------------------------- */
+var FOOD_RELATION_LABELS = {
+  exact_same_food: 'Aliment identique',
+  same_food_family: 'Même famille',
+  same_nutrition_role: 'Même rôle',
+  same_meal_function: 'Même fonction',
+  unrelated: 'Sans lien',
+  unknown: 'Inconnu'
+};
+var FOOD_RELATION_ACTION_LABELS = {
+  exclude: 'Exclure',
+  deprioritize: 'Déprioriser',
+  allow_as_variation: 'Variation possible',
+  eligible: 'Éligible',
+  unknown: 'Inconnu'
+};
+var FOOD_RELATION_REASON_BUILDERS = {
+  exact_same_food: function (mealType) { return 'déjà présent dans le repas (' + mealType + ')'; },
+  same_food_family: function (mealType, matched) { return 'famille déjà représentée par ' + (matched[0] || 'un aliment du repas'); },
+  same_nutrition_role: function (mealType, matched) { return 'rôle déjà représenté par ' + (matched[0] || 'un aliment du repas'); },
+  same_meal_function: function (mealType, matched) { return 'variation possible de la base déjà couverte par ' + (matched[0] || 'un aliment du repas'); },
+  unrelated: function () { return 'aucune correspondance avec la routine détectée'; },
+  unknown: function () { return 'aliment non catégorisé — correspondance inconnue'; }
+};
+function describeFoodRelationReason(relation, mealType, matchedFoods) {
+  var builder = FOOD_RELATION_REASON_BUILDERS[relation];
+  return builder ? builder(mealType, matchedFoods || []) : '—';
+}
+
+function daysBetweenIsoDates(a, b) {
+  var da = new Date(a + 'T00:00:00Z'), db = new Date(b + 'T00:00:00Z');
+  return Math.round((db - da) / 86400000);
+}
+
+/* -----------------------------------------------------------------------
+   computeObservationFreshness(result, fixture)
+
+   Descriptif uniquement — lit les données déjà chargées (journalEntries,
+   observationSnapshot), n'en collecte aucune nouvelle. Ne conclut jamais
+   sur la validité du conseil, seulement sur l'ancienneté de la dernière
+   donnée disponible dans la fenêtre déjà analysée par le moteur.
+   ----------------------------------------------------------------------- */
+function computeObservationFreshness(result, fixture) {
+  var obs = result.audit && result.audit.observationSnapshot;
+  if (!obs || !obs.windowStart || !obs.windowEnd) return null;
+
+  var lastDataDate = (fixture.journalEntries || []).reduce(function (max, e) {
+    if (!e || !e.date || e.date < obs.windowStart || e.date > obs.windowEnd) return max;
+    return (!max || e.date > max) ? e.date : max;
+  }, null);
+
+  var status = 'stale';
+  var staleWarning = null;
+  if (lastDataDate) {
+    var gapDays = daysBetweenIsoDates(lastDataDate, obs.windowEnd);
+    status = gapDays <= 0 ? 'recent' : (gapDays <= 3 ? 'aging' : 'stale');
+  }
+  if (status !== 'recent') {
+    staleWarning = lastDataDate
+      ? 'Dernière donnée utilisée le ' + lastDataDate + ' — tendance potentiellement ancienne.'
+      : 'Aucune donnée dans la période analysée — tendance non actualisable.';
+  }
+
+  return {
+    windowStart: obs.windowStart, windowEnd: obs.windowEnd,
+    analyzableDays: obs.analyzableDays, lastDataDate: lastDataDate,
+    status: status, staleWarning: staleWarning
+  };
+}
+
+/* -----------------------------------------------------------------------
+   computeMealPatternWarnings(ruleId, result, fixture)
+
+   Chantier SÉPARÉ (meal-pattern-*.js) appliqué en POST-TRAITEMENT ici
+   uniquement — ne modifie jamais le texte déjà généré par le moteur
+   confiné (nutrition-advice-renderer.js), ne réécrit rien. Classifie
+   chaque alternative proposée par famille/rôle/fonction de repas
+   (meal-pattern-role-matching.js, jamais modifié) et retourne une
+   décision descriptive par candidat — jamais une correction automatique
+   du conseil, seulement des éléments pour la revue admin.
+   ----------------------------------------------------------------------- */
 function computeMealPatternWarnings(ruleId, result, fixture) {
-  if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof evaluateFoodPresenceInMealPatterns !== 'function') {
-    return { warnings: [], mealType: null, mealPatterns: [] };
+  if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof classifyFoodAgainstMealPattern !== 'function') {
+    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null };
   }
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
   var labels = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
@@ -322,24 +428,34 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
   });
   var mealType = Object.keys(mealTypeCounts).sort(function (a, b) { return mealTypeCounts[b] - mealTypeCounts[a]; })[0] || null;
 
-  var warnings = [];
+  // suggestions candidates → comparaison exacte → famille → rôle →
+  // fonction de repas → action (classifyFoodAgainstMealPattern applique
+  // déjà cet ordre de spécificité, voir meal-pattern-role-matching.js).
+  var candidates = [];
   if (mealType) {
     labels.forEach(function (label, i) {
-      var evaluation = evaluateFoodPresenceInMealPatterns(label, mealType, mealPatterns);
-      if (evaluation.excluded) {
-        warnings.push({ code: result.audit.selectedFoodCodes[i], label: label, presence: evaluation.presence, mealType: mealType });
-      }
+      var classification = classifyFoodAgainstMealPattern(label, mealType, mealPatterns);
+      candidates.push({
+        code: result.audit.selectedFoodCodes[i],
+        label: label,
+        relation: classification.relation,
+        matchedFoods: classification.matchedFoods,
+        action: classification.action,
+        reason: describeFoodRelationReason(classification.relation, mealType, classification.matchedFoods),
+        evidence: classification.evidence
+      });
     });
   }
 
   // Question de clarification fixe (meal-pattern-clarifying-questions.js)
-  // — seulement quand TOUTES les alternatives proposées sont déjà
-  // couvertes par la routine détectée (suggestion résiduelle faible) :
-  // dans ce cas, poser une question plutôt que d'insister sur une
-  // alternative redondante. Jamais générée, toujours choisie dans le
+  // — seulement quand AUCUN candidat n'a une action 'eligible' ou
+  // 'allow_as_variation' (aucune option pertinente ne reste) : dans ce
+  // cas, poser une question plutôt que d'insister sur des alternatives
+  // exclues/dépriorisées. Jamais générée, toujours choisie dans le
   // catalogue fixe.
+  var hasRelevantOption = candidates.some(function (c) { return c.action === 'eligible' || c.action === 'allow_as_variation'; });
   var clarifyingQuestion = null;
-  if (typeof selectClarifyingQuestion === 'function' && labels.length > 0 && warnings.length === labels.length) {
+  if (typeof selectClarifyingQuestion === 'function' && candidates.length > 0 && !hasRelevantOption) {
     var mealPatternForType = mealPatterns.filter(function (p) { return p.mealType === mealType; })[0];
     clarifyingQuestion = selectClarifyingQuestion({
       hasRedundantSuggestions: true,
@@ -347,12 +463,15 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
     });
   }
 
-  return { warnings: warnings, mealType: mealType, mealPatterns: mealPatterns, clarifyingQuestion: clarifyingQuestion };
+  var freshness = computeObservationFreshness(result, fixture);
+
+  return { mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness, clarifyingQuestion: clarifyingQuestion };
 }
 
 function renderPopupPreview(ruleId, result, mealWarnings) {
   var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
-  var warnedCodes = (mealWarnings && mealWarnings.warnings || []).map(function (w) { return w.code; });
+  var candidateByCode = {};
+  (mealWarnings && mealWarnings.candidates || []).forEach(function (c) { candidateByCode[c.code] = c; });
 
   var inner;
   if (!result.eligible) {
@@ -361,8 +480,11 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
     var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
     var foods = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
     var chips = foods.map(function (f, i) {
-      var isWarned = warnedCodes.indexOf(result.audit.selectedFoodCodes[i]) !== -1;
-      return '<span class="popup-chip' + (isWarned ? ' warn' : '') + '">' + (isWarned ? '⚠️ ' : '') + esc(f) + '</span>';
+      var code = result.audit.selectedFoodCodes[i];
+      var candidate = candidateByCode[code];
+      var actionClass = candidate ? ' action-' + candidate.action : '';
+      var icon = candidate && candidate.action === 'exclude' ? '⛔ ' : candidate && candidate.action === 'deprioritize' ? '⚠️ ' : candidate && candidate.action === 'allow_as_variation' ? '🔄 ' : '';
+      return '<span class="popup-chip' + actionClass + '">' + icon + esc(f) + '</span>';
     }).join('');
     var matchTag = result.audit.matchedByKeyword
       ? '<div class="popup-subtitle" style="padding:0 16px 6px">Substitutions ciblées d\'après les aliments repérés</div>'
@@ -373,7 +495,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
     if (cq) {
       var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
       clarifyingHtml = '<div class="clarify-block">'
-        + '<div class="clarify-note">Toutes les alternatives proposées sont déjà présentes dans ce repas — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
+        + '<div class="clarify-note">Aucune option pertinente ne reste parmi les alternatives proposées — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
         + '<div class="clarify-question">' + esc(cq.text) + '</div>'
         + optionsHtml
         + '</div>';
@@ -473,16 +595,36 @@ function renderReviewPanel(ruleId, result, fixture, panelId, mealWarnings) {
     + '<div class="review-row"><span class="review-row-lbl">Alternatives sélectionnées</span><span class="review-row-val">' + esc((result.audit.selectedFoodCodes || []).join(', ') || '—') + '</span></div>'
     + '<div class="review-row"><span class="review-row-lbl">Correspondance par mot-clé (vs. liste générique)</span><span class="review-row-val">' + (result.audit.matchedByKeyword ? 'Oui, ciblée' : 'Non, générique') + '</span></div>';
 
-  var warnings = (mealWarnings && mealWarnings.warnings) || [];
-  var mealWarningHtml = '';
-  if (warnings.length > 0) {
-    var warningRows = warnings.map(function (w) {
-      var presenceLbl = w.presence === 'unknown_quantity' ? 'déjà présent (quantité non renseignée)' : 'déjà présent';
-      return '<div class="review-row"><span class="review-row-lbl">⚠️ ' + esc(w.label) + '</span><span class="review-row-val">' + esc(presenceLbl) + ' au créneau "' + esc(w.mealType) + '"</span></div>';
+  var candidates = (mealWarnings && mealWarnings.candidates) || [];
+  var roleMatchHtml = '';
+  if (candidates.length > 0) {
+    var headerRow = '<div class="role-match-row header"><div>Aliment</div><div>Relation</div><div>Aliment associé</div><div>Action</div><div>Raison</div><div>Occurrences</div></div>';
+    var candidateRows = candidates.map(function (c) {
+      return '<div class="role-match-row">'
+        + '<div class="role-match-food">' + esc(c.label) + '</div>'
+        + '<div class="role-match-relation ' + esc(c.relation) + '">' + esc(FOOD_RELATION_LABELS[c.relation] || c.relation) + '</div>'
+        + '<div>' + esc((c.matchedFoods || []).join(', ') || '—') + '</div>'
+        + '<div class="role-match-action ' + esc(c.action) + '">' + esc(FOOD_RELATION_ACTION_LABELS[c.action] || c.action) + '</div>'
+        + '<div class="role-match-reason">' + esc(c.reason) + '</div>'
+        + '<div class="role-match-evidence">' + (c.evidence ? esc(c.evidence.mealPatternId) + ' · ' + esc(c.evidence.occurrenceCount) + 'x' : '—') + '</div>'
+        + '</div>';
     }).join('');
-    mealWarningHtml = '<div class="review-block"><div class="review-block-title" style="color:var(--amber)">Déjà dans la routine — à retirer avant validation (meal-pattern-*.js)</div>'
-      + '<p style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Ces aliments font déjà partie de la composition habituelle de ce repas — les reproposer serait redondant. Le texte du conseil n\'a pas été modifié automatiquement : au réviseur de retirer manuellement ces éléments ("🍽️ Modifier les aliments") avant validation.</p>'
-      + warningRows + '</div>';
+    roleMatchHtml = '<div class="review-block"><div class="review-block-title">Classification par famille / rôle / fonction (meal-pattern-role-matching.js)</div>'
+      + '<p style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Le texte du conseil n\'a pas été modifié automatiquement : au réviseur d\'agir ("🍽️ Modifier les aliments") selon l\'action indiquée pour chaque candidat.</p>'
+      + '<div class="role-match-table">' + headerRow + candidateRows + '</div></div>';
+  }
+
+  var freshnessHtml = '';
+  var freshness = mealWarnings && mealWarnings.freshness;
+  if (freshness) {
+    var freshnessStatusLabels = { recent: '🟢 Récente', aging: '🟡 Vieillissante', stale: '🔴 Ancienne' };
+    freshnessHtml = '<div class="review-block"><div class="review-block-title">Fraîcheur de l\'observation</div>'
+      + '<div class="review-row"><span class="review-row-lbl">Période analysée</span><span class="review-row-val">' + esc(freshness.windowStart) + ' → ' + esc(freshness.windowEnd) + '</span></div>'
+      + '<div class="review-row"><span class="review-row-lbl">Jours renseignés</span><span class="review-row-val">' + esc(freshness.analyzableDays) + '</span></div>'
+      + '<div class="review-row"><span class="review-row-lbl">Dernière donnée utilisée</span><span class="review-row-val">' + esc(freshness.lastDataDate || 'aucune') + '</span></div>'
+      + '<div class="review-row"><span class="review-row-lbl">Statut</span><span class="review-row-val freshness-badge">' + (freshnessStatusLabels[freshness.status] || freshness.status) + '</span></div>'
+      + (freshness.staleWarning ? '<p style="font-size:.78rem;color:var(--amber);margin-top:6px">⚠️ ' + esc(freshness.staleWarning) + '</p>' : '')
+      + '</div>';
   }
 
   return '<div class="review-panel">'
@@ -490,7 +632,8 @@ function renderReviewPanel(ruleId, result, fixture, panelId, mealWarnings) {
     + '<div class="review-block"><div class="review-block-title">Pourquoi ce conseil est proposé</div>' + obsHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Profil du patient</div>' + profileHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Sélection alimentaire</div>' + selectionHtml + '</div>'
-    + mealWarningHtml
+    + roleMatchHtml
+    + freshnessHtml
     + '<div class="review-status" id="review-status-' + safeId + '"></div>'
     + '<div class="review-actions" id="review-actions-' + safeId + '">'
     + '<div class="review-btn approve" onclick="setReviewDecision(\'' + safeId + '\',\'approved\')">✅ Valider</div>'

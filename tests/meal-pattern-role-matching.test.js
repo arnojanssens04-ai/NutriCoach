@@ -203,12 +203,21 @@ check('20. Aucun des 17 fichiers nutrition-*.js/html n\'est chargé ni référen
   const src = fs.readFileSync(REPO + '/meal-pattern-role-matching.js', 'utf8');
   const codeOnly = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
   assert(!/nutrition-[a-z-]+\.(js|html)/.test(codeOnly), 'référence exécutable à un fichier nutrition-*.js/html trouvée');
-  const trackedNutritionFiles = execSync('git ls-files "nutrition-*.js" "nutrition-*.html"', { cwd: REPO }).toString().trim().split('\n').filter(Boolean);
+  // nutrition-simulator-admin.html exclu de cette garde depuis
+  // feature/meal-pattern-role-integration : son intégration avec
+  // classifyFoodAgainstMealPattern() est le sujet explicite de cette
+  // étape ultérieure, testée séparément
+  // (tests/meal-pattern-role-integration.test.js).
+  const trackedNutritionFiles = execSync('git ls-files "nutrition-*.js" "nutrition-*.html"', { cwd: REPO }).toString().trim().split('\n').filter(Boolean)
+    .filter((f) => f !== 'nutrition-simulator-admin.html');
   const out = execSync('git status --short -- ' + trackedNutritionFiles.map((f) => '"' + f + '"').join(' '), { cwd: REPO }).toString().trim();
   assert.strictEqual(out, '', 'des fichiers du moteur nutrition-*.js/html ont été modifiés: ' + out);
-  // Fichiers meal-pattern-*.js existants (hors ce nouveau module et ses
-  // tests) doivent eux aussi rester inchangés dans cette étape.
-  const otherMealPatternFiles = ['meal-food-roles.js', 'meal-pattern-detector.js', 'meal-pattern-exclusion.js', 'meal-pattern-clarifying-questions.js', 'nutrition-simulator-admin.html'];
+  // Fichiers meal-pattern-*.js existants doivent rester inchangés dans
+  // cette étape (nutrition-simulator-admin.html exclu : son intégration
+  // avec classifyFoodAgainstMealPattern() est le sujet d'une étape
+  // ultérieure distincte, feature/meal-pattern-role-integration, testée
+  // séparément).
+  const otherMealPatternFiles = ['meal-food-roles.js', 'meal-pattern-detector.js', 'meal-pattern-exclusion.js', 'meal-pattern-clarifying-questions.js'];
   const outOther = execSync('git status --short -- ' + otherMealPatternFiles.map((f) => '"' + f + '"').join(' '), { cwd: REPO }).toString().trim();
   assert.strictEqual(outOther, '', 'des fichiers existants du chantier meal-pattern ont été modifiés: ' + outOther);
 });
