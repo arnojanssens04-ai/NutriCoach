@@ -2998,7 +2998,25 @@ async function checkAdminNutritionBetaAlert(){
   });
   if(!eligible || !eligible.length) return;
 
+  // Anti-nag (localStorage, propre à ce navigateur uniquement — aucune
+  // écriture Supabase, aucune persistance côté serveur, contrairement à
+  // profiles.milestones_shown) : deux réponses possibles à la question
+  // "voulez-vous améliorer ça ?"
+  //  - "Oui" : reporte de 5 jours (nutritionBetaAlertSnoozedUntil_<règle>),
+  //    pour revoir l'évolution plutôt que renotifier chaque jour ;
+  //  - "Non" : ARRÊTE définitivement cette observation
+  //    (nutritionBetaAlertStopped_<règle>) — plus aucun message pour
+  //    cette règle tant que ce n'est pas effacé manuellement (localStorage
+  //    du navigateur), ne bloque jamais une AUTRE règle.
   var top = eligible[0];
+  var snoozeKey = 'nutritionBetaAlertSnoozedUntil_' + top.ruleId;
+  var stopKey = 'nutritionBetaAlertStopped_' + top.ruleId;
+  try {
+    if(localStorage.getItem(stopKey)) return;
+    var snoozedUntil = localStorage.getItem(snoozeKey);
+    if(snoozedUntil && referenceDate < snoozedUntil) return;
+  } catch(e){ /* localStorage indisponible, on affiche quand même */ }
+
   var meta = NUTRITION_BETA_ALERT_META[top.ruleId] || { icon: '🧪', title: top.ruleId };
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[top.ruleId] : null;
   var foods = nutritionBetaFoodLabelsForCodes(rule && rule.eligibleFoodListId, top.result.audit.selectedFoodCodes, top.result.audit.matchedByKeyword);
@@ -3013,7 +3031,8 @@ async function checkAdminNutritionBetaAlert(){
   if(top.ruleId === 'increase_food_variety_v1'){
     observedFoods = computeMostFrequentFoods(journalEntries, referenceDate, 7, 3);
   }
-  showNutritionBetaAlert(meta, top.result, foods, observedFoods);
+  var snoozeUntilDate = dateStr(new Date(new Date(referenceDate+'T00:00:00').getTime() + 5*86400000));
+  showNutritionBetaAlert(meta, top.result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey);
 }
 
 // Fréquence des aliments réellement enregistrés (champ `aliment`, déjà
@@ -3037,7 +3056,14 @@ function computeMostFrequentFoods(journalEntries, referenceDate, windowDays, top
     .slice(0, topN||3);
 }
 
-function showNutritionBetaAlert(meta, result, foods, observedFoods){
+function nutritionBetaAlertRespond(el, snoozeKey, snoozeUntilDate, stopKey, wantsImprovement){
+  try {
+    if(wantsImprovement){ localStorage.setItem(snoozeKey, snoozeUntilDate); }
+    else { localStorage.setItem(stopKey, '1'); }
+  } catch(e){ /* localStorage indisponible, sans effet ce coup-ci */ }
+  el.closest('div[style*=fixed]').remove();
+}
+function showNutritionBetaAlert(meta, result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey){
   var observedHtml = (observedFoods && observedFoods.length)
     ? '<div style="font-size:.72rem;color:var(--text2);margin-bottom:12px">🔎 Aliments qui reviennent souvent : '
       + observedFoods.map(function(f){ return esc(f); }).join(', ')
@@ -3048,6 +3074,9 @@ function showNutritionBetaAlert(meta, result, foods, observedFoods){
       + foods.map(function(f){ return '<span style="font-size:.72rem;background:var(--card2);color:var(--text2);border:1px solid var(--border2);border-radius:999px;padding:4px 10px">'+esc(f)+'</span>'; }).join('')
       + '</div>'
     : '';
+  var safeSnoozeKey = String(snoozeKey).replace(/[^a-zA-Z0-9_-]/g,'');
+  var safeSnoozeUntil = String(snoozeUntilDate).replace(/[^a-zA-Z0-9_-]/g,'');
+  var safeStopKey = String(stopKey).replace(/[^a-zA-Z0-9_-]/g,'');
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s';
   ov.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:36px 28px;max-width:340px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)">'
@@ -3057,7 +3086,11 @@ function showNutritionBetaAlert(meta, result, foods, observedFoods){
     +'<p style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:16px">'+esc(result.advice.body)+'</p>'
     +observedHtml
     +foodsHtml
-    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:11px 24px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:1rem;font-weight:600;cursor:pointer">Continuer</button>'
+    +'<p style="font-size:.8rem;color:var(--text2);font-weight:600;margin-bottom:10px">Souhaitez-vous améliorer ça ?</p>'
+    +'<div style="display:flex;flex-direction:column;gap:8px">'
+    +'<button onclick="nutritionBetaAlertRespond(this,\''+safeSnoozeKey+'\',\''+safeSnoozeUntil+'\',\''+safeStopKey+'\',true)" style="padding:11px 24px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">✅ Oui — revoir dans 5 jours</button>'
+    +'<button onclick="nutritionBetaAlertRespond(this,\''+safeSnoozeKey+'\',\''+safeSnoozeUntil+'\',\''+safeStopKey+'\',false)" style="padding:11px 24px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">🚫 Non — arrêter ces messages</button>'
+    +'</div>'
     +'</div>';
   document.body.appendChild(ov);
 }
