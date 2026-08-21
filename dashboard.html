@@ -2248,9 +2248,17 @@ function calcNutritionalQuality(entries, tgt){
   // pouss\u00e9 \u00e0 se restreindre pour "bien scorer". Suspendu si la satit\u00e9 du
   // jour a \u00e9t\u00e9 valid\u00e9e (Satiety Override) \u2014 dans ce cas la sensation de la
   // personne prime sur le chiffre, pas de jugement ext\u00e9rieur suppl\u00e9mentaire.
+  // Corrig\u00e9 le 2026-08-21 : ne se d\u00e9clenche plus tant que la journ\u00e9e
+  // n'est pas repr\u00e9sentative (au moins 3 repas enregistr\u00e9s, quel que
+  // soit leur type) \u2014 sinon un objectif calorique \u00e9lev\u00e9 (ex. 3500kcal)
+  // d\u00e9clenchait ce message d\u00e8s le petit-d\u00e9jeuner seul, ce qui n'a rien
+  // \u00e0 voir avec "manger moins que d'habitude".
   var kcalRatio = tgt.kcal>0 ? T.kcal/tgt.kcal : 1;
   var satietyOk = (typeof SATIETY_TODAY!=='undefined') && SATIETY_TODAY===true;
-  if(!satietyOk && kcalRatio>0 && kcalRatio<0.7){
+  var mealTypesLogged = {};
+  entries.forEach(function(e){ if(e.repas) mealTypesLogged[e.repas]=true; });
+  var enoughMealsLogged = Object.keys(mealTypesLogged).length >= 3;
+  if(!satietyOk && enoughMealsLogged && kcalRatio>0 && kcalRatio<0.7){
     score = Math.min(score, 82);
     tips.push({priority:0, msg:'Vous avez mang\u00e9 nettement moins que d\'habitude aujourd\'hui \u2014 pas de souci si c\'est ponctuel, mais si \u00e7a devient r\u00e9gulier, parlez-en \u00e0 votre di\u00e9t\u00e9ticien.'});
   }
