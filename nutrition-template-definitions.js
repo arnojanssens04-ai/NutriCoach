@@ -32,100 +32,78 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_iron_sources_v1: {
     id: 'increase_iron_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en fer sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en fer nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_calcium_sources_v1: {
     id: 'increase_calcium_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en calcium sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en calcium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_fiber_sources_v1: {
     id: 'increase_fiber_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en fibres sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en fibres nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_omega3_sources_v1: {
     id: 'increase_omega3_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en oméga-3 sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en oméga-3 nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_magnesium_sources_v1: {
     id: 'increase_magnesium_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en magnésium sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en magnésium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_zinc_sources_v1: {
     id: 'increase_zinc_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en zinc sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en zinc nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_vitamin_c_sources_v1: {
     id: 'increase_vitamin_c_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de vitamine C apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Sources de vitamine C peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_vitamin_d_sources_v1: {
     id: 'increase_vitamin_d_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de vitamine D apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Sources de vitamine D peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_potassium_sources_v1: {
     id: 'increase_potassium_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en potassium sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en potassium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_vitamin_b12_sources_v1: {
     id: 'increase_vitamin_b12_sources_v1',
     status: 'active',
-    bodyTemplate: 'Les sources alimentaires de vitamine B12 apparaissent peu souvent dans les repas enregistrés sur la période analysée. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Sources de vitamine B12 peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_protein_sources_v1: {
     id: 'increase_protein_sources_v1',
     status: 'active',
-    bodyTemplate: 'L\'apport moyen en protéines sur la période analysée est nettement inférieur à une référence journalière générique. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à une carence. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être ajoutés à certains repas, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Apport en protéines nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   increase_hydration_v1: {

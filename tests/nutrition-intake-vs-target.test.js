@@ -156,15 +156,16 @@ check('8. Vitamine C/D/B12 et hydratation restent sur le mécanisme de rareté (
   });
 });
 
-check('9. Aucun gabarit des 8 nutriments migrés ne contient de formulation interdite ni le mot "carence" hors négation', () => {
+check('9. Aucun gabarit des 8 nutriments migrés ne contient de formulation interdite ni le mot "carence"/"diagnostic" affirmatif (formulation épurée validée le 2026-08-21)', () => {
   const src = fs.readFileSync(REPO + '/nutrition-template-definitions.js', 'utf8');
   ['increase_iron_sources_v1', 'increase_calcium_sources_v1', 'increase_fiber_sources_v1', 'increase_omega3_sources_v1',
     'increase_magnesium_sources_v1', 'increase_zinc_sources_v1', 'increase_potassium_sources_v1', 'increase_protein_sources_v1']
     .forEach((id) => {
       const idx = src.indexOf(id + ': {');
       const block = src.slice(idx, idx + 500);
-      assert(/nettement inférieur à une référence journalière générique/.test(block), id + ' ne reflète pas la nouvelle formulation quantitative');
-      assert(!/(?<!de conclure à une )carence/i.test(block), id + ' affirme une carence hors négation');
+      assert(/nettement sous la référence sur la période analysée/.test(block), id + ' ne reflète pas la formulation épurée validée');
+      assert(/observation du journal, pas un diagnostic/.test(block), id + ' devrait préciser explicitement qu\'il ne s\'agit pas d\'un diagnostic');
+      assert(!/\bcarence\b/i.test(block), id + ' ne devrait plus jamais mentionner "carence", même en négation, dans la formulation épurée');
     });
 });
 

@@ -118,6 +118,11 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-actions{ display:flex; gap:8px; padding:0 16px 16px; }
 .popup-btn{ flex:1; font-size:.78rem; font-weight:600; padding:9px 10px; border-radius:8px; text-align:center; border:1px solid var(--border2); cursor:default; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
+.popup-response-actions{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.popup-response-btn{ font-size:.74rem; font-weight:600; padding:6px 10px; border-radius:999px; border:1px solid var(--border2); color:var(--text2); cursor:pointer; }
+.popup-response-btn.valid{ background:var(--sage-l); color:var(--sage); border-color:transparent; }
+.popup-response-btn.active{ outline:2px solid var(--gold); outline-offset:1px; }
+.popup-response-status{ margin-top:6px; }
 .popup-btn.secondary{ background:transparent; color:var(--text2); }
 .popup-none{ text-align:center; font-size:.82rem; color:var(--text3); font-style:italic; padding:10px; }
 .popup-meta-compact{ padding:0 16px 12px; display:flex; flex-wrap:wrap; gap:6px; }
@@ -810,10 +815,20 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
   // meal-pattern-detector.js) — jamais un jugement sur le repas lui-même.
   var insufficientCoverage = !!mealPatternForType && mealPatternForType.confidence === 'unknown';
 
-  var mealDominance = computeMealDominance(flaggedNames, fixture.journalEntries, freshness);
-  var categoryBreakdown = groupFlaggedFoodsByCategory(flaggedNames, fixture.journalEntries);
-  var categoryConcentration = computeCategoryConcentration(categoryBreakdown, fixture.journalEntries, freshness);
-  var overallVolumeSignal = computeOverallVolumeSignal(flaggedNames, fixture.journalEntries, freshness);
+  // La synthèse groupée (dominance/concentration/volume) ne s'applique
+  // qu'aux règles qui repèrent des aliments précis via mot-clé (ex.
+  // ultra-transformés, useKeywordSubstitution) — jamais aux règles
+  // nutriment (calcium, fer...), qui n'ont pas d'aliments "repérés" à
+  // regrouper : sans ça, l'état 'insufficient_data' générique par
+  // défaut de computeMealDominance masquerait à tort les alternatives
+  // pourtant proposées par ces règles.
+  var mealDominance = null, categoryBreakdown = [], categoryConcentration = [], overallVolumeSignal = null;
+  if (flaggedNames.length > 0) {
+    mealDominance = computeMealDominance(flaggedNames, fixture.journalEntries, freshness);
+    categoryBreakdown = groupFlaggedFoodsByCategory(flaggedNames, fixture.journalEntries);
+    categoryConcentration = computeCategoryConcentration(categoryBreakdown, fixture.journalEntries, freshness);
+    overallVolumeSignal = computeOverallVolumeSignal(flaggedNames, fixture.journalEntries, freshness);
+  }
 
   return {
     mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness,
@@ -912,8 +927,9 @@ function renderVolumeAlertHtml(mealWarnings) {
     + '</div>';
 }
 
-function renderPopupPreview(ruleId, result, mealWarnings) {
+function renderPopupPreview(ruleId, result, mealWarnings, panelId) {
   var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
+  var safePanelId = String(panelId || ruleId).replace(/[^a-zA-Z0-9_-]/g, '');
   var mw = mealWarnings || {};
   var candidateByCode = {};
   (mw.candidates || []).forEach(function (c) { candidateByCode[c.code] = c; });
@@ -950,6 +966,20 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         + '<span class="popup-meta-chip popup-freshness-badge status-' + esc(freshness.status) + '">' + badgeMeta.icon + ' ' + esc(badgeMeta.label) + '</span>'
         + '<span class="popup-meta-chip">' + esc(freshness.analyzableDays) + ' j renseigné' + (freshness.analyzableDays > 1 ? 's' : '') + '</span>'
         + '<span class="popup-meta-chip">Dernière donnée : ' + esc(freshness.lastDataDate || 'aucune') + '</span>'
+        + '</div>';
+    }
+
+    // Quantité observée vs référence — uniquement pour les règles
+    // quantitatives (calcium, fer, fibres...), où observationSnapshot
+    // expose avgIntake/dailyTarget/unit (computeNutrientIntakeVsTarget,
+    // nutrition-signal-engine.js). Jamais affiché pour les règles à
+    // mots-clés (ultra-transformés), qui n'ont pas cette donnée.
+    var obsSnapshot = result.audit && result.audit.observationSnapshot;
+    if (obsSnapshot && typeof obsSnapshot.avgIntake === 'number' && typeof obsSnapshot.dailyTarget === 'number') {
+      var unitLabel = obsSnapshot.unit || '';
+      metaHtml += '<div class="popup-meta-compact">'
+        + '<span class="popup-meta-chip popup-intake-chip">📊 ' + esc(Math.round(obsSnapshot.avgIntake * 10) / 10) + ' ' + esc(unitLabel) + '/j observé' + '</span>'
+        + '<span class="popup-meta-chip">Référence : ' + esc(obsSnapshot.dailyTarget) + ' ' + esc(unitLabel) + '/j</span>'
         + '</div>';
     }
 
@@ -1049,6 +1079,20 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         : null;
       var isConcentratedEvent = !noOptions && topCategoryConcentration && topCategoryConcentration.status === 'concentrated_event';
 
+      // Réponse à la suggestion — interaction VISUELLE locale uniquement
+      // (même principe que setReviewDecision pour le panneau de revue) :
+      // met à jour un badge de statut dans cette page admin, jamais de
+      // génération de texte, jamais de persistance ni d'appel réseau.
+      // N'apparaît que lorsque des aliments concrets sont proposés
+      // (chips), jamais pour une question fixe ou un message "aucune
+      // option".
+      var responseActionsHtml = '<div class="popup-response-actions" id="popup-response-actions-' + safePanelId + '">'
+        + '<div class="popup-response-btn valid" onclick="setPopupResponse(\'' + safePanelId + '\',\'valid\')">✅ Je valide</div>'
+        + '<div class="popup-response-btn" onclick="setPopupResponse(\'' + safePanelId + '\',\'more\')">🔄 Je veux d\'autres aliments</div>'
+        + '<div class="popup-response-btn" onclick="setPopupResponse(\'' + safePanelId + '\',\'help\')">❓ J\'ai besoin d\'aide</div>'
+        + '</div>'
+        + '<div class="popup-response-status" id="popup-response-status-' + safePanelId + '"></div>';
+
       var optionsBlockHtml;
       if (isInsufficientData) {
         optionsBlockHtml = '<p class="popup-none-inline">ℹ️ Trop peu de données pour identifier une habitude à examiner cette semaine.</p>';
@@ -1060,16 +1104,17 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         var coherentAlts = filterCoherentAlternatives(topCategoryConcentration.categoryCode, mw.mealType, mw.mealPatterns);
         if (coherentAlts.length > 0) {
           optionsBlockHtml = '<p>🔁 Cette catégorie apparaît à plusieurs reprises sur des jours différents. Si vous souhaitez la faire évoluer, nous pouvons chercher une option qui conserve une texture, un goût et un usage proches.</p>'
-            + '<div class="popup-chips">' + coherentAlts.map(function (a) { return '<span class="popup-chip">🥗 ' + esc(a) + '</span>'; }).join('') + '</div>';
+            + '<div class="popup-chips">' + coherentAlts.map(function (a) { return '<span class="popup-chip">🥗 ' + esc(a) + '</span>'; }).join('') + '</div>'
+            + responseActionsHtml;
         } else if (clarifyingHtml) {
           optionsBlockHtml = clarifyingHtml;
         } else {
-          optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' : '');
+          optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' + responseActionsHtml : '');
         }
       } else if (clarifyingHtml) {
         optionsBlockHtml = clarifyingHtml;
       } else {
-        optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' : '');
+        optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' + responseActionsHtml : '');
       }
 
       inner = '<div class="popup-card">'
@@ -1229,6 +1274,34 @@ var REVIEW_DECISION_LABELS = {
   edit_foods: { icon: '🍽️', text: 'Modification des aliments demandée (aucun éditeur réel dans cette maquette)', cls: 'pending' },
   more_info: { icon: '❓', text: 'Informations complémentaires demandées (local, non transmis)', cls: 'pending' }
 };
+/* -----------------------------------------------------------------------
+   setPopupResponse(panelId, response)
+
+   Interaction VISUELLE locale, en mémoire du navigateur uniquement —
+   comme setReviewDecision() : aucun appel réseau, aucune écriture
+   Supabase, rien n'est persisté ni régénéré comme texte. Sert
+   uniquement à donner un retour immédiat dans cette page admin ;
+   disparaît au rechargement.
+   ----------------------------------------------------------------------- */
+var POPUP_RESPONSE_LABELS = {
+  valid: { icon: '✅', text: 'Réponse enregistrée localement : « Je valide »', cls: 'approved' },
+  more: { icon: '🔄', text: 'Réponse enregistrée localement : « Je veux d\'autres aliments » (aucune nouvelle liste générée dans cette maquette)', cls: 'pending' },
+  help: { icon: '❓', text: 'Réponse enregistrée localement : « J\'ai besoin d\'aide » (aucune mise en relation réelle dans cette maquette)', cls: 'pending' }
+};
+function setPopupResponse(panelId, response) {
+  var statusEl = document.getElementById('popup-response-status-' + panelId);
+  var actionsEl = document.getElementById('popup-response-actions-' + panelId);
+  if (!statusEl) return;
+  var meta = POPUP_RESPONSE_LABELS[response];
+  if (!meta) return;
+  statusEl.innerHTML = '<div class="review-decision-badge ' + meta.cls + '">' + meta.icon + ' ' + esc(meta.text) + '</div>';
+  if (actionsEl) {
+    Array.prototype.forEach.call(actionsEl.children, function (btn) { btn.classList.remove('active'); });
+    var clicked = actionsEl.querySelector('[onclick*="\'' + response + '\'"]');
+    if (clicked) clicked.classList.add('active');
+  }
+}
+
 function setReviewDecision(panelId, decision) {
   var statusEl = document.getElementById('review-status-' + panelId);
   var actionsEl = document.getElementById('review-actions-' + panelId);
@@ -1258,7 +1331,7 @@ function renderProfile(fixtureKey, fixture) {
     + '<div class="profile-id">Règle simulée : ' + esc(fixture.ruleId) + '</div>';
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
-  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result, mealWarnings);
+  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result, mealWarnings, fixtureKey);
   var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture, fixtureKey, mealWarnings);
   if (reviewHtml) html += '<div class="section-lbl">Revue admin — pourquoi ce conseil ?</div>' + reviewHtml;
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);

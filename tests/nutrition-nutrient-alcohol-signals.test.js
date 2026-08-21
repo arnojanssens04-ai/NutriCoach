@@ -63,10 +63,11 @@ check('3. Sources de fer peu présentes : conseil généré, jamais d\'affirmati
   const sandbox = buildSandbox();
   const res = runFixture(sandbox, 'low_iron_source_presence');
   assert.strictEqual(res.eligible, true, res.blockReason);
-  // "carence" ne peut apparaître QUE dans la négation explicite, jamais
-  // comme affirmation isolée (ex. "carence en fer détectée").
-  assert(!/(?<!de conclure à une )carence/i.test(res.advice.body), 'le texte affirme une carence hors négation');
-  assert(/ne permet pas de conclure/i.test(res.advice.body), 'la limite explicite est absente du texte');
+  // Formulation épurée validée le 2026-08-21 : le mot "carence" a été
+  // retiré du gabarit (même en négation) au profit de "pas un
+  // diagnostic", qui porte la même limite explicite plus brièvement.
+  assert(!/\bcarence\b/i.test(res.advice.body), 'le texte ne devrait plus jamais mentionner "carence"');
+  assert(/pas un diagnostic/i.test(res.advice.body), 'la limite explicite est absente du texte');
 });
 
 check('3b. Sources de magnésium peu présentes : conseil généré, jamais d\'affirmation directe de carence', () => {
