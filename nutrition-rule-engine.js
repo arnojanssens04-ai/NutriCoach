@@ -18,7 +18,10 @@
 
    TANT QUE CES POINTS NE SONT PAS TRANCHÉS EXPLICITEMENT PAR UNE
    DÉCISION PRODUIT ET, le cas échéant, UN AVIS JURIDIQUE :
-   - aucun conseil généré ici n'est jamais montré à un patient ;
+   - aucun conseil généré ici n'est jamais montré à un patient (seule
+     exception sanctionnée le 2026-08-21 : une modale bêta admin-only
+     dans dashboard.html, visible uniquement par profiles.role==='admin'
+     sur son propre journal — voir checkAdminNutritionBetaAlert()) ;
    - aucune table Supabase n'existe pour ce moteur (rien n'est persisté
      au-delà de la mémoire du processus qui exécute une simulation) ;
    - aucun statut de règle 'active' (production) n'est reconnu par ce

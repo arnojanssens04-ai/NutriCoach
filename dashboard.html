@@ -1364,6 +1364,29 @@ body {
      pour qu'une correction faite ici profite partout automatiquement. -->
 <script src="regles-pathologies.js?v=10"></script>
 <script src="recettes-data.js?v=2"></script>
+<!-- Moteur de conseils nutritionnels (nutrition-*.js) — EXCEPTION SANCTIONNÉE
+     le 2026-08-21, lecture seule, jamais modifiée par ce fichier : le moteur
+     reste "shadow_active" (jamais de règle "active"), n'écrit jamais dans
+     Supabase, et chaque résultat reste annoté visibility:
+     'admin_simulator_only' (nutrition-audit.js). Voir checkAdminNutritionBetaAlert()
+     plus bas : n'affiche la modale que si profiles.role==='admin', sur le
+     propre journal de l'admin connecté, jamais pour un autre patient. Ce
+     n'est PAS un déploiement patient — le blocage MDR/RGPD documenté dans
+     docs/GOVERNANCE_QUESTIONS.md reste entier. -->
+<script src="trend-definitions.js?v=1"></script>
+<script src="trend-engine.js?v=1"></script>
+<script src="nutrition-food-definitions.js?v=1"></script>
+<script src="nutrition-template-definitions.js?v=1"></script>
+<script src="nutrition-rule-definitions.js?v=1"></script>
+<script src="nutrition-signal-engine.js?v=1"></script>
+<script src="nutrition-priority-engine.js?v=1"></script>
+<script src="nutrition-safety.js?v=1"></script>
+<script src="nutrition-rule-engine.js?v=1"></script>
+<script src="nutrition-ultra-processed-substitutions.js?v=1"></script>
+<script src="nutrition-food-selector.js?v=1"></script>
+<script src="nutrition-advice-renderer.js?v=1"></script>
+<script src="nutrition-audit.js?v=1"></script>
+<script src="nutrition-simulator.js?v=1"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -2899,6 +2922,107 @@ function showMilestoneCelebration(m){
   document.body.appendChild(ov);
 }
 
+// ── Moteur nutrition-*.js : bêta admin uniquement ───────────────────
+// EXCEPTION SANCTIONNÉE le 2026-08-21 (voir commentaire sur les <script>
+// nutrition-*.js plus haut) : affiche, UNIQUEMENT si profiles.role==='admin',
+// la même modale que showMilestoneCelebration() ci-dessus, mais pour un
+// résultat du moteur de conseils nutritionnels calculé sur le PROPRE journal
+// de l'admin connecté (lecture seule, jamais un autre patient). Contrairement
+// aux jalons, RIEN n'est persisté (pas de "déjà montré") : la modale peut
+// réapparaître à chaque chargement tant que l'observation reste éligible —
+// c'est voulu, l'objectif est de repérer des bugs/améliorations, pas de
+// simuler un vrai parcours patient. Aucune écriture Supabase, aucune
+// nouvelle donnée collectée, aucune règle "active" (nutrition-rule-engine.js
+// refuse structurellement ce statut). Reste bloqué par la même gouvernance
+// MDR/RGPD que le simulateur admin (voir docs/GOVERNANCE_QUESTIONS.md) :
+// ceci n'est PAS un déploiement patient.
+var NUTRITION_BETA_ALERT_META = {
+  reduce_ultra_processed_foods_v1: { icon: '🍔', title: 'Aliments ultra-transformés' },
+  reduce_alcohol_v1: { icon: '🍷', title: 'Alcool' },
+  increase_iron_sources_v1: { icon: '🩸', title: 'Fer' },
+  increase_calcium_sources_v1: { icon: '🦴', title: 'Calcium' },
+  increase_fiber_sources_v1: { icon: '🌾', title: 'Fibres' },
+  increase_omega3_sources_v1: { icon: '🐟', title: 'Oméga-3' },
+  increase_magnesium_sources_v1: { icon: '⚡', title: 'Magnésium' },
+  increase_zinc_sources_v1: { icon: '🛡️', title: 'Zinc' },
+  increase_vitamin_c_sources_v1: { icon: '🍊', title: 'Vitamine C' },
+  increase_vitamin_d_sources_v1: { icon: '☀️', title: 'Vitamine D' },
+  increase_potassium_sources_v1: { icon: '🍌', title: 'Potassium' },
+  increase_vitamin_b12_sources_v1: { icon: '🥚', title: 'Vitamine B12' },
+  reduce_added_sugar_v1: { icon: '🍬', title: 'Sucre ajouté' },
+  increase_protein_sources_v1: { icon: '🥩', title: 'Protéines' },
+  increase_hydration_v1: { icon: '💧', title: 'Hydratation' },
+  increase_food_variety_v1: { icon: '🌈', title: 'Variété alimentaire' }
+};
+
+// Duplique volontairement foodLabelsForCodes() de nutrition-simulator-
+// admin.html (même convention d'isolement par fichier que tout le chantier
+// nutrition-*.js) plutôt que d'importer ce fichier admin dans dashboard.html.
+function nutritionBetaFoodLabelsForCodes(eligibleFoodListId, codes, matchedByKeyword){
+  var byCode = {};
+  if(matchedByKeyword && typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES !== 'undefined'){
+    Object.keys(ULTRA_PROCESSED_CATEGORY_ALTERNATIVES).forEach(function(cat){
+      ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[cat].forEach(function(i){ byCode[i.code]=i.label; });
+    });
+  } else {
+    var list = (typeof NUTRITION_FOOD_LISTS !== 'undefined') ? NUTRITION_FOOD_LISTS[eligibleFoodListId] : null;
+    if(list && Array.isArray(list.items)) list.items.forEach(function(i){ byCode[i.code]=i.label; });
+  }
+  return (codes||[]).map(function(c){ return byCode[c]||c; });
+}
+
+async function checkAdminNutritionBetaAlert(){
+  var p = PROF||{};
+  if(p.role!=='admin') return;
+  if(typeof runNutritionSimulationForAllRules !== 'function') return;
+
+  var referenceDate = today();
+  var since = new Date(); since.setDate(since.getDate()-13);
+  var r = await sb.from('journal')
+    .select('date, repas, aliment, quantite, kcal, is_ultra_processed')
+    .eq('user_id', USER.id)
+    .gte('date', dateStr(since))
+    .lte('date', referenceDate);
+  var journalEntries = (r && r.data) || [];
+  if(!journalEntries.length) return;
+
+  var profileForEngine = {
+    patientId: USER.id, age: p.age || null, isPregnantOrBreastfeeding: false,
+    allergies: [], intolerances: [], clinicalContext: [], symptoms: [],
+    diet: p.diet || null, eligibleForAutomatedAdvice: true
+  };
+
+  var eligible = runNutritionSimulationForAllRules({
+    journalEntries: journalEntries, referenceDate: referenceDate,
+    profile: profileForEngine, mode: 'simulation', now: referenceDate+'T12:00:00Z'
+  });
+  if(!eligible || !eligible.length) return;
+
+  var top = eligible[0];
+  var meta = NUTRITION_BETA_ALERT_META[top.ruleId] || { icon: '🧪', title: top.ruleId };
+  var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[top.ruleId] : null;
+  var foods = nutritionBetaFoodLabelsForCodes(rule && rule.eligibleFoodListId, top.result.audit.selectedFoodCodes, top.result.audit.matchedByKeyword);
+  showNutritionBetaAlert(meta, top.result, foods);
+}
+
+function showNutritionBetaAlert(meta, result, foods){
+  var foodsHtml = foods.length
+    ? '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:18px">'
+      + foods.map(function(f){ return '<span style="font-size:.72rem;background:var(--card2);color:var(--text2);border:1px solid var(--border2);border-radius:999px;padding:4px 10px">'+esc(f)+'</span>'; }).join('')
+      + '</div>'
+    : '';
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s';
+  ov.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:36px 28px;max-width:340px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)">'
+    +'<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#8a2f2f;background:rgba(138,47,47,0.1);border:1px solid rgba(138,47,47,0.25);border-radius:999px;padding:3px 10px;display:inline-block;margin-bottom:14px">🧪 Bêta admin — jamais montré à un patient</div>'
+    +'<div style="font-size:3rem;margin-bottom:14px">'+meta.icon+'</div>'
+    +'<div style="font-family:\'Lora\',serif;font-size:1.3rem;font-weight:700;margin-bottom:10px">'+esc(meta.title)+'</div>'
+    +'<p style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:16px">'+esc(result.advice.body)+'</p>'
+    +foodsHtml
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:11px 24px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:1rem;font-weight:600;cursor:pointer">Continuer</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
 // \u2500\u2500 INDICATEURS CLINIQUES \u2500\u2500 remplace le r\u00e9flexe "compteur de calories"
 // par "ce que \u00e7a signifie pour VOTRE sant\u00e9" \u2014 uniquement pour les
 // pathologies o\u00f9 on suit une vraie donn\u00e9e fiable (sodium, graisses
@@ -3219,6 +3343,7 @@ async function renderMotivationCards(){
   }
 
   checkMilestones();
+  checkAdminNutritionBetaAlert();
 }
 
 // \u2500\u2500 DASHBOARD RENDER \u2500\u2500

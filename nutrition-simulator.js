@@ -14,8 +14,17 @@
    séparée, non commencée ici.
 
    Résultat toujours annoté visibility: 'admin_simulator_only' (via
-   nutrition-audit.js) — il n'existe aucun chemin de code dans ce fichier
-   qui achemine un résultat vers dashboard.html ou vers un patient.
+   nutrition-audit.js) — ce fichier lui-même ne fait toujours rien
+   d'autre que chaîner les modules sur des données déjà chargées.
+
+   EXCEPTION SANCTIONNÉE le 2026-08-21 : dashboard.html charge désormais
+   ce fichier (et le reste du moteur) pour afficher, UNIQUEMENT si
+   profiles.role==='admin' et sur le propre journal de l'admin connecté,
+   une modale bêta identique au style existant (showMilestoneCelebration).
+   Voir checkAdminNutritionBetaAlert() dans dashboard.html. Ce n'est
+   toujours PAS un déploiement patient — aucune règle n'atteint le statut
+   "active", aucune écriture Supabase, le blocage MDR/RGPD documenté
+   dans docs/GOVERNANCE_QUESTIONS.md reste entier.
    ────────────────────────────────────────────────────────────────────── */
 
 /* -----------------------------------------------------------------------
