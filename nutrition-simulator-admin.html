@@ -136,6 +136,8 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-understand-row{ display:flex; justify-content:space-between; gap:10px; font-size:.78rem; padding:3px 0; }
 .popup-understand-reason{ color:var(--text2); text-align:right; }
 .popup-details-link{ text-align:center; font-size:.74rem; color:var(--text3); text-decoration:underline; padding:0 16px 12px; cursor:default; }
+.popup-volume-alert{ margin:0 16px 14px; padding:12px 14px; background:var(--amber-l); border:1px solid rgba(122,92,30,0.25); border-radius:10px; }
+.popup-volume-alert p{ font-size:.82rem; line-height:1.55; color:var(--text); margin:0 0 8px; }
 .popup-group-list{ margin:0 0 8px; padding-left:18px; font-size:.83rem; line-height:1.6; color:var(--text2); }
 .popup-details-panel{ margin:0 16px 14px; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; }
 .popup-details-count{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text3); margin-bottom:8px; }
@@ -535,10 +537,32 @@ function mealTypeLabelFr(mealType) { return MEAL_TYPE_LABELS_FR[mealType] || mea
    modifié). Tout aliment non classable tombe dans 'autres_elements' —
    jamais son nom brut affiché comme titre de groupe.
    ----------------------------------------------------------------------- */
+// sensoryProfile/coherentAlternatives/incoherentExclusions : DÉCLARATIFS
+// uniquement (préférence/fonction alimentaire), jamais une vérité
+// psychologique ni une conclusion nutritionnelle — voir
+// computeCategoryConcentration()/filterCoherentAlternatives(). Absents
+// volontairement pour sauces_accompagnements/plats_prepares (pas encore
+// de profil fiable) : ces catégories restent sans alternative proposée
+// tant qu'aucune matrice n'est validée pour elles (repli sûr).
 var ULTRA_PROCESSED_DISPLAY_CATEGORIES = {
-  repas_rapides: { label: 'Repas rapides', keywords: ['burger', 'pain burger', 'wrap industriel', 'kebab', 'pizza', 'nuggets', 'hot dog', 'frites'] },
-  produits_sucres_boulangerie: { label: 'Produits sucrés ou de boulangerie', keywords: ['foret noire', 'patisserie industrielle', 'viennoiserie', 'biscuit', 'gateau industriel', 'pain brioche', 'cereales chocolatees', 'barre chocolatee', 'donut', 'croissant industriel'] },
-  boissons: { label: 'Boissons', keywords: ['soda', 'boisson gazeuse', 'cola', 'fanta', 'jus industriel', 'boisson energisante'] },
+  repas_rapides: {
+    label: 'Repas rapides', keywords: ['burger', 'pain burger', 'wrap industriel', 'kebab', 'pizza', 'nuggets', 'hot dog', 'frites'],
+    sensoryProfile: { taste: ['salty'], texture: 'crisp_or_soft', temperature: 'hot', mealFunction: 'main_dish_or_side', convenienceLevel: 'high' },
+    coherentAlternatives: ['Burger maison', 'Pommes de terre au four aux herbes', 'Potatoes maison', 'Quartiers de pommes de terre rôtis'],
+    incoherentExclusions: ['Yaourt nature', 'Salade seule', 'Wrap froid au thon']
+  },
+  produits_sucres_boulangerie: {
+    label: 'Produits sucrés ou de boulangerie', keywords: ['foret noire', 'patisserie industrielle', 'viennoiserie', 'biscuit', 'gateau industriel', 'pain brioche', 'cereales chocolatees', 'barre chocolatee', 'donut', 'croissant industriel'],
+    sensoryProfile: { taste: ['sweet'], texture: 'crumbly_or_moelleux', temperature: 'ambient', mealFunction: 'treat', convenienceLevel: 'medium' },
+    coherentAlternatives: ['Banana bread maison', 'Pain complet avec chocolat noir', 'Biscuit maison'],
+    incoherentExclusions: ['Pomme seule', 'Concombre']
+  },
+  boissons: {
+    label: 'Boissons', keywords: ['soda', 'boisson gazeuse', 'cola', 'fanta', 'jus industriel', 'boisson energisante'],
+    sensoryProfile: { taste: ['sweet'], texture: 'fizzy', temperature: 'cold', mealFunction: 'beverage', convenienceLevel: 'high' },
+    coherentAlternatives: ['Eau gazeuse avec agrume', 'Boisson pétillante moins sucrée'],
+    incoherentExclusions: ['Eau plate seule']
+  },
   sauces_accompagnements: { label: 'Sauces et accompagnements préparés', keywords: ['sauce', 'mayonnaise', 'ketchup'] },
   plats_prepares: { label: 'Plats préparés', keywords: ['plat prepare', 'jambon', 'charcuterie', 'cordon bleu', 'lasagne surgelee', 'pizza surgelee', 'fromage fondu', 'cheddar fondu'] }
 };
@@ -583,9 +607,128 @@ function groupFlaggedFoodsByCategory(flaggedFoodNames, journalEntries) {
   }).sort(function (a, b) { return b.occurrenceCount - a.occurrenceCount; });
 }
 
+/* -----------------------------------------------------------------------
+   computeCategoryConcentration(categoryBreakdown, journalEntries, freshness)
+
+   Descriptif uniquement — distingue, PAR CATÉGORIE, une concentration
+   ponctuelle (ex. plusieurs aliments d'une même catégorie dans un seul
+   repas, un seul soir) d'une habitude récurrente. Une concentration
+   ponctuelle n'autorise JAMAIS une suggestion de substitution : on ne
+   qualifie jamais ça de "repas social" ni d'aucune autre interprétation
+   du contexte (convivial, festif...) — seulement "concentré sur un
+   créneau", et on ne suppose jamais une culpabilité. Règle validée le
+   2026-08-21 :
+
+   - couverture globale insuffisante (fraîcheur "stale" ou moins de
+     minDistinctDays jours renseignés au total) → 'insufficient_data',
+     avant même d'évaluer la concentration ;
+   - au moins minOccurrences occurrences ET au moins minDistinctDays
+     jours distincts pour CETTE catégorie → 'recurrent_pattern',
+     suggestionsAllowed vrai (voir filterCoherentAlternatives) ;
+   - sinon → 'concentrated_event', suggestionsAllowed faux, jamais de
+     substitution ni de message évaluatif.
+   ----------------------------------------------------------------------- */
+function computeCategoryConcentration(categoryBreakdown, journalEntries, freshness) {
+  var minOccurrences = 3, minDistinctDays = 3;
+  var coverageOk = !!freshness && freshness.status !== 'stale'
+    && typeof freshness.analyzableDays === 'number' && freshness.analyzableDays >= minDistinctDays;
+
+  return (categoryBreakdown || []).map(function (group) {
+    var foodNameSet = {};
+    group.foods.forEach(function (f) { foodNameSet[f.name] = true; });
+    var days = {}, mealTypes = {};
+    (journalEntries || []).forEach(function (e) {
+      if (!e || !e.aliment || !e.date || !foodNameSet[e.aliment]) return;
+      days[e.date] = true;
+      if (e.repas) mealTypes[e.repas] = true;
+    });
+    var distinctDays = Object.keys(days).length;
+
+    var status, suggestionsAllowed = false, reason = null;
+    if (!coverageOk) {
+      status = 'insufficient_data'; reason = 'coverage_below_threshold';
+    } else if (group.occurrenceCount >= minOccurrences && distinctDays >= minDistinctDays) {
+      status = 'recurrent_pattern'; suggestionsAllowed = true;
+    } else {
+      status = 'concentrated_event'; reason = 'insufficient_recurrence';
+    }
+
+    var def = ULTRA_PROCESSED_DISPLAY_CATEGORIES[group.categoryCode];
+    return {
+      status: status,
+      categoryCode: group.categoryCode,
+      categoryLabel: group.categoryLabel,
+      mealTypes: Object.keys(mealTypes),
+      distinctDays: distinctDays,
+      occurrenceCount: group.occurrenceCount,
+      suggestionsAllowed: suggestionsAllowed,
+      reason: reason,
+      sensoryProfile: (status === 'recurrent_pattern' && def && def.sensoryProfile) ? def.sensoryProfile : null,
+      minOccurrences: minOccurrences,
+      minDistinctDays: minDistinctDays
+    };
+  });
+}
+
+/* -----------------------------------------------------------------------
+   filterCoherentAlternatives(categoryCode, mealType, mealPatterns)
+
+   Ne retient, parmi les alternatives déclarées pour la catégorie
+   (ULTRA_PROCESSED_DISPLAY_CATEGORIES[...].coherentAlternatives), que
+   celles qui ne sont pas déjà exactement présentes dans le repas visé
+   (réutilise classifyFoodAgainstMealPattern, meal-pattern-role-
+   matching.js, jamais modifié) — jamais un remplacement par simple
+   rôle/famille générique quand une matrice sensorielle spécifique
+   existe déjà pour cette catégorie.
+   ----------------------------------------------------------------------- */
+function filterCoherentAlternatives(categoryCode, mealType, mealPatterns) {
+  var def = ULTRA_PROCESSED_DISPLAY_CATEGORIES[categoryCode];
+  if (!def || !def.coherentAlternatives) return [];
+  return def.coherentAlternatives.filter(function (altName) {
+    if (typeof classifyFoodAgainstMealPattern !== 'function') return true;
+    var classification = classifyFoodAgainstMealPattern(altName, mealType, mealPatterns);
+    return classification.action !== 'exclude';
+  });
+}
+
+/* -----------------------------------------------------------------------
+   computeOverallVolumeSignal(flaggedFoodNames, journalEntries, freshness)
+
+   Descriptif uniquement — signale un volume global élevé d'aliments
+   ultra-transformés sur la fenêtre analysée, MÊME si les aliments sont
+   tous différents à chaque fois (donc jamais détecté par catégorie ni
+   par mealType). Ne propose jamais de substitution ici : seulement une
+   observation chiffrée et une question fermée pour ouvrir la discussion
+   avec un professionnel. Seuil validé le 2026-08-21 : au moins
+   `threshold` occurrences ET au moins `threshold` jours distincts (soit
+   une moyenne d'au moins une occurrence par jour sur toute la fenêtre).
+   ----------------------------------------------------------------------- */
+function computeOverallVolumeSignal(flaggedFoodNames, journalEntries, freshness) {
+  var threshold = 7;
+  var names = flaggedFoodNames || [];
+  var days = {};
+  var total = 0;
+  (journalEntries || []).forEach(function (e) {
+    if (!e || !e.aliment || !e.date || names.indexOf(e.aliment) === -1) return;
+    total += 1;
+    days[e.date] = true;
+  });
+  var distinctDays = Object.keys(days).length;
+  var triggered = total >= threshold && distinctDays >= threshold;
+  return {
+    triggered: triggered,
+    totalOccurrences: total,
+    distinctDays: distinctDays,
+    threshold: threshold,
+    flaggedFoodNames: names.slice(),
+    suggestionsAllowed: false,
+    offerProfessionalDiscussion: triggered
+  };
+}
+
 function computeMealPatternWarnings(ruleId, result, fixture) {
   if (!result.eligible || typeof detectMealPatterns !== 'function' || typeof classifyFoodAgainstMealPattern !== 'function') {
-    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null, mealPatternForType: null, nonRecurringMeal: false, insufficientCoverage: false, mealDominance: null, categoryBreakdown: [] };
+    return { mealType: null, mealPatterns: [], candidates: [], freshness: null, clarifyingQuestion: null, mealPatternForType: null, nonRecurringMeal: false, insufficientCoverage: false, mealDominance: null, categoryBreakdown: [], categoryConcentration: [], overallVolumeSignal: null };
   }
   var rule = (typeof NUTRITION_RULE_REGISTRY !== 'undefined') ? NUTRITION_RULE_REGISTRY[ruleId] : null;
   var labels = foodLabelsForCodes(rule && rule.eligibleFoodListId, result.audit.selectedFoodCodes, result.audit.matchedByKeyword);
@@ -655,12 +798,15 @@ function computeMealPatternWarnings(ruleId, result, fixture) {
 
   var mealDominance = computeMealDominance(flaggedNames, fixture.journalEntries, freshness);
   var categoryBreakdown = groupFlaggedFoodsByCategory(flaggedNames, fixture.journalEntries);
+  var categoryConcentration = computeCategoryConcentration(categoryBreakdown, fixture.journalEntries, freshness);
+  var overallVolumeSignal = computeOverallVolumeSignal(flaggedNames, fixture.journalEntries, freshness);
 
   return {
     mealType: mealType, mealPatterns: mealPatterns, candidates: candidates, freshness: freshness,
     clarifyingQuestion: clarifyingQuestion, mealPatternForType: mealPatternForType,
     nonRecurringMeal: nonRecurringMeal, insufficientCoverage: insufficientCoverage,
-    mealDominance: mealDominance, categoryBreakdown: categoryBreakdown
+    mealDominance: mealDominance, categoryBreakdown: categoryBreakdown,
+    categoryConcentration: categoryConcentration, overallVolumeSignal: overallVolumeSignal
   };
 }
 
@@ -712,6 +858,29 @@ function renderCardDetailsPanel(mealWarnings, result) {
     + '<div class="popup-details-count">' + esc(totalCount) + ' élément' + (totalCount > 1 ? 's' : '') + ' pris en compte</div>'
     + groupsHtml
     + '<div class="popup-details-raw"><div class="popup-section-title">Texte du conseil généré</div><div class="popup-body">' + esc(result.advice.body) + '</div></div>'
+    + '</div>';
+}
+
+/* -----------------------------------------------------------------------
+   renderVolumeAlertHtml(mealWarnings)
+
+   Signal de volume global (computeOverallVolumeSignal) — coexiste
+   TOUJOURS avec la synthèse par catégorie, ne la remplace jamais
+   (validé le 2026-08-21) : affiché en premier dans le corps de la
+   carte, avant le détail par catégorie/repas. Formulation descriptive
+   uniquement — jamais "il y a un problème", jamais un verdict sur la
+   personne (voir docs/GOVERNANCE_QUESTIONS.md).
+   ----------------------------------------------------------------------- */
+function renderVolumeAlertHtml(mealWarnings) {
+  var volume = (mealWarnings || {}).overallVolumeSignal;
+  if (!volume || !volume.triggered) return '';
+  return '<div class="popup-section popup-volume-alert">'
+    + '<div class="popup-section-title">Volume global élevé</div>'
+    + '<p>Sur l\'ensemble de la semaine, les aliments classés ultra-transformés reviennent fréquemment dans votre journal (' + esc(volume.totalOccurrences) + ' occurrences sur ' + esc(volume.distinctDays) + ' jours).</p>'
+    + '<p>Augmenter la part d\'aliments bruts et peu transformés est une piste généralement recommandée dans ce cas.</p>'
+    + '<div class="clarify-question">Souhaitez-vous en discuter avec un professionnel ?</div>'
+    + '<div class="clarify-option">○ Oui</div>'
+    + '<div class="clarify-option">○ Plus tard</div>'
     + '</div>';
 }
 
@@ -775,6 +944,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
 
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
+        + renderVolumeAlertHtml(mw)
         + '<div class="popup-body">'
         + '<p>Des aliments classés comme ultra-transformés apparaissent régulièrement dans votre journal cette semaine.</p>'
         + '<p>' + esc(total) + ' occurrence' + (total > 1 ? 's' : '') + ' ont été relevées, réparties principalement entre :</p>'
@@ -842,11 +1012,33 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
           + '</div>';
       }
 
+      // Concentration/récurrence de la catégorie dominante — jamais de
+      // substitution pour un repas concentré sur une seule occasion
+      // (voir computeCategoryConcentration), jamais qualifié de "repas
+      // social" ni d'aucune interprétation du contexte.
+      var topCategory = (mw.categoryBreakdown || [])[0] || null;
+      var topCategoryConcentration = topCategory
+        ? (mw.categoryConcentration || []).filter(function (c) { return c.categoryCode === topCategory.categoryCode; })[0]
+        : null;
+      var isConcentratedEvent = !noOptions && topCategoryConcentration && topCategoryConcentration.status === 'concentrated_event';
+
       var optionsBlockHtml;
       if (isInsufficientData) {
         optionsBlockHtml = '<p class="popup-none-inline">Trop peu de données pour identifier une habitude à examiner cette semaine.</p>';
       } else if (noOptions) {
         optionsBlockHtml = '<p class="popup-none-inline">Couverture insuffisante — aucune option affichée pour ce repas.</p>';
+      } else if (isConcentratedEvent) {
+        optionsBlockHtml = '<p class="popup-none-inline">Plusieurs aliments de cette catégorie apparaissent dans un même repas. Comme cette observation est concentrée sur une seule occasion, aucune modification n\'est proposée. L\'analyse des habitudes se fait sur plusieurs jours.</p>';
+      } else if (topCategoryConcentration && topCategoryConcentration.status === 'recurrent_pattern') {
+        var coherentAlts = filterCoherentAlternatives(topCategoryConcentration.categoryCode, mw.mealType, mw.mealPatterns);
+        if (coherentAlts.length > 0) {
+          optionsBlockHtml = '<p>Cette catégorie apparaît à plusieurs reprises sur des jours différents. Si vous souhaitez la faire évoluer, nous pouvons chercher une option qui conserve une texture, un goût et un usage proches.</p>'
+            + '<div class="popup-chips">' + coherentAlts.map(function (a) { return '<span class="popup-chip">' + esc(a) + '</span>'; }).join('') + '</div>';
+        } else if (clarifyingHtml) {
+          optionsBlockHtml = clarifyingHtml;
+        } else {
+          optionsBlockHtml = matchTag + (chips ? '<div class="popup-chips">' + chips + '</div>' : '');
+        }
       } else if (clarifyingHtml) {
         optionsBlockHtml = clarifyingHtml;
       } else {
@@ -855,6 +1047,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
 
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
+        + renderVolumeAlertHtml(mw)
         + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
         + compositionHtml
         + understandingHtml
