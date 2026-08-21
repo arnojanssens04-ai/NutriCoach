@@ -778,6 +778,17 @@ function renderBalancedPlate(entries){
   // "tr\u00e8s \u00e9quilibr\u00e9e" est donc r\u00e9serv\u00e9 aux journ\u00e9es qui le sont vraiment
   // sur les deux plans.
   var avgShortfall = ((100-vegBarPct)+(100-protBarPct)+(100-starchBarPct)+(100-fatBarPct))/4;
+  // Corrig\u00e9 le 2026-08-21 : la MOYENNE seule pouvait masquer une cat\u00e9gorie
+  // nettement sous sa cible (ex. f\u00e9culents \u00e0 57% noy\u00e9s dans une moyenne \u00e0
+  // 10,75 gr\u00e2ce aux 3 autres cat\u00e9gories \u00e0 100%) tout en affichant "tr\u00e8s
+  // \u00e9quilibr\u00e9e" \u2014 le verdict le plus positif exige d\u00e9sormais qu'AUCUNE
+  // cat\u00e9gorie individuelle ne soit sous 70% de sa cible, en plus de la
+  // moyenne globale.
+  var PLATE_CATEGORY_LABELS = {veg:'l\u00e9gumes et fruits', prot:'prot\u00e9ines', starch:'f\u00e9culents', fat:'mati\u00e8res grasses'};
+  var plateBarPcts = {veg:vegBarPct, prot:protBarPct, starch:starchBarPct, fat:fatBarPct};
+  var minBarPct = Math.min(vegBarPct, protBarPct, starchBarPct, fatBarPct);
+  var weakestCategoryKey = Object.keys(plateBarPcts).filter(function(k){ return plateBarPcts[k]===minBarPct; })[0];
+  var allCategoriesOk = minBarPct >= 70;
   var statusTxt;
   if(totalW < 250){
     // Trop peu mang\u00e9 pour se prononcer avec confiance \u2014 un seul aliment
@@ -785,8 +796,9 @@ function renderBalancedPlate(entries){
     // jusqu'ici sans que \u00e7a dise grand-chose de la journ\u00e9e enti\u00e8re.
     statusTxt = 'D\u00e9but de journ\u00e9e \u2014 la structure se pr\u00e9cisera au fil de vos repas.';
   } else {
-    statusTxt = (avgShortfall<=25 && ultraN<=1) ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
-      : (avgShortfall<=25 && ultraN>=2) ? 'Bonne r\u00e9partition des familles, mais plusieurs aliments transform\u00e9s aujourd\'hui \u2014 la qualit\u00e9 compte autant que la structure.'
+    statusTxt = (avgShortfall<=25 && allCategoriesOk && ultraN<=1) ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
+      : (avgShortfall<=25 && allCategoriesOk && ultraN>=2) ? 'Bonne r\u00e9partition des familles, mais plusieurs aliments transform\u00e9s aujourd\'hui \u2014 la qualit\u00e9 compte autant que la structure.'
+      : (avgShortfall<=25 && !allCategoriesOk) ? 'Structure plut\u00f4t \u00e9quilibr\u00e9e \u2014 un peu plus de ' + PLATE_CATEGORY_LABELS[weakestCategoryKey] + ' compl\u00e9terait votre assiette.'
       : avgShortfall<=45 ? 'Structure de l\'assiette : plut\u00f4t \u00e9quilibr\u00e9e.'
       : vegPct<30 ? 'Une portion de l\u00e9gumes ou de fruits en plus donnerait plus de place aux v\u00e9g\u00e9taux.'
       : 'Continuez \u00e0 varier les trois familles \u00e0 chaque repas.';
