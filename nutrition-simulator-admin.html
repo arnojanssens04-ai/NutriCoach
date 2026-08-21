@@ -120,10 +120,9 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
 .popup-btn.secondary{ background:transparent; color:var(--text2); }
 .popup-none{ text-align:center; font-size:.82rem; color:var(--text3); font-style:italic; padding:10px; }
-.popup-meta{ padding:0 16px 12px; display:flex; flex-direction:column; gap:4px; }
-.popup-meta-row{ display:flex; justify-content:space-between; gap:10px; font-size:.74rem; color:var(--text2); }
-.popup-meta-lbl{ color:var(--text3); }
-.popup-freshness-badge{ font-weight:700; }
+.popup-meta-compact{ padding:0 16px 12px; display:flex; flex-wrap:wrap; gap:6px; }
+.popup-meta-chip{ font-size:.7rem; color:var(--text2); background:var(--card2); border:1px solid var(--border); border-radius:999px; padding:3px 9px; }
+.popup-freshness-badge{ font-weight:700; border-color:transparent; }
 .popup-freshness-badge.status-recent{ color:var(--sage); }
 .popup-freshness-badge.status-aging{ color:var(--amber); }
 .popup-freshness-badge.status-stale{ color:var(--red); }
@@ -138,6 +137,8 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-details-link{ text-align:center; font-size:.74rem; color:var(--text3); text-decoration:underline; padding:0 16px 12px; cursor:default; }
 .popup-volume-alert{ margin:0 16px 14px; padding:12px 14px; background:var(--amber-l); border:1px solid rgba(122,92,30,0.25); border-radius:10px; }
 .popup-volume-alert p{ font-size:.82rem; line-height:1.55; color:var(--text); margin:0 0 8px; }
+.popup-volume-alert-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.popup-volume-alert .popup-meta-chip{ background:rgba(255,255,255,0.5); }
 .popup-group-list{ margin:0 0 8px; padding-left:18px; font-size:.83rem; line-height:1.6; color:var(--text2); }
 .popup-details-panel{ margin:0 16px 14px; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; }
 .popup-details-count{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text3); margin-bottom:8px; }
@@ -854,9 +855,23 @@ function renderCardDetailsPanel(mealWarnings, result) {
     return '<div class="popup-details-group"><div class="popup-details-group-title">' + esc(g.categoryLabel) + '</div><ul class="popup-details-group-list">' + foodsHtml + '</ul></div>';
   }).join('');
 
+  // Compréhension par candidat (relation/action) — déplacée ici depuis la
+  // vue principale (2026-08-21, simplification visuelle) : les pastilles
+  // ⛔⚠️🔄 de la vue principale suffisent pour une lecture rapide, le
+  // détail relation/raison par aliment reste disponible ici pour la
+  // traçabilité complète.
+  var understandingHtml = '';
+  if ((mw.candidates || []).length > 0) {
+    var understandingItems = mw.candidates.map(function (c) {
+      return '<div class="popup-understand-row"><span>' + esc(c.label) + '</span><span class="popup-understand-reason">' + esc(c.reason) + '</span></div>';
+    }).join('');
+    understandingHtml = '<div class="popup-details-group"><div class="popup-details-group-title">Ce que nous avons compris</div>' + understandingItems + '</div>';
+  }
+
   return '<div class="popup-details-panel">'
     + '<div class="popup-details-count">' + esc(totalCount) + ' élément' + (totalCount > 1 ? 's' : '') + ' pris en compte</div>'
     + groupsHtml
+    + understandingHtml
     + '<div class="popup-details-raw"><div class="popup-section-title">Texte du conseil généré</div><div class="popup-body">' + esc(result.advice.body) + '</div></div>'
     + '</div>';
 }
@@ -875,8 +890,7 @@ function renderVolumeAlertHtml(mealWarnings) {
   var volume = (mealWarnings || {}).overallVolumeSignal;
   if (!volume || !volume.triggered) return '';
   return '<div class="popup-section popup-volume-alert">'
-    + '<div class="popup-section-title">Volume global élevé</div>'
-    + '<p>Sur l\'ensemble de la semaine, les aliments classés ultra-transformés reviennent fréquemment dans votre journal (' + esc(volume.totalOccurrences) + ' occurrences sur ' + esc(volume.distinctDays) + ' jours).</p>'
+    + '<div class="popup-volume-alert-head"><span class="popup-section-title" style="margin:0">Volume global élevé</span><span class="popup-meta-chip">' + esc(volume.totalOccurrences) + ' occ. / ' + esc(volume.distinctDays) + ' j</span></div>'
     + '<p>Augmenter la part d\'aliments bruts et peu transformés est une piste généralement recommandée dans ce cas.</p>'
     + '<div class="clarify-question">Souhaitez-vous en discuter avec un professionnel ?</div>'
     + '<div class="clarify-option">○ Oui</div>'
@@ -910,13 +924,18 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       + '<div class="popup-dismiss">&times;</div>'
       + '</div>';
 
+    // Bandeau compact — remplace les 3 lignes période/fraîcheur/dernière
+    // donnée par une seule ligne de badges (simplification visuelle
+    // validée le 2026-08-21) ; le texte brut des dates reste présent
+    // (jamais retiré, seulement condensé) pour la traçabilité.
     var metaHtml = '';
     if (freshness) {
       var badgeMeta = FRESHNESS_BADGE_META[freshness.status] || { icon: '', label: freshness.status };
-      metaHtml = '<div class="popup-meta">'
-        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Période analysée</span><span>' + esc(freshness.windowStart) + ' → ' + esc(freshness.windowEnd) + ' (' + esc(freshness.analyzableDays) + ' j renseigné' + (freshness.analyzableDays > 1 ? 's' : '') + ')</span></div>'
-        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Fraîcheur</span><span class="popup-freshness-badge status-' + esc(freshness.status) + '">' + badgeMeta.icon + ' ' + esc(badgeMeta.label) + '</span></div>'
-        + '<div class="popup-meta-row"><span class="popup-meta-lbl">Dernière donnée</span><span>' + esc(freshness.lastDataDate || 'aucune dans la période') + '</span></div>'
+      metaHtml = '<div class="popup-meta-compact">'
+        + '<span class="popup-meta-chip">' + esc(freshness.windowStart) + ' → ' + esc(freshness.windowEnd) + '</span>'
+        + '<span class="popup-meta-chip popup-freshness-badge status-' + esc(freshness.status) + '">' + badgeMeta.icon + ' ' + esc(badgeMeta.label) + '</span>'
+        + '<span class="popup-meta-chip">' + esc(freshness.analyzableDays) + ' j renseigné' + (freshness.analyzableDays > 1 ? 's' : '') + '</span>'
+        + '<span class="popup-meta-chip">Dernière donnée : ' + esc(freshness.lastDataDate || 'aucune') + '</span>'
         + '</div>';
     }
 
@@ -979,17 +998,10 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         compositionHtml = '<div class="popup-section"><div class="popup-section-title">Composition habituelle</div><p class="popup-none-inline">Aucune composition récurrente détectée pour ce repas.</p></div>';
       }
 
-      // Compréhension du repas — ce que meal-pattern-role-matching.js a
-      // classifié pour chaque alternative envisagée, jamais une
-      // conclusion nutritionnelle.
-      var understandingHtml = '';
-      if ((mw.candidates || []).length > 0 && !mw.insufficientCoverage) {
-        var understandingItems = mw.candidates.map(function (c) {
-          return '<div class="popup-understand-row"><span>' + esc(c.label) + '</span><span class="popup-understand-reason">' + esc(c.reason) + '</span></div>';
-        }).join('');
-        understandingHtml = '<div class="popup-section"><div class="popup-section-title">Ce que nous avons compris</div>' + understandingItems + '</div>';
-      }
-
+      // Compréhension du repas (relation/raison par aliment) : déplacée
+      // dans "Voir les détails" (renderCardDetailsPanel) — simplification
+      // visuelle du 2026-08-21. Les pastilles ⛔⚠️🔄 sur les chips
+      // ci-dessous restent visibles dans la vue principale.
       var chips = foods.map(function (f, i) {
         var code = result.audit.selectedFoodCodes[i];
         var candidate = candidateByCode[code];
@@ -1048,9 +1060,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
         + renderVolumeAlertHtml(mw)
-        + '<div class="popup-body">' + esc(result.advice.body) + '</div>'
         + compositionHtml
-        + understandingHtml
         + '<div class="popup-section"><div class="popup-section-title">Options</div>' + optionsBlockHtml + '</div>'
         + '<div class="popup-details-link">Voir les détails</div>'
         + renderCardDetailsPanel(mw, result)
