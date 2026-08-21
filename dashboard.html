@@ -2971,6 +2971,73 @@ function nutritionBetaFoodLabelsForCodes(eligibleFoodListId, codes, matchedByKey
   return (codes||[]).map(function(c){ return byCode[c]||c; });
 }
 
+/* ── Catégories de familles alimentaires — "Variété alimentaire" ────────
+   Table de mots-clés dupliquée volontairement (même convention que
+   ULTRA_PROCESSED_DISPLAY_CATEGORIES / meal-food-roles.js : chaque
+   chantier reste isolé, pas d'import croisé). Sert UNIQUEMENT à choisir
+   des suggestions dont la catégorie diffère de ce qui revient déjà
+   souvent — jamais une conclusion nutritionnelle, jamais un
+   remplacement 1-pour-1 d'un aliment précis par un autre. */
+var VARIETY_FOOD_CATEGORY_KEYWORDS = {
+  fruits: ['pomme', 'poire', 'banane', 'orange', 'mandarine', 'clementine', 'raisin', 'fraise', 'framboise', 'peche', 'abricot', 'kiwi', 'ananas', 'mangue', 'melon', 'pasteque', 'cerise', 'prune'],
+  legumes: ['carotte', 'brocoli', 'epinard', 'salade', 'tomate', 'concombre', 'courgette', 'aubergine', 'poivron', 'chou', 'haricot vert', 'petit pois', 'champignon', 'oignon', 'poireau'],
+  feculents_cereales: ['riz', 'pates', 'quinoa', 'patate douce', 'pomme de terre', 'pain', 'avoine', 'flocon avoine', 'semoule', 'boulgour', 'polenta', 'muesli', 'granola', 'cereale', 'corn flakes', 'cornflakes', 'biscotte'],
+  legumineuses: ['lentille', 'pois chiche', 'haricot rouge', 'haricot blanc', 'feve', 'soja'],
+  oleagineux: ['amande', 'noisette', 'noix', 'cajou', 'pistache', 'graine'],
+  produits_laitiers: ['yaourt', 'fromage', 'lait', 'skyr', 'fromage blanc'],
+  oeufs: ['oeuf'],
+  sucrants: ['miel', 'confiture', 'sirop erable', 'sucre'],
+  proteines_animales: ['poulet', 'dinde', 'boeuf', 'porc', 'poisson', 'saumon', 'maquereau', 'thon', 'crevette', 'jambon', 'tofu']
+};
+function categorizeVarietyFood(name){
+  var normalized = String(name||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/['’]/g,' ').replace(/[^a-z0-9\s]/g,' ');
+  if(!normalized) return null;
+  // Pluriel français naïf (retrait du "s" final) : les aliments du
+  // journal réel sont presque toujours saisis au pluriel ("lentilles",
+  // "carottes"), les mots-clés ci-dessus au singulier — sans ce repli,
+  // aucune correspondance ne serait jamais trouvée pour ces aliments.
+  var tokens = normalized.split(/\s+/).filter(Boolean);
+  var tokenVariants = {};
+  tokens.forEach(function(t){
+    tokenVariants[t] = true;
+    if(t.length > 3 && t.charAt(t.length-1) === 's') tokenVariants[t.slice(0,-1)] = true;
+  });
+  var codes = Object.keys(VARIETY_FOOD_CATEGORY_KEYWORDS);
+  for(var i=0;i<codes.length;i++){
+    var keywords = VARIETY_FOOD_CATEGORY_KEYWORDS[codes[i]];
+    for(var j=0;j<keywords.length;j++){
+      var kw = keywords[j];
+      var match = kw.indexOf(' ')!==-1 ? normalized.indexOf(kw)!==-1 : !!tokenVariants[kw];
+      if(match) return codes[i];
+    }
+  }
+  return null;
+}
+
+// Réordonne (jamais ne complète/n'invente) la liste générique de
+// suggestions pour privilégier celles dont la catégorie diffère de ce
+// qui revient déjà souvent dans le journal — corrige le cas "amande
+// (oléagineux) suivi de pois chiches (légumineuse) sans rapport
+// apparent" en montrant plutôt des catégories réellement absentes du
+// quotidien observé. Complète avec le reste de la liste si besoin
+// (jamais moins de suggestions qu'avant), ordre d'origine sinon.
+function selectVarietyFoodSuggestions(genericFoods, observedFoods, topN){
+  var observedCategories = {};
+  (observedFoods||[]).forEach(function(f){
+    var c = categorizeVarietyFood(f);
+    if(c) observedCategories[c] = true;
+  });
+  var fresh = [], overlapping = [];
+  (genericFoods||[]).forEach(function(f){
+    var c = categorizeVarietyFood(f);
+    if(c && observedCategories[c]) overlapping.push(f);
+    else fresh.push(f);
+  });
+  return fresh.concat(overlapping).slice(0, topN || genericFoods.length);
+}
+
 async function checkAdminNutritionBetaAlert(){
   var p = PROF||{};
   if(p.role!=='admin') return;
@@ -3030,6 +3097,23 @@ async function checkAdminNutritionBetaAlert(){
   var observedFoods = [];
   if(top.ruleId === 'increase_food_variety_v1'){
     observedFoods = computeMostFrequentFoods(journalEntries, referenceDate, 7, 3);
+    // Reclasse la liste générique (jamais ne la remplace, ni n'élargit
+    // au-delà de ce que le moteur juge sûr) pour privilégier des
+    // catégories différentes de ce qui revient déjà souvent — corrige
+    // les suggestions sans rapport apparent (ex. amande/oléagineux
+    // suivi de pois chiches/légumineuse au hasard). Réutilise
+    // selectCompatibleFoods (nutrition-food-selector.js, jamais
+    // modifié) avec le MÊME filtrage allergies/régime que l'engine,
+    // juste sans la limite maxSelectedFoods, pour reclasser tous les
+    // aliments sûrs plutôt que seulement les 3 déjà retenus.
+    if(typeof selectCompatibleFoods === 'function' && rule){
+      var unlimitedRule = Object.assign({}, rule, { maxSelectedFoods: undefined });
+      var allCompatible = selectCompatibleFoods(unlimitedRule, profileForEngine, NUTRITION_FOOD_LISTS);
+      if(!allCompatible.blockReason && allCompatible.selected.length){
+        var allCompatibleLabels = allCompatible.selected.map(function(i){ return i.label; });
+        foods = selectVarietyFoodSuggestions(allCompatibleLabels, observedFoods, foods.length || 3);
+      }
+    }
   }
   var snoozeUntilDate = dateStr(new Date(new Date(referenceDate+'T00:00:00').getTime() + 5*86400000));
   showNutritionBetaAlert(meta, top.result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey);
@@ -3064,13 +3148,24 @@ function nutritionBetaAlertRespond(el, snoozeKey, snoozeUntilDate, stopKey, want
   el.closest('div[style*=fixed]').remove();
 }
 function showNutritionBetaAlert(meta, result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey){
-  var observedHtml = (observedFoods && observedFoods.length)
-    ? '<div style="font-size:.72rem;color:var(--text2);margin-bottom:12px">🔎 Aliments qui reviennent souvent : '
+  // Les deux listes ci-dessous n'ont AUCUN lien entre elles : "foods"
+  // vient d'une liste générique fixe du moteur (ex. varied_staple_foods_v1),
+  // "observedFoods" vient du vrai journal — jamais un remplacement
+  // 1-pour-1 de l'un par l'autre (ex. "amande" -> "pois chiches" n'a pas
+  // de sens). Libellés distincts pour ne jamais suggérer une
+  // correspondance qui n'existe pas (corrigé le 2026-08-21, option A).
+  var hasObserved = observedFoods && observedFoods.length;
+  var observedHtml = hasObserved
+    ? '<div style="font-size:.72rem;color:var(--text2);margin-bottom:12px">🔎 Ce qui revient souvent : '
       + observedFoods.map(function(f){ return esc(f); }).join(', ')
       + '</div>'
     : '';
+  var foodsLabelHtml = (hasObserved && foods.length)
+    ? '<div style="font-size:.68rem;color:var(--text3);margin-bottom:6px">💡 D\'autres aliments à découvrir (sans lien direct avec ce qui précède)</div>'
+    : '';
   var foodsHtml = foods.length
-    ? '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:18px">'
+    ? foodsLabelHtml
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:18px">'
       + foods.map(function(f){ return '<span style="font-size:.72rem;background:var(--card2);color:var(--text2);border:1px solid var(--border2);border-radius:999px;padding:4px 10px">'+esc(f)+'</span>'; }).join('')
       + '</div>'
     : '';
