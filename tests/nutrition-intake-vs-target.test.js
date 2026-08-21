@@ -44,7 +44,7 @@ function ironEntry(date, mg) {
   return { date: date, repas: 'lunch', aliment: 'x', quantite: 100, kcal: 100, iron_mg: mg };
 }
 
-check('1. Apport soutenu et net sous la référence (≈3mg/j vs 14mg/j) : signal déclenché', () => {
+check('1. Apport soutenu et net sous la référence (≈3mg/j vs 14mg/j, fenêtre de 14 jours) : signal déclenché', () => {
   const sandbox = buildSandbox();
   const journal = ['2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09', '2026-08-10', '2026-08-11', '2026-08-12']
     .map((d) => ironEntry(d, 3));
@@ -55,7 +55,7 @@ check('1. Apport soutenu et net sous la référence (≈3mg/j vs 14mg/j) : signa
 
 check('2. Apport moyen adéquat malgré UN jour bas isolé : pas de signal (un pic bas isolé ne suffit jamais)', () => {
   const sandbox = buildSandbox();
-  // 6 jours à 14mg/j (référence) + 1 jour très bas (1mg) -> moyenne ≈ 12,1mg/j, largement au-dessus du seuil (60% de 14 = 8,4mg/j)
+  // 6 jours à 14mg/j (référence) + 1 jour très bas (1mg) -> moyenne ≈ 12,1mg/j, largement au-dessus du seuil (50% de 14 = 7mg/j, validé le 2026-08-21)
   const journal = [
     ironEntry('2026-08-06', 14), ironEntry('2026-08-07', 14), ironEntry('2026-08-08', 14),
     ironEntry('2026-08-09', 14), ironEntry('2026-08-10', 14), ironEntry('2026-08-11', 14),
@@ -65,10 +65,10 @@ check('2. Apport moyen adéquat malgré UN jour bas isolé : pas de signal (un p
   assert.strictEqual(res.state, 'absent', 'un seul jour bas isolé ne doit jamais déclencher le signal si la moyenne reste correcte');
 });
 
-check('3. Apport tout juste au seuil (exactement 60% de la référence) : pas de signal (le seuil est strict, pas inclusif du côté insuffisant)', () => {
+check('3. Apport tout juste au seuil (exactement 50% de la référence, seuil validé le 2026-08-21) : pas de signal (le seuil est strict, pas inclusif du côté insuffisant)', () => {
   const sandbox = buildSandbox();
   const journal = ['2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09', '2026-08-10', '2026-08-11', '2026-08-12']
-    .map((d) => ironEntry(d, 8.4)); // exactement 60% de 14
+    .map((d) => ironEntry(d, 7)); // exactement 50% de 14
   const res = callResolver(sandbox, 'low_source_presence_iron', journal, '2026-08-12');
   assert.strictEqual(res.state, 'absent');
 });
@@ -96,6 +96,43 @@ check('6. Les 8 nutriments migrés (fer, calcium, fibres, oméga-3, magnésium, 
   assert.strictEqual(typeof res.avgIntake, 'number');
   assert.strictEqual(res.dailyTarget, 14);
   assert.strictEqual(res.unit, 'mg');
+});
+
+check('6b. Calcium sur 14 jours, apport soutenu sous 50% de la référence (900mg/j) : signal déclenché (règle validée le 2026-08-21)', () => {
+  const sandbox = buildSandbox();
+  function calciumEntry(date, mg) { return { date: date, repas: 'lunch', aliment: 'x', quantite: 100, kcal: 100, calcium_mg: mg }; }
+  const journal = [
+    '2026-07-30', '2026-07-31', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-04', '2026-08-05',
+    '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09', '2026-08-10', '2026-08-11', '2026-08-12'
+  ].map((d) => calciumEntry(d, 350)); // 350mg/j en moyenne, sous 50% de 900mg (450mg)
+  const res = callResolver(sandbox, 'low_source_presence_calcium', journal, '2026-08-12');
+  assert.strictEqual(res.state, 'present');
+  assert.strictEqual(res.dailyTarget, 900);
+  assert.strictEqual(res.calendarDays, 14);
+});
+
+check('6c. Calcium sur 14 jours, apport tout juste au-dessus de 50% (460mg/j vs 450mg requis) : pas de signal', () => {
+  const sandbox = buildSandbox();
+  function calciumEntry(date, mg) { return { date: date, repas: 'lunch', aliment: 'x', quantite: 100, kcal: 100, calcium_mg: mg }; }
+  const journal = [
+    '2026-07-30', '2026-07-31', '2026-08-01', '2026-08-02', '2026-08-03', '2026-08-04', '2026-08-05',
+    '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09', '2026-08-10', '2026-08-11', '2026-08-12'
+  ].map((d) => calciumEntry(d, 460));
+  const res = callResolver(sandbox, 'low_source_presence_calcium', journal, '2026-08-12');
+  assert.strictEqual(res.state, 'absent');
+});
+
+check('6d. Fenêtre de 14 jours confirmée dans le code source pour les 8 nutriments migrés, seuil 50% explicite', () => {
+  const src = fs.readFileSync(REPO + '/nutrition-signal-engine.js', 'utf8');
+  const resolversBlock = src.slice(src.indexOf('var NUTRITION_SIGNAL_RESOLVERS'));
+  ['low_source_presence_iron', 'low_source_presence_calcium', 'low_source_presence_fiber', 'low_source_presence_omega3',
+    'low_source_presence_magnesium', 'low_source_presence_zinc', 'low_source_presence_potassium', 'low_source_presence_protein']
+    .forEach((id) => {
+      const idx = resolversBlock.indexOf(id + ':');
+      const block = resolversBlock.slice(idx, idx + 600);
+      assert(/observationWindowDays:\s*14/.test(block), id + ' devrait utiliser une fenêtre de 14 jours');
+      assert(/insufficiencyRatio:\s*0\.5/.test(block), id + ' devrait utiliser un seuil de 50%');
+    });
 });
 
 check('7. NUTRIENT_DAILY_TARGETS_REFERENCE : les valeurs reprennent exactement celles de calcTargets() (dashboard.html, branche plan_fixe)', () => {

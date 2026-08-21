@@ -189,8 +189,16 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       eligibleForAutomatedAdvice: true
     },
     // Cible générique réutilisée (NUTRIENT_DAILY_TARGETS_REFERENCE.iron_mg = 14mg/j) — apport
-    // moyen ici ≈ 3mg/j, largement sous le seuil de déclenchement (60% de la cible).
+    // moyen ici ≈ 3mg/j, largement sous le seuil de déclenchement (50% de la cible, fenêtre de
+    // 14 jours validée le 2026-08-21 — 14 jours de données pour couvrir cette fenêtre).
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Pâtes au fromage', false), { iron_mg: 2.5 }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Riz blanc', false), { iron_mg: 1.8 }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Pain blanc et fromage', false), { iron_mg: 3.2 }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Pâtes au fromage', false), { iron_mg: 2.5 }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Riz blanc', false), { iron_mg: 1.8 }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Pommes de terre', false), { iron_mg: 3.0 }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Pâtes nature', false), { iron_mg: 2.9 }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Pâtes au fromage', false), { iron_mg: 2.5 }),
       Object.assign(nsfEntry('2026-08-07', 'lunch', 'Riz blanc', false), { iron_mg: 1.8 }),
       Object.assign(nsfEntry('2026-08-08', 'lunch', 'Pain blanc et fromage', false), { iron_mg: 3.2 }),
@@ -216,8 +224,16 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       diet: null,
       eligibleForAutomatedAdvice: true
     },
-    // Cible générique réutilisée (magnesium_mg = 300mg/j) — apport moyen ≈ 55mg/j.
+    // Cible générique réutilisée (magnesium_mg = 300mg/j) — apport moyen ≈ 55mg/j, sur 14 jours
+    // (fenêtre validée le 2026-08-21).
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Riz blanc', false), { magnesium_mg: 40 }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Pâtes nature', false), { magnesium_mg: 50 }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Blanc de poulet', false), { magnesium_mg: 60 }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Riz blanc', false), { magnesium_mg: 40 }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Pommes de terre', false), { magnesium_mg: 65 }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Pain blanc', false), { magnesium_mg: 55 }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Riz blanc et légumes', false), { magnesium_mg: 70 }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { magnesium_mg: 40 }),
       Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { magnesium_mg: 50 }),
       Object.assign(nsfEntry('2026-08-08', 'lunch', 'Blanc de poulet', false), { magnesium_mg: 60 }),
@@ -243,8 +259,16 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       diet: null,
       eligibleForAutomatedAdvice: true
     },
-    // Cible générique réutilisée (zinc_mg = 10mg/j) — apport moyen ≈ 1,7mg/j.
+    // Cible générique réutilisée (zinc_mg = 10mg/j) — apport moyen ≈ 1,7mg/j, sur 14 jours
+    // (fenêtre validée le 2026-08-21).
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Riz blanc', false), { zinc_mg: 1.2 }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Pâtes nature', false), { zinc_mg: 1.5 }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Épinards cuits', false), { zinc_mg: 2.1 }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Riz blanc', false), { zinc_mg: 1.2 }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Pommes de terre', false), { zinc_mg: 1.8 }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Pain blanc', false), { zinc_mg: 1.9 }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Salade verte', false), { zinc_mg: 2.0 }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { zinc_mg: 1.2 }),
       Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { zinc_mg: 1.5 }),
       Object.assign(nsfEntry('2026-08-08', 'lunch', 'Épinards cuits', false), { zinc_mg: 2.1 }),
@@ -322,8 +346,16 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       diet: null,
       eligibleForAutomatedAdvice: true
     },
-    // Cible générique réutilisée (potassium_mg = 3500mg/j) — apport moyen ≈ 650mg/j.
+    // Cible générique réutilisée (potassium_mg = 3500mg/j) — apport moyen ≈ 650mg/j, sur 14
+    // jours (fenêtre validée le 2026-08-21).
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Pain blanc', false), { potassium_mg: 500 }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Pâtes nature', false), { potassium_mg: 550 }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Riz blanc', false), { potassium_mg: 600 }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Pain blanc', false), { potassium_mg: 500 }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Pâtes nature', false), { potassium_mg: 700 }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Biscottes', false), { potassium_mg: 800 }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Riz blanc et légumes', false), { potassium_mg: 900 }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Pain blanc', false), { potassium_mg: 500 }),
       Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { potassium_mg: 550 }),
       Object.assign(nsfEntry('2026-08-08', 'lunch', 'Riz blanc', false), { potassium_mg: 600 }),
@@ -435,7 +467,31 @@ var NUTRITION_SIMULATOR_FIXTURES = {
     // la vitamine B12 (restée sur l'ancien mécanisme, aucune cible chiffrée
     // disponible) — pour démontrer le tri de priorité sur un profil qui cumule
     // plusieurs signaux de nature différente en même temps.
+    // 14 jours de données (fenêtre validée le 2026-08-21) — répète le même
+    // motif d'apports faibles sur deux semaines pour rester sous 50% de la
+    // référence journalière sur l'ensemble de la fenêtre analysée.
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Riz blanc et pâtes', false), {
+        nutrient_sources: [], iron_mg: 2, calcium_mg: 100, fiber_g: 3, omega3_g: 0.1, magnesium_mg: 50, zinc_mg: 1.5, potassium_mg: 500, protein_g: 10
+      }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Pain blanc', false), {
+        nutrient_sources: [], iron_mg: 2.5, calcium_mg: 120, fiber_g: 2.5, omega3_g: 0.1, magnesium_mg: 45, zinc_mg: 1.2, potassium_mg: 450, protein_g: 8
+      }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Pommes de terre', false), {
+        nutrient_sources: [], iron_mg: 3, calcium_mg: 90, fiber_g: 4, omega3_g: 0.1, magnesium_mg: 60, zinc_mg: 1.8, potassium_mg: 600, protein_g: 9
+      }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Riz blanc', false), {
+        nutrient_sources: [], iron_mg: 2, calcium_mg: 100, fiber_g: 3, omega3_g: 0.1, magnesium_mg: 50, zinc_mg: 1.5, potassium_mg: 500, protein_g: 10
+      }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Pâtes nature', false), {
+        nutrient_sources: [], iron_mg: 2.5, calcium_mg: 110, fiber_g: 2.8, omega3_g: 0.1, magnesium_mg: 55, zinc_mg: 1.4, potassium_mg: 480, protein_g: 9
+      }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Biscottes', false), {
+        nutrient_sources: [], iron_mg: 2.8, calcium_mg: 95, fiber_g: 3.2, omega3_g: 0.1, magnesium_mg: 48, zinc_mg: 1.6, potassium_mg: 520, protein_g: 8
+      }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Riz blanc et légumes pauvres en fibres', false), {
+        nutrient_sources: [], iron_mg: 3, calcium_mg: 105, fiber_g: 3, omega3_g: 0.1, magnesium_mg: 52, zinc_mg: 1.5, potassium_mg: 550, protein_g: 9
+      }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc et pâtes', false), {
         nutrient_sources: [], iron_mg: 2, calcium_mg: 100, fiber_g: 3, omega3_g: 0.1, magnesium_mg: 50, zinc_mg: 1.5, potassium_mg: 500, protein_g: 10
       }),
@@ -475,8 +531,16 @@ var NUTRITION_SIMULATOR_FIXTURES = {
       diet: null,
       eligibleForAutomatedAdvice: true
     },
-    // Cible générique réutilisée (protein_g = 56g/j) — apport moyen ≈ 14g/j.
+    // Cible générique réutilisée (protein_g = 56g/j) — apport moyen ≈ 14g/j, sur 14 jours
+    // (fenêtre validée le 2026-08-21).
     journalEntries: [
+      Object.assign(nsfEntry('2026-07-30', 'lunch', 'Riz blanc', false), { protein_g: 12 }),
+      Object.assign(nsfEntry('2026-07-31', 'lunch', 'Pâtes nature', false), { protein_g: 14 }),
+      Object.assign(nsfEntry('2026-08-01', 'lunch', 'Salade verte', false), { protein_g: 10 }),
+      Object.assign(nsfEntry('2026-08-02', 'lunch', 'Riz blanc', false), { protein_g: 12 }),
+      Object.assign(nsfEntry('2026-08-03', 'lunch', 'Pain blanc', false), { protein_g: 16 }),
+      Object.assign(nsfEntry('2026-08-04', 'lunch', 'Pommes de terre', false), { protein_g: 15 }),
+      Object.assign(nsfEntry('2026-08-05', 'lunch', 'Riz blanc et légumes', false), { protein_g: 13 }),
       Object.assign(nsfEntry('2026-08-06', 'lunch', 'Riz blanc', false), { protein_g: 12 }),
       Object.assign(nsfEntry('2026-08-07', 'lunch', 'Pâtes nature', false), { protein_g: 14 }),
       Object.assign(nsfEntry('2026-08-08', 'lunch', 'Salade verte', false), { protein_g: 10 }),

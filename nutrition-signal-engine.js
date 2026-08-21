@@ -395,7 +395,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'iron_mg',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.iron_mg,
       unit: 'mg',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en fer sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -408,7 +409,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'calcium_mg',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.calcium_mg,
       unit: 'mg',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en calcium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -421,7 +423,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'fiber_g',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.fiber_g,
       unit: 'g',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en fibres sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -434,7 +437,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'omega3_g',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.omega3_g,
       unit: 'g',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en oméga-3 sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -447,7 +451,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'magnesium_mg',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.magnesium_mg,
       unit: 'mg',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en magnésium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -460,7 +465,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'zinc_mg',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.zinc_mg,
       unit: 'mg',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en zinc sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -495,7 +501,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'potassium_mg',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.potassium_mg,
       unit: 'mg',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en potassium sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -519,7 +526,8 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       nutrientField: 'protein_g',
       dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.protein_g,
       unit: 'g',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
+      insufficiencyRatio: 0.5,
       neutralMessage: 'L\'apport moyen en protéines sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
