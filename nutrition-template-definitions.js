@@ -118,10 +118,8 @@ var NUTRITION_ADVICE_TEMPLATES = {
   increase_food_variety_v1: {
     id: 'increase_food_variety_v1',
     status: 'active',
-    bodyTemplate: 'Un nombre restreint d\'aliments différents a été observé dans les repas enregistrés sur la période analysée. '
-      + 'Cette observation décrit le journal enregistré et ne permet pas de conclure à un déséquilibre nutritionnel. '
-      + 'Parmi les aliments habituellement disponibles, {{foods}} pourraient être alternés avec les habitudes actuelles, '
-      + 'à discuter avec un professionnel avant toute mise en œuvre.',
+    bodyTemplate: 'Peu de variété observée dans les repas sur la période analysée (observation du journal, pas un diagnostic). '
+      + 'Aliments à essayer : {{foods}}. À discuter avec un professionnel.',
     allowedVariables: ['foods']
   },
   reduce_added_sugar_v1: {
