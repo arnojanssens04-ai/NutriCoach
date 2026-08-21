@@ -299,22 +299,22 @@ function renderResult(result) {
 }
 
 var CARD_CATEGORY_BY_RULE = {
-  reduce_ultra_processed_foods_v1: { category: 'ultra_processed', icon: 'UT', title: 'Aliments ultra-transformés' },
-  reduce_alcohol_v1: { category: 'alcohol', icon: 'AL', title: 'Alcool' },
-  increase_iron_sources_v1: { category: 'nutrient', icon: 'Fe', title: 'Fer' },
-  increase_calcium_sources_v1: { category: 'nutrient', icon: 'Ca', title: 'Calcium' },
-  increase_fiber_sources_v1: { category: 'nutrient', icon: 'Fi', title: 'Fibres' },
-  increase_omega3_sources_v1: { category: 'nutrient', icon: 'Ω3', title: 'Oméga-3' },
-  increase_magnesium_sources_v1: { category: 'nutrient', icon: 'Mg', title: 'Magnésium' },
-  increase_zinc_sources_v1: { category: 'nutrient', icon: 'Zn', title: 'Zinc' },
-  increase_vitamin_c_sources_v1: { category: 'nutrient', icon: 'C', title: 'Vitamine C' },
-  increase_vitamin_d_sources_v1: { category: 'nutrient', icon: 'D', title: 'Vitamine D' },
-  increase_potassium_sources_v1: { category: 'nutrient', icon: 'K', title: 'Potassium' },
-  increase_vitamin_b12_sources_v1: { category: 'nutrient', icon: 'B12', title: 'Vitamine B12' },
-  reduce_added_sugar_v1: { category: 'ultra_processed', icon: 'SU', title: 'Sucre ajouté' },
-  increase_protein_sources_v1: { category: 'nutrient', icon: 'Pr', title: 'Protéines' },
-  increase_hydration_v1: { category: 'nutrient', icon: 'H2O', title: 'Hydratation' },
-  increase_food_variety_v1: { category: 'nutrient', icon: 'Vr', title: 'Variété alimentaire' }
+  reduce_ultra_processed_foods_v1: { category: 'ultra_processed', icon: '🍔', title: 'Aliments ultra-transformés' },
+  reduce_alcohol_v1: { category: 'alcohol', icon: '🍷', title: 'Alcool' },
+  increase_iron_sources_v1: { category: 'nutrient', icon: '🩸', title: 'Fer' },
+  increase_calcium_sources_v1: { category: 'nutrient', icon: '🦴', title: 'Calcium' },
+  increase_fiber_sources_v1: { category: 'nutrient', icon: '🌾', title: 'Fibres' },
+  increase_omega3_sources_v1: { category: 'nutrient', icon: '🐟', title: 'Oméga-3' },
+  increase_magnesium_sources_v1: { category: 'nutrient', icon: '⚡', title: 'Magnésium' },
+  increase_zinc_sources_v1: { category: 'nutrient', icon: '🛡️', title: 'Zinc' },
+  increase_vitamin_c_sources_v1: { category: 'nutrient', icon: '🍊', title: 'Vitamine C' },
+  increase_vitamin_d_sources_v1: { category: 'nutrient', icon: '☀️', title: 'Vitamine D' },
+  increase_potassium_sources_v1: { category: 'nutrient', icon: '🍌', title: 'Potassium' },
+  increase_vitamin_b12_sources_v1: { category: 'nutrient', icon: '🥚', title: 'Vitamine B12' },
+  reduce_added_sugar_v1: { category: 'ultra_processed', icon: '🍬', title: 'Sucre ajouté' },
+  increase_protein_sources_v1: { category: 'nutrient', icon: '🥩', title: 'Protéines' },
+  increase_hydration_v1: { category: 'nutrient', icon: '💧', title: 'Hydratation' },
+  increase_food_variety_v1: { category: 'nutrient', icon: '🌈', title: 'Variété alimentaire' }
 };
 
 function foodLabelsForCodes(eligibleFoodListId, codes, matchedByKeyword) {
@@ -523,6 +523,8 @@ function computeMealDominance(flaggedFoodNames, journalEntries, freshness) {
 // Libellés fixes pour les créneaux de repas (mêmes codes que le
 // journal réel : breakfast/lunch/dinner/snack) — affichage uniquement.
 var MEAL_TYPE_LABELS_FR = { breakfast: 'Petit-déjeuner', lunch: 'Déjeuner', dinner: 'Dîner', snack: 'Collation' };
+// Purement décoratif, jamais utilisé pour une logique quelconque.
+var MEAL_TYPE_ICONS_FR = { breakfast: '🌅', lunch: '🥗', dinner: '🌙', snack: '🍎' };
 function mealTypeLabelFr(mealType) { return MEAL_TYPE_LABELS_FR[mealType] || mealType; }
 
 /* -----------------------------------------------------------------------
@@ -545,6 +547,17 @@ function mealTypeLabelFr(mealType) { return MEAL_TYPE_LABELS_FR[mealType] || mea
 // volontairement pour sauces_accompagnements/plats_prepares (pas encore
 // de profil fiable) : ces catégories restent sans alternative proposée
 // tant qu'aucune matrice n'est validée pour elles (repli sûr).
+// Icônes purement décoratives pour le panneau de détails — jamais
+// utilisées pour une logique quelconque, uniquement pour la lisibilité.
+var CATEGORY_DETAILS_ICONS = {
+  repas_rapides: '🍔',
+  produits_sucres_boulangerie: '🍰',
+  boissons: '🥤',
+  sauces_accompagnements: '🥫',
+  plats_prepares: '🍱',
+  autres_elements: '📦'
+};
+
 var ULTRA_PROCESSED_DISPLAY_CATEGORIES = {
   repas_rapides: {
     label: 'Repas rapides', keywords: ['burger', 'pain burger', 'wrap industriel', 'kebab', 'pizza', 'nuggets', 'hot dog', 'frites'],
@@ -852,7 +865,8 @@ function renderCardDetailsPanel(mealWarnings, result) {
     var foodsHtml = g.foods.map(function (f) {
       return '<li>' + esc(f.name) + ' · ' + esc(f.count) + 'x</li>';
     }).join('');
-    return '<div class="popup-details-group"><div class="popup-details-group-title">' + esc(g.categoryLabel) + '</div><ul class="popup-details-group-list">' + foodsHtml + '</ul></div>';
+    var groupIcon = CATEGORY_DETAILS_ICONS[g.categoryCode] || '📦';
+    return '<div class="popup-details-group"><div class="popup-details-group-title">' + groupIcon + ' ' + esc(g.categoryLabel) + '</div><ul class="popup-details-group-list">' + foodsHtml + '</ul></div>';
   }).join('');
 
   // Compréhension par candidat (relation/action) — déplacée ici depuis la
@@ -865,14 +879,14 @@ function renderCardDetailsPanel(mealWarnings, result) {
     var understandingItems = mw.candidates.map(function (c) {
       return '<div class="popup-understand-row"><span>' + esc(c.label) + '</span><span class="popup-understand-reason">' + esc(c.reason) + '</span></div>';
     }).join('');
-    understandingHtml = '<div class="popup-details-group"><div class="popup-details-group-title">Ce que nous avons compris</div>' + understandingItems + '</div>';
+    understandingHtml = '<div class="popup-details-group"><div class="popup-details-group-title">🧠 Ce que nous avons compris</div>' + understandingItems + '</div>';
   }
 
   return '<div class="popup-details-panel">'
-    + '<div class="popup-details-count">' + esc(totalCount) + ' élément' + (totalCount > 1 ? 's' : '') + ' pris en compte</div>'
+    + '<div class="popup-details-count">📋 ' + esc(totalCount) + ' élément' + (totalCount > 1 ? 's' : '') + ' pris en compte</div>'
     + groupsHtml
     + understandingHtml
-    + '<div class="popup-details-raw"><div class="popup-section-title">Texte du conseil généré</div><div class="popup-body">' + esc(result.advice.body) + '</div></div>'
+    + '<div class="popup-details-raw"><div class="popup-section-title">📝 Texte du conseil généré</div><div class="popup-body">' + esc(result.advice.body) + '</div></div>'
     + '</div>';
 }
 
@@ -890,9 +904,9 @@ function renderVolumeAlertHtml(mealWarnings) {
   var volume = (mealWarnings || {}).overallVolumeSignal;
   if (!volume || !volume.triggered) return '';
   return '<div class="popup-section popup-volume-alert">'
-    + '<div class="popup-volume-alert-head"><span class="popup-section-title" style="margin:0">Volume global élevé</span><span class="popup-meta-chip">' + esc(volume.totalOccurrences) + ' occ. / ' + esc(volume.distinctDays) + ' j</span></div>'
-    + '<p>Augmenter la part d\'aliments bruts et peu transformés est une piste généralement recommandée dans ce cas.</p>'
-    + '<div class="clarify-question">Souhaitez-vous en discuter avec un professionnel ?</div>'
+    + '<div class="popup-volume-alert-head"><span class="popup-section-title" style="margin:0">⚠️ Volume global élevé</span><span class="popup-meta-chip">' + esc(volume.totalOccurrences) + ' occ. / ' + esc(volume.distinctDays) + ' j</span></div>'
+    + '<p>🌱 Augmenter la part d\'aliments bruts et peu transformés est une piste généralement recommandée dans ce cas.</p>'
+    + '<div class="clarify-question">❓ Souhaitez-vous en discuter avec un professionnel ?</div>'
     + '<div class="clarify-option">○ Oui</div>'
     + '<div class="clarify-option">○ Plus tard</div>'
     + '</div>';
@@ -943,7 +957,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
         + '<div class="popup-stale-block">'
-        + '<div class="popup-stale-title">Observation ancienne</div>'
+        + '<div class="popup-stale-title">🕓 Observation ancienne</div>'
         + '<div class="popup-stale-text">Cette analyse date de plus de 14 jours. Ajoutez des repas récents pour obtenir une vue actuelle.</div>'
         + '</div>'
         + '</div>';
@@ -954,27 +968,28 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
       // liste complète reste accessible via "Voir les détails".
       var topGroups = (mw.categoryBreakdown || []).slice(0, 3);
       var groupItems = topGroups.map(function (g) {
-        return '<li>' + esc(g.categoryLabel) + ' : ' + esc(g.occurrenceCount) + ' occurrence' + (g.occurrenceCount > 1 ? 's' : '') + '</li>';
+        var groupIcon = CATEGORY_DETAILS_ICONS[g.categoryCode] || '📦';
+        return '<li>' + groupIcon + ' ' + esc(g.categoryLabel) + ' : ' + esc(g.occurrenceCount) + ' occurrence' + (g.occurrenceCount > 1 ? 's' : '') + '</li>';
       }).join('');
       var total = dominance.totalOccurrences;
       var mealOptionsHtml = (dominance.mealBreakdown || []).map(function (m) {
-        return '<div class="clarify-option">○ ' + esc(mealTypeLabelFr(m.mealType)) + '</div>';
-      }).join('') + '<div class="clarify-option">○ Je préfère en discuter</div>';
+        return '<div class="clarify-option">○ ' + esc(MEAL_TYPE_ICONS_FR[m.mealType] || '🍽️') + ' ' + esc(mealTypeLabelFr(m.mealType)) + '</div>';
+      }).join('') + '<div class="clarify-option">○ 💬 Je préfère en discuter</div>';
 
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
         + renderVolumeAlertHtml(mw)
         + '<div class="popup-body">'
-        + '<p>Des aliments classés comme ultra-transformés apparaissent régulièrement dans votre journal cette semaine.</p>'
+        + '<p>🔎 Des aliments classés comme ultra-transformés apparaissent régulièrement dans votre journal cette semaine.</p>'
         + '<p>' + esc(total) + ' occurrence' + (total > 1 ? 's' : '') + ' ont été relevées, réparties principalement entre :</p>'
         + '<ul class="popup-group-list">' + groupItems + '</ul>'
         + '<p>Il n\'est pas nécessaire de tout modifier en même temps.</p>'
         + '</div>'
-        + '<div class="popup-section"><div class="popup-section-title">Prochaine étape</div>'
-        + '<div class="clarify-question">Quel repas souhaitez-vous améliorer en premier ?</div>'
+        + '<div class="popup-section"><div class="popup-section-title">👉 Prochaine étape</div>'
+        + '<div class="clarify-question">❓ Quel repas souhaitez-vous améliorer en premier ?</div>'
         + mealOptionsHtml
         + '</div>'
-        + '<div class="popup-details-link">Voir les aliments pris en compte</div>'
+        + '<div class="popup-details-link">🔍 Voir les aliments pris en compte</div>'
         + renderCardDetailsPanel(mw, result)
         + '<div class="popup-actions">'
         + '<div class="popup-btn secondary">Plus tard</div>'
@@ -993,9 +1008,9 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         var compositionItems = mw.mealPatternForType.foods.map(function (f) {
           return '<span class="popup-chip">' + esc(f.name) + ' · ' + esc(f.frequency) + 'x</span>';
         }).join('');
-        compositionHtml = '<div class="popup-section"><div class="popup-section-title">Composition habituelle</div><div class="popup-chips">' + compositionItems + '</div></div>';
+        compositionHtml = '<div class="popup-section"><div class="popup-section-title">🍽️ Composition habituelle</div><div class="popup-chips">' + compositionItems + '</div></div>';
       } else if (mw.nonRecurringMeal) {
-        compositionHtml = '<div class="popup-section"><div class="popup-section-title">Composition habituelle</div><p class="popup-none-inline">Aucune composition récurrente détectée pour ce repas.</p></div>';
+        compositionHtml = '<div class="popup-section"><div class="popup-section-title">🍽️ Composition habituelle</div><p class="popup-none-inline">Aucune composition récurrente détectée pour ce repas.</p></div>';
       }
 
       // Compréhension du repas (relation/raison par aliment) : déplacée
@@ -1019,7 +1034,7 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
         clarifyingHtml = '<div class="clarify-block">'
           + '<div class="clarify-note">Aucune option pertinente ne reste parmi les alternatives proposées — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
-          + '<div class="clarify-question">' + esc(cq.text) + '</div>'
+          + '<div class="clarify-question">❓ ' + esc(cq.text) + '</div>'
           + optionsHtml
           + '</div>';
       }
@@ -1036,16 +1051,16 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
 
       var optionsBlockHtml;
       if (isInsufficientData) {
-        optionsBlockHtml = '<p class="popup-none-inline">Trop peu de données pour identifier une habitude à examiner cette semaine.</p>';
+        optionsBlockHtml = '<p class="popup-none-inline">ℹ️ Trop peu de données pour identifier une habitude à examiner cette semaine.</p>';
       } else if (noOptions) {
-        optionsBlockHtml = '<p class="popup-none-inline">Couverture insuffisante — aucune option affichée pour ce repas.</p>';
+        optionsBlockHtml = '<p class="popup-none-inline">ℹ️ Couverture insuffisante — aucune option affichée pour ce repas.</p>';
       } else if (isConcentratedEvent) {
-        optionsBlockHtml = '<p class="popup-none-inline">Plusieurs aliments de cette catégorie apparaissent dans un même repas. Comme cette observation est concentrée sur une seule occasion, aucune modification n\'est proposée. L\'analyse des habitudes se fait sur plusieurs jours.</p>';
+        optionsBlockHtml = '<p class="popup-none-inline">📅 Plusieurs aliments de cette catégorie apparaissent dans un même repas. Comme cette observation est concentrée sur une seule occasion, aucune modification n\'est proposée. L\'analyse des habitudes se fait sur plusieurs jours.</p>';
       } else if (topCategoryConcentration && topCategoryConcentration.status === 'recurrent_pattern') {
         var coherentAlts = filterCoherentAlternatives(topCategoryConcentration.categoryCode, mw.mealType, mw.mealPatterns);
         if (coherentAlts.length > 0) {
-          optionsBlockHtml = '<p>Cette catégorie apparaît à plusieurs reprises sur des jours différents. Si vous souhaitez la faire évoluer, nous pouvons chercher une option qui conserve une texture, un goût et un usage proches.</p>'
-            + '<div class="popup-chips">' + coherentAlts.map(function (a) { return '<span class="popup-chip">' + esc(a) + '</span>'; }).join('') + '</div>';
+          optionsBlockHtml = '<p>🔁 Cette catégorie apparaît à plusieurs reprises sur des jours différents. Si vous souhaitez la faire évoluer, nous pouvons chercher une option qui conserve une texture, un goût et un usage proches.</p>'
+            + '<div class="popup-chips">' + coherentAlts.map(function (a) { return '<span class="popup-chip">🥗 ' + esc(a) + '</span>'; }).join('') + '</div>';
         } else if (clarifyingHtml) {
           optionsBlockHtml = clarifyingHtml;
         } else {
@@ -1061,8 +1076,8 @@ function renderPopupPreview(ruleId, result, mealWarnings) {
         + headHtml + metaHtml
         + renderVolumeAlertHtml(mw)
         + compositionHtml
-        + '<div class="popup-section"><div class="popup-section-title">Options</div>' + optionsBlockHtml + '</div>'
-        + '<div class="popup-details-link">Voir les détails</div>'
+        + '<div class="popup-section"><div class="popup-section-title">💡 Options</div>' + optionsBlockHtml + '</div>'
+        + '<div class="popup-details-link">🔍 Voir les détails</div>'
         + renderCardDetailsPanel(mw, result)
         + '<div class="popup-actions">'
         + '<div class="popup-btn secondary">Plus tard</div>'
