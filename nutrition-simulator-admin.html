@@ -479,6 +479,69 @@ function computeObservationFreshness(result, fixture) {
    sous minimumOccurrences, ou si la couverture globale est
    insuffisante ; sinon 'multiple_meals' — jamais un choix arbitraire.
    ----------------------------------------------------------------------- */
+/* -----------------------------------------------------------------------
+   computeIntakeFollowUp(nutrientResolverId, journalEntries,
+                         firstReferenceDate, followUpReferenceDate)
+
+   Descriptif uniquement — compare l'apport moyen observé à deux
+   moments (celui qui a déclenché la suggestion, et une date de suivi
+   ultérieure, configurable, jamais fixée en dur à 7 jours) pour la
+   MÊME règle nutriment. Réutilise NUTRITION_SIGNAL_RESOLVERS
+   (nutrition-signal-engine.js, jamais modifié) — ne recalcule rien,
+   n'invente aucune donnée. Uniquement pour les 8 nutriments migrés
+   sur computeNutrientIntakeVsTarget (avgIntake numérique exposé) —
+   vitamines C/D/B12 restent sur le mécanisme de rareté de sources,
+   sans quantité comparable, donc hors périmètre de ce suivi.
+
+   Seuil validé le 2026-08-21 : +/-15% de variation pour distinguer
+   'improved'/'declined' de 'stable' — jamais une conclusion médicale,
+   uniquement un constat chiffré et descriptif.
+   ----------------------------------------------------------------------- */
+function computeIntakeFollowUp(nutrientResolverId, journalEntries, firstReferenceDate, followUpReferenceDate) {
+  var changeThreshold = 0.15;
+  if (typeof NUTRITION_SIGNAL_RESOLVERS === 'undefined' || typeof NUTRITION_SIGNAL_RESOLVERS[nutrientResolverId] !== 'function') {
+    return null;
+  }
+
+  var first = NUTRITION_SIGNAL_RESOLVERS[nutrientResolverId](journalEntries, firstReferenceDate);
+  var followUp = NUTRITION_SIGNAL_RESOLVERS[nutrientResolverId](journalEntries, followUpReferenceDate);
+
+  var hasQuantity = first && followUp
+    && typeof first.avgIntake === 'number' && typeof followUp.avgIntake === 'number'
+    && first.evaluatedDays > 0 && followUp.evaluatedDays > 0;
+
+  if (!hasQuantity) {
+    return {
+      status: 'insufficient_data',
+      firstAvgIntake: null, firstWindow: null,
+      followUpAvgIntake: null, followUpWindow: null,
+      changeRatio: null, dailyTarget: (followUp && followUp.dailyTarget) || (first && first.dailyTarget) || null,
+      unit: (followUp && followUp.unit) || (first && first.unit) || null,
+      changeThreshold: changeThreshold
+    };
+  }
+
+  var changeRatio = first.avgIntake > 0 ? (followUp.avgIntake - first.avgIntake) / first.avgIntake : null;
+  var status;
+  if (changeRatio === null) {
+    status = 'insufficient_data';
+  } else if (changeRatio >= changeThreshold) {
+    status = 'improved';
+  } else if (changeRatio <= -changeThreshold) {
+    status = 'declined';
+  } else {
+    status = 'stable';
+  }
+
+  return {
+    status: status,
+    firstAvgIntake: first.avgIntake, firstWindow: { start: first.windowStart, end: first.windowEnd },
+    followUpAvgIntake: followUp.avgIntake, followUpWindow: { start: followUp.windowStart, end: followUp.windowEnd },
+    changeRatio: changeRatio, dailyTarget: followUp.dailyTarget, unit: followUp.unit,
+    changeThreshold: changeThreshold
+  };
+}
+
 function computeMealDominance(flaggedFoodNames, journalEntries, freshness) {
   var threshold = 0.60, minimumOccurrences = 3, minimumDistinctDays = 2;
   var names = flaggedFoodNames || [];
@@ -1225,6 +1288,36 @@ function renderReviewPanel(ruleId, result, fixture, panelId, mealWarnings) {
       + '<div class="role-match-table">' + headerRow + candidateRows + '</div></div>';
   }
 
+  // Suivi de progression — compare l'apport moyen observé à la date qui
+  // a déclenché la suggestion et à une date de suivi ultérieure
+  // (délai configurable, ici +7 jours par défaut dans cette maquette
+  // admin — voir computeIntakeFollowUp). Uniquement pour les règles
+  // nutriment quantitatives, jamais un jugement sur la personne, un
+  // simple constat chiffré.
+  var followUpHtml = '';
+  if (rule && rule.triggerPatternId && typeof rule.triggerPatternId === 'string' && rule.triggerPatternId.indexOf('low_source_presence_') === 0) {
+    var followUpReferenceDate = typeof shiftDateStrSim === 'function' ? shiftDateStrSim(fixture.referenceDate, 7) : fixture.referenceDate;
+    var followUp = computeIntakeFollowUp(rule.triggerPatternId, fixture.journalEntries, fixture.referenceDate, followUpReferenceDate);
+    if (followUp && followUp.status !== 'insufficient_data') {
+      var followUpBadges = {
+        improved: { icon: '🟢', label: 'Amélioration observée' },
+        stable: { icon: '🟡', label: 'Stable' },
+        declined: { icon: '🔴', label: 'En baisse' }
+      };
+      var followUpBadge = followUpBadges[followUp.status] || { icon: '', label: followUp.status };
+      var changePct = Math.round(followUp.changeRatio * 100);
+      followUpHtml = '<div class="review-block"><div class="review-block-title">📈 Suivi depuis la dernière observation</div>'
+        + '<div class="review-row"><span class="review-row-lbl">Statut</span><span class="review-row-val">' + followUpBadge.icon + ' ' + esc(followUpBadge.label) + '</span></div>'
+        + '<div class="review-row"><span class="review-row-lbl">Apport moyen — 1ʳᵉ observation</span><span class="review-row-val">' + esc(followUp.firstAvgIntake.toFixed(1)) + ' ' + esc(followUp.unit) + '/j (' + esc(followUp.firstWindow.start) + ' → ' + esc(followUp.firstWindow.end) + ')</span></div>'
+        + '<div class="review-row"><span class="review-row-lbl">Apport moyen — suivi</span><span class="review-row-val">' + esc(followUp.followUpAvgIntake.toFixed(1)) + ' ' + esc(followUp.unit) + '/j (' + esc(followUp.followUpWindow.start) + ' → ' + esc(followUp.followUpWindow.end) + ')</span></div>'
+        + '<div class="review-row"><span class="review-row-lbl">Variation</span><span class="review-row-val">' + (changePct >= 0 ? '+' : '') + esc(changePct) + '%</span></div>'
+        + '</div>';
+    } else if (followUp) {
+      followUpHtml = '<div class="review-block"><div class="review-block-title">📈 Suivi depuis la dernière observation</div>'
+        + '<p class="popup-none-inline">ℹ️ Pas assez de données à la date de suivi pour comparer.</p></div>';
+    }
+  }
+
   var freshnessHtml = '';
   var freshness = mealWarnings && mealWarnings.freshness;
   if (freshness) {
@@ -1244,6 +1337,7 @@ function renderReviewPanel(ruleId, result, fixture, panelId, mealWarnings) {
     + '<div class="review-block"><div class="review-block-title">Profil du patient</div>' + profileHtml + '</div>'
     + '<div class="review-block"><div class="review-block-title">Sélection alimentaire</div>' + selectionHtml + '</div>'
     + roleMatchHtml
+    + followUpHtml
     + freshnessHtml
     + '<div class="review-status" id="review-status-' + safeId + '"></div>'
     + '<div class="review-actions" id="review-actions-' + safeId + '">'
