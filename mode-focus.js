@@ -709,6 +709,12 @@ function renderBalancedPlate(entries, T, tgt){
 
   var totalW = vegW+protW+starchW+fatW;
   plateCard.style.display = 'block';
+  // Force un reflow avant de fixer les largeurs finales -- sans ça, la
+  // transition CSS des barres (voir .plate-bar-fill) ne s'anime jamais au
+  // premier affichage : le passage display:none -> block et le changement
+  // de largeur se produisent dans le même cycle, donc le navigateur ne
+  // peint jamais l'état intermédiaire à 0% depuis lequel animer.
+  void plateCard.offsetWidth;
   if(totalW<=0){
     document.getElementById('plate-status').textContent = 'Ajoutez vos repas pour voir la structure de votre assiette.';
     document.getElementById('plate-ultra-status').style.display = 'none';
