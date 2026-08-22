@@ -3792,7 +3792,12 @@ async function refreshDash(){
     // dupliqu\u00e9 ailleurs : voir evaluateMealTags() / renderMealTagsHTML() dans
     // regles-pathologies.js.
     var mealGlyc = (typeof renderMealTagsHTML==='function') ? renderMealTagsHTML(foods, pathos) : '';
-    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+'</div>';
+    // Sous le badge "Repas équilibré", on rappelle les kcal de CE repas --
+    // évite d'avoir à remonter les yeux vers l'en-tête de la carte pour
+    // savoir combien ce repas précis a apporté.
+    var badgeKcalCaption = (!hideKcalHere && foods.length && /Repas équilibré/.test(mealGlyc))
+      ? '<div class="meal-glyc-tip">'+mk.toFixed(0)+' kcal pour ce repas</div>' : '';
+    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+badgeKcalCaption+'</div>';
   }).join('');
   // Alerts
   var alerts=genAlerts(T,tgt,pathos,entries,SATIETY_TODAY);

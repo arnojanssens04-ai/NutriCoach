@@ -271,14 +271,19 @@ function evaluateMealTags(mealItems, pathos){
   }
 
   // Renforcement positif -- uniquement si AUCUNE alerte n'a \u00e9t\u00e9 lev\u00e9e sur ce
-  // repas ET qu'il contient r\u00e9ellement des fibres ou des prot\u00e9ines
-  // (\u00e9vite de f\u00e9liciter un repas simplement parce qu'il n'a rien de mauvais
-  // \u00e0 signaler -- il faut un vrai point positif \u00e0 souligner).
+  // repas (donc au plus 1 aliment ultra-transform\u00e9, cf. veto ci-dessus qui
+  // se d\u00e9clenche \u00e0 partir de 2 -- un seul aliment ultra-transform\u00e9
+  // ponctuel, ex. un bonbon en fin de repas, ne remet pas en cause
+  // l'\u00e9quilibre du reste) ET qu'il contient r\u00e9ellement des fibres ou des
+  // prot\u00e9ines EN QUANTIT\u00c9 SUR L'ENSEMBLE DU REPAS (totaux, pas juste un
+  // seul aliment isol\u00e9 -- avant ce correctif, un unique aliment riche en
+  // fibres/prot\u00e9ines suffisait \u00e0 valider tout le repas, m\u00eame accompagn\u00e9
+  // d'aliments tr\u00e8s d\u00e9s\u00e9quilibr\u00e9s qui n'atteignaient pas le seuil "veto"
+  // ci-dessus).
   if(!tags.length){
-    var hasFiberOrProtein = mealItems.some(function(e){
-      return (e.food_fibres_100||0) > 2 || (e.proteines||0) > 5;
-    });
-    if(hasFiberOrProtein){
+    var totalFibres = mealItems.reduce(function(s,e){ return s+(e.food_fibres_100||0)*(e.quantite||0)/100; }, 0);
+    var totalProteines = mealItems.reduce(function(s,e){ return s+(e.proteines||0); }, 0);
+    if(totalFibres > 3 || totalProteines > 10){
       tags.push({priority:8, level:'ok', badge:'\u2705 Repas \u00e9quilibr\u00e9', tip:null});
     }
   }
