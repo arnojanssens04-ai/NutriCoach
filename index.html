@@ -3,27 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cap Santé — Votre cap, pas une moyenne</title>
-<meta name="description" content="Une application de suivi alimentaire qui s'adapte réellement à vous : scan photo par IA, personnalisation selon vos objectifs ou votre pathologie, et une équipe humaine derrière l'écran.">
-<meta property="og:title" content="Cap Santé — Votre cap, pas une moyenne">
-<meta property="og:description" content="La nutrition qui s'adapte réellement à vous. Scan photo par IA, personnalisation selon votre situation, équipe humaine.">
+<title>Cap Sant&#233; &#8212; Suivi nutritionnel personnalis&#233;, adapt&#233; &#224; votre profil</title>
+<meta name="description" content="Une application de suivi alimentaire qui s'adapte r&#233;ellement &#224; vous : scan photo par IA, personnalisation selon vos objectifs ou votre pathologie.">
+<meta property="og:title" content="Cap Sant&#233; &#8212; Suivi nutritionnel personnalis&#233;, adapt&#233; &#224; votre profil">
+<meta property="og:description" content="La nutrition qui s'adapte r&#233;ellement &#224; vous. Scan photo par IA, personnalisation selon votre situation.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#2D5A43">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232D5A43'/%3E%3Cpath d='M16 8c-4.5 0-8 3.6-8 8 0 3 1.6 5.6 4 7 0-4 2-7.5 4-9.5-1 2.5-1.3 5.5-.6 8.7.8.4 1.7.6 2.6.6 4.4 0 8-3.6 8-8s-3.6-8-8-8 -2 2z' fill='%23FBF9F5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f5f3ee;
-  --bg2: #efece4;
-  --ink: #16241b;
-  --ink2: #5c5852;
-  --ink3: #a09c94;
-  --card: #ffffff;
-  --line: rgba(22,36,27,0.12);
-  --line2: rgba(22,36,27,0.2);
-  --cap: #2d4f1c;
-  --cap-l: rgba(45,79,28,0.08);
-  --sage: #4a7a3a;
-  --needle: #8b2a2a;
-  --needle-l: rgba(139,42,42,0.08);
+  /* &#9472;&#9472; Charte 2026 &#9472;&#9472; */
+  --bg-main: #FBF9F5;
+  --bg-card: #FFFFFF;
+  --primary-green: #2D5A43;
+  --accent-terracotta: #E07A5F;
+  --accent-soft-green: #EAF2ED;
+  --text-dark: #1A201C;
+  --text-muted: #65726A;
+
+  /* Couleurs s&#233;mantiques &#8212; distinctes des couleurs de marque. L'erreur ne
+     doit JAMAIS r&#233;utiliser l'accent terracotta (qui sert la chaleur/l'humain
+     ailleurs sur la page) : m&#234;me couleur, deux significations oppos&#233;es,
+     c'est exactement le genre d'incoh&#233;rence qu'une vraie &#233;quipe design
+     n'aurait pas laiss&#233; passer. */
+  --color-success: #2D5A43;
+  --color-warning: #B8860B;
+  --color-error: #B3261E;
+  --color-info: #3D6B99;
+
+  /* Alias vers les anciens noms de variable (formulaire de connexion et
+     sections plus bas) pour que tout le fichier reste coh&#233;rent avec la
+     nouvelle charte sans avoir &#224; r&#233;&#233;crire le CSS d&#233;j&#224; existant. */
+  --bg: var(--bg-main);
+  --bg2: var(--accent-soft-green);
+  --ink: var(--text-dark);
+  --ink2: var(--text-muted);
+  --ink3: #9AA39C;
+  --card: var(--bg-card);
+  --line: rgba(26,32,28,0.1);
+  --line2: rgba(26,32,28,0.18);
+  --cap: var(--primary-green);
+  --cap-l: var(--accent-soft-green);
+  --sage: #4A7A3A;
+  --needle: var(--color-error);
+  --needle-l: rgba(179,38,30,0.08);
+
+  /* &#9472;&#9472; &#201;chelle typographique nomm&#233;e &#8212; avant, chaque section d&#233;finissait
+     sa taille au cas par cas (clamp() diff&#233;rent partout). D&#233;sormais une
+     seule &#233;chelle, appliqu&#233;e partout. &#9472;&#9472; */
+  --fs-display: clamp(2rem, 4.2vw, 2.85rem);
+  --fs-h1: clamp(1.55rem, 2.8vw, 2.05rem);
+  --fs-h2: 1.12rem;
+  --fs-body: .95rem;
+  --fs-body-small: .87rem;
+  --fs-caption: .78rem;
+  --fs-overline: .72rem;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--bg); scroll-behavior: smooth; }
@@ -32,11 +69,73 @@ body {
   background: var(--bg);
   font-family: 'Inter', sans-serif;
   color: var(--ink);
+  position: relative;
+}
+/* Grain tres subtil sur toute la page -- imperceptible isolement, donne une
+   sensation "papier" plutot qu'un aplat de couleur numerique plat. */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 2000; pointer-events: none;
+  opacity: .025; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .mono { font-family: 'IBM Plex Mono', monospace; }
 a { color: inherit; }
 
-/* ── TOP NAV — minimale, une seule action ── */
+/* &#9472;&#9472; ACCESSIBILITE &#8212; focus clavier toujours visible, jamais silencieux &#9472;&#9472; */
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2.5px solid var(--primary-green);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.btn-cta-white:focus-visible { outline-color: #fff; }
+
+/* &#9472;&#9472; ANIMATIONS &#8212; s&#233;quence d'entr&#233;e, scroll-reveal, micro-interactions.
+   Restreint volontairement : une intention par bloc, jamais d&#233;coratif,
+   toujours d&#233;sactiv&#233; si prefers-reduced-motion. &#9472;&#9472; */
+
+/* S&#233;quence d'entr&#233;e du hero au chargement -- un seul moment orchestr&#233;,
+   chaque &#233;l&#233;ment arrive avec un l&#233;ger d&#233;calage plut&#244;t que tout d'un coup. */
+.hero-h1, .hero-sub, .hero-text > .btn-cta, .hero-cta-sub, .hero-visual {
+  opacity: 0; transform: translateY(14px);
+  animation: heroIn .7s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero-h1 { animation-delay: .05s; }
+.hero-sub { animation-delay: .16s; }
+.hero-text > .btn-cta { animation-delay: .27s; }
+.hero-cta-sub { animation-delay: .34s; }
+.hero-visual { animation-delay: .4s; }
+@keyframes heroIn { to { opacity: 1; transform: translateY(0); } }
+
+/* Pulsation unique et douce du CTA principal &#224; son arriv&#233;e -- un seul
+   battement, jamais en boucle (une pulsation infinie fatigue et fait
+   "publicit&#233;", pas "rassurant"). */
+.hero-text > .btn-cta { animation-name: heroIn, ctaPulseOnce; animation-duration: .7s, .8s; animation-delay: .27s, 1.1s; animation-fill-mode: forwards, none; }
+@keyframes ctaPulseOnce { 0%,100% { box-shadow: 0 8px 20px -6px rgba(45,90,67,0.45); } 50% { box-shadow: 0 8px 26px -4px rgba(45,90,67,0.7); } }
+
+/* Scroll-reveal -- fondu + l&#233;ger glissement vers le haut d&#232;s qu'un bloc
+   entre dans le viewport (voir IntersectionObserver en bas de page). */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .65s cubic-bezier(.16,1,.3,1), transform .65s cubic-bezier(.16,1,.3,1); }
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+.pillars-grid .reveal:nth-child(1) { transition-delay: 0s; }
+.pillars-grid .reveal:nth-child(2) { transition-delay: .1s; }
+.pillars-grid .reveal:nth-child(3) { transition-delay: .2s; }
+
+/* Micro-interactions au survol -- discr&#232;tes, jamais du "d&#233;cor". */
+.trust-item { transition: transform .2s ease; }
+.trust-item:hover { transform: translateY(-2px); }
+.trust-item:hover .trust-ico { background: var(--primary-green); color: #fff; }
+.trust-ico { transition: background .2s ease, color .2s ease; }
+.pillar-ico { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+.pillar-card:hover .pillar-ico { transform: scale(1.1) rotate(-4deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-h1, .hero-sub, .hero-text > .btn-cta, .hero-cta-sub, .hero-visual { animation: none; opacity: 1; transform: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .trust-item, .trust-ico, .pillar-ico, .pillar-card { transition: none; }
+}
+
+/* &#9472;&#9472; TOP NAV &#8212; minimale, une seule action &#9472;&#9472; */
 .topnav {
   position: sticky; top: 0; z-index: 100;
   background: rgba(245,243,238,0.9);
@@ -54,7 +153,7 @@ a { color: inherit; }
 }
 .nav-btn:hover { background: var(--cap-l); border-color: var(--cap); }
 
-/* ── SECTION 1 — OUVERTURE : un constat, pas un slogan ── */
+/* &#9472;&#9472; SECTION 1 &#8212; OUVERTURE : un constat, pas un slogan &#9472;&#9472; */
 .opening { max-width: 780px; margin: 0 auto; padding: 15vh 24px 14vh; text-align: center; }
 .opening-line {
   font-family: 'Lora', serif; font-weight: 600; letter-spacing: -.4px;
@@ -81,19 +180,19 @@ a { color: inherit; }
   @keyframes opIn { from{ opacity:0; transform: translateY(10px); } to{ opacity:1; transform: translateY(0); } }
 }
 
-/* ── Éléments communs des sections ── */
+/* &#9472;&#9472; &#201;l&#233;ments communs des sections &#9472;&#9472; */
 .section { max-width: 1080px; margin: 0 auto; padding: 76px 24px; }
 .section.bordered { border-top: 1px solid var(--line); }
 .section-hdr { max-width: 640px; margin-bottom: 44px; }
 .eyebrow { display: inline-flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); margin-bottom: 16px; }
 .eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--sage); }
-.section-hdr h2 { font-family: 'Lora', serif; font-weight: 700; font-size: clamp(1.5rem, 3vw, 2.05rem); letter-spacing: -.5px; line-height: 1.22; margin-bottom: 14px; }
+.section-hdr h2 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-h1); letter-spacing: -.5px; line-height: 1.22; margin-bottom: 14px; }
 .section-hdr p { font-size: .98rem; color: var(--ink2); line-height: 1.6; }
 .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease-out, transform .6s ease-out; }
 .reveal.in-view { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
 
-/* ── SECTION 2 — MÉCANISME (scan photo) ── */
+/* &#9472;&#9472; SECTION 2 &#8212; M&#201;CANISME (scan photo) &#9472;&#9472; */
 .mech-wrap { display: grid; grid-template-columns: 1fr .85fr; gap: 54px; align-items: center; }
 @media (max-width: 880px) { .mech-wrap { grid-template-columns: 1fr; gap: 36px; } }
 .mech-points { list-style: none; display: flex; flex-direction: column; gap: 13px; margin-top: 22px; }
@@ -123,7 +222,7 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .scan-row { opacity: 1; } }
 @keyframes scanRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── SECTION 3 — PERSONNALISATION (3 profils) ── */
+/* &#9472;&#9472; SECTION 3 &#8212; PERSONNALISATION (3 profils) &#9472;&#9472; */
 .profiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
 @media (max-width: 780px) { .profiles { grid-template-columns: 1fr; } }
 .profile-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px 22px; }
@@ -132,7 +231,7 @@ a { color: inherit; }
 .profile-after { font-size: .87rem; color: var(--ink); line-height: 1.55; }
 .profile-after b { color: var(--cap); }
 
-/* ── SECTION 4 — ÉQUIPE ── */
+/* &#9472;&#9472; SECTION 4 &#8212; &#201;QUIPE &#9472;&#9472; */
 .team-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
 @media (max-width: 780px) { .team-wrap { grid-template-columns: 1fr; } }
 .team-copy p { font-size: .95rem; color: var(--ink2); line-height: 1.7; margin-bottom: 14px; }
@@ -154,7 +253,7 @@ a { color: inherit; }
 .bilan-mock-highlight .bilan-mock-val { color: var(--cap); }
 .bilan-mock-diff { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; font-weight: 500; opacity: .75; }
 
-/* ── SECTION 5 — HONNÊTETÉ ── */
+/* &#9472;&#9472; SECTION 5 &#8212; HONN&#202;TET&#201; &#9472;&#9472; */
 .honest-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
 @media (max-width: 700px) { .honest-grid { grid-template-columns: 1fr; } }
 .honest-card { display: flex; gap: 13px; align-items: flex-start; padding: 18px 4px; border-bottom: 1px solid var(--line); }
@@ -162,7 +261,7 @@ a { color: inherit; }
 .honest-card h3 { font-family: 'Lora', serif; font-weight: 600; font-size: .96rem; margin-bottom: 4px; }
 .honest-card p { font-size: .84rem; color: var(--ink2); line-height: 1.55; }
 
-/* ── SECTION 6 — AUTH (préservée) ── */
+/* &#9472;&#9472; SECTION 6 &#8212; AUTH (pr&#233;serv&#233;e) &#9472;&#9472; */
 .auth-section { background: var(--card); border-top: 1px solid var(--line); padding: 60px 20px 50px; }
 .auth-intro { text-align: center; max-width: 460px; margin: 0 auto 30px; }
 .auth-intro h2 { font-family: 'Lora', serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -.4px; margin-bottom: 8px; }
@@ -222,169 +321,287 @@ a { color: inherit; }
 
 @media (max-width: 460px) { .row2 { grid-template-columns: 1fr; gap: 0; } }
 
-/* ── FOOTER ── */
+/* &#9472;&#9472; FOOTER &#9472;&#9472; */
 footer { border-top: 1px solid var(--line); padding: 22px 24px; text-align: center; }
 footer p { font-size: .72rem; color: var(--ink3); }
 footer a { color: var(--ink3); text-decoration: underline; }
+
+/* &#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+   NOUVELLE VITRINE 2026 &#8212; header, hero, bandeau confiance, piliers,
+   section cabinet. Le formulaire de connexion (auth-section) et tout
+   ce qui suit restent inchang&#233;s.
+   &#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552; */
+
+/* &#9472;&#9472; HEADER &#9472;&#9472; */
+.hd-2026 { position: sticky; top: 0; z-index: 100; background: rgba(251,249,245,0.88); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); padding: 0 24px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
+.hd-logo { font-family: 'Lora', serif; font-size: 1.3rem; font-weight: 700; letter-spacing: -.2px; color: var(--text-dark); }
+.hd-logo span { color: var(--primary-green); }
+.hd-nav { display: flex; gap: 30px; list-style: none; }
+.hd-nav a { font-size: .87rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color .15s; }
+.hd-nav a:hover { color: var(--primary-green); }
+.hd-actions { display: flex; align-items: center; gap: 10px; }
+.btn-ghost { font-family: 'Inter', sans-serif; font-size: .84rem; font-weight: 600; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line2); background: transparent; color: var(--text-dark); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-ghost:hover { border-color: var(--primary-green); color: var(--primary-green); }
+.btn-cta { font-family: 'Inter', sans-serif; font-size: .84rem; font-weight: 700; padding: 10px 20px; border-radius: 999px; border: none; background: var(--primary-green); color: #fff; cursor: pointer; box-shadow: 0 8px 20px -6px rgba(45,90,67,0.45); transition: transform .15s, box-shadow .15s; white-space: nowrap; }
+.btn-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 26px -6px rgba(45,90,67,0.5); }
+.hd-burger { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line2); background: transparent; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; }
+.hd-burger span, .hd-burger span::before, .hd-burger span::after { content: ''; display: block; width: 17px; height: 2px; background: var(--text-dark); border-radius: 2px; position: relative; transition: transform .2s, opacity .2s; }
+.hd-burger span::before { position: absolute; top: -6px; }
+.hd-burger span::after { position: absolute; top: 6px; }
+.hd-burger.open span { background: transparent; }
+.hd-burger.open span::before { transform: rotate(45deg) translate(-4px,-4px); top: 0; }
+.hd-burger.open span::after { transform: rotate(-45deg) translate(-4px,4px); top: 0; }
+.hd-mobile-panel { display: none; position: fixed; top: 68px; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--line); padding: 18px 24px 22px; z-index: 99; box-shadow: 0 16px 30px rgba(26,32,28,0.08); }
+.hd-mobile-panel.open { display: block; }
+.hd-mobile-panel a { display: block; padding: 12px 0; font-size: .95rem; font-weight: 500; color: var(--text-dark); text-decoration: none; border-bottom: 1px solid var(--line); }
+.hd-mobile-panel .hd-mobile-actions { display: flex; gap: 10px; margin-top: 16px; }
+.hd-mobile-panel .hd-mobile-actions button { flex: 1; }
+@media (max-width: 820px) {
+  .hd-nav { display: none; }
+  .hd-burger { display: flex; }
+  .hd-actions .btn-ghost { display: none; }
+}
+@media (min-width: 821px) { .hd-mobile-panel { display: none !important; } }
+
+/* &#9472;&#9472; HERO &#9472;&#9472; */
+.hero-2026 { position: relative; max-width: 1180px; margin: 0 auto; padding: 64px 24px 40px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 50px; align-items: center; }
+.hero-2026::before {
+  content: ''; position: absolute; z-index: 0; pointer-events: none;
+  top: -60px; left: 50%; transform: translateX(-50%);
+  width: min(900px, 130vw); height: 460px;
+  background: radial-gradient(ellipse at center, rgba(45,90,67,0.09) 0%, rgba(224,122,95,0.06) 45%, transparent 72%);
+  filter: blur(30px);
+}
+.hero-text, .hero-visual { position: relative; z-index: 1; }
+@media (max-width: 940px) { .hero-2026 { grid-template-columns: 1fr; padding-top: 40px; text-align: center; } }
+.hero-h1 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-display); line-height: 1.18; letter-spacing: -.6px; color: var(--text-dark); margin-bottom: 20px; }
+.hero-h1 em { font-style: normal; color: var(--primary-green); }
+.hero-sub { font-size: 1.05rem; line-height: 1.62; color: var(--text-muted); max-width: 480px; margin-bottom: 32px; }
+@media (max-width: 940px) { .hero-sub { margin-left: auto; margin-right: auto; } }
+.hero-cta-sub { margin-top: 12px; font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .03em; color: var(--text-muted); }
+.hero-cta-sub .dotsep { color: var(--accent-terracotta); margin: 0 6px; }
+
+.hero-visual { position: relative; display: flex; justify-content: center; align-items: center; min-height: 380px; }
+.collage { position: relative; width: 340px; height: 340px; }
+.collage-card { position: absolute; background: var(--bg-card); border-radius: 20px; }
+.meal-peek {
+  width: 190px; padding: 18px 20px; left: 6px; top: 18px;
+  box-shadow: 0 16px 40px -10px rgba(26,32,28,0.14);
+  transform: rotate(-6deg);
+}
+.meal-peek-emoji { display: block; margin-bottom: 10px; color: var(--primary-green); }
+.meal-peek-emoji svg { width: 22px; height: 22px; }
+.meal-peek-name { font-family: 'Lora', serif; font-weight: 600; font-size: .88rem; color: var(--text-dark); margin-bottom: 10px; }
+.meal-peek-badge { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: .62rem; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--accent-soft-green); color: var(--primary-green); }
+.meal-peek-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary-green); flex-shrink: 0; }
+.diet-note {
+  width: 250px; padding: 22px 22px 24px; right: 4px; bottom: 8px;
+  box-shadow: 0 24px 54px -12px rgba(26,32,28,0.18);
+  border: 1px solid rgba(224,122,95,0.18);
+  transform: rotate(3deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .meal-peek { animation: cardFloatA 6s ease-in-out infinite; }
+  .diet-note { animation: cardFloatB 6s ease-in-out infinite; animation-delay: .3s; }
+}
+@keyframes cardFloatA { 0%,100% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(-6deg) translateY(-9px); } }
+@keyframes cardFloatB { 0%,100% { transform: rotate(3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-11px); } }
+.diet-note-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.diet-note-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft-green); display: flex; align-items: center; justify-content: center; color: var(--primary-green); flex-shrink: 0; }
+.diet-note-avatar svg { width: 17px; height: 17px; }
+.diet-note-name { font-family: 'Lora', serif; font-weight: 600; font-size: .85rem; color: var(--text-dark); }
+.diet-note-time { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; color: var(--text-muted); margin-top: 1px; }
+.diet-note-txt { font-size: .86rem; line-height: 1.55; color: var(--text-dark); font-style: italic; }
+@media (max-width: 940px) { .hero-visual { min-height: 320px; margin-top: 20px; } .collage { width: 300px; height: 300px; } }
+@media (max-width: 420px) { .collage { width: 260px; height: 300px; } .diet-note { width: 220px; } .meal-peek { width: 165px; } }
+
+/* &#9472;&#9472; BANDEAU DE CONFIANCE &#9472;&#9472; */
+.trust-strip { max-width: 1080px; margin: 8px auto 0; padding: 24px 24px; display: flex; justify-content: center; gap: 44px; flex-wrap: wrap; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.trust-item { display: flex; align-items: center; gap: 10px; font-size: var(--fs-body-small); font-weight: 500; color: var(--text-dark); }
+.trust-ico { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft-green); color: var(--primary-green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.trust-ico svg { width: 15px; height: 15px; }
+
+/* &#9472;&#9472; 3 PILIERS &#9472;&#9472; */
+.pillars-wrap { max-width: 1180px; margin: 0 auto; padding: 96px 24px; }
+.pillars-hdr { max-width: 620px; margin: 0 auto 48px; text-align: center; }
+.pillars-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: var(--fs-overline); letter-spacing: .08em; text-transform: uppercase; color: var(--primary-green); margin-bottom: 14px; }
+.pillars-hdr h2 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-h1); letter-spacing: -.5px; color: var(--text-dark); }
+.pillars-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+@media (max-width: 900px) { .pillars-grid { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; } }
+.pillar-card { background: var(--bg-card); border-radius: 22px; padding: 32px 26px; box-shadow: 0 10px 30px -5px rgba(45,90,68,0.06); transition: transform .2s ease; }
+.pillar-card:hover { transform: translateY(-4px); }
+.pillar-ico { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft-green); display: flex; align-items: center; justify-content: center; color: var(--primary-green); margin-bottom: 20px; }
+.pillar-ico svg { width: 24px; height: 24px; }
+.pillar-card.warm .pillar-ico { color: var(--accent-terracotta); }
+.pillar-card.warm .pillar-ico { background: rgba(224,122,95,0.14); }
+.pillar-card h3 { font-family: 'Lora', serif; font-weight: 600; font-size: var(--fs-h2); color: var(--text-dark); margin-bottom: 10px; line-height: 1.32; }
+.pillar-card p { font-size: var(--fs-body-small); line-height: 1.6; color: var(--text-muted); }
+.pillar-tags { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; }
+.pillar-tag { font-family: 'IBM Plex Mono', monospace; font-size: .64rem; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft-green); color: var(--primary-green); font-weight: 600; }
+.pillar-card.warm .pillar-tag { background: rgba(224,122,95,0.14); color: var(--accent-terracotta); }
+
+/* &#9472;&#9472; SECTION CABINET &#9472;&#9472; */
+.cabinet-wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+@media (max-width: 860px) { .cabinet-wrap { grid-template-columns: 1fr; gap: 32px; } }
+.cabinet-copy .pillars-eyebrow { color: var(--accent-terracotta); }
+.cabinet-copy h2 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-h1); letter-spacing: -.4px; color: var(--text-dark); margin-bottom: 14px; line-height: 1.26; }
+.cabinet-copy p { font-size: var(--fs-body); line-height: 1.65; color: var(--text-muted); margin-bottom: 22px; }
+.medical-note { display: flex; gap: 9px; align-items: flex-start; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); font-size: .78rem; line-height: 1.55; color: var(--text-muted); }
+.medical-note svg { flex-shrink: 0; width: 16px; height: 16px; margin-top: 1px; color: var(--accent-terracotta); }
+.cabinet-doc { background: var(--bg-card); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px -5px rgba(45,90,68,0.06); }
+.cabinet-doc-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.cabinet-doc-title { font-family: 'Lora', serif; font-weight: 600; font-size: .95rem; color: var(--text-dark); }
+.cabinet-doc-tag { font-family: 'IBM Plex Mono', monospace; font-size: .6rem; text-transform: uppercase; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft-green); color: var(--primary-green); font-weight: 700; }
+.cabinet-doc-row { display: flex; justify-content: space-between; font-size: .83rem; padding: 9px 0; border-bottom: 1px dashed var(--line); color: var(--text-muted); }
+.cabinet-doc-row b { color: var(--text-dark); font-weight: 600; }
+.cabinet-doc-row:last-child { border-bottom: none; }
+
+/* &#9472;&#9472; CTA FINAL &#9472;&#9472; */
+.final-cta { max-width: 780px; margin: 0 auto; padding: 24px 24px 96px; text-align: center; }
+.final-cta-card { background: var(--primary-green); border-radius: 28px; padding: 58px 36px; }
+.final-cta-card h2 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-h1); letter-spacing: -.5px; color: #fff; margin-bottom: 14px; }
+.final-cta-card p { font-size: .95rem; color: rgba(255,255,255,0.78); margin-bottom: 28px; }
+.btn-cta-white { font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 700; padding: 14px 30px; border-radius: 999px; border: none; background: #fff; color: var(--primary-green); cursor: pointer; box-shadow: 0 10px 26px rgba(0,0,0,0.18); transition: transform .15s; }
+.btn-cta-white:hover { transform: translateY(-2px); }
 </style>
 </head>
 <body>
 
-<div class="topnav">
-  <div class="nav-logo">Cap <span>Santé</span></div>
-  <button class="nav-btn" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'})">Se connecter</button>
-</div>
-
-<!-- SECTION 1 — Un constat, pas un slogan. Le visiteur doit se reconnaître
-     avant qu'on lui parle du produit. -->
-<div class="opening">
-  <div class="opening-line op-in d1">
-    Vous avez déjà essayé de noter ce que vous mangiez.<br>
-    Vous avez tenu <b>trois jours</b>.
+<header class="hd-2026">
+  <div class="hd-logo">Cap<span>Sant&#233;</span></div>
+  <nav>
+    <ul class="hd-nav">
+      <li><a href="#philosophie">Notre philosophie</a></li>
+      <li><a href="#fonctionnalites">Fonctionnalit&#233;s</a></li>
+      <li><a href="#cabinet">Tarifs</a></li>
+    </ul>
+  </nav>
+  <div class="hd-actions">
+    <button class="btn-ghost" onclick="goAuth('login')">Se connecter</button>
+    <button class="btn-cta" onclick="goAuth('signup')">Essai gratuit</button>
+    <button class="hd-burger" id="hdBurger" aria-label="Menu" aria-expanded="false" onclick="toggleMobileNav()"><span></span></button>
   </div>
-  <p class="opening-sub op-in d2">
-    Le problème n'a jamais été vous. C'était le temps que ça prenait — et le fait que les conseils restaient les mêmes pour tout le monde, quoi que vous notiez.
-  </p>
-  <a class="opening-cue op-in d3" onclick="document.getElementById('equipe').scrollIntoView({behavior:'smooth'})">
-    Voir ce qui change vraiment
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-  </a>
+</header>
+<div class="hd-mobile-panel" id="hdMobilePanel">
+  <a href="#philosophie" onclick="closeMobileNav()">Notre philosophie</a>
+  <a href="#fonctionnalites" onclick="closeMobileNav()">Fonctionnalit&#233;s</a>
+  <a href="#cabinet" onclick="closeMobileNav()">Tarifs</a>
+  <div class="hd-mobile-actions">
+    <button class="btn-ghost" onclick="closeMobileNav();goAuth('login')">Se connecter</button>
+    <button class="btn-cta" onclick="closeMobileNav();goAuth('signup')">Essai gratuit</button>
+  </div>
 </div>
 
-<!-- SECTION 2 — La vraie différence : des personnes compétentes, pas juste un
-     algorithme. C'est le point qu'aucun concurrent ne peut copier du jour au
-     lendemain — contrairement à un scan photo IA, que tout le monde propose
-     désormais. Cette preuve passe donc EN PREMIER. -->
-<div class="section bordered" id="equipe">
-  <div class="team-wrap">
-    <div class="reveal">
-      <div class="eyebrow">Ce qui ne se copie pas</div>
-      <h2 style="font-family:'Lora',serif;font-weight:700;font-size:clamp(1.6rem,3.4vw,2.2rem);letter-spacing:-.5px;line-height:1.2;margin-bottom:16px">Ce n'est pas un algorithme qui vous a laissé tomber la dernière fois. Ça ne devrait pas être un algorithme seul qui vous aide cette fois.</h2>
-      <div class="team-copy">
-        <p>Cap Santé est construit par une équipe <b>formée à la diététique</b>, pas uniquement par des développeurs qui ont ajouté un compteur de calories à leur portfolio.</p>
-        <p>Quand une question dépasse ce que l'application peut répondre seule, <b>une vraie personne vous répond dans le chat</b> — pas un robot conversationnel qui boucle sur les mêmes phrases.</p>
-        <p><b>Chaque semaine, un vrai bilan fait le point</b> sur ce qui a fonctionné et ce qui a coincé — et si votre poids stagne, votre objectif calorique est recalculé en conséquence, pas figé au premier jour.</p>
-        <p>Cap Santé ne remplace pas un suivi médical. Il le complète, avec des recommandations mesurées plutôt qu'agressives.</p>
+<!-- HERO -->
+<section class="hero-2026" id="philosophie">
+  <div class="hero-text">
+    <h1 class="hero-h1">La nutrition adapt&#233;e &#224; votre sant&#233;.<br><em>Pas une moyenne g&#233;n&#233;rique.</em></h1>
+    <p class="hero-sub">Un suivi personnalis&#233; selon votre profil et vos objectifs, une prise en compte de vos pathologies (Diab&#232;te T2, Hypertension) et un Mode Focus sans stress calorique.</p>
+    <button class="btn-cta" style="padding:15px 28px;font-size:.92rem" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (7 jours)</button>
+    <div class="hero-cta-sub">Sans engagement<span class="dotsep">&#8226;</span>Bas&#233; sur les donn&#233;es nutritionnelles officielles CIQUAL</div>
+  </div>
+  <div class="hero-visual">
+    <div class="collage">
+      <div class="collage-card meal-peek">
+        <span class="meal-peek-emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V7a1 1 0 0 1 1-1h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7Z"/><path d="M4 13c4-1 8-4 10-9"/></svg></span>
+        <div class="meal-peek-name">D&#233;jeuner enregistr&#233;</div>
+        <div class="meal-peek-badge"><span class="meal-peek-badge-dot"></span>Glyc&#233;mie stable</div>
       </div>
-    </div>
-    <div class="reveal" style="display:flex;flex-direction:column;gap:14px">
-      <div class="chat-mock">
-        <div class="chat-label">Chat Cap Santé</div>
-        <div class="chat-bubble from-user">Je viens de me faire diagnostiquer un diabète type 2, je ne sais pas par où commencer avec l'app.</div>
-        <div class="chat-bubble from-team">On a activé le suivi diabète sur votre profil — vos objectifs et suggestions vont s'ajuster automatiquement. On reste dispo si vous avez des questions en cours de route.</div>
-      </div>
-      <div class="bilan-mock">
-        <div class="bilan-mock-hdr">
-          <span class="chat-label" style="margin-bottom:0">Bilan · Semaine dernière</span>
-          <span class="bilan-mock-badge">Recalculé</span>
+      <div class="collage-card diet-note">
+        <div class="diet-note-head">
+          <span class="diet-note-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></span>
+          <div>
+            <div class="diet-note-name">Bilan du jour</div>
+            <div class="diet-note-time">&#192; l'instant</div>
+          </div>
         </div>
-        <div class="bilan-mock-row"><span>Poids</span><span class="bilan-mock-val">−0,4 kg</span></div>
-        <div class="bilan-mock-row"><span>Respect du plan</span><span class="bilan-mock-val">Bon</span></div>
-        <div class="bilan-mock-row bilan-mock-highlight"><span>Nouvel objectif</span><span class="bilan-mock-val">2 980 kcal <span class="bilan-mock-diff">(−120)</span></span></div>
+        <p class="diet-note-txt">&#171;&nbsp;Bravo pour votre repas de midi&nbsp;! Bel &#233;quilibre prot&#233;ines et fibres aujourd'hui.&nbsp;&#187;</p>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- SECTION 3 — Le mécanisme, en soutien pratique — pas l'argument vedette.
-     Le scan photo reste démontré plutôt qu'affirmé, mais présenté sobrement :
-     tout le monde propose de l'IA aujourd'hui, ce n'est plus ça qui
-     convainc, juste ce qui rend l'usage quotidien réaliste. -->
-<div class="section bordered" id="mecanisme">
-  <div class="mech-wrap">
-    <div class="reveal">
-      <div class="eyebrow">Concrètement, au quotidien</div>
-      <h2 style="font-family:'Lora',serif;font-weight:700;font-size:clamp(1.6rem,3.4vw,2.2rem);letter-spacing:-.5px;line-height:1.2;margin-bottom:16px">Noter ce que vous mangez, oui. Le refaire à chaque repas comme une corvée, non.</h2>
-      <p style="font-size:.98rem;color:var(--ink2);line-height:1.65;max-width:460px">
-        On ne va pas vous mentir : il faut toujours prendre deux secondes pour noter votre repas. Ce qui change, c'est ce que ça vous coûte pour le faire — une photo remplace la recherche dans une liste de mille aliments. Vous validez ou corrigez, et c'est fait.
-      </p>
-      <ul class="mech-points">
-        <li><span class="mech-check">✓</span><span><b>Gratuit</b> pendant la bêta — le scan photo n'est verrouillé derrière aucun abonnement.</span></li>
-        <li><span class="mech-check">✓</span><span><b>Elle apprend de vous</b> — chaque correction affine ses futures estimations, spécifiquement pour vos habitudes.</span></li>
-        <li><span class="mech-check">✓</span><span><b>Base Ciqual</b> — des valeurs nutritionnelles de référence, pas une estimation générique venue d'ailleurs.</span></li>
-      </ul>
-    </div>
-    <div class="scan-demo" id="scanDemo">
-      <div class="scan-photo">
-        <div class="scan-badge">🤖 IA Cap Santé</div>
-        <div class="scan-line"></div>
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="38" stroke="#2d4f1c" stroke-width="2" opacity="0.35"/>
-          <circle cx="50" cy="50" r="26" stroke="#4a7a3a" stroke-width="1.5" opacity="0.3"/>
-          <circle cx="38" cy="42" r="6" fill="#2d4f1c" opacity="0.55"/>
-          <rect x="52" y="36" width="16" height="10" rx="2" fill="#4a7a3a" opacity="0.5"/>
-          <circle cx="58" cy="60" r="7" fill="#2d4f1c" opacity="0.4"/>
-        </svg>
-      </div>
-      <div class="scan-results">
-        <div class="scan-row r1"><span>🍚 Riz complet</span><span>160g · 197 kcal</span></div>
-        <div class="scan-row r2"><span>🐟 Saumon</span><span>130g · 267 kcal</span></div>
-        <div class="scan-row r3"><span>🥦 Brocoli</span><span>130g · 41 kcal</span></div>
-      </div>
-    </div>
+<!-- BANDEAU DE CONFIANCE -->
+<section class="trust-strip">
+  <div class="trust-item">
+    <span class="trust-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+    Suivi personnalis&#233; selon votre profil
   </div>
-</div>
+  <div class="trust-item">
+    <span class="trust-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg></span>
+    Donn&#233;es nutritionnelles officielles (CIQUAL)
+  </div>
+  <div class="trust-item">
+    <span class="trust-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+    Export de bilan pour votre m&#233;decin
+  </div>
+</section>
 
-<!-- SECTION 4 — Preuve de personnalisation réelle, pas une promesse abstraite.
-     Trois profils délibérément différents pour que chacun se retrouve —
-     le grand public et les sportifs avant la pathologie, conformément au
-     positionnement retenu. -->
-<div class="section bordered">
-  <div class="section-hdr reveal">
-    <div class="eyebrow">Ce qui change selon vous</div>
-    <h2>La même application ne donne jamais le même conseil.</h2>
-    <p>Trois personnes, trois situations, trois manières différentes dont Cap Santé s'ajuste — sans que vous ayez à le configurer vous-même.</p>
+<!-- 3 PILIERS -->
+<section class="pillars-wrap" id="fonctionnalites">
+  <div class="pillars-hdr reveal">
+    <div class="pillars-eyebrow">Ce que Cap Sant&#233; change vraiment</div>
+    <h2>Trois piliers, pas une liste de fonctionnalit&#233;s.</h2>
   </div>
-  <div class="profiles">
-    <div class="profile-card reveal">
-      <span class="profile-tag">Sportif</span>
-      <div class="profile-before">« Je veux progresser sans passer des heures à calculer mes macros. »</div>
-      <div class="profile-after">L'objectif protéique s'ajuste à <b>votre activité réelle</b>, pas à une moyenne générique — et le plan alimentaire tient compte des jours d'entraînement.</div>
+  <div class="pillars-grid">
+    <div class="pillar-card reveal">
+      <div class="pillar-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></div>
+      <h3>Un bilan qui parle vraiment de vous</h3>
+      <p>Un bilan personnalis&#233; chaque semaine, bas&#233; sur ce que vous avez r&#233;ellement mang&#233; &#8212; pas un message automatique g&#233;n&#233;rique, une vraie lecture de votre semaine.</p>
+      <div class="pillar-tags"><span class="pillar-tag">Bilan hebdo</span><span class="pillar-tag">Scan photo IA</span></div>
     </div>
-    <div class="profile-card reveal">
-      <span class="profile-tag">Sans contrainte particulière</span>
-      <div class="profile-before">« Je veux juste mieux manger, sans y penser à chaque repas. »</div>
-      <div class="profile-after">Le score valorise une alimentation <b>équilibrée et peu transformée</b> — pas un chiffre à atteindre coûte que coûte, quitte à mal manger pour y arriver.</div>
+    <div class="pillar-card reveal">
+      <div class="pillar-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.7 0-3 .5-4.5 2-1.5-1.5-2.8-2-4.5-2A5.5 5.5 0 0 0 2 8.5C2 10.8 3.5 12.5 5 14l7 7Z"/><path d="M3.5 9h4l2-3 3 6 2-3h4.5"/></svg></div>
+      <h3>Prise en charge des pathologies<br>(Diab&#232;te T2 &amp; Cardiovasculaire)</h3>
+      <p>Chaque repas affiche son Tampon Glyc&#233;mique &#8212; stable ou &#224; surveiller, avec ce qui l'explique. Un Score de Protection Cardiaque suit sodium, lipides et fibres pour les profils concern&#233;s.</p>
+      <div class="pillar-tags"><span class="pillar-tag">Tampon glyc&#233;mique</span><span class="pillar-tag">Score cardio</span></div>
     </div>
-    <div class="profile-card reveal">
-      <span class="profile-tag">Pathologie suivie (ex. diabète)</span>
-      <div class="profile-before">« Chaque repas compte pour ma glycémie, mais les applications généralistes l'ignorent. »</div>
-      <div class="profile-after">Les suggestions <b>excluent automatiquement</b> les aliments à fort impact glycémique — sans que vous ayez à le vérifier vous-même à chaque fois.</div>
+    <div class="pillar-card warm reveal">
+      <div class="pillar-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V7a1 1 0 0 1 1-1h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7Z"/><path d="M4 13c4-1 8-4 10-9"/></svg></div>
+      <h3>Mode Focus (S&#233;r&#233;nit&#233; anti-TCA)</h3>
+      <p>Une assiette &#233;quilibr&#233;e &#224; visualiser, plut&#244;t qu'un chiffre de calories &#224; ne pas d&#233;passer. L'alternative au comptage anxieux, pens&#233;e pour durer sans &#233;puiser.</p>
+      <div class="pillar-tags"><span class="pillar-tag">Sans stress calorique</span></div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- SECTION 5 — Honnêteté radicale plutôt qu'une FAQ défensive en accordéon. -->
-<div class="section bordered">
-  <div class="section-hdr reveal">
-    <div class="eyebrow">Ce qu'on ne vous cache pas</div>
-    <h2>Avant que vous ne demandiez.</h2>
-  </div>
-  <div class="honest-grid">
-    <div class="honest-card reveal">
-      <div class="honest-ico">€</div>
-      <div><h3>Gratuit pendant la bêta</h3><p>L'essentiel de Cap Santé — suivi, score, plan alimentaire, scan photo IA — est accessible sans payer pendant que l'application est encore en développement.</p></div>
-    </div>
-    <div class="honest-card reveal">
-      <div class="honest-ico">✕</div>
-      <div><h3>Zéro publicité</h3><p>Aucune bannière, aucun sponsor caché dans vos suggestions de repas. Ce que vous voyez sert votre suivi, rien d'autre.</p></div>
-    </div>
-    <div class="honest-card reveal">
-      <div class="honest-ico">🔒</div>
-      <div><h3>Données hébergées en UE</h3><p>Chiffrées, conformes RGPD, jamais revendues à des tiers à des fins publicitaires.</p></div>
-    </div>
-    <div class="honest-card reveal">
-      <div class="honest-ico">↺</div>
-      <div><h3>L'IA peut se tromper</h3><p>Sur un plat mélangé ou fait maison, ça arrive. Une correction prend un instant — et elle s'en souvient pour la prochaine fois.</p></div>
+<!-- SECTION CABINET -->
+<section class="cabinet-wrap" id="cabinet">
+  <div class="cabinet-copy reveal">
+    <div class="pillars-eyebrow">Pour vos consultations</div>
+    <h2>Votre suivi, pr&#234;t pour votre m&#233;decin.</h2>
+    <p>Exportez un bilan clair de votre alimentation &#224; remettre &#224; votre m&#233;decin traitant ou &#224; apporter en consultation &#8212; pour que le suivi ne reste pas enferm&#233; dans une application.</p>
+    <button class="btn-ghost" onclick="goAuth('signup')" style="border-color:var(--primary-green);color:var(--primary-green)">En savoir plus</button>
+    <div class="medical-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>Cap Sant&#233; accompagne votre suivi nutritionnel et ne remplace pas un avis m&#233;dical. Pour toute question sur un traitement en cours, parlez-en &#224; votre m&#233;decin.</span>
     </div>
   </div>
-</div>
+  <div class="cabinet-doc reveal" id="cabinetDoc">
+    <div class="cabinet-doc-hdr">
+      <span class="cabinet-doc-title">Bilan &#8212; 4 semaines</span>
+      <span class="cabinet-doc-tag">PDF</span>
+    </div>
+    <div class="cabinet-doc-row"><span>Score Sant&#233; moyen</span><b>84 / 100</b></div>
+    <div class="cabinet-doc-row"><span>Fibres (moyenne/jour)</span><b>29 g</b></div>
+    <div class="cabinet-doc-row"><span>Repas &#224; risque glyc&#233;mique</span><b>2 sur 84</b></div>
+    <div class="cabinet-doc-row"><span>Poids</span><b>-1.4 kg</b></div>
+  </div>
+</section>
 
-<!-- SECTION 6 — Activation, sans détour. -->
+<!-- CTA FINAL -->
+<section class="final-cta">
+  <div class="final-cta-card reveal">
+    <h2>Prenez soin de votre sant&#233; d&#232;s aujourd'hui.</h2>
+    <p>Sans engagement &#8226; Con&#231;u par des professionnels</p>
+    <button class="btn-cta-white" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (7 jours)</button>
+  </div>
+</section>
+<!-- SECTION 6 &#8212; Activation, sans d&#233;tour. -->
 <section class="auth-section" id="auth">
   <div class="auth-intro reveal">
     <h2 id="auth-intro-title">Commencez maintenant.</h2>
-    <p id="auth-intro-sub">Créez votre compte en moins d'une minute — aucune carte bancaire requise pendant la bêta.</p>
+    <p id="auth-intro-sub">Cr&#233;ez votre compte en moins d'une minute &#8212; aucune carte bancaire requise pendant la b&#234;ta.</p>
   </div>
   <div class="auth-wrap">
     <div class="tabs" id="auth-tabs">
@@ -401,11 +618,11 @@ footer a { color: var(--ink3); text-decoration: underline; }
       </div>
       <div class="field">
         <label for="le-pwd">Mot de passe</label>
-        <input type="password" id="le-pwd" placeholder="••••••••" autocomplete="current-password"
+        <input type="password" id="le-pwd" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password"
                onkeydown="if(event.key==='Enter')login()">
       </div>
       <button class="btn" id="lb" onclick="login()">Se connecter</button>
-      <div class="forgot"><a href="#" onclick="reset(event)">Mot de passe oublié ?</a></div>
+      <div class="forgot"><a href="#" onclick="reset(event)">Mot de passe oubli&#233; ?</a></div>
     </div>
 
     <!-- SIGNUP -->
@@ -414,7 +631,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
       <div class="msg ok"  id="so"></div>
       <div class="row2">
         <div class="field">
-          <label for="s-pre">Prénom</label>
+          <label for="s-pre">Pr&#233;nom</label>
           <input type="text" id="s-pre" placeholder="Marie" autocomplete="given-name">
         </div>
         <div class="field">
@@ -428,43 +645,35 @@ footer a { color: var(--ink3); text-decoration: underline; }
       </div>
       <div class="field">
         <label for="s-pwd">Mot de passe</label>
-        <input type="password" id="s-pwd" placeholder="Min. 8 caractères" autocomplete="new-password"
+        <input type="password" id="s-pwd" placeholder="Min. 8 caract&#232;res" autocomplete="new-password"
                onkeydown="if(event.key==='Enter')signup()">
       </div>
-      <div class="field">
-        <label for="s-diet">Régime alimentaire (facultatif)</label>
-        <select id="s-diet">
-          <option value="">Aucune restriction particulière</option>
-          <option value="vegetarian">Végétarien</option>
-          <option value="vegan">Végétalien</option>
-        </select>
-      </div>
-      <button class="btn" id="sb" onclick="signup()">Créer mon compte</button>
+      <button class="btn" id="sb" onclick="signup()">Cr&#233;er mon compte</button>
     </div>
 
-    <!-- NOUVEAU MOT DE PASSE (après clic sur le lien reçu par email) -->
+    <!-- NOUVEAU MOT DE PASSE (apr&#232;s clic sur le lien re&#231;u par email) -->
     <div class="form" id="fr">
       <div class="msg err" id="re"></div>
       <div class="field">
         <label for="r-pwd">Nouveau mot de passe</label>
-        <input type="password" id="r-pwd" placeholder="Min. 8 caractères" autocomplete="new-password"
+        <input type="password" id="r-pwd" placeholder="Min. 8 caract&#232;res" autocomplete="new-password"
                onkeydown="if(event.key==='Enter')setNewPassword()">
       </div>
-      <button class="btn" id="rb" onclick="setNewPassword()">Définir mon nouveau mot de passe</button>
+      <button class="btn" id="rb" onclick="setNewPassword()">D&#233;finir mon nouveau mot de passe</button>
     </div>
 
     <div class="badge">
       <div class="dot"></div>
-      Données chiffrées &nbsp;·&nbsp; Hébergement EU &nbsp;·&nbsp; RGPD
+      Donn&#233;es chiffr&#233;es &nbsp;&#183;&nbsp; H&#233;bergement EU &nbsp;&#183;&nbsp; RGPD
     </div>
   </div>
 </section>
 
 <footer>
-  <p>© 2026 Cap Santé — Tous droits réservés &nbsp;·&nbsp; <a href="confidentialite.html">Confidentialité</a> &nbsp;·&nbsp; <a href="cgu.html">CGU</a> &nbsp;·&nbsp; <a href="mentions-legales.html">Mentions légales</a></p>
+  <p>&#169; 2026 Cap Sant&#233; &#8212; Tous droits r&#233;serv&#233;s &nbsp;&#183;&nbsp; <a href="confidentialite.html">Confidentialit&#233;</a> &nbsp;&#183;&nbsp; <a href="cgu.html">CGU</a></p>
 </footer>
 
-<!-- Apparition douce des sections au défilement -->
+<!-- Apparition douce des sections au d&#233;filement -->
 <script>
 if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
   var io = new IntersectionObserver(function(entries){
@@ -477,7 +686,7 @@ if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
   document.querySelectorAll('.reveal').forEach(function(w){ w.classList.add('in-view'); });
 }
 
-// Effet tilt + spot lumineux sur la carte de démo scan
+// Effet tilt + spot lumineux sur la carte de d\u00e9mo scan
 function initTilt(el){
   if(!el) return;
   var maxTilt = 8;
@@ -511,9 +720,67 @@ var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
 var sb = supabase.createClient(SURL, SKEY);
 
 function goAuth(tab) {
+  closeMobileNav();
   sw(tab);
   document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
 }
+
+function toggleMobileNav(){
+  var panel = document.getElementById('hdMobilePanel');
+  var burger = document.getElementById('hdBurger');
+  var open = !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  burger.classList.toggle('open', open);
+  burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function closeMobileNav(){
+  document.getElementById('hdMobilePanel').classList.remove('open');
+  document.getElementById('hdBurger').classList.remove('open');
+  document.getElementById('hdBurger').setAttribute('aria-expanded', 'false');
+}
+
+/* &#9472;&#9472; ANIMATIONS &#8212; scroll-reveal + compteur anim&#233; sur le bilan.
+   Tout est court-circuit&#233; si prefers-reduced-motion est demand&#233;. &#9472;&#9472; */
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return;
+
+  function animateCounters(container){
+    var nums = container.querySelectorAll('.cabinet-doc-row b');
+    nums.forEach(function(el){
+      var m = el.textContent.trim().match(/^(-?\d+(?:\.\d+)?)(.*)$/);
+      if(!m) return;
+      var target = parseFloat(m[1]);
+      var suffix = m[2];
+      var decimals = (m[1].split('.')[1] || '').length;
+      var duration = 900, startTime = null;
+      function step(ts){
+        if(!startTime) startTime = ts;
+        var progress = Math.min((ts - startTime) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = (0 + (target - 0) * eased).toFixed(decimals) + suffix;
+        if(progress < 1) requestAnimationFrame(step);
+        else el.textContent = target.toFixed(decimals) + suffix;
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  var revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window && revealEls.length){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        entry.target.classList.add('in-view');
+        if(entry.target.id === 'cabinetDoc') animateCounters(entry.target);
+        io.unobserve(entry.target);
+      });
+    }, { threshold: .18, rootMargin: '0px 0px -30px 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+})();
 
 function sw(t) {
   var isL = (t === 'login');
@@ -536,7 +803,7 @@ async function login() {
   var p = document.getElementById('le-pwd').value;
   if (!e || !p) { showMsg('le', 'Remplissez tous les champs.'); return; }
   var btn = document.getElementById('lb');
-  btn.disabled = true; btn.textContent = 'Connexion…';
+  btn.disabled = true; btn.textContent = 'Connexion\u2026';
   var r = await sb.auth.signInWithPassword({ email: e, password: p });
   btn.disabled = false; btn.textContent = 'Se connecter';
   if (r.error) {
@@ -551,24 +818,23 @@ async function signup() {
   var nom = document.getElementById('s-nom').value.trim();
   var e   = document.getElementById('s-email').value.trim();
   var p   = document.getElementById('s-pwd').value;
-  var diet = document.getElementById('s-diet').value || null; // '' => null (aucune restriction déclarée)
   if (!pre || !nom || !e || !p) { showMsg('se', 'Remplissez tous les champs.'); return; }
-  if (p.length < 8) { showMsg('se', 'Mot de passe trop court (8 caractères min).'); return; }
+  if (p.length < 8) { showMsg('se', 'Mot de passe trop court (8 caract\u00e8res min).'); return; }
   var btn = document.getElementById('sb');
-  btn.disabled = true; btn.textContent = 'Création…';
+  btn.disabled = true; btn.textContent = 'Cr\u00e9ation\u2026';
   var r = await sb.auth.signUp({ email: e, password: p, options: { data: { prenom: pre, nom: nom } } });
-  btn.disabled = false; btn.textContent = 'Créer mon compte';
+  btn.disabled = false; btn.textContent = 'Cr\u00e9er mon compte';
   if (r.error) { showMsg('se', r.error.message); return; }
   if (r.data && r.data.user) {
-    // Planifie le message de bienvenue automatique — délai aléatoire entre
-    // 1h et 5h après l'inscription, une des 3 variantes tirée au sort.
-    // L'envoi réel se fait plus tard côté serveur (edge function + cron),
+    // Planifie le message de bienvenue automatique \u2014 d\u00e9lai al\u00e9atoire entre
+    // 1h et 5h apr\u00e8s l'inscription, une des 3 variantes tir\u00e9e au sort.
+    // L'envoi r\u00e9el se fait plus tard c\u00f4t\u00e9 serveur (edge function + cron),
     // ici on ne fait que poser le rendez-vous.
     var delayMinutes = 60 + Math.random()*(300-60);
     var sendAt = new Date(Date.now() + delayMinutes*60000).toISOString();
     var variant = 1 + Math.floor(Math.random()*3);
     await sb.from('profiles').upsert({
-      id: r.data.user.id, prenom: pre, nom: nom, diet: diet,
+      id: r.data.user.id, prenom: pre, nom: nom,
       welcome_send_at: sendAt, welcome_msg_variant: variant, welcome_message_sent: false
     });
     var loginR = await sb.auth.signInWithPassword({ email: e, password: p });
@@ -577,7 +843,7 @@ async function signup() {
       return;
     }
   }
-  showMsg('so', '✅ Compte créé ! Connectez-vous maintenant.', 'ok');
+  showMsg('so', '\u2705 Compte cr\u00e9\u00e9 ! Connectez-vous maintenant.', 'ok');
 }
 
 async function reset(e) {
@@ -587,20 +853,20 @@ async function reset(e) {
   var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html' });
   if (r.error) {
     var msg = r.error.message.indexOf('rate limit') >= 0
-      ? 'Trop de tentatives — réessayez dans environ 1 heure.'
+      ? 'Trop de tentatives \u2014 r\u00e9essayez dans environ 1 heure.'
       : r.error.message;
     showMsg('le', msg);
     return;
   }
-  showMsg('le', '📧 Email de réinitialisation envoyé !', 'ok');
+  showMsg('le', '\ud83d\udce7 Email de r\u00e9initialisation envoy\u00e9 !', 'ok');
 }
 
-// ── RÉCUPÉRATION DE MOT DE PASSE ──
-// En arrivant via le lien reçu par email, Supabase crée une session
-// technique de type "recovery" — sans cette détection, la redirection
-// automatique plus bas nous renverrait au dashboard avant même d'avoir pu
-// définir le nouveau mot de passe. On vérifie l'URL directement (immédiat,
-// fiable) ET on écoute l'événement officiel (filet de sécurité).
+// \u2500\u2500 R\u00c9CUP\u00c9RATION DE MOT DE PASSE \u2500\u2500
+// En arrivant via le lien re\u00e7u par email, Supabase cr\u00e9e une session
+// technique de type "recovery" \u2014 sans cette d\u00e9tection, la redirection
+// automatique plus bas nous renverrait au dashboard avant m\u00eame d'avoir pu
+// d\u00e9finir le nouveau mot de passe. On v\u00e9rifie l'URL directement (imm\u00e9diat,
+// fiable) ET on \u00e9coute l'\u00e9v\u00e9nement officiel (filet de s\u00e9curit\u00e9).
 var inRecoveryMode = (window.location.hash.indexOf('type=recovery') >= 0);
 
 function showRecoveryForm(){
@@ -621,11 +887,11 @@ sb.auth.onAuthStateChange(function(event, session) {
 
 async function setNewPassword(){
   var pwd = document.getElementById('r-pwd').value;
-  if (!pwd || pwd.length < 8) { showMsg('re', 'Le mot de passe doit contenir au moins 8 caractères.'); return; }
+  if (!pwd || pwd.length < 8) { showMsg('re', 'Le mot de passe doit contenir au moins 8 caract\u00e8res.'); return; }
   var btn = document.getElementById('rb');
-  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  btn.disabled = true; btn.textContent = 'Enregistrement\u2026';
   var r = await sb.auth.updateUser({ password: pwd });
-  btn.disabled = false; btn.textContent = 'Définir mon nouveau mot de passe';
+  btn.disabled = false; btn.textContent = 'D\u00e9finir mon nouveau mot de passe';
   if (r.error) { showMsg('re', r.error.message); return; }
   window.location.href = 'dashboard.html';
 }
