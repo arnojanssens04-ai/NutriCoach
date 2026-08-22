@@ -668,7 +668,7 @@ function getPlateTargets(){
   return ACTIVITY_PLATE_TARGETS[act] || ACTIVITY_PLATE_TARGETS.sedentary;
 }
 
-function renderBalancedPlate(entries){
+function renderBalancedPlate(entries, T, tgt){
   var plateCard = document.getElementById('balanced-plate-card');
   if(!plateCard) return;
   var today_ = entries.filter(function(e){ return e.date===today(); });
@@ -722,8 +722,18 @@ function renderBalancedPlate(entries){
   var plateTgt = getPlateTargets();
   var actLabels = {sedentary:'s\u00e9dentaire', light:'l\u00e9g\u00e8rement actif', moderate:'mod\u00e9r\u00e9ment actif', active:'actif', sportif:'sportif'};
   var actKey = (PROF && PROF.activite) || 'sedentary';
+  // Une fois les calories du jour quasiment atteintes (\u226585% de la cible),
+  // ces barres ne repr\u00e9sentent plus une progression "encore \u00e0 manger" mais
+  // un bilan r\u00e9trospectif de la r\u00e9partition du jour -- sans cette
+  // distinction, une cat\u00e9gorie sous 100% (f\u00e9culents, mati\u00e8res grasses...)
+  // donnait l'impression fausse qu'il fallait encore manger davantage de
+  // cette famille pr\u00e9cise, alors que la journ\u00e9e est en pratique termin\u00e9e
+  // et que ce d\u00e9ficit ne se rattrapera pas ce jour-l\u00e0.
+  var dayNearlyDone = !!(T && tgt && tgt.kcal>0 && T.kcal >= tgt.kcal*0.85);
   var capEl = document.getElementById('plate-tgt-caption');
-  if(capEl) capEl.innerHTML = 'Progression vers votre besoin du jour ('+(actLabels[actKey]||'s\u00e9dentaire')+') \u2014 \u00e9volue au fil de vos repas, pas juste sur ce que vous avez d\u00e9j\u00e0 mang\u00e9.';
+  if(capEl) capEl.innerHTML = dayNearlyDone
+    ? 'R\u00e9partition de vos apports aujourd\'hui ('+(actLabels[actKey]||'s\u00e9dentaire')+') \u2014 vos calories du jour sont quasiment atteintes : ces pourcentages montrent comment elles se sont r\u00e9parties, ce n\'est pas une invitation \u00e0 manger plus.'
+    : 'Progression vers votre besoin du jour ('+(actLabels[actKey]||'s\u00e9dentaire')+') \u2014 \u00e9volue au fil de vos repas, pas juste sur ce que vous avez d\u00e9j\u00e0 mang\u00e9.';
 
   // Cibles en GRAMMES ABSOLUS pour la journ\u00e9e enti\u00e8re, pas en proportion de
   // ce qui a \u00e9t\u00e9 mang\u00e9 jusqu'ici. Avant : une seule banane repr\u00e9sentait
@@ -798,7 +808,9 @@ function renderBalancedPlate(entries){
   } else {
     statusTxt = (avgShortfall<=25 && allCategoriesOk && ultraN<=1) ? 'Structure de l\'assiette : tr\u00e8s \u00e9quilibr\u00e9e aujourd\'hui.'
       : (avgShortfall<=25 && allCategoriesOk && ultraN>=2) ? 'Bonne r\u00e9partition des familles, mais plusieurs aliments transform\u00e9s aujourd\'hui \u2014 la qualit\u00e9 compte autant que la structure.'
-      : (avgShortfall<=25 && !allCategoriesOk) ? 'Structure plut\u00f4t \u00e9quilibr\u00e9e \u2014 un peu plus de ' + PLATE_CATEGORY_LABELS[weakestCategoryKey] + ' compl\u00e9terait votre assiette.'
+      : (avgShortfall<=25 && !allCategoriesOk) ? (dayNearlyDone
+          ? 'Structure plut\u00f4t \u00e9quilibr\u00e9e \u2014 un peu moins de ' + PLATE_CATEGORY_LABELS[weakestCategoryKey] + ' que d\'habitude aujourd\'hui, \u00e0 retenir pour demain.'
+          : 'Structure plut\u00f4t \u00e9quilibr\u00e9e \u2014 un peu plus de ' + PLATE_CATEGORY_LABELS[weakestCategoryKey] + ' compl\u00e9terait votre assiette.')
       : avgShortfall<=45 ? 'Structure de l\'assiette : plut\u00f4t \u00e9quilibr\u00e9e.'
       : vegPct<30 ? 'Une portion de l\u00e9gumes ou de fruits en plus donnerait plus de place aux v\u00e9g\u00e9taux.'
       : 'Continuez \u00e0 varier les trois familles \u00e0 chaque repas.';

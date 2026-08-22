@@ -744,7 +744,7 @@ body {
     <div class="focus-card-hdr">&#129474; Sodium &amp; potassium du jour</div>
     <div class="focus-card-txt" id="focus-hta-line">&#8212;</div>
     <div class="focus-card-meals" id="focus-hta-meals">&#8212; repas enregistr&#233;s aujourd'hui</div>
-    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Demandez &#224; votre di&#233;t&#233;ticien &#8594;</a>
+    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Contactez le support Cap Sant&#233; &#8594;</a>
   </div>
 
   <!-- L'ASSIETTE &#201;QUILIBR&#201;E &#8212; remplace la logique "combien de kcal" par
@@ -777,7 +777,7 @@ body {
     </div>
     <div class="focus-card-txt" id="plate-status" style="margin-top:10px">Ajoutez vos repas pour voir la structure de votre assiette.</div>
     <div class="focus-card-txt" id="plate-ultra-status" style="margin-top:6px;display:none"></div>
-    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Demandez &#224; votre di&#233;t&#233;ticien &#8594;</a>
+    <a href="chat.html" class="focus-dietitian-link">Un doute sur votre progression ? Contactez le support Cap Sant&#233; &#8594;</a>
   </div>
 
   <!-- TENDANCE DE LA SEMAINE &#8212; un rep&#232;re de progression narratif plut&#244;t
@@ -3568,7 +3568,7 @@ async function refreshDash(){
   document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
 
   if(hideExactKcal){
-    if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries);
+    if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries, T, tgt);
     if(typeof renderWeeklyTrend==='function') renderWeeklyTrend();
     if(typeof renderFocusGuidance==='function') renderFocusGuidance(T, tgt);
 
