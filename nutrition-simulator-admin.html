@@ -205,9 +205,11 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <main id="app-root">
   <h1 class="page-title">Simulateur — moteur de conseils nutritionnels</h1>
   <p class="page-sub">
-    Profils entièrement fictifs. Cette page exécute <code>runNutritionSimulation()</code> en mode
-    <code>simulation</code> sur des données de test, pour observer le comportement des règles, du filtrage de
-    sécurité et de la génération de texte — jamais affiché à un patient réel, aucune persistance.
+    Cette page exécute <code>runNutritionSimulation()</code> en mode <code>simulation</code> sur tes propres
+    données réelles (admin, lecture seule) pour observer le comportement des règles, du filtrage de sécurité et
+    de la génération de texte — jamais affiché à un patient réel, aucune persistance. Les profils fictifs de test
+    ont été retirés de cette page (voir <code>nutrition-simulator-fixtures.js</code> si besoin de les rejouer
+    ponctuellement en local).
   </p>
 
   <div class="profile-card" id="real-journal-card">
@@ -216,15 +218,6 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
     <div id="real-journal-root">
       <div class="result-box blocked" id="real-journal-status">Chargement…</div>
     </div>
-  </div>
-
-  <div id="profiles-root"></div>
-
-  <div class="profile-card">
-    <div class="profile-title">Démo — priorité d'affichage entre plusieurs signaux simultanés</div>
-    <div class="profile-id">Profil végétalien fictif déclenchant plusieurs signaux nutriment en même temps</div>
-    <div class="section-lbl">Ordre d'affichage proposé</div>
-    <div id="priority-demo-root"></div>
   </div>
 </main>
 
@@ -1542,14 +1535,6 @@ sb.auth.getSession().then(function (r) {
     document.getElementById('app-root').style.display = 'block';
 
     loadRealJournalForAdmin(uid, res.data);
-
-    var root = document.getElementById('profiles-root');
-    root.innerHTML = Object.keys(NUTRITION_SIMULATOR_FIXTURES).map(function (key) {
-      return renderProfile(key, NUTRITION_SIMULATOR_FIXTURES[key]);
-    }).join('');
-
-    var priorityRoot = document.getElementById('priority-demo-root');
-    priorityRoot.innerHTML = renderMultiSignalPriorityDemo(NUTRITION_SIMULATOR_FIXTURES.multi_signal_vegan_priority_demo);
   });
 });
 </script>
