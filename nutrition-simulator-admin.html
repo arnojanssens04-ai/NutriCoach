@@ -205,11 +205,11 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <main id="app-root">
   <h1 class="page-title">Simulateur — moteur de conseils nutritionnels</h1>
   <p class="page-sub">
-    Cette page exécute <code>runNutritionSimulation()</code> en mode <code>simulation</code> sur tes propres
-    données réelles (admin, lecture seule) pour observer le comportement des règles, du filtrage de sécurité et
-    de la génération de texte — jamais affiché à un patient réel, aucune persistance. Les profils fictifs de test
-    ont été retirés de cette page (voir <code>nutrition-simulator-fixtures.js</code> si besoin de les rejouer
-    ponctuellement en local).
+    Cette page exécute <code>runNutritionSimulation()</code> en mode <code>simulation</code> sur des données
+    réelles (lecture seule) pour observer le comportement des règles, du filtrage de sécurité et de la génération
+    de texte — <strong>jamais envoyé ni affiché à un patient réel</strong> à ce stade, uniquement un aperçu admin.
+    Les profils fictifs de test ont été retirés de cette page (voir <code>nutrition-simulator-fixtures.js</code>
+    si besoin de les rejouer ponctuellement en local).
   </p>
 
   <div class="profile-card" id="real-journal-card">
@@ -218,6 +218,20 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
     <div id="real-journal-root">
       <div class="result-box blocked" id="real-journal-status">Chargement…</div>
     </div>
+  </div>
+
+  <!-- FILE DE RELECTURE — tous les patients réels, un conseil (le plus
+       prioritaire) par patient. Approuver/refuser écrit une décision dans
+       nutrition_advice_decisions (admin uniquement, RLS) : le conseil
+       décidé ne réapparaît plus jamais dans cette liste. AUCUN envoi ni
+       affichage patient n'en découle à ce stade -- la décision prépare
+       seulement le terrain pour une future étape patient-facing, qui
+       reste hors périmètre tant que le blocage MDR/RGPD documenté dans
+       docs/GOVERNANCE_QUESTIONS.md n'est pas levé. -->
+  <div class="profile-card">
+    <div class="profile-title">File de relecture — tous les patients</div>
+    <div class="profile-id">Un conseil par patient (le plus prioritaire du jour). Valider ou refuser retire définitivement ce conseil de la liste — aucun envoi ni affichage patient pour l'instant.</div>
+    <div id="patient-queue-root"><div class="result-box blocked">Chargement…</div></div>
   </div>
 </main>
 
@@ -1521,6 +1535,122 @@ function loadRealJournalForAdmin(uid, adminProfile) {
     });
 }
 
+/* -----------------------------------------------------------------------
+   loadPatientQueue(adminUid)
+
+   Charge TOUS les patients réels (role != 'admin'), calcule pour chacun
+   le conseil le plus prioritaire du jour (mêmes fonctions du moteur que
+   partout ailleurs, aucune logique dupliquée), exclut ceux déjà décidés
+   aujourd'hui, et affiche le reste avec deux actions (Valider/Refuser)
+   qui écrivent dans nutrition_advice_decisions. Lecture seule sur
+   journal/profiles, écriture uniquement sur la table de décisions.
+   ----------------------------------------------------------------------- */
+function decidePatientAdvice(cardId, patientId, ruleId, referenceDate, decision, adminUid) {
+  var card = document.getElementById(cardId);
+  var actionsEl = card && card.querySelector('.queue-actions');
+  if (actionsEl) actionsEl.innerHTML = 'Enregistrement…';
+
+  sb.from('nutrition_advice_decisions').insert({
+    patient_id: patientId, rule_id: ruleId, reference_date: referenceDate,
+    decision: decision, decided_by: adminUid
+  }).then(function (res) {
+    if (res.error) {
+      if (actionsEl) actionsEl.innerHTML = '<span class="popup-none">Erreur : ' + esc(res.error.message) + '</span>';
+      return;
+    }
+    if (card) card.remove();
+  });
+}
+
+function loadPatientQueue(adminUid) {
+  var root = document.getElementById('patient-queue-root');
+  var referenceDate = todayIsoSim();
+  var windowStart = shiftDateStrSim(referenceDate, -13);
+
+  sb.from('profiles').select('id, prenom, nom, age, diet, role').neq('role', 'admin')
+    .then(function (profilesRes) {
+      if (profilesRes.error) {
+        root.innerHTML = '<div class="result-box blocked">Erreur de lecture des patients : ' + esc(profilesRes.error.message) + '</div>';
+        return;
+      }
+      var patients = profilesRes.data || [];
+      if (!patients.length) {
+        root.innerHTML = '<p class="popup-none">Aucun patient pour l\'instant.</p>';
+        return;
+      }
+      var patientIds = patients.map(function (p) { return p.id; });
+
+      Promise.all([
+        sb.from('journal')
+          .select('user_id, date, repas, aliment, quantite, kcal, is_ultra_processed')
+          .in('user_id', patientIds)
+          .gte('date', windowStart)
+          .lte('date', referenceDate),
+        sb.from('nutrition_advice_decisions')
+          .select('patient_id, rule_id')
+          .in('patient_id', patientIds)
+          .eq('reference_date', referenceDate)
+      ]).then(function (results) {
+        var journalRes = results[0], decisionsRes = results[1];
+        if (journalRes.error) {
+          root.innerHTML = '<div class="result-box blocked">Erreur de lecture des journaux : ' + esc(journalRes.error.message) + '</div>';
+          return;
+        }
+        var allEntries = journalRes.data || [];
+        var journalByPatient = {};
+        allEntries.forEach(function (e) {
+          if (!journalByPatient[e.user_id]) journalByPatient[e.user_id] = [];
+          journalByPatient[e.user_id].push(e);
+        });
+
+        // Décisions déjà prises aujourd'hui, pour ce patient + cette
+        // règle précise -- ne bloque jamais une AUTRE règle du même
+        // patient, ni le même conseil un autre jour.
+        var decidedKeys = {};
+        (decisionsRes.data || []).forEach(function (d) {
+          decidedKeys[d.patient_id + '::' + d.rule_id] = true;
+        });
+
+        var cards = [];
+        patients.forEach(function (p) {
+          var journalEntries = journalByPatient[p.id] || [];
+          if (!journalEntries.length) return;
+
+          var profileForEngine = {
+            patientId: p.id, age: p.age || null, isPregnantOrBreastfeeding: false,
+            allergies: [], intolerances: [], clinicalContext: [], symptoms: [],
+            diet: p.diet || null, eligibleForAutomatedAdvice: true
+          };
+
+          var eligible = runNutritionSimulationForAllRules({
+            journalEntries: journalEntries, referenceDate: referenceDate,
+            profile: profileForEngine, mode: 'simulation', now: referenceDate + 'T12:00:00Z'
+          });
+          if (!eligible || !eligible.length) return;
+
+          var top = eligible[0];
+          if (decidedKeys[p.id + '::' + top.ruleId]) return;
+
+          var mealWarnings = computeMealPatternWarnings(top.ruleId, top.result, { journalEntries: journalEntries, referenceDate: referenceDate });
+          var patientLabel = ((p.prenom || '') + ' ' + (p.nom || '')).trim() || p.id;
+          var cardId = 'queue-' + String(p.id).replace(/[^a-zA-Z0-9_-]/g, '');
+
+          cards.push('<div class="profile-card" id="' + cardId + '">'
+            + '<div class="profile-title">' + esc(patientLabel) + '</div>'
+            + '<div class="profile-id">Règle : ' + esc(top.ruleId) + '</div>'
+            + renderPopupPreview(top.ruleId, top.result, mealWarnings, cardId)
+            + '<div class="queue-actions" style="margin-top:12px;display:flex;gap:8px">'
+            + '<div class="review-btn approve" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(top.ruleId) + '\',\'' + referenceDate + '\',\'approved\',\'' + esc(adminUid) + '\')">✅ Valider</div>'
+            + '<div class="review-btn reject" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(top.ruleId) + '\',\'' + referenceDate + '\',\'rejected\',\'' + esc(adminUid) + '\')">❌ Refuser</div>'
+            + '</div>'
+            + '</div>');
+        });
+
+        root.innerHTML = cards.length ? cards.join('') : '<p class="popup-none">Aucun conseil en attente de relecture pour l\'instant.</p>';
+      });
+    });
+}
+
 sb.auth.getSession().then(function (r) {
   if (!r.data || !r.data.session) {
     document.getElementById('access-denied').style.display = 'block';
@@ -1535,6 +1665,7 @@ sb.auth.getSession().then(function (r) {
     document.getElementById('app-root').style.display = 'block';
 
     loadRealJournalForAdmin(uid, res.data);
+    loadPatientQueue(uid);
   });
 });
 </script>
