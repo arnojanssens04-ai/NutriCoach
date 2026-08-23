@@ -230,7 +230,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
        docs/GOVERNANCE_QUESTIONS.md n'est pas levé. -->
   <div class="profile-card">
     <div class="profile-title">File de relecture — tous les patients</div>
-    <div class="profile-id">Un conseil par patient (le plus prioritaire du jour). Valider ou refuser retire définitivement ce conseil de la liste — aucun envoi ni affichage patient pour l'instant.</div>
+    <div class="profile-id">Tous les conseils éligibles du jour, pour chaque patient. Valider ou refuser retire définitivement ce conseil précis de la liste — aucun envoi ni affichage patient pour l'instant.</div>
     <div id="patient-queue-root"><div class="result-box blocked">Chargement…</div></div>
   </div>
 </main>
@@ -1628,22 +1628,27 @@ function loadPatientQueue(adminUid) {
           });
           if (!eligible || !eligible.length) return;
 
-          var top = eligible[0];
-          if (decidedKeys[p.id + '::' + top.ruleId]) return;
-
-          var mealWarnings = computeMealPatternWarnings(top.ruleId, top.result, { journalEntries: journalEntries, referenceDate: referenceDate });
           var patientLabel = ((p.prenom || '') + ' ' + (p.nom || '')).trim() || p.id;
-          var cardId = 'queue-' + String(p.id).replace(/[^a-zA-Z0-9_-]/g, '');
 
-          cards.push('<div class="profile-card" id="' + cardId + '">'
-            + '<div class="profile-title">' + esc(patientLabel) + '</div>'
-            + '<div class="profile-id">Règle : ' + esc(top.ruleId) + '</div>'
-            + renderPopupPreview(top.ruleId, top.result, mealWarnings, cardId)
-            + '<div class="queue-actions" style="margin-top:12px;display:flex;gap:8px">'
-            + '<div class="review-btn approve" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(top.ruleId) + '\',\'' + referenceDate + '\',\'approved\',\'' + esc(adminUid) + '\')">✅ Valider</div>'
-            + '<div class="review-btn reject" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(top.ruleId) + '\',\'' + referenceDate + '\',\'rejected\',\'' + esc(adminUid) + '\')">❌ Refuser</div>'
-            + '</div>'
-            + '</div>');
+          // Tous les conseils éligibles pour ce patient, pas seulement le
+          // plus prioritaire -- chacun a sa propre carte et sa propre
+          // décision indépendante (valider l'un ne décide pas des autres).
+          eligible.forEach(function (entry) {
+            if (decidedKeys[p.id + '::' + entry.ruleId]) return;
+
+            var mealWarnings = computeMealPatternWarnings(entry.ruleId, entry.result, { journalEntries: journalEntries, referenceDate: referenceDate });
+            var cardId = 'queue-' + String(p.id).replace(/[^a-zA-Z0-9_-]/g, '') + '-' + String(entry.ruleId).replace(/[^a-zA-Z0-9_-]/g, '');
+
+            cards.push('<div class="profile-card" id="' + cardId + '">'
+              + '<div class="profile-title">' + esc(patientLabel) + '</div>'
+              + '<div class="profile-id">Règle : ' + esc(entry.ruleId) + '</div>'
+              + renderPopupPreview(entry.ruleId, entry.result, mealWarnings, cardId)
+              + '<div class="queue-actions" style="margin-top:12px;display:flex;gap:8px">'
+              + '<div class="review-btn approve" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(entry.ruleId) + '\',\'' + referenceDate + '\',\'approved\',\'' + esc(adminUid) + '\')">✅ Valider</div>'
+              + '<div class="review-btn reject" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(entry.ruleId) + '\',\'' + referenceDate + '\',\'rejected\',\'' + esc(adminUid) + '\')">❌ Refuser</div>'
+              + '</div>'
+              + '</div>');
+          });
         });
 
         root.innerHTML = cards.length ? cards.join('') : '<p class="popup-none">Aucun conseil en attente de relecture pour l\'instant.</p>';
