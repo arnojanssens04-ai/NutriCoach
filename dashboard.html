@@ -2447,7 +2447,7 @@ function estimateFibresFallback(nom, gluc){
   return 0; // pas d'estimation fiable au-del\u00e0 de ces cat\u00e9gories connues
 }
 
-async function addEntry(food,qty){
+async function addEntry(food,qty,isHomemade){
   var fibresVal = (food.fibres===null || food.fibres===undefined || food.fibres==='')
     ? estimateFibresFallback(food.nom, food.gluc)
     : pN(food.fibres);
@@ -2465,7 +2465,13 @@ async function addEntry(food,qty){
     food_fibres_100:fibresVal,food_mg_100:pN(food.mg),food_sucres_100:pN(food.sucres||food.sugar||0),
     food_o6_100:pN(food.o6),food_vitc_100:pN(food.vitc),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
-    is_ultra_processed: (typeof food.nova_group==='number') ? (food.nova_group>=4)
+    // "Fait maison" (case cochée par l'utilisateur au moment d'ajouter
+    // l'aliment) force false, quelle que soit la classification par défaut
+    // liée à l'aliment -- celle-ci reflète souvent une version
+    // industrielle/commerciale (ex: "Pizza jambon champignons" en base
+    // Ciqual), pas la préparation maison réelle de l'utilisateur.
+    is_ultra_processed: isHomemade ? false
+      : (typeof food.nova_group==='number') ? (food.nova_group>=4)
       : (typeof food.is_ultra_processed==='boolean') ? food.is_ultra_processed
       : null
   });
@@ -5136,6 +5142,21 @@ function openPortionPicker(food){
   var grid = document.getElementById('pp-options');
   title.textContent = food.nom;
 
+  // Case "Fait maison" -- uniquement visible quand l'aliment lié est
+  // actuellement classé ultra-transformé par défaut (NOVA/Ciqual ou IA),
+  // pour couvrir le cas d'une préparation maison basée sur un aliment dont
+  // la classification par défaut reflète plutôt une version industrielle
+  // (ex: "Pizza jambon champignons" en base Ciqual vs. pizza faite maison).
+  var defaultUltra = (typeof food.nova_group==='number') ? (food.nova_group>=4)
+    : (typeof food.is_ultra_processed==='boolean') ? food.is_ultra_processed
+    : false;
+  var homemadeWrap = document.getElementById('pp-homemade-wrap');
+  var homemadeCheckbox = document.getElementById('pp-homemade');
+  if(homemadeWrap){
+    homemadeWrap.style.display = defaultUltra ? 'flex' : 'none';
+    if(homemadeCheckbox) homemadeCheckbox.checked = false;
+  }
+
   var cat = detectPortionCategory(food.nom);
   var options;
   if(cat){
@@ -5170,7 +5191,9 @@ function openPortionPicker(food){
 
 function confirmPortion(grams){
   if(!pendingFood)return;
-  addEntry(pendingFood, grams);
+  var homemadeCheckbox = document.getElementById('pp-homemade');
+  var isHomemade = !!(homemadeCheckbox && homemadeCheckbox.checked);
+  addEntry(pendingFood, grams, isHomemade);
   closePortionPicker();
 }
 
@@ -5183,6 +5206,8 @@ function confirmPrecise(){
 function closePortionPicker(){
   document.getElementById('portion-picker').classList.remove('on');
   pendingFood = null;
+  var hc=document.getElementById('pp-homemade'); if(hc) hc.checked=false;
+  var hw=document.getElementById('pp-homemade-wrap'); if(hw) hw.style.display='none';
   var s1=document.getElementById('srch'); if(s1)s1.value='';
   var z1=document.getElementById('srch-zone'); if(z1)z1.innerHTML='';
   var s2=document.getElementById('st4-srch'); if(s2)s2.value='';
@@ -6491,6 +6516,10 @@ async function logout(){
         <button class="btn-next" style="flex:0 0 auto;padding:10px 18px" onclick="confirmPrecise()">OK</button>
       </div>
     </div>
+    <label id="pp-homemade-wrap" style="display:none;align-items:center;gap:8px;margin-top:14px;font-size:.82rem;color:var(--text2);cursor:pointer">
+      <input type="checkbox" id="pp-homemade" style="width:17px;height:17px;flex-shrink:0">
+      Fait maison &#8212; ne compte pas comme ultra-transform&#233;
+    </label>
     <button class="btn-back" style="width:100%;margin-top:14px" onclick="closePortionPicker()">Annuler</button>
   </div>
 </div>
