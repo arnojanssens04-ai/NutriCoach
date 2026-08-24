@@ -1814,6 +1814,27 @@ var ULTRA_PROCESSED_PATTERNS = [
 ];
 var ULTRA_PROCESSED_REGEX = new RegExp(ULTRA_PROCESSED_PATTERNS.join('|'));
 
+// Classification "sources nutritionnelles" par mots-clés sur le nom de
+// l'aliment (même logique que ULTRA_PROCESSED_PATTERNS) -- alimente le
+// champ nutrient_sources du journal, seul moyen pour le moteur de
+// conseils (computeNutrientSourceRarity, nutrition-signal-engine.js) de
+// savoir si un aliment est une source de vitamine C / D / B12 pour un
+// patient réel (les rich-food-lists de nutrition-food-definitions.js
+// utilisent des codes génériques, pas les noms Ciqual/OFF réels).
+var NUTRIENT_SOURCE_KEYWORDS = {
+  vitamin_b12: /uf|oeuf|yaourt|yogourt|poulet|volaille|saumon|maquereau|boisson.*(soja|vegetale).*enrichi|levure.*(alimentaire|maltee).*enrichi/,
+  vitamin_c: /orange|kiwi|poivron|brocoli|fraise|clementine|mandarine|pamplemousse|persil|cassis/,
+  vitamin_d: /saumon|uf|oeuf|lait.*enrichi|maquereau|sardine|hareng|foie de morue/
+};
+function computeNutrientSources(alimentName){
+  var n = (alimentName||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  var sources = [];
+  Object.keys(NUTRIENT_SOURCE_KEYWORDS).forEach(function(code){
+    if(NUTRIENT_SOURCE_KEYWORDS[code].test(n)) sources.push(code);
+  });
+  return sources;
+}
+
 // Renvoie la LISTE compl\u00e8te des entr\u00e9es ultra-transform\u00e9es (pas juste un
 // compte) \u2014 n\u00e9cessaire pour calculer un bar\u00e8me progressif dans Score Sant\u00e9
 // (quantit\u00e9, rang du premier aliment...) tout en gardant countUltraProcessed
@@ -2510,6 +2531,7 @@ async function addEntry(food,qty,isHomemade){
     food_fibres_100:fibresVal,food_mg_100:pN(food.mg),food_sucres_100:pN(food.sucres||food.sugar||0),
     food_o6_100:pN(food.o6),food_vitc_100:pN(food.vitc),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
+    nutrient_sources: computeNutrientSources(food.nom),
     // "Fait maison" (case cochée par l'utilisateur au moment d'ajouter
     // l'aliment) force false, quelle que soit la classification par défaut
     // liée à l'aliment -- celle-ci reflète souvent une version

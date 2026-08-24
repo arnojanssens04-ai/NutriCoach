@@ -1671,7 +1671,7 @@ function loadRealJournalForAdmin(uid, adminProfile) {
   var windowStart = shiftDateStrSim(referenceDate, -6);
 
   sb.from('journal')
-    .select('date, repas, aliment, quantite, kcal, is_ultra_processed')
+    .select('date, repas, aliment, quantite, kcal, is_ultra_processed, nutrient_sources')
     .eq('user_id', uid)
     .gte('date', windowStart)
     .lte('date', referenceDate)
@@ -1769,7 +1769,7 @@ function loadPatientQueue(adminUid) {
 
       Promise.all([
         sb.from('journal')
-          .select('user_id, date, repas, aliment, quantite, kcal, is_ultra_processed')
+          .select('user_id, date, repas, aliment, quantite, kcal, is_ultra_processed, nutrient_sources')
           .in('user_id', patientIds)
           .gte('date', windowStart)
           .lte('date', referenceDate),
