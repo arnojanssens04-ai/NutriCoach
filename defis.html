@@ -367,9 +367,28 @@ async function loadMyChallenges(){
       await syncProgressForWindow(c);
     }
     await evaluateAndRender(c, el);
+    await notifyCreatorIfPartnerJoined(c);
   }
 
   updateCreateJoinAvailability(list);
+}
+
+// Prévient le créateur (une seule fois, à la première ouverture de la
+// page après coup) que son partenaire a rejoint le défi -- pas de vraie
+// notification système dans l'app pour ce cas précis, donc affiché
+// directement ici.
+async function notifyCreatorIfPartnerJoined(challenge){
+  if(challenge.creator_id !== USER.id) return;
+  if(challenge.status !== 'active') return;
+  if(!challenge.partner_id) return;
+  if(challenge.creator_notified_join) return;
+
+  var partnerRes = await sb.from('profiles').select('prenom').eq('id', challenge.partner_id).maybeSingle();
+  var partnerName = (partnerRes.data && partnerRes.data.prenom) || 'Votre partenaire';
+  toast('🎉 '+partnerName+' a accepté votre défi !');
+
+  await sb.from('duo_challenges').update({ creator_notified_join: true }).eq('id', challenge.id);
+  challenge.creator_notified_join = true;
 }
 
 // Réservé aux admins pour l'instant -- fonctionnalité pas encore ouverte
