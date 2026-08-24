@@ -85,22 +85,28 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="section-lbl">Mes défis en cours</div>
   <div id="my-challenges"><div class="empty">Chargement…</div></div>
 
-  <div class="section-lbl">Créer un défi</div>
-  <div class="card">
-    <div id="tpl-list"></div>
-    <button class="btn" id="create-btn" onclick="createChallenge()" disabled>Créer et obtenir mon code</button>
-    <div class="code-box" id="new-code-box" style="display:none">
-      <div class="code-val" id="new-code-val"></div>
-      <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi.</div>
-    </div>
+  <div id="blocked-msg" class="card" style="display:none;text-align:center;color:var(--text2);font-size:.84rem">
+    Vous avez déjà un défi en cours. Terminez-le (ou attendez qu'il expire) avant d'en créer ou d'en rejoindre un nouveau.
   </div>
 
-  <div class="section-lbl">Rejoindre un défi</div>
-  <div class="card">
-    <p style="font-size:.82rem;color:var(--text2)">Vous avez reçu un code ? Entrez-le ici pour rejoindre le défi.</p>
-    <div class="join-row">
-      <input type="text" id="join-code-input" placeholder="CODE" maxlength="6">
-      <button class="btn" style="width:auto;margin:0;padding:11px 18px" onclick="joinChallenge()">Rejoindre</button>
+  <div id="create-join-sections">
+    <div class="section-lbl">Créer un défi</div>
+    <div class="card">
+      <div id="tpl-list"></div>
+      <button class="btn" id="create-btn" onclick="createChallenge()" disabled>Créer et obtenir mon code</button>
+      <div class="code-box" id="new-code-box" style="display:none">
+        <div class="code-val" id="new-code-val"></div>
+        <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi.</div>
+      </div>
+    </div>
+
+    <div class="section-lbl">Rejoindre un défi</div>
+    <div class="card">
+      <p style="font-size:.82rem;color:var(--text2)">Vous avez reçu un code ? Entrez-le ici pour rejoindre le défi.</p>
+      <div class="join-row">
+        <input type="text" id="join-code-input" placeholder="CODE" maxlength="6">
+        <button class="btn" style="width:auto;margin:0;padding:11px 18px" onclick="joinChallenge()">Rejoindre</button>
+      </div>
     </div>
   </div>
 </div>
@@ -330,12 +336,27 @@ async function evaluateAndRender(challenge, container){
     + '</div>';
 }
 
+// Tant qu'un défi n'est pas terminé (réussi/échoué/annulé) pour cet
+// utilisateur, on masque "Créer un défi" et "Rejoindre un défi" -- un seul
+// défi actif ou en attente à la fois, jamais plusieurs en parallèle.
+function updateCreateJoinAvailability(list){
+  var hasBlocking = list.some(function(c){ return c.status === 'pending' || c.status === 'active'; });
+  var blockedMsg = document.getElementById('blocked-msg');
+  var sections = document.getElementById('create-join-sections');
+  if(blockedMsg) blockedMsg.style.display = hasBlocking ? 'block' : 'none';
+  if(sections) sections.style.display = hasBlocking ? 'none' : 'block';
+}
+
 async function loadMyChallenges(){
   var root = document.getElementById('my-challenges');
   var r = await sb.from('duo_challenges').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false});
   if(r.error){ root.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
   var list = r.data || [];
-  if(!list.length){ root.innerHTML = '<div class="empty">Aucun défi pour l\'instant — créez-en un ou rejoignez celui d\'un proche avec un code.</div>'; return; }
+  if(!list.length){
+    root.innerHTML = '<div class="empty">Aucun défi pour l\'instant — créez-en un ou rejoignez celui d\'un proche avec un code.</div>';
+    updateCreateJoinAvailability(list);
+    return;
+  }
 
   root.innerHTML = list.map(function(c){ return '<div id="chal-'+c.id+'"></div>'; }).join('');
 
@@ -347,6 +368,8 @@ async function loadMyChallenges(){
     }
     await evaluateAndRender(c, el);
   }
+
+  updateCreateJoinAvailability(list);
 }
 
 // Réservé aux admins pour l'instant -- fonctionnalité pas encore ouverte
