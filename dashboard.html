@@ -2123,13 +2123,20 @@ function openScoreDetail(){
     {ico:'\ud83e\uddb4', lbl:'Calcium', val:T.cal, tgt:tgt.cal||1000, unit:'mg', dec:0}
   ];
 
+  // Mode Focus/Sérénité (hide_exact_kcal) : les chiffres exacts de cette
+  // popup sont exactement ce que le mode promet de masquer partout
+  // ailleurs (kcal, journal, résumé repas récents...) -- ici on garde la
+  // barre de progression visuelle (même logique que l'assiette Mode Focus,
+  // "une plage à visualiser plutôt qu'un chiffre à ne pas dépasser") mais
+  // on masque le nombre atteint et la cible en chiffres.
+  var focusOnDetail = PROF && PROF.hide_exact_kcal === true;
   var rowsHtml = rowsData.map(function(r,idx){
     var pct = r.tgt>0 ? Math.min(100, r.val/r.tgt*100) : 0;
     return '<div class="sd-row" style="animation-delay:'+(idx*90)+'ms">'
       +'<div class="sd-ico">'+r.ico+'</div>'
       +'<div class="sd-body">'
         +'<div class="sd-lbl">'+r.lbl+'</div>'
-        +'<div class="sd-val"><span class="sd-num" id="sd-num-'+idx+'">0</span><span class="sd-target"> / '+r.tgt.toFixed(r.dec)+r.unit+'</span></div>'
+        +(focusOnDetail ? '' : '<div class="sd-val"><span class="sd-num" id="sd-num-'+idx+'">0</span><span class="sd-target"> / '+r.tgt.toFixed(r.dec)+r.unit+'</span></div>')
         +'<div class="sd-track"><div class="sd-fill" id="sd-fill-'+idx+'" style="width:0%"></div></div>'
       +'</div></div>';
   }).join('');
@@ -2160,9 +2167,11 @@ function openScoreDetail(){
     setTimeout(function(){
       var numEl = document.getElementById('sd-num-'+idx);
       var fillEl = document.getElementById('sd-fill-'+idx);
-      if(!numEl) return;
       var pct = r.tgt>0 ? Math.min(100, r.val/r.tgt*100) : 0;
       if(fillEl) fillEl.style.width = pct+'%';
+      // En Mode Focus, sd-num n'existe plus dans le DOM (chiffres masqués) --
+      // seule la barre de progression s'anime, pas de décompte numérique.
+      if(!numEl) return;
       var start = performance.now(), dur = 900;
       function tick(now){
         var t = Math.min(1, (now-start)/dur);
