@@ -255,6 +255,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-audit.js"></script>
 <script src="nutrition-simulator.js"></script>
 <script src="nutrition-simulator-fixtures.js"></script>
+<script src="aut-summary-card.js"></script>
 <!-- Chantier séparé (meal-pattern-*.js) — jamais chargé par les fichiers
      nutrition-*.js ci-dessus, jamais l'inverse : le filtrage qu'il permet
      est appliqué en POST-TRAITEMENT ici, dans cette page admin, sans
@@ -1582,6 +1583,89 @@ function todayIsoSim() {
    (loadRealJournalAndRender). Aucune écriture, aucune donnée transmise
    ailleurs que dans cette page.
    ----------------------------------------------------------------------- */
+// ── Même carte que dashboard.html (aut-summary-card.js) — dupliqué ici
+// volontairement (convention du projet : chaque fichier garde sa propre
+// copie, jamais de dépendance croisée entre pages) pour que l'aperçu
+// admin du "vrai journal" montre EXACTEMENT ce qu'un patient verrait,
+// plutôt que l'ancien aperçu générique (avec "Ce que nous avons compris",
+// "Texte du conseil généré"...). Utilise matchUltraProcessedCategory
+// (déjà chargé via nutrition-ultra-processed-substitutions.js) comme
+// filet de détection à la place d'une regex séparée.
+var AUT_CATEGORY_LABELS = {
+  fried_potato: 'Fritures & frites',
+  candy_confectionery: 'Confiseries',
+  sugary_dessert_pastry: 'Pâtisseries & desserts sucrés',
+  sugary_drink: 'Boissons sucrées',
+  fast_food_meal: 'Repas rapides & fast-food',
+  salty_snack: 'Snacks salés',
+  processed_meat: 'Charcuterie transformée',
+  instant_meal: 'Plats instantanés',
+  other_ultra_processed: 'Autres aliments transformés'
+};
+var AUT_MEAL_LABELS = {breakfast:'Petit-déjeuner', lunch:'Déjeuner', snack:'Collation', dinner:'Souper', snack2:'2e collation'};
+
+function isAUTJournalEntry(e){
+  if(e.is_ultra_processed === true) return true;
+  if(e.is_ultra_processed === false) return false;
+  return (typeof matchUltraProcessedCategory === 'function') && matchUltraProcessedCategory(e.aliment) !== null;
+}
+
+function computeAUTSummaryData(entries, periodLabel){
+  var byDate = {};
+  entries.forEach(function(e){ byDate[e.date] = true; });
+  var daysLogged = Object.keys(byDate).length;
+
+  var autEntries = entries.filter(isAUTJournalEntry);
+  var total = entries.length;
+  var autShare = total>0 ? Math.round(autEntries.length/total*100) : 0;
+  var brutShare = 100 - autShare;
+
+  var byMeal = {};
+  autEntries.forEach(function(e){ byMeal[e.repas] = (byMeal[e.repas]||0)+1; });
+  var topMealId = Object.keys(byMeal).sort(function(a,b){ return byMeal[b]-byMeal[a]; })[0];
+  var namesAtTopMeal = {};
+  autEntries.forEach(function(e){ if(e.repas===topMealId) namesAtTopMeal[e.aliment] = (namesAtTopMeal[e.aliment]||0)+1; });
+  var topFoodName = Object.keys(namesAtTopMeal).sort(function(a,b){ return namesAtTopMeal[b]-namesAtTopMeal[a]; })[0];
+
+  var byCategory = {};
+  autEntries.forEach(function(e){
+    var cat = (typeof matchUltraProcessedCategory==='function') ? matchUltraProcessedCategory(e.aliment) : null;
+    var key = cat || 'other_ultra_processed';
+    if(!byCategory[key]) byCategory[key] = {};
+    byCategory[key][e.aliment] = (byCategory[key][e.aliment]||0)+1;
+  });
+  var groups = Object.keys(byCategory).map(function(key){
+    var items = Object.keys(byCategory[key]).map(function(name){ return {name:name, count:byCategory[key][name]}; })
+      .sort(function(a,b){ return b.count-a.count; });
+    return { key:key, label: AUT_CATEGORY_LABELS[key]||key, items:items,
+      total: items.reduce(function(s,i){ return s+i.count; },0) };
+  }).sort(function(a,b){ return b.total-a.total; });
+
+  var recommendations = groups.slice(0,2).map(function(g){
+    var alt = (typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES!=='undefined') ? ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[g.key] : null;
+    var altText = (alt && alt.length) ? alt.slice(0,2).map(function(a){ return a.label; }).join(' & ') : 'Privilégiez une version faite maison ou peu transformée.';
+    return {
+      id: g.key,
+      title: g.label,
+      subtitle: g.items.slice(0,2).map(function(i){ return i.name+' ('+i.count+'×)'; }).join(', '),
+      alternative: altText
+    };
+  });
+
+  return {
+    periodLabel: periodLabel,
+    completion: { days: daysLogged, total: 7 },
+    autShare: autShare, brutShare: brutShare,
+    totalOccurrences: autEntries.length,
+    topImpact: {
+      label: AUT_MEAL_LABELS[topMealId] || '—',
+      detail: topFoodName ? (namesAtTopMeal[topFoodName]+'× '+topFoodName) : 'Rien de particulier cette semaine.'
+    },
+    recommendations: recommendations,
+    groups: groups.map(function(g){ return {label:g.label, items:g.items}; })
+  };
+}
+
 function loadRealJournalForAdmin(uid, adminProfile) {
   var referenceDate = todayIsoSim();
   var windowStart = shiftDateStrSim(referenceDate, -6);
@@ -1615,7 +1699,26 @@ function loadRealJournalForAdmin(uid, adminProfile) {
         },
         journalEntries: journal
       };
-      document.getElementById('real-journal-root').innerHTML = renderProfile('real_journal', fixture);
+
+      var root = document.getElementById('real-journal-root');
+      if(!journal.length){
+        root.innerHTML = '<p class="popup-none">Aucune entrée de journal sur les 7 derniers jours.</p>';
+        return;
+      }
+      var periodLabel = windowStart + ' → ' + referenceDate;
+      var data = computeAUTSummaryData(journal, periodLabel);
+      root.innerHTML = '';
+      root.appendChild(renderAUTCard(data, {
+        // Page d'aperçu admin, pas d'action réelle -- fermer/mettre de
+        // côté vide juste l'aperçu (redevient visible au rechargement),
+        // les autres actions n'ont pas de sens hors d'un vrai dashboard
+        // patient (pas de journal/chat/recette à ouvrir ici).
+        onClose: function(){ root.innerHTML = '<p class="popup-none">Aperçu fermé — rechargez la page pour le revoir.</p>'; },
+        onDismiss: function(){ root.innerHTML = '<p class="popup-none">Aperçu fermé — rechargez la page pour le revoir.</p>'; },
+        onContactSupport: function(){},
+        onApplyRecommendation: function(){},
+        onViewRecipe: function(){}
+      }));
     });
 }
 
