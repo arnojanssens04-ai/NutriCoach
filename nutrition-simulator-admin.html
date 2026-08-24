@@ -114,7 +114,9 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .clarify-block{ margin:0 16px 14px; padding:12px 14px; background:var(--amber-l); border:1px dashed rgba(122,92,30,0.3); border-radius:10px; }
 .clarify-note{ font-size:.7rem; color:var(--amber); margin-bottom:8px; }
 .clarify-question{ font-weight:700; font-size:.86rem; margin-bottom:8px; }
-.clarify-option{ font-size:.82rem; color:var(--text2); padding:4px 0; }
+.clarify-option{ font-size:.82rem; color:var(--text2); padding:4px 0; cursor:pointer; border-radius:6px; transition:background .12s, color .12s; }
+.clarify-option:hover{ background:var(--card2); }
+.clarify-option.selected{ color:var(--gold); font-weight:600; background:var(--gold-l); padding-left:6px; }
 .popup-actions{ display:flex; gap:8px; padding:0 16px 16px; }
 .popup-btn{ flex:1; font-size:.78rem; font-weight:600; padding:9px 10px; border-radius:8px; text-align:center; border:1px solid var(--border2); cursor:default; }
 .popup-btn.primary{ background:var(--gold); color:#fff; border-color:var(--gold); }
@@ -145,6 +147,8 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 .popup-volume-alert-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
 .popup-volume-alert .popup-meta-chip{ background:rgba(255,255,255,0.5); }
 .popup-group-list{ margin:0 0 8px; padding-left:18px; font-size:.83rem; line-height:1.6; color:var(--text2); }
+.meal-followup-block{ margin-top:8px; padding:10px 12px; background:var(--card2); border-radius:8px; }
+.popup-alt-suggestion{ font-size:.82rem; color:var(--text); line-height:1.5; }
 .popup-details-panel{ margin:0 16px 14px; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; }
 .popup-details-count{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text3); margin-bottom:8px; }
 .popup-details-group{ margin-bottom:8px; }
@@ -992,12 +996,12 @@ function renderVolumeAlertHtml(mealWarnings) {
     + '<div class="popup-volume-alert-head"><span class="popup-section-title" style="margin:0">⚠️ Volume global élevé</span><span class="popup-meta-chip">' + esc(volume.totalOccurrences) + ' occ. / ' + esc(volume.distinctDays) + ' j</span></div>'
     + '<p>🌱 Augmenter la part d\'aliments bruts et peu transformés est une piste généralement recommandée dans ce cas.</p>'
     + '<div class="clarify-question">❓ Souhaitez-vous en discuter avec un professionnel ?</div>'
-    + '<div class="clarify-option">○ Oui</div>'
-    + '<div class="clarify-option">○ Plus tard</div>'
+    + '<div class="clarify-option" onclick="setClarifyOption(this)">○ Oui</div>'
+    + '<div class="clarify-option" onclick="setClarifyOption(this)">○ Plus tard</div>'
     + '</div>';
 }
 
-function renderPopupPreview(ruleId, result, mealWarnings, panelId) {
+function renderPopupPreview(ruleId, result, mealWarnings, panelId, journalEntries) {
   var meta = CARD_CATEGORY_BY_RULE[ruleId] || { category: 'nutrient', icon: '?', title: ruleId };
   var safePanelId = String(panelId || ruleId).replace(/[^a-zA-Z0-9_-]/g, '');
   var mw = mealWarnings || {};
@@ -1072,9 +1076,48 @@ function renderPopupPreview(ruleId, result, mealWarnings, panelId) {
         return '<li>' + groupIcon + ' ' + esc(g.categoryLabel) + ' : ' + esc(g.occurrenceCount) + ' occurrence' + (g.occurrenceCount > 1 ? 's' : '') + '</li>';
       }).join('');
       var total = dominance.totalOccurrences;
+      var safePanelIdMeal = String(panelId || ruleId).replace(/[^a-zA-Z0-9_-]/g, '');
+
+      // Vrai contenu de suivi par repas (pas juste une sélection visuelle
+      // sans suite) : pour CE créneau précis, les aliments ultra-transformés
+      // réellement relevés dans le journal, et une suggestion d'alternative
+      // via la même table que le reste de l'app (ULTRA_PROCESSED_CATEGORY_
+      // ALTERNATIVES, nutrition-ultra-processed-substitutions.js) --
+      // jamais de texte généré, uniquement des données déjà chargées.
+      var flaggedNames = (result.audit && result.audit.flaggedFoodNames) || [];
+      var foodCountsByMeal = {};
+      (journalEntries || []).forEach(function (e) {
+        if (!e || !e.aliment || !e.repas || flaggedNames.indexOf(e.aliment) === -1) return;
+        if (!foodCountsByMeal[e.repas]) foodCountsByMeal[e.repas] = {};
+        foodCountsByMeal[e.repas][e.aliment] = (foodCountsByMeal[e.repas][e.aliment] || 0) + 1;
+      });
+
+      var mealFollowUpBlocks = (dominance.mealBreakdown || []).map(function (m) {
+        var counts = foodCountsByMeal[m.mealType] || {};
+        var foodItems = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+        var listHtml = foodItems.map(function (name) {
+          return '<li>' + esc(name) + ' · ' + counts[name] + 'x</li>';
+        }).join('');
+
+        var topFood = foodItems[0];
+        var altHtml = '';
+        if (topFood && typeof matchUltraProcessedCategory === 'function') {
+          var cat = matchUltraProcessedCategory(topFood);
+          var alts = cat && typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES !== 'undefined' ? ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[cat] : null;
+          if (alts && alts.length) {
+            altHtml = '<div class="popup-alt-suggestion">💡 À la place de « ' + esc(topFood) + ' » : ' + alts.slice(0, 2).map(function (a) { return esc(a.label); }).join(' ou ') + '.</div>';
+          }
+        }
+
+        return '<div class="meal-followup-block" id="meal-followup-' + safePanelIdMeal + '-' + esc(m.mealType) + '" style="display:none">'
+          + (listHtml ? '<ul class="popup-group-list">' + listHtml + '</ul>' : '')
+          + altHtml
+          + '</div>';
+      }).join('');
+
       var mealOptionsHtml = (dominance.mealBreakdown || []).map(function (m) {
-        return '<div class="clarify-option">○ ' + esc(MEAL_TYPE_ICONS_FR[m.mealType] || '🍽️') + ' ' + esc(mealTypeLabelFr(m.mealType)) + '</div>';
-      }).join('') + '<div class="clarify-option">○ 💬 Je préfère en discuter</div>';
+        return '<div class="clarify-option" onclick="selectMealToImprove(this, \'' + safePanelIdMeal + '\', \'' + esc(m.mealType) + '\')">○ ' + esc(MEAL_TYPE_ICONS_FR[m.mealType] || '🍽️') + ' ' + esc(mealTypeLabelFr(m.mealType)) + '</div>';
+      }).join('') + '<div class="clarify-option" onclick="setClarifyOption(this)">○ 💬 Je préfère en discuter</div>' + mealFollowUpBlocks;
 
       inner = '<div class="popup-card">'
         + headHtml + metaHtml
@@ -1131,7 +1174,7 @@ function renderPopupPreview(ruleId, result, mealWarnings, panelId) {
       var clarifyingHtml = '';
       var cq = mw.clarifyingQuestion;
       if (cq && !noOptions) {
-        var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option">○ ' + esc(opt) + '</div>'; }).join('');
+        var optionsHtml = cq.options.map(function (opt) { return '<div class="clarify-option" onclick="setClarifyOption(this)">○ ' + esc(opt) + '</div>'; }).join('');
         clarifyingHtml = '<div class="clarify-block">'
           + '<div class="clarify-note">Aucune option pertinente ne reste parmi les alternatives proposées — question fixe posée à la place (meal-pattern-clarifying-questions.js) :</div>'
           + '<div class="clarify-question">❓ ' + esc(cq.text) + '</div>'
@@ -1389,6 +1432,47 @@ var POPUP_RESPONSE_LABELS = {
   more: { icon: '🔄', text: 'Réponse enregistrée localement : « Je veux d\'autres aliments » (aucune nouvelle liste générée dans cette maquette)', cls: 'pending' },
   help: { icon: '❓', text: 'Réponse enregistrée localement : « J\'ai besoin d\'aide » (aucune mise en relation réelle dans cette maquette)', cls: 'pending' }
 };
+/* -----------------------------------------------------------------------
+   setClarifyOption(el)
+
+   Sélection d'une option "○ ..." (choix de repas à améliorer en premier,
+   "Oui/Plus tard" pour discuter avec un professionnel, question de
+   clarification meal-pattern) -- comme setReviewDecision/setPopupResponse
+   ci-dessous : interaction VISUELLE locale uniquement, aucun appel réseau,
+   aucune écriture Supabase, aucune génération de texte. Ces options
+   n'avaient jusqu'ici AUCUN gestionnaire de clic (oubli, pas un choix
+   voulu) -- cliquer dessus ne faisait strictement rien.
+   ----------------------------------------------------------------------- */
+function setClarifyOption(el) {
+  var group = el.parentElement;
+  if (!group) return;
+  Array.prototype.forEach.call(group.querySelectorAll('.clarify-option'), function (o) {
+    o.classList.remove('selected');
+  });
+  el.classList.add('selected');
+}
+
+/* -----------------------------------------------------------------------
+   selectMealToImprove(el, panelId, mealType)
+
+   Variante de setClarifyOption() spécifique au choix "quel repas
+   améliorer en premier" : en plus de surligner l'option, révèle le bloc
+   de suivi RÉEL déjà précalculé pour ce repas (aliments ultra-transformés
+   effectivement relevés dans le journal + suggestion d'alternative) --
+   toujours purement local, aucune génération de texte, uniquement des
+   données déjà chargées et déjà affichées ailleurs dans cette page.
+   ----------------------------------------------------------------------- */
+function selectMealToImprove(el, panelId, mealType) {
+  setClarifyOption(el);
+  var group = el.parentElement;
+  if (!group) return;
+  Array.prototype.forEach.call(group.querySelectorAll('.meal-followup-block'), function (b) {
+    b.style.display = 'none';
+  });
+  var block = document.getElementById('meal-followup-' + panelId + '-' + mealType);
+  if (block) block.style.display = 'block';
+}
+
 function setPopupResponse(panelId, response) {
   var statusEl = document.getElementById('popup-response-status-' + panelId);
   var actionsEl = document.getElementById('popup-response-actions-' + panelId);
@@ -1432,7 +1516,7 @@ function renderProfile(fixtureKey, fixture) {
     + '<div class="profile-id">Règle simulée : ' + esc(fixture.ruleId) + '</div>';
 
   html += '<div class="section-lbl">Résultat de la simulation</div>' + renderResult(result);
-  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result, mealWarnings, fixtureKey);
+  html += '<div class="section-lbl">Aperçu de la carte</div>' + renderPopupPreview(fixture.ruleId, result, mealWarnings, fixtureKey, fixture.journalEntries);
   var reviewHtml = renderReviewPanel(fixture.ruleId, result, fixture, fixtureKey, mealWarnings);
   if (reviewHtml) html += '<div class="section-lbl">Revue admin — pourquoi ce conseil ?</div>' + reviewHtml;
   html += '<div class="section-lbl">Trace d\'audit (mémoire uniquement, aucune persistance)</div>' + renderAudit(result.audit);
@@ -1642,7 +1726,7 @@ function loadPatientQueue(adminUid) {
             cards.push('<div class="profile-card" id="' + cardId + '">'
               + '<div class="profile-title">' + esc(patientLabel) + '</div>'
               + '<div class="profile-id">Règle : ' + esc(entry.ruleId) + '</div>'
-              + renderPopupPreview(entry.ruleId, entry.result, mealWarnings, cardId)
+              + renderPopupPreview(entry.ruleId, entry.result, mealWarnings, cardId, journalEntries)
               + '<div class="queue-actions" style="margin-top:12px;display:flex;gap:8px">'
               + '<div class="review-btn approve" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(entry.ruleId) + '\',\'' + referenceDate + '\',\'approved\',\'' + esc(adminUid) + '\')">✅ Valider</div>'
               + '<div class="review-btn reject" onclick="decidePatientAdvice(\'' + cardId + '\',\'' + esc(p.id) + '\',\'' + esc(entry.ruleId) + '\',\'' + referenceDate + '\',\'rejected\',\'' + esc(adminUid) + '\')">❌ Refuser</div>'
