@@ -5732,18 +5732,22 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     adjusted = adjusted.concat(res.adj);
 
     // Suggestion d'aliment si une cat\u00e9gorie est VIDE \u2014 inject\u00e9e DANS ce repas
-    // sp\u00e9cifiquement, pas ailleurs dans la journ\u00e9e.
+    // sp\u00e9cifiquement, pas ailleurs dans la journ\u00e9e. Toutes les cat\u00e9gories
+    // manquantes d'UN M\u00caME repas sont regroup\u00e9es en UNE SEULE carte (avant
+    // ce correctif, prot\u00e9ines+glucides manquants au m\u00eame repas donnaient
+    // deux cartes quasi identiques \u00e0 la suite).
+    var mealAdditions = [], mealSkipped = [];
     [['protein',fProt,mProt*4],['carb',fCarb,tgtCarbKcal],['fat',fFat,tgtFatKcal]].forEach(function(t){
       var key=t[0], factor=t[1], targetKcal=t[2];
       if(factor !== null) return;
       emptyBucketFlags[key] = true;
+      var labelMacro = key==='carb'?'glucides':key==='protein'?'prot\u00e9ines':'lipides';
 
       // Garde-fou : ne jamais sugg\u00e9rer d'ajouter de la nourriture si la
       // journ\u00e9e a d\u00e9j\u00e0 atteint son budget calorique \u2014 et, sp\u00e9cifiquement
       // pour les prot\u00e9ines, si l'objectif prot\u00e9ique du jour est d\u00e9j\u00e0 couvert.
       if(!kcalBudgetLeft || (key==='protein' && !protBudgetLeft)){
-        suggestionAlerts.push({t:'good',i:'\u2705',ttl:'Aucun ajout n\u00e9cessaire',
-          txt:'Votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' manque de '+(key==='carb'?'glucides':key==='protein'?'prot\u00e9ines':'lipides')+', mais votre objectif du jour est d\u00e9j\u00e0 couvert \u2014 pas besoin d\'en ajouter davantage.'});
+        mealSkipped.push(labelMacro);
         return;
       }
 
@@ -5770,12 +5774,20 @@ function analyzeAndAdjust(entries, tgt, pathologies){
         food_ags_100:def.ags, food_pot_100:def.pot, food_fibres_100:0, food_mg_100:0, food_na_100:0, food_zn_100:0,
         _suggested:true, _bucketKey:key};
       adjusted.push({entry:se, cat:key, oldQty:qty, newQty:qty, factor:1, suggested:true});
-      var labelMacro = key==='carb'?'glucides':key==='protein'?'prot\u00e9ines':'lipides';
       var gapRemaining = targetKcal - (qty*def.kcal/100);
-      var gapNote = gapRemaining > targetKcal*0.25 ? ' \u00c0 ce niveau de besoin, une seule portion ne suffit pas pour ce repas.' : '';
-      suggestionAlerts.push({t:'good',i:'\ud83d\udca1',ttl:'Id\u00e9e du coach pour compl\u00e9ter ce repas',
-        txt:'Aucune source de '+labelMacro+' \u00e0 votre '+(MEAL_META[mealKey]?MEAL_META[mealKey].l.toLowerCase():mealKey)+' \u2014 essayez d\'ajouter '+qty+'g de "'+def.nom+'", d\u00e9j\u00e0 pr\u00e9remplis ci-dessus. Touchez \u21c4 pour choisir autre chose.'+gapNote});
+      mealAdditions.push({labelMacro:labelMacro, qty:qty, nom:def.nom, tight:gapRemaining > targetKcal*0.25});
     });
+
+    var mealLabelLower = MEAL_META[mealKey] ? MEAL_META[mealKey].l.toLowerCase() : mealKey;
+    if(mealAdditions.length){
+      var addTxt = mealAdditions.map(function(a){ return 'essayez d\'ajouter '+a.qty+'g de "'+a.nom+'" pour les '+a.labelMacro; }).join(', et ');
+      var anyTight = mealAdditions.some(function(a){ return a.tight; });
+      suggestionAlerts.push({t:'good',i:'\ud83d\udca1',ttl:'Id\u00e9e du coach pour compl\u00e9ter ce repas',
+        txt:'Aucune source de '+mealAdditions.map(function(a){return a.labelMacro;}).join(' ni de ')+' \u00e0 votre '+mealLabelLower+' \u2014 '+addTxt+', d\u00e9j\u00e0 pr\u00e9remplis ci-dessus. Touchez \u21c4 pour choisir autre chose.'+(anyTight?' \u00c0 ce niveau de besoin, une seule portion ne suffit pas pour ce repas.':'')});
+    } else if(mealSkipped.length){
+      suggestionAlerts.push({t:'good',i:'\u2705',ttl:'Aucun ajout n\u00e9cessaire',
+        txt:'Votre '+mealLabelLower+' manque de '+mealSkipped.join(' et de ')+', mais votre objectif du jour est d\u00e9j\u00e0 couvert \u2014 pas besoin d\'en ajouter davantage.'});
+    }
   });
 
   // Totaux r\u00e9els de la journ\u00e9e = somme de tous les repas d\u00e9j\u00e0 ajust\u00e9s
@@ -5798,7 +5810,27 @@ function analyzeAndAdjust(entries, tgt, pathologies){
     var carbGramsTotal = 0;
     adjusted.forEach(function(a){ if(a.cat==='carb'||a.cat==='mixed') carbGramsTotal += pN2(a.entry.food_gluc_100)*a.newQty/100; });
     var fiberPerCarb = carbGramsTotal>0 ? T.fibres/carbGramsTotal : 0;
-    if(T.fibres < tgt.fibres*0.7){
+
+    // Rep\u00e8re par-repas, calcul\u00e9 AVANT le r\u00e9sum\u00e9 g\u00e9n\u00e9ral \u2014 un repas d\u00e9j\u00e0
+    // pass\u00e9 (heure actuelle > fin habituelle de ce repas) ne peut plus
+    // \u00eatre corrig\u00e9, donc jamais inclus : plus aucun int\u00e9r\u00eat \u00e0 signaler
+    // "peu de fibres au d\u00e9jeuner" une fois le d\u00e9jeuner termin\u00e9.
+    var MEAL_TYPICAL_END_HOUR = {breakfast:10, lunch:14, snack:17, dinner:21, snack2:23};
+    var currentHour = new Date().getHours();
+    var fiberPerMealTarget = tgt.fibres / (nMeals||1);
+    var fiberByMeal = {};
+    adjusted.forEach(function(a){ var r=a.newQty/100; fiberByMeal[a.entry.repas]=(fiberByMeal[a.entry.repas]||0)+pN2(a.entry.food_fibres_100)*r; });
+    var mealLabels = {breakfast:'petit-d\u00e9jeuner', lunch:'d\u00e9jeuner', snack:'collation', dinner:'souper', snack2:'2e collation'};
+    var lowFiberMeals = Object.keys(fiberByMeal).filter(function(mid){
+      var endHour = MEAL_TYPICAL_END_HOUR[mid];
+      var isPassed = (endHour!==undefined) && currentHour > endHour;
+      return !isPassed && fiberByMeal[mid] < fiberPerMealTarget*0.5;
+    });
+
+    // R\u00e9sum\u00e9 g\u00e9n\u00e9ral affich\u00e9 seulement si aucun repas actionnable pr\u00e9cis
+    // n'est d\u00e9j\u00e0 signal\u00e9 ci-dessous \u2014 \u00e9vite le doublon "vos fibres sont
+    // basses" + "peu de fibres \u00e0 ce repas pr\u00e9cis" qui disent la m\u00eame chose.
+    if(!lowFiberMeals.length && T.fibres < tgt.fibres*0.7){
       alerts.push({t:'warn',i:'\ud83c\udf3f',ttl:'Apport en fibres insuffisant (Diab\u00e8te)',
         txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont basses pour un bon contr\u00f4le glyc\u00e9mique. Privil\u00e9giez les c\u00e9r\u00e9ales compl\u00e8tes et augmentez les l\u00e9gumes plut\u00f4t que les f\u00e9culents raffin\u00e9s.'});
     } else if(fiberPerCarb < 0.05 && carbGramsTotal > 50){
@@ -5809,15 +5841,9 @@ function analyzeAndAdjust(entries, tgt, pathologies){
         txt:'Vos fibres ('+T.fibres.toFixed(0)+'g/'+tgt.fibres+'g) sont parfaitement dans la cible \u2014 un vrai atout pour la r\u00e9gulation de votre glyc\u00e9mie. Continuez ainsi !'});
     }
 
-    var fiberPerMealTarget = tgt.fibres / (nMeals||1);
-    var fiberByMeal = {};
-    adjusted.forEach(function(a){ var r=a.newQty/100; fiberByMeal[a.entry.repas]=(fiberByMeal[a.entry.repas]||0)+pN2(a.entry.food_fibres_100)*r; });
-    var mealLabels = {breakfast:'petit-d\u00e9jeuner', lunch:'d\u00e9jeuner', snack:'collation', dinner:'souper', snack2:'2e collation'};
-    Object.keys(fiberByMeal).forEach(function(mid){
-      if(fiberByMeal[mid] < fiberPerMealTarget*0.5){
-        alerts.push({t:'warn',i:'\ud83c\udf3f',ttl:'Peu de fibres au '+(mealLabels[mid]||mid),
-          txt:'Ce repas apporte '+fiberByMeal[mid].toFixed(1)+'g de fibres sur ~'+fiberPerMealTarget.toFixed(0)+'g vis\u00e9s pour ce repas ('+tgt.fibres+'g/jour \u00f7 '+nMeals+' repas). '+(typeof suggestFiberBoost==='function'?suggestFiberBoost(fiberByMeal[mid]*10):'Ajoutez un l\u00e9gume, un fruit ou une c\u00e9r\u00e9ale compl\u00e8te \u00e0 ce repas.')});
-      }
+    lowFiberMeals.forEach(function(mid){
+      alerts.push({t:'warn',i:'\ud83c\udf3f',ttl:'Peu de fibres au '+(mealLabels[mid]||mid),
+        txt:'Ce repas apporte '+fiberByMeal[mid].toFixed(1)+'g de fibres sur ~'+fiberPerMealTarget.toFixed(0)+'g vis\u00e9s pour ce repas ('+tgt.fibres+'g/jour \u00f7 '+nMeals+' repas). '+(typeof suggestFiberBoost==='function'?suggestFiberBoost(fiberByMeal[mid]*10):'Ajoutez un l\u00e9gume, un fruit ou une c\u00e9r\u00e9ale compl\u00e8te \u00e0 ce repas.')});
     });
   }
 
