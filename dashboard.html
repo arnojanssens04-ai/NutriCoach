@@ -1058,6 +1058,12 @@ body {
       <div class="prof-card-body" style="font-size:.82rem;color:var(--text2)">Relevez un objectif commun avec un proche &#8212; vous r&#233;ussissez ensemble, ou aucun des deux.</div>
     </div>
   </a>
+  <a href="bilan-dieteticien.html" id="bilan-dieteticien-link" style="display:none;text-decoration:none;color:inherit">
+    <div class="prof-card" style="cursor:pointer">
+      <div class="prof-card-hdr"><span>&#128203; Bilan di&#233;t&#233;ticien <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+      <div class="prof-card-body" style="font-size:.82rem;color:var(--text2)">Un r&#233;sum&#233; clair de votre alimentation des 7 derniers jours, pr&#234;t &#224; partager en consultation.</div>
+    </div>
+  </a>
   <div class="prof-card" id="cycle-tracking-card">
     <div class="prof-card-hdr"><span>&#127819; Suivi du cycle (optionnel)</span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
@@ -6462,6 +6468,8 @@ function renderProfile(){
   if(nutritionConsentCard) nutritionConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
   var defisLink = document.getElementById('defis-link');
   if(defisLink) defisLink.style.display = (p.role==='admin') ? 'block' : 'none';
+  var bilanDietLink = document.getElementById('bilan-dieteticien-link');
+  if(bilanDietLink) bilanDietLink.style.display = (p.role==='admin') ? 'block' : 'none';
   var nutritionPathologyConsentSwitch = document.getElementById('nutrition-advice-pathology-consent-switch');
   if(nutritionPathologyConsentSwitch) nutritionPathologyConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_pathology === true);
   var nutritionSportConsentSwitch = document.getElementById('nutrition-advice-sport-consent-switch');

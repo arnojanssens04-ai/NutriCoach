@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Bilan diététicien</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --amber:#8a6215; --amber-l:rgba(138,98,21,0.1);
+  --r:12px; --sh:0 1px 4px rgba(0,0,0,0.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px}
+
+.topbar{position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between}
+.t-logo{font-family:'Lora',serif; font-size:1.4rem; font-weight:700}
+.t-logo span{color:var(--gold)}
+.t-back{font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px}
+.t-back:hover{border-color:var(--gold); color:var(--gold)}
+
+.wrap{max-width:760px; margin:0 auto; padding:20px 16px}
+
+#access-denied{max-width:420px; margin:80px auto; text-align:center; font-size:.86rem; color:var(--text2)}
+
+.toolbar{display:flex; justify-content:flex-end; gap:8px; margin-bottom:14px}
+.toolbar button{font-family:'Inter',sans-serif; font-size:.76rem; font-weight:600; color:var(--text2); background:var(--card); border:1px solid var(--border2); border-radius:8px; padding:7px 13px; cursor:pointer}
+.toolbar button:hover{border-color:var(--gold); color:var(--gold)}
+
+.doc{background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); overflow:hidden}
+.doc-hdr{padding:28px 30px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
+.doc-hdr-brand{font-family:'Lora',serif; font-size:.78rem; font-weight:600; color:var(--gold); letter-spacing:.03em; margin-bottom:10px}
+.doc-title{font-family:'Lora',serif; font-size:1.5rem; font-weight:700; text-wrap:balance; margin-bottom:4px}
+.doc-meta{text-align:right; font-size:.76rem; color:var(--text2); line-height:1.6}
+.doc-meta b{color:var(--text); font-weight:600}
+
+.sec{padding:26px 30px; border-bottom:1px solid var(--border)}
+.sec:last-child{border-bottom:none}
+.sec-lbl{font-family:'Lora',serif; font-size:.98rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px}
+.sec-lbl .n{font-variant-numeric:tabular-nums; font-family:'Inter',sans-serif; font-size:.68rem; font-weight:700; color:var(--text3); border:1px solid var(--border2); border-radius:99px; padding:2px 8px}
+
+.stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px}
+.stat{background:var(--card2); border:1px solid var(--border); border-radius:9px; padding:12px 14px}
+.stat-v{font-family:'Lora',serif; font-size:1.35rem; font-weight:700; font-variant-numeric:tabular-nums}
+.stat-l{font-size:.7rem; color:var(--text2); margin-top:2px; line-height:1.4}
+
+.weight-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px}
+.weight-card{border:1px solid var(--border); border-radius:9px; padding:13px 15px; background:var(--card2)}
+.weight-card .stat-l{margin-bottom:4px}
+.weight-card .stat-v{font-size:1.3rem}
+.weight-card .stat-v.na{font-size:.86rem; color:var(--text3); font-weight:500; font-family:'Inter',sans-serif}
+.weight-delta{font-size:.72rem; margin-top:3px; font-weight:600}
+.weight-delta.down{color:var(--sage)}
+.weight-delta.up{color:var(--amber)}
+
+.alert-bar{display:flex; gap:10px; align-items:flex-start; border-radius:9px; padding:11px 14px; font-size:.78rem; line-height:1.5; margin-bottom:10px}
+.alert-bar:last-child{margin-bottom:0}
+.alert-bar.amber{background:var(--amber-l); color:var(--amber); border:1px solid rgba(138,98,21,.2)}
+.alert-bar.rose{background:var(--rose-l); color:var(--rose); border:1px solid rgba(139,42,42,.2)}
+.alert-bar b{font-weight:700}
+
+.macro-detail{display:flex; flex-direction:column; gap:9px; margin-top:12px}
+.macro-line{display:flex; align-items:center; gap:12px; font-size:.78rem}
+.macro-line .lbl{width:88px; flex-shrink:0; font-weight:600}
+.macro-bar{flex:1; height:8px; border-radius:99px; background:var(--border); position:relative; overflow:hidden}
+.macro-bar-fill{height:100%; border-radius:99px; background:var(--gold)}
+.macro-bar-target{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--text)}
+.macro-val{width:170px; flex-shrink:0; text-align:right; color:var(--text2); font-variant-numeric:tabular-nums}
+.macro-val b{color:var(--text)}
+
+.tbl-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:9px}
+table{width:100%; border-collapse:collapse; font-size:.78rem; min-width:640px}
+th{text-align:left; font-size:.66rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); font-weight:600; padding:9px 12px; background:var(--card2); border-bottom:1px solid var(--border)}
+th.num,td.num{text-align:right; font-variant-numeric:tabular-nums}
+td{padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+tr:last-child td{border-bottom:none}
+.day-hdr td{background:var(--gold-l); font-weight:700; color:var(--gold); font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; padding:7px 12px}
+.food-name{font-weight:500}
+.food-qty{color:var(--text2); font-size:.72rem}
+.tag-aut{display:inline-block; font-size:.62rem; font-weight:700; color:#9a5a12; background:rgba(154,90,18,.1); border-radius:5px; padding:1px 6px; margin-left:6px; vertical-align:middle}
+
+.micro-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
+.micro{border:1px solid var(--border); border-radius:9px; padding:13px 15px; background:var(--card2)}
+.micro-hdr{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+.micro-name{font-weight:600; font-size:.82rem}
+.micro-pill{font-size:.62rem; font-weight:700; padding:2px 8px; border-radius:99px; text-transform:uppercase; letter-spacing:.02em}
+.micro-pill.rare{background:var(--rose-l); color:var(--rose)}
+.micro-pill.ok{background:var(--sage-l); color:var(--sage)}
+.micro-pill.na{background:var(--card); color:var(--text3); border:1px solid var(--border2)}
+.micro-txt{font-size:.74rem; color:var(--text2); line-height:1.5}
+.micro-src{font-size:.7rem; color:var(--text3); margin-top:6px}
+
+.insight-list{display:flex; flex-direction:column; gap:10px}
+.insight{display:flex; gap:11px; align-items:flex-start}
+.insight-dot{width:7px;height:7px;border-radius:99px; background:var(--sage); margin-top:6px; flex-shrink:0}
+.insight-dot.warn{background:var(--amber)}
+.insight-txt{font-size:.82rem; line-height:1.55}
+.insight-txt b{font-weight:600}
+
+.foot{padding:20px 30px; text-align:center; font-size:.7rem; color:var(--text3); background:var(--card2)}
+.popup-none{text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem}
+
+@media print{
+  body{background:#fff; padding:0}
+  .topbar, .toolbar{display:none}
+  .wrap{max-width:100%; padding:0}
+  .doc{border:none; box-shadow:none; border-radius:0}
+  .sec{break-inside:avoid; padding:16px 4px}
+  .day-hdr{break-after:avoid}
+  tr{break-inside:avoid}
+  .tbl-wrap{border:none; overflow-x:visible}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="dashboard.html" class="t-back">&larr; Profil</a>
+</header>
+
+<div class="wrap">
+  <div id="access-denied" style="display:none">Cette page n'est pas disponible pour votre compte.</div>
+
+  <div id="app-root" style="display:none">
+    <div class="toolbar">
+      <button type="button" onclick="toggleAnon()" id="anon-btn">🕶️ Masquer le nom</button>
+      <button type="button" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    </div>
+    <div id="report-root"><p class="popup-none">Chargement…</p></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var AUT_TAG_PATTERNS = /industriel\b|soda|coca|cola|chips|bonbon|nutella|biscuit|gateau.*industri|viennoiserie|donut|brownie|blondie|frites?\b|plat.*(cuisine|prepare)|nugget|charcuterie|saucisse|bacon|surimi|mcdo|burger|kebab|cereales?.*sucre|glace\b|sorbet/;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function isAUT(e){
+  if(typeof e.is_ultra_processed === 'boolean') return e.is_ultra_processed;
+  var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return AUT_TAG_PATTERNS.test(n);
+}
+function todayIso(){ var d=new Date(); return d.toISOString().slice(0,10); }
+function shiftDate(iso, days){
+  var d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function fmtDateLabel(iso){
+  var d = new Date(iso+'T00:00:00Z');
+  return d.toLocaleDateString('fr-BE',{weekday:'long', day:'numeric', month:'long'});
+}
+function n1(v){ return (Math.round(v*10)/10).toLocaleString('fr-BE',{minimumFractionDigits:0, maximumFractionDigits:1}); }
+function n0(v){ return Math.round(v).toLocaleString('fr-BE'); }
+
+var PATIENT_NAME = '';
+var anonOn = false;
+function toggleAnon(){
+  anonOn = !anonOn;
+  var el = document.getElementById('patient-name');
+  if(el) el.textContent = anonOn ? 'Patient·e' : PATIENT_NAME;
+}
+
+function buildReport(prof, journal, bilans){
+  var referenceDate = todayIso();
+  var windowStart = shiftDate(referenceDate, -6);
+  var dates = [];
+  for(var i=6;i>=0;i--) dates.push(shiftDate(referenceDate, -i));
+
+  var byDate = {};
+  journal.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+
+  var filledDays = dates.filter(function(d){ return byDate[d] && byDate[d].length; });
+  var dayTotals = filledDays.map(function(d){
+    var kcal = byDate[d].reduce(function(s,e){ return s + (Number(e.kcal)||0); }, 0);
+    return {date:d, kcal:kcal};
+  });
+  var avgKcal = dayTotals.length ? dayTotals.reduce(function(s,d){return s+d.kcal;},0)/dayTotals.length : 0;
+
+  // Complétion faible : jour rempli mais total kcal anormalement bas
+  // (repas manifestement oublié), sous 900 kcal -- seuil volontairement
+  // bas pour ne signaler que les cas manifestes, jamais une simple petite
+  // journée.
+  var lowCompletionDays = dayTotals.filter(function(d){ return d.kcal > 0 && d.kcal < 900; });
+  var severeDeficitDays = dayTotals.filter(function(d){ return d.kcal > 0 && d.kcal < 1200; });
+
+  var totProt=0, totGluc=0, totLip=0;
+  filledDays.forEach(function(d){
+    byDate[d].forEach(function(e){
+      totProt += Number(e.proteines)||0; totGluc += Number(e.glucides)||0; totLip += Number(e.lipides)||0;
+    });
+  });
+  var nDays = filledDays.length || 1;
+  var avgProt = totProt/nDays, avgGluc = totGluc/nDays, avgLip = totLip/nDays;
+  var kcalFromMacros = avgProt*4 + avgGluc*4 + avgLip*9;
+  var pctProt = kcalFromMacros>0 ? (avgProt*4/kcalFromMacros*100) : 0;
+  var pctGluc = kcalFromMacros>0 ? (avgGluc*4/kcalFromMacros*100) : 0;
+  var pctLip = kcalFromMacros>0 ? (avgLip*9/kcalFromMacros*100) : 0;
+  var protPerKg = (prof.poids && prof.poids>0) ? avgProt/prof.poids : null;
+
+  // Poids actuel : profils.poids (+ date de dernière modif si dispo via
+  // le bilan le plus récent, sinon "aujourd'hui" par défaut faute de
+  // date explicite en base sur profiles.poids).
+  var latestBilan = bilans.length ? bilans[bilans.length-1] : null;
+  var currentWeight = (latestBilan && latestBilan.poids) ? latestBilan.poids : prof.poids;
+  var currentWeightDate = latestBilan ? latestBilan.date : null;
+
+  // Poids ~2 mois : bilan le plus proche de -60 jours, dans une fenêtre
+  // de tolérance de 20 jours -- jamais une extrapolation.
+  var targetDate = shiftDate(referenceDate, -60);
+  var targetMs = new Date(targetDate+'T00:00:00Z').getTime();
+  var weight2moAgo = null, weight2moDate = null, bestDiff = Infinity;
+  bilans.forEach(function(b){
+    if(!b.poids) return;
+    var diff = Math.abs(new Date(b.date+'T00:00:00Z').getTime() - targetMs);
+    if(diff < bestDiff){ bestDiff = diff; weight2moAgo = b.poids; weight2moDate = b.date; }
+  });
+  var toleranceMs = 20*24*60*60*1000;
+  if(bestDiff > toleranceMs){ weight2moAgo = null; weight2moDate = null; }
+
+  // Micronutriments -- vitamine B12 = présence de sources dans le
+  // journal (nutrient_sources), jamais une quantité en µg inventée. Fer
+  // et calcium = quantité réelle (champs food_fer_100/food_cal_100 déjà
+  // trackés), comparée à la référence générique de calcTargets() (fer:14mg,
+  // cal:900mg), jamais une valeur personnalisée non sourcée.
+  var diet = (prof.diet||'').toLowerCase();
+  var isVeg = diet.indexOf('veget')>=0 || diet.indexOf('vegan')>=0 || diet.indexOf('végé')>=0;
+  var isElderly = prof.age && prof.age >= 65;
+
+  var b12Days = filledDays.filter(function(d){
+    return byDate[d].some(function(e){ return Array.isArray(e.nutrient_sources) && e.nutrient_sources.indexOf('vitamin_b12')>=0; });
+  });
+  var b12State = filledDays.length===0 ? 'na' : (b12Days.length/filledDays.length < 0.3 ? 'rare' : 'ok');
+
+  var totFer=0, totCal=0;
+  filledDays.forEach(function(d){
+    byDate[d].forEach(function(e){
+      var qty = Number(e.quantite)||0;
+      totFer += ((Number(e.food_fer_100)||0) * qty/100);
+      totCal += ((Number(e.food_cal_100)||0) * qty/100);
+    });
+  });
+  var avgFer = totFer/nDays, avgCal = totCal/nDays;
+  var ferState = filledDays.length===0 ? 'na' : (avgFer/14 < 0.5 ? 'rare' : 'ok');
+  var calState = filledDays.length===0 ? 'na' : (avgCal/900 < 0.5 ? 'rare' : 'ok');
+
+  var micros = [];
+  if(isVeg || isElderly){
+    if(isVeg){
+      micros.push({name:'Vitamine B12', state:b12State,
+        txt: b12State==='na' ? 'Données insuffisantes sur la période pour ce nutriment.'
+          : 'Aliments sources de B12 présents ' + b12Days.length + ' jour' + (b12Days.length>1?'s':'') + ' sur ' + filledDays.length + ' analysés.',
+        src:'Basé sur la présence d\'aliments sources — aucune quantité en µg n\'est mesurée.'});
+    }
+    micros.push({name:'Fer', state:ferState,
+      txt: ferState==='na' ? 'Données insuffisantes sur la période pour ce nutriment.'
+        : 'Apport moyen estimé : ' + n1(avgFer) + ' mg/j (référence générique : 14 mg/j).'});
+    micros.push({name:'Calcium', state:calState,
+      txt: calState==='na' ? 'Données insuffisantes sur la période pour ce nutriment.'
+        : 'Apport moyen estimé : ' + n0(avgCal) + ' mg/j (référence générique : 900 mg/j).'});
+  }
+
+  var alerts = [];
+  if(lowCompletionDays.length){
+    alerts.push({level:'amber', html:'<b>' + lowCompletionDays.length + ' jour' + (lowCompletionDays.length>1?'s':'') + ' à faible complétion détecté' + (lowCompletionDays.length>1?'s':'') + '</b> (' +
+      lowCompletionDays.map(function(d){ return fmtDateLabel(d.date) + ' — ' + n0(d.kcal) + ' kcal enregistrées'; }).join(', ') +
+      '). La moyenne kcal/jour peut être sous-estimée si un repas n\'a pas été noté.'});
+  }
+  if(severeDeficitDays.length){
+    alerts.push({level:'rose', html:'<b>Déficit calorique sévère détecté</b> (' +
+      severeDeficitDays.map(function(d){ return fmtDateLabel(d.date) + ' : ' + n0(d.kcal) + ' kcal'; }).join(', ') +
+      ', sous le seuil de 1 200 kcal/j) — risque d\'apport micronutritionnel global insuffisant ce jour-là.'});
+  }
+
+  // Journal détaillé, groupé par jour, uniquement les jours ayant des
+  // entrées.
+  var MEAL_LABELS = {breakfast:'Petit-déjeuner', lunch:'Déjeuner', snack:'Collation', dinner:'Souper', snack2:'2e collation'};
+  var rowsHtml = '';
+  dates.forEach(function(d){
+    if(!byDate[d] || !byDate[d].length) return;
+    rowsHtml += '<tr class="day-hdr"><td colspan="7">' + esc(fmtDateLabel(d)) + '</td></tr>';
+    byDate[d].forEach(function(e){
+      rowsHtml += '<tr>'
+        + '<td><div class="food-name">' + esc(e.aliment) + (isAUT(e) ? '<span class="tag-aut">AUT</span>' : '') + '</div>'
+        + '<div class="food-qty">' + esc(MEAL_LABELS[e.repas] || e.repas || '') + '</div></td>'
+        + '<td class="num">' + n0(e.quantite) + ' g</td>'
+        + '<td class="num">' + n0(e.kcal) + '</td>'
+        + '<td class="num">' + n1(e.proteines) + '</td>'
+        + '<td class="num">' + n1(e.glucides) + '</td>'
+        + '<td class="num">' + n1(e.lipides) + '</td>'
+        + '<td class="num">' + n1(e.food_fibres_100 ? (Number(e.food_fibres_100)*Number(e.quantite)/100) : 0) + '</td>'
+        + '</tr>';
+    });
+  });
+
+  // Autres observations
+  var uniqueFoods = {};
+  journal.forEach(function(e){ uniqueFoods[e.aliment] = true; });
+  var uniqueCount = Object.keys(uniqueFoods).length;
+  var varietyRate = journal.length ? uniqueCount/journal.length : 0;
+  var breakfastDays = filledDays.filter(function(d){ return byDate[d].some(function(e){ return e.repas==='breakfast'; }); }).length;
+  var autCount = journal.filter(isAUT).length;
+
+  var insights = [];
+  insights.push({warn:false, html:'Petit-déjeuner enregistré <b>' + breakfastDays + ' jour' + (breakfastDays>1?'s':'') + ' sur ' + filledDays.length + '</b> — ' + (breakfastDays/(filledDays.length||1) >= 0.7 ? 'régularité des repas élevée' : 'régularité des repas variable') + ' sur la période.'});
+  insights.push({warn: varietyRate < 0.5, html:'Variété alimentaire : <b>' + uniqueCount + ' aliment' + (uniqueCount>1?'s':'') + ' distinct' + (uniqueCount>1?'s':'') + '</b> sur ' + journal.length + ' entrées au total.'});
+  insights.push({warn:false, html:'Aliments ultra-transformés : <b>' + autCount + ' occurrence' + (autCount>1?'s':'') + '</b> sur la période.'});
+
+  var patientName = ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() || 'Patient·e';
+  PATIENT_NAME = patientName;
+
+  var html = ''
+    + '<div class="doc" id="report">'
+    + '<div class="doc-hdr"><div><div class="doc-hdr-brand">Cap Santé</div>'
+    + '<div class="doc-title">Bilan alimentaire — 7 derniers jours</div></div>'
+    + '<div class="doc-meta"><div><b id="patient-name">' + esc(patientName) + '</b>' + (prof.age ? ' · ' + prof.age + ' ans' : '') + '</div>'
+    + (prof.diet ? '<div>Régime : ' + esc(prof.diet) + '</div>' : '')
+    + '<div>Période : ' + esc(windowStart) + ' &rarr; ' + esc(referenceDate) + '</div></div></div>'
+
+    + '<div class="sec"><div class="sec-lbl">Vue d\'ensemble</div><div class="stat-row">'
+    + '<div class="stat"><div class="stat-v">' + filledDays.length + '/7</div><div class="stat-l">jours avec journal rempli</div></div>'
+    + '<div class="stat"><div class="stat-v">' + n0(avgKcal) + '</div><div class="stat-l">kcal moyennes / jour</div></div>'
+    + '</div></div>'
+
+    + '<div class="sec"><div class="sec-lbl">Poids</div><div class="weight-row">'
+    + '<div class="weight-card"><div class="stat-l">Poids actuel</div>'
+    + (currentWeight ? '<div class="stat-v">' + n1(currentWeight) + ' kg</div><div class="weight-delta">' + (currentWeightDate ? 'mesuré le ' + esc(currentWeightDate) : '') + '</div>' : '<div class="stat-v na">Non disponible</div>')
+    + '</div>'
+    + '<div class="weight-card"><div class="stat-l">Poids il y a 2 mois</div>'
+    + (weight2moAgo ? '<div class="stat-v">' + n1(weight2moAgo) + ' kg</div><div class="weight-delta ' + (currentWeight && currentWeight < weight2moAgo ? 'down' : 'up') + '">' + (currentWeight ? (currentWeight<weight2moAgo?'−':'+') + n1(Math.abs(currentWeight-weight2moAgo)) + ' kg sur 2 mois' : '') + '</div>'
+        : '<div class="stat-v na">Poids (il y a 2 mois) : non disponible</div>')
+    + '</div></div></div>'
+
+    + (alerts.length ? '<div class="sec"><div class="sec-lbl">Fiabilité des données</div>'
+        + alerts.map(function(a){ return '<div class="alert-bar ' + a.level + '"><span>⚠️</span><span>' + a.html + '</span></div>'; }).join('')
+        + '</div>' : '')
+
+    + '<div class="sec"><div class="sec-lbl">Répartition des macronutriments <span class="n">moyenne / jour</span></div><div class="stat-row">'
+    + '<div class="stat"><div class="stat-v">' + n0(avgProt) + ' g</div><div class="stat-l">Protéines — ' + n0(pctProt) + ' % des kcal</div></div>'
+    + '<div class="stat"><div class="stat-v">' + n0(avgGluc) + ' g</div><div class="stat-l">Glucides — ' + n0(pctGluc) + ' % des kcal</div></div>'
+    + '<div class="stat"><div class="stat-v">' + n0(avgLip) + ' g</div><div class="stat-l">Lipides — ' + n0(pctLip) + ' % des kcal</div></div>'
+    + '</div>'
+    + (protPerKg ? '<div class="macro-detail"><div class="macro-line"><span class="lbl">Protéines</span><div class="macro-bar"><div class="macro-bar-fill" style="width:' + Math.min(100, protPerKg/1.6*100) + '%"></div></div><span class="macro-val"><b>' + n1(protPerKg) + ' g/kg</b> (poids actuel)</span></div></div>' : '')
+    + '</div>'
+
+    + (micros.length ? '<div class="sec"><div class="sec-lbl">Points d\'attention nutritionnels <span class="n">selon profil</span></div><div class="micro-grid">'
+        + micros.map(function(m){
+            var pillClass = m.state==='rare' ? 'rare' : (m.state==='ok' ? 'ok' : 'na');
+            var pillLabel = m.state==='rare' ? 'Sources rares' : (m.state==='ok' ? 'Apport suffisant' : 'Non évaluable');
+            return '<div class="micro"><div class="micro-hdr"><span class="micro-name">' + esc(m.name) + '</span><span class="micro-pill ' + pillClass + '">' + pillLabel + '</span></div>'
+              + '<div class="micro-txt">' + esc(m.txt) + '</div>'
+              + (m.src ? '<div class="micro-src">' + esc(m.src) + '</div>' : '')
+              + '</div>';
+          }).join('')
+        + '</div></div>' : '')
+
+    + (rowsHtml ? '<div class="sec"><div class="sec-lbl">Journal alimentaire détaillé <span class="n">7 jours</span></div>'
+        + '<div class="tbl-wrap"><table><thead><tr><th>Aliment</th><th class="num">Qté</th><th class="num">Kcal</th><th class="num">Prot.</th><th class="num">Gluc.</th><th class="num">Lip.</th><th class="num">Fibres</th></tr></thead><tbody>'
+        + rowsHtml + '</tbody></table></div></div>'
+        : '<div class="sec"><p class="popup-none">Aucune entrée de journal sur les 7 derniers jours.</p></div>')
+
+    + '<div class="sec"><div class="sec-lbl">Autres observations</div><div class="insight-list">'
+    + insights.map(function(i){ return '<div class="insight"><div class="insight-dot' + (i.warn?' warn':'') + '"></div><div class="insight-txt">' + i.html + '</div></div>'; }).join('')
+    + '</div></div>'
+
+    + '<div class="foot">Généré automatiquement par Cap Santé à partir du journal déclaré par le patient — ne remplace pas un avis professionnel.</div>'
+    + '</div>';
+
+  document.getElementById('report-root').innerHTML = html;
+}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role, prenom, nom, age, diet, poids').eq('id', uid).single().then(function(res){
+    // Réservé aux admins pour l'instant -- fonctionnalité pas encore
+    // ouverte aux vrais patients, même principe que le reste des tests
+    // en cours.
+    if(!res.data || res.data.role !== 'admin'){
+      document.getElementById('access-denied').style.display = 'block';
+      return;
+    }
+    document.getElementById('app-root').style.display = 'block';
+    var prof = res.data;
+    var referenceDate = todayIso();
+    var windowStart = shiftDate(referenceDate, -6);
+    var bilanWindowStart = shiftDate(referenceDate, -90);
+
+    Promise.all([
+      sb.from('journal').select('date, repas, aliment, quantite, kcal, proteines, glucides, lipides, food_fer_100, food_cal_100, food_fibres_100, is_ultra_processed, nutrient_sources')
+        .eq('user_id', uid).gte('date', windowStart).lte('date', referenceDate),
+      sb.from('bilans').select('date, poids').eq('user_id', uid).gte('date', bilanWindowStart).lte('date', referenceDate).order('date', {ascending:true})
+    ]).then(function(results){
+      var journalRes = results[0], bilansRes = results[1];
+      if(journalRes.error){
+        document.getElementById('report-root').innerHTML = '<p class="popup-none">Erreur de lecture du journal : ' + esc(journalRes.error.message) + '</p>';
+        return;
+      }
+      buildReport(prof, journalRes.data || [], bilansRes.data || []);
+    });
+  });
+});
+</script>
+</body>
+</html>
