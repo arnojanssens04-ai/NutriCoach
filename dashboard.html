@@ -714,6 +714,10 @@ body {
 <!-- DASHBOARD -->
 <div class="page on" id="pg-dashboard">
 
+  <!-- D&#201;FIS &#192; DEUX &#8212; alerte objectif du jour atteint, tout en haut de
+       l'accueil (admin-only pour l'instant, m&#234;me p&#233;rim&#232;tre que defis.html). -->
+  <div id="duo-challenge-alert-zone" style="margin-bottom:14px"></div>
+
   <!-- KCAL EN PREMIER &#8212; plus imm&#233;diatement utile au quotidien -->
   <div class="kcal-card" id="kcal-card">
     <div class="kcal-ring-wrap">
@@ -3553,6 +3557,108 @@ async function renderMotivationCards(){
 
   checkMilestones();
   checkAdminNutritionBetaAlert();
+  checkDuoChallengeDailyAlerts();
+}
+
+// ── Défis à deux — alerte "objectif du jour atteint" sur l'accueil ──
+// Dupliqué depuis defis.html (mêmes gabarits/métriques, convention du
+// projet : chaque fichier garde sa propre copie). Admin-only pour
+// l'instant, même périmètre que defis.html.
+var DUO_TEMPLATES_DASH = {
+  veg_250_4days: { label:'4 jours à 250g de légumes chacun', metric:'veg', dailyTarget:250, mode:'individual' },
+  veg_combined_400_7days: { label:'Entraide : 400g de légumes à deux', metric:'veg', dailyTarget:400, mode:'combined' },
+  fibres_30_7days: { label:'7 jours à 30g de fibres chacun', metric:'fibres', dailyTarget:30, mode:'individual' },
+  fibres_combined_60_7days: { label:'Entraide : 60g de fibres à deux', metric:'fibres', dailyTarget:60, mode:'combined' },
+  prot_60_7days: { label:'7 jours à 60g de protéines chacun', metric:'protein', dailyTarget:60, mode:'individual' },
+  prot_combined_140_7days: { label:'Entraide : 140g de protéines à deux', metric:'protein', dailyTarget:140, mode:'combined' },
+  petit_dej_5days: { label:'5 jours avec un petit-déjeuner enregistré chacun', metric:'breakfast_logged', dailyTarget:1, mode:'individual' },
+  ultra_max1_5days: { label:'5 jours avec au plus 1 aliment ultra-transformé chacun', metric:'ultra_count', dailyTarget:1, comparator:'lte', mode:'individual' },
+  diversite_8_5days: { label:'5 jours avec au moins 8 aliments différents chacun', metric:'food_variety_count', dailyTarget:8, mode:'individual' }
+};
+var DUO_VEG_KEYWORDS_DASH = ['legume','carotte','courgette','brocoli','epinard','salade','tomate','poivron','haricot vert','chou','aubergine','concombre','celeri','poireau','endive','betterave','radis','fenouil','navet','artichaut','asperge','champignon'];
+function isDuoVegFood(nom){
+  var n = String(nom||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return DUO_VEG_KEYWORDS_DASH.some(function(kw){ return n.indexOf(kw)>=0; });
+}
+function computeDuoMetricValue(entriesForDay, metric){
+  entriesForDay = entriesForDay || [];
+  if(metric==='fibres') return entriesForDay.reduce(function(s,e){ return s+(e.food_fibres_100||0)*(e.quantite||0)/100; },0);
+  if(metric==='protein') return entriesForDay.reduce(function(s,e){ return s+(e.food_prot_100||0)*(e.quantite||0)/100; },0);
+  if(metric==='veg') return entriesForDay.reduce(function(s,e){ return s+(isDuoVegFood(e.aliment)?(e.quantite||0):0); },0);
+  if(metric==='breakfast_logged') return entriesForDay.some(function(e){ return e.repas==='breakfast'; }) ? 1 : 0;
+  if(metric==='ultra_count') return entriesForDay.reduce(function(s,e){ return s+(isMealItemUltraProcessed(e)?1:0); },0);
+  if(metric==='food_variety_count'){
+    var names={}; entriesForDay.forEach(function(e){ names[String(e.aliment||'').toLowerCase().trim()]=true; });
+    return Object.keys(names).length;
+  }
+  return 0;
+}
+function duoMeetsTarget(value, tpl){
+  return tpl.comparator==='lte' ? (value<=tpl.dailyTarget) : (value>=tpl.dailyTarget);
+}
+
+async function checkDuoChallengeDailyAlerts(){
+  if(!(PROF && PROF.role==='admin')) return;
+  var zone = document.getElementById('duo-challenge-alert-zone');
+  if(!zone) return;
+
+  var r = await sb.from('duo_challenges').select('*')
+    .or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).eq('status','active');
+  var challenges = r.data || [];
+  if(!challenges.length){ zone.innerHTML=''; return; }
+
+  var td = today();
+  var myJournalRes = await sb.from('journal')
+    .select('aliment, quantite, food_fibres_100, food_prot_100, repas, is_ultra_processed')
+    .eq('user_id', USER.id).eq('date', td);
+  var myEntriesToday = myJournalRes.data || [];
+
+  var cards = [];
+  for(var i=0;i<challenges.length;i++){
+    var c = challenges[i];
+    var tpl = DUO_TEMPLATES_DASH[c.template_id];
+    if(!tpl) continue;
+
+    var myVal = computeDuoMetricValue(myEntriesToday, tpl.metric);
+    var myMet = tpl.mode==='individual' ? duoMeetsTarget(myVal, tpl) : false;
+    await sb.from('duo_challenge_progress').upsert({
+      challenge_id:c.id, user_id:USER.id, date:td, metric_value:myVal, met_target:myMet
+    }, {onConflict:'challenge_id,user_id,date'});
+
+    var progRes = await sb.from('duo_challenge_progress').select('*').eq('challenge_id', c.id).eq('date', td);
+    var rows = progRes.data || [];
+    var mine = rows.filter(function(x){ return x.user_id===USER.id; })[0];
+    var partnerId = (c.creator_id===USER.id) ? c.partner_id : c.creator_id;
+    var partnerRow = rows.filter(function(x){ return x.user_id===partnerId; })[0];
+
+    var success;
+    if(tpl.mode==='individual'){
+      success = !!(mine && mine.met_target && partnerRow && partnerRow.met_target);
+    } else {
+      var total = (mine?mine.metric_value:0) + (partnerRow?partnerRow.metric_value:0);
+      success = total >= tpl.dailyTarget;
+    }
+    if(!success || !partnerId) continue;
+
+    var dismissKey = 'duoChallengeAlertDismissed_'+c.id+'_'+td;
+    if(localStorage.getItem(dismissKey)) continue;
+
+    var partnerRes = await sb.from('profiles').select('prenom').eq('id', partnerId).maybeSingle();
+    var partnerName = (partnerRes.data && partnerRes.data.prenom) || 'votre partenaire';
+
+    cards.push('<div class="alert-item alert-good"><span class="alert-ico">🎉</span><div>'
+      + '<div class="alert-ttl">Objectif du défi atteint aujourd\'hui !</div>'
+      + esc(tpl.label) + ' avec <strong>' + esc(partnerName) + '</strong>.'
+      + '<div style="margin-top:6px">'
+        + '<a href="defis.html" style="font-size:.78rem;color:var(--gold);font-weight:600;text-decoration:none">Voir le défi &#8594;</a>'
+        + ' &#183; <a href="#" onclick="dismissDuoChallengeAlert(\''+dismissKey+'\');return false" style="font-size:.78rem;color:var(--text3);text-decoration:underline;margin-left:8px">Masquer</a>'
+      + '</div></div></div>');
+  }
+  zone.innerHTML = cards.join('');
+}
+function dismissDuoChallengeAlert(key){
+  try{ localStorage.setItem(key,'1'); }catch(e){}
+  checkDuoChallengeDailyAlerts();
 }
 
 // \u2500\u2500 DASHBOARD RENDER \u2500\u2500
