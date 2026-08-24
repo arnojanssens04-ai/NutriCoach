@@ -245,10 +245,15 @@ function meetsTarget(value, tpl){
   return tpl.comparator === 'lte' ? (value <= tpl.dailyTarget) : (value >= tpl.dailyTarget);
 }
 
-// Rattrape TOUS les jours de la fenêtre qui n'ont pas encore de ligne de
-// progression pour MOI, pas seulement aujourd'hui -- avant ce correctif,
-// un jour non couvert par une ouverture de cette page précise ce jour-là
-// restait indéfiniment vide, même si le vrai journal était complet.
+// Rattrape TOUS les jours PASSÉS de la fenêtre qui n'ont pas encore de
+// ligne de progression pour MOI (une fois écrits, ces jours-là sont
+// définitifs -- la journée est terminée, rien ne peut plus changer).
+// AUJOURD'HUI est traité à part : toujours recalculé et réécrit, jamais
+// figé -- avant ce correctif, une première ouverture de la page tôt dans
+// la journée (objectif pas encore atteint) bloquait le jour sur "non
+// atteint" pour de bon, même si l'objectif était rempli plus tard le
+// même jour. Valider dès que l'objectif est atteint, sans attendre la
+// fin de journée.
 async function syncProgressForWindow(challenge){
   var tpl = DUO_TEMPLATES[challenge.template_id];
   if(!tpl) return;
@@ -262,10 +267,13 @@ async function syncProgressForWindow(challenge){
   var doneDates = {};
   (existing.data||[]).forEach(function(r){ doneDates[r.date] = true; });
 
-  var missingDates = [];
+  var datesToSync = [];
   var cursor = start;
-  while(cursor <= end){ if(!doneDates[cursor]) missingDates.push(cursor); cursor = addDaysStr(cursor, 1); }
-  if(!missingDates.length) return;
+  while(cursor <= end){
+    if(cursor === todayStr() || !doneDates[cursor]) datesToSync.push(cursor);
+    cursor = addDaysStr(cursor, 1);
+  }
+  if(!datesToSync.length) return;
 
   var journalRes = await sb.from('journal')
     .select('date, aliment, quantite, food_fibres_100, food_prot_100, repas, is_ultra_processed')
@@ -274,7 +282,7 @@ async function syncProgressForWindow(challenge){
   var byDate = {};
   entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
 
-  var rowsToUpsert = missingDates.map(function(d){
+  var rowsToUpsert = datesToSync.map(function(d){
     var val = computeMetricValue(byDate[d], tpl.metric);
     var met = tpl.mode === 'individual' ? meetsTarget(val, tpl) : false; // 'combined' : évalué à la lecture, somme des deux
     return { challenge_id: challenge.id, user_id: USER.id, date: d, metric_value: val, met_target: met };
