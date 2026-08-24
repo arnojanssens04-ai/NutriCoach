@@ -868,6 +868,9 @@ body {
         <div class="qn-mini-item" id="qn-mini-ultra"><span class="qn-mini-dot"></span>Peu transform&#233;</div>
       </div>
       <div class="extra-score-tip" id="qn-tip">Commencez &#224; remplir votre journal pour voir votre score.</div>
+      <div id="aut-summary-trigger-wrap" style="display:none;margin-top:8px">
+        <a href="#" onclick="openAUTSummary();return false" style="font-size:.74rem;color:var(--gold);text-decoration:none;font-weight:600">Voir la synth&#232;se des aliments ultra-transform&#233;s &#8594;</a>
+      </div>
     </div>
     <div class="extra-score-card">
       <div class="extra-score-hdr">
@@ -1067,15 +1070,9 @@ body {
   <div class="prof-card" id="nutrition-advice-consent-card" style="display:none">
     <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:14px">Visible uniquement pour vous en tant qu'admin, pendant la p&#233;riode de test. Consentements distincts, par finalit&#233; &#8212; aucun n'active de fonctionnalit&#233; pour l'instant sur votre compte (le moteur reste en phase de pr&#233;paration), ils enregistrent simplement votre choix pour quand chaque usage sera activ&#233;. Chacun peut &#234;tre retir&#233; ind&#233;pendamment &#224; tout moment.</p>
+      <p style="margin-bottom:14px">R&#233;serv&#233; pour l'instant &#224; l'adaptation des conseils &#224; vos pathologies et votre activit&#233; sportive d&#233;clar&#233;es &#8212; en pr&#233;paration, aucun impact sur votre compte tant que ce n'est pas activ&#233;.</p>
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Analyse de mon journal (sources de nutriments, alternatives alimentaires)</span>
-        <div class="switch" id="nutrition-advice-consent-switch" onclick="toggleNutritionAdviceConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mes pathologies d&#233;clar&#233;es</span>
         <div class="switch" id="nutrition-advice-pathology-consent-switch" onclick="toggleNutritionAdvicePathologyConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
         </div>
@@ -1084,6 +1081,17 @@ body {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mon activit&#233; sportive d&#233;clar&#233;e</span>
         <div class="switch" id="nutrition-advice-sport-consent-switch" onclick="toggleNutritionAdviceSportConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-card" id="aut-consent-card" style="display:none">
+    <div class="prof-card-hdr"><span>&#127807; Analyse de mon journal <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Autorise l'app &#224; analyser votre journal des 7 derniers jours pour vous montrer la part d'aliments ultra-transform&#233;s et vous proposer des alternatives concr&#232;tes &#8212; jamais li&#233; &#224; vos pathologies d&#233;clar&#233;es (voir ci-dessus pour ce consentement distinct).</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-weight:600;color:var(--text)">Analyser mon journal (aliments ultra-transform&#233;s)</span>
+        <div class="switch" id="aut-consent-switch" onclick="toggleAutConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
         </div>
       </div>
     </div>
@@ -1388,6 +1396,7 @@ body {
 <script src="nutrition-advice-renderer.min.js?v=1"></script>
 <script src="nutrition-audit.min.js?v=1"></script>
 <script src="nutrition-simulator.min.js?v=1"></script>
+<script src="aut-summary-card.js?v=1"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -3868,6 +3877,8 @@ async function refreshDash(){
       } else {
         document.getElementById('qn-tip').innerHTML = qnRes.tipHtml || qnRes.tip;
       }
+      var autTriggerWrap = document.getElementById('aut-summary-trigger-wrap');
+      if(autTriggerWrap) autTriggerWrap.style.display = (PROF && PROF.role==='admin' && PROF.consent_nutrition_advice===true) ? 'block' : 'none';
     }
     if(rjRes){
       document.getElementById('rj-num').textContent = rjRes.score+'/100';
@@ -6295,12 +6306,14 @@ function renderProfile(){
   if(nutritionConsentCard) nutritionConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
   var defisLink = document.getElementById('defis-link');
   if(defisLink) defisLink.style.display = (p.role==='admin') ? 'block' : 'none';
-  var nutritionConsentSwitch = document.getElementById('nutrition-advice-consent-switch');
-  if(nutritionConsentSwitch) nutritionConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
   var nutritionPathologyConsentSwitch = document.getElementById('nutrition-advice-pathology-consent-switch');
   if(nutritionPathologyConsentSwitch) nutritionPathologyConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_pathology === true);
   var nutritionSportConsentSwitch = document.getElementById('nutrition-advice-sport-consent-switch');
   if(nutritionSportConsentSwitch) nutritionSportConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_sport === true);
+  var autConsentSwitch = document.getElementById('aut-consent-switch');
+  if(autConsentSwitch) autConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
+  var autConsentCard = document.getElementById('aut-consent-card');
+  if(autConsentCard) autConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
@@ -6490,6 +6503,169 @@ async function toggleFocusMode(){
   toast(newVal ? '🌿 Mode focus activé' : 'Mode focus désactivé');
   if(typeof refreshDash==='function') refreshDash();
 }
+// toggleAutConsent() / toggleNutritionAdvicePathologyConsent() /
+// toggleNutritionAdviceSportConsent() -- même constat que toggleFocusMode :
+// boutons présents, fonctions jamais définies, aucun effet au clic.
+// ── Carte de synthèse "Aliments ultra-transformés" (aut-summary-card.js) ──
+// Alimente le composant avec de VRAIES données du journal des 7 derniers
+// jours -- pas le moteur nutrition-*.js confiné, une lecture directe du
+// journal + les tables de catégorisation/alternatives déjà chargées
+// (nutrition-ultra-processed-substitutions.min.js). Voir docs/GOVERNANCE_
+// QUESTIONS.md (note du 2026-08-24) : connecté aux vrais patients sur
+// confirmation explicite de l'utilisateur, gateé par
+// profiles.consent_nutrition_advice.
+var AUT_CATEGORY_LABELS = {
+  fried_potato: 'Fritures & frites',
+  candy_confectionery: 'Confiseries',
+  sugary_dessert_pastry: 'Pâtisseries & desserts sucrés',
+  sugary_drink: 'Boissons sucrées',
+  fast_food_meal: 'Repas rapides & fast-food',
+  salty_snack: 'Snacks salés',
+  processed_meat: 'Charcuterie transformée',
+  instant_meal: 'Plats instantanés',
+  other_ultra_processed: 'Autres aliments transformés'
+};
+var AUT_MEAL_LABELS = {breakfast:'Petit-déjeuner', lunch:'Déjeuner', snack:'Collation', dinner:'Souper', snack2:'2e collation'};
+
+function isAUTJournalEntry(e){
+  if(e.is_ultra_processed === true) return true;
+  if(e.is_ultra_processed === false) return false;
+  if(typeof ULTRA_PROCESSED_REGEX === 'undefined') return false;
+  var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return ULTRA_PROCESSED_REGEX.test(n);
+}
+
+function computeAUTSummaryData(entries, periodLabel){
+  var byDate = {};
+  entries.forEach(function(e){ byDate[e.date] = true; });
+  var daysLogged = Object.keys(byDate).length;
+
+  var autEntries = entries.filter(isAUTJournalEntry);
+  var total = entries.length;
+  var autShare = total>0 ? Math.round(autEntries.length/total*100) : 0;
+  var brutShare = 100 - autShare;
+
+  var byMeal = {};
+  autEntries.forEach(function(e){ byMeal[e.repas] = (byMeal[e.repas]||0)+1; });
+  var topMealId = Object.keys(byMeal).sort(function(a,b){ return byMeal[b]-byMeal[a]; })[0];
+  var namesAtTopMeal = {};
+  autEntries.forEach(function(e){ if(e.repas===topMealId) namesAtTopMeal[e.aliment] = (namesAtTopMeal[e.aliment]||0)+1; });
+  var topFoodName = Object.keys(namesAtTopMeal).sort(function(a,b){ return namesAtTopMeal[b]-namesAtTopMeal[a]; })[0];
+
+  var byCategory = {};
+  autEntries.forEach(function(e){
+    var cat = (typeof matchUltraProcessedCategory==='function') ? matchUltraProcessedCategory(e.aliment) : null;
+    var key = cat || 'other_ultra_processed';
+    if(!byCategory[key]) byCategory[key] = {};
+    byCategory[key][e.aliment] = (byCategory[key][e.aliment]||0)+1;
+  });
+  var groups = Object.keys(byCategory).map(function(key){
+    var items = Object.keys(byCategory[key]).map(function(name){ return {name:name, count:byCategory[key][name]}; })
+      .sort(function(a,b){ return b.count-a.count; });
+    return { key:key, label: AUT_CATEGORY_LABELS[key]||key, items:items,
+      total: items.reduce(function(s,i){ return s+i.count; },0) };
+  }).sort(function(a,b){ return b.total-a.total; });
+
+  var recommendations = groups.slice(0,2).map(function(g){
+    var alt = (typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES!=='undefined') ? ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[g.key] : null;
+    var altText = (alt && alt.length) ? alt.slice(0,2).map(function(a){ return a.label; }).join(' & ') : 'Privilégiez une version faite maison ou peu transformée.';
+    return {
+      id: g.key,
+      title: g.label,
+      subtitle: g.items.slice(0,2).map(function(i){ return i.name+' ('+i.count+'×)'; }).join(', '),
+      alternative: altText,
+      _altFirstFood: alt && alt[0] ? alt[0].label : null
+    };
+  });
+
+  return {
+    periodLabel: periodLabel,
+    completion: { days: daysLogged, total: 7 },
+    autShare: autShare, brutShare: brutShare,
+    totalOccurrences: autEntries.length,
+    topImpact: {
+      label: AUT_MEAL_LABELS[topMealId] || '—',
+      detail: topFoodName ? (namesAtTopMeal[topFoodName]+'× '+topFoodName) : 'Rien de particulier cette semaine.'
+    },
+    recommendations: recommendations,
+    groups: groups.map(function(g){ return {label:g.label, items:g.items}; })
+  };
+}
+
+async function openAUTSummary(){
+  // Réservé aux admins pour l'instant, le temps de continuer les tests --
+  // même principe que le reste des fonctionnalités du moteur de conseils.
+  if(!(PROF && PROF.role==='admin')) return;
+  if(!(PROF && PROF.consent_nutrition_advice===true)){
+    toast('Activez l\'analyse de votre journal dans "Mon profil" pour voir cette synthèse.');
+    return;
+  }
+  var since = new Date(); since.setDate(since.getDate()-6);
+  var sinceStr = dateStr(since), todayStr_ = today();
+  var r = await sb.from('journal').select('date, repas, aliment, quantite, is_ultra_processed')
+    .eq('user_id', USER.id).gte('date', sinceStr).lte('date', todayStr_);
+  var entries = r.data || [];
+  if(!entries.length){
+    toast('Pas encore assez de données cette semaine pour cette synthèse.');
+    return;
+  }
+  var periodLabel = parseUTC(sinceStr+'T00:00:00Z').toLocaleDateString('fr-BE',{day:'numeric',month:'long'})
+    + ' – ' + parseUTC(todayStr_+'T00:00:00Z').toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'});
+  var data = computeAUTSummaryData(entries, periodLabel);
+
+  var overlay = document.createElement('div');
+  overlay.id = 'aut-summary-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto';
+  var card = renderAUTCard(data, {
+    onClose: function(){ overlay.remove(); },
+    onDismiss: function(){ overlay.remove(); },
+    onContactSupport: function(){ window.location.href = 'chat.html'; },
+    onViewRecipe: function(){ window.location.href = 'recette.html'; },
+    onApplyRecommendation: function(recId){
+      var rec = data.recommendations.filter(function(x){ return x.id===recId; })[0];
+      var altName = rec && rec._altFirstFood;
+      overlay.remove();
+      goJournal(activeMeal || 'lunch');
+      if(altName){
+        setTimeout(function(){
+          var s = document.getElementById('srch');
+          if(s){ s.value = altName; if(typeof onSearch==='function') onSearch(altName); s.focus(); }
+        }, 150);
+      }
+    }
+  });
+  overlay.appendChild(card);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+async function toggleAutConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice === true);
+  var r = await sb.from('profiles').update({consent_nutrition_advice:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.consent_nutrition_advice = newVal;
+  var sw = document.getElementById('aut-consent-switch');
+  if(sw) sw.classList.toggle('on', newVal);
+  toast(newVal ? '✅ Analyse du journal activée' : 'Analyse du journal désactivée');
+  if(typeof refreshDash==='function') refreshDash();
+}
+async function toggleNutritionAdvicePathologyConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice_pathology === true);
+  var r = await sb.from('profiles').update({consent_nutrition_advice_pathology:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.consent_nutrition_advice_pathology = newVal;
+  var sw = document.getElementById('nutrition-advice-pathology-consent-switch');
+  if(sw) sw.classList.toggle('on', newVal);
+}
+async function toggleNutritionAdviceSportConsent(){
+  var newVal = !(PROF && PROF.consent_nutrition_advice_sport === true);
+  var r = await sb.from('profiles').update({consent_nutrition_advice_sport:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.consent_nutrition_advice_sport = newVal;
+  var sw = document.getElementById('nutrition-advice-sport-consent-switch');
+  if(sw) sw.classList.toggle('on', newVal);
+}
+
 function toggleHealthConsent(){
   setup.healthConsent = !setup.healthConsent;
   document.getElementById('consent-box').classList.toggle('on', setup.healthConsent);

@@ -267,3 +267,31 @@ et 2 ci-dessus.
 > exact de l'éditeur vs. d'un éventuel professionnel de santé impliqué,
 > reste à faire trancher par un DPO/avocat qualifié avant toute
 > production réelle.
+
+---
+
+## Note — carte de synthèse "Aliments ultra-transformés" (2026-08-24)
+
+**DÉCISION (2026-08-24)** : contrairement au reste du moteur `nutrition-*.js`
+(qui reste Phase 0 bloquante, voir statut en tête de document), la carte de
+synthèse AUT (`aut-summary-card.js`) est connectée à de vrais patients avec
+de vraies données du journal, sur confirmation explicite de l'utilisateur
+("tout est en ordre" en réponse à la question posée sur la consultation
+DPO/avocat). Cette décision n'a pas été revérifiée techniquement par ce
+travail — elle repose sur la déclaration de l'utilisateur.
+
+Périmètre concerné, volontairement étroit : cette carte relève de la
+finalité **`consent_nutrition_advice`** déjà définie plus haut dans ce
+document ("analyse du journal pour des suggestions non liées aux
+pathologies... alternatives aux aliments ultra-transformés") — PAS des
+finalités pathologie/sport (`consent_nutrition_advice_pathology`,
+`consent_nutrition_advice_sport`), qui restent admin-only. La carte n'est
+montrée à un patient que si `profiles.consent_nutrition_advice === true`,
+et le consentement correspondant est désormais recueillable par le patient
+lui-même (case dans "Mon profil"), pas seulement par un admin en test.
+
+**MISE À JOUR (2026-08-24, même jour)** : revenu sur la décision ci-dessus
+avant tout déploiement réel — la carte de synthèse AUT reste **admin-only**
+(carte de consentement masquée, lien déclencheur masqué, fonction
+`openAUTSummary()` elle-même bloquée côté JS pour un non-admin), le temps
+de continuer les tests. Aucun vrai patient n'y a accès pour l'instant.
