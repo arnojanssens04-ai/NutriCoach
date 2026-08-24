@@ -142,6 +142,19 @@ function biscuitTropSucre(sucres100){
 // C'est pr\u00e9cis\u00e9ment pour compenser ce trou de donn\u00e9e que la r\u00e8gle sur les
 // jus/boissons sucr\u00e9es ci-dessous se base sur le NOM de l'aliment plut\u00f4t que
 // sur cette seule valeur num\u00e9rique.
+// Même signal que le veto ultra-transformé plus bas dans evaluateMealTags
+// (is_ultra_processed explicite en priorité, ULTRA_PROCESSED_REGEX en
+// repli) -- factorisé ici pour être réutilisé par evaluateGlycemicImpact.
+function isMealItemUltraProcessed(e){
+  if(e.is_ultra_processed === true) return true;
+  if(e.is_ultra_processed === false) return false;
+  if(typeof ULTRA_PROCESSED_REGEX !== 'undefined'){
+    var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    return ULTRA_PROCESSED_REGEX.test(n);
+  }
+  return false;
+}
+
 function evaluateGlycemicImpact(mealItems){
   mealItems = mealItems || [];
   var totalCarbs = 0, totalSugars = 0, totalFibers = 0, totalProteins = 0, totalFats = 0;
@@ -182,6 +195,17 @@ function evaluateGlycemicImpact(mealItems){
   if(hasSweetLiquid){
     if(state === 'OPTIMAL_BUFFER') state = 'MODERATE_BUFFER';
     liquidWarning = '\u26a1 Attention : la matrice liquide du jus de fruit s\'absorbe rapidement malgr\u00e9 les fibres associ\u00e9es.';
+  }
+
+  // M\u00eame principe que le malus jus de fruit ci-dessus : un repas compos\u00e9
+  // d'un SEUL aliment ultra-transform\u00e9 ne peut jamais revendiquer un statut
+  // "optimal" -- sans ce plafond, les graisses/prot\u00e9ines d'une p\u00e2tisserie
+  // industrielle (ex: brownie) gonflent artificiellement le pouvoir tampon
+  // calcul\u00e9 et affichent \u00e0 tort "glyc\u00e9mie stabilis\u00e9e" pour un dessert
+  // sucr\u00e9 pris seul.
+  var isSingleUltraProcessedItem = mealItems.length === 1 && isMealItemUltraProcessed(mealItems[0]);
+  if(isSingleUltraProcessedItem && state === 'OPTIMAL_BUFFER'){
+    state = 'MODERATE_BUFFER';
   }
 
   return {
@@ -245,14 +269,7 @@ function evaluateMealTags(mealItems, pathos){
   // le m\u00eame signal que le reste de l'app (is_ultra_processed post\u00e9 par
   // l'IA/OFF, ou le m\u00eame ULTRA_PROCESSED_REGEX en repli).
   var ultraCount = 0;
-  mealItems.forEach(function(e){
-    if(e.is_ultra_processed === true){ ultraCount++; return; }
-    if(e.is_ultra_processed === false) return;
-    if(typeof ULTRA_PROCESSED_REGEX !== 'undefined'){
-      var n = (e.aliment||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      if(ULTRA_PROCESSED_REGEX.test(n)) ultraCount++;
-    }
-  });
+  mealItems.forEach(function(e){ if(isMealItemUltraProcessed(e)) ultraCount++; });
   if(ultraCount >= 2){
     tags.push({priority:2, level:'mid', badge:'\ud83d\udfe0 Plusieurs aliments transform\u00e9s',
       tip:'Rien de grave ponctuellement, mais essayez de garder au moins un aliment brut au prochain repas.'});
