@@ -44,7 +44,7 @@ var ULTRA_PROCESSED_CATEGORY_DEFINITIONS = [
   { category: 'candy_confectionery', weeklyThreshold: 2,
     keywords: ['bonbon', 'confiserie', 'sucrerie', 'chewing-gum', 'guimauve', 'reglisse'] },
   { category: 'sugary_dessert_pastry', weeklyThreshold: 4,
-    keywords: ['mousse au chocolat', 'chocolat industriel', 'patisserie industrielle', 'gateau industriel', 'viennoiserie industrielle', 'biscuit industriel', 'barre chocolatee', 'glace industrielle', 'donut', 'beignet industriel', 'macaron'] },
+    keywords: ['mousse au chocolat', 'chocolat industriel', 'patisserie industrielle', 'gateau industriel', 'viennoiserie industrielle', 'biscuit industriel', 'barre chocolatee', 'glace industrielle', 'donut', 'beignet industriel', 'macaron', 'brownie', 'blondie'] },
   { category: 'sugary_drink', weeklyThreshold: 3,
     keywords: ['soda', 'cola', 'boisson sucree', 'boisson energisante', 'jus industriel', 'limonade', 'sirop'] },
   { category: 'fast_food_meal', weeklyThreshold: 2,
