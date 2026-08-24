@@ -1047,8 +1047,8 @@ body {
     </div>
   </div>
 
-  <div class="prof-card" id="focus-mode-card" style="display:none">
-    <div class="prof-card-hdr"><span>&#127807; Mode focus <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+  <div class="prof-card" id="focus-mode-card">
+    <div class="prof-card-hdr"><span>&#127807; Mode focus</span></div>
     <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
       <p style="margin-bottom:12px">Masque le chiffre exact des calories sur votre tableau de bord &#8212; pour vous concentrer sur la qualit&#233; de vos repas plut&#244;t que sur un chiffre &#224; g&#233;rer en temps r&#233;el. Le suivi continue normalement en arri&#232;re-plan pour votre bilan.</p>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
@@ -2871,16 +2871,34 @@ async function shareScoreNow(score, label){
 async function computeStreak(){
   var since = new Date(); since.setDate(since.getDate()-60);
   var r = await sb.from('journal').select('date').eq('user_id',USER.id).gte('date',dateStr(since));
-  if(!r.data) return 0;
+  if(!r.data) return {streak:0, graceUsed:false};
   var datesSet = {};
   r.data.forEach(function(row){ datesSet[row.date]=true; });
   var streak = 0;
+  var graceUsed = false;
   var cursor = new Date();
   // Si aujourd'hui est encore vide, on ne casse pas la s\u00e9rie tout de suite \u2014
   // la journ\u00e9e n'est pas finie, on compte depuis hier.
   if(!datesSet[today()]) cursor.setDate(cursor.getDate()-1);
-  while(datesSet[dateStr(cursor)]){ streak++; cursor.setDate(cursor.getDate()-1); }
-  return streak;
+  for(;;){
+    var ds = dateStr(cursor);
+    if(datesSet[ds]){ streak++; cursor.setDate(cursor.getDate()-1); continue; }
+    // Jour manqu\u00e9 : un SEUL jour isol\u00e9 (le lendemain ET la veille sont
+    // renseign\u00e9s) ne casse plus la s\u00e9rie -- au plus une fois par s\u00e9rie,
+    // sinon deux jours manqu\u00e9s d'affil\u00e9e la cassent normalement. \u00c9vite le
+    // m\u00e9canisme "punitif" qui d\u00e9courage 44% des utilisateurs apr\u00e8s un
+    // premier jour rat\u00e9 (voir recherche r\u00e9tention 2026).
+    if(!graceUsed && streak>0){
+      var dayBefore = new Date(cursor); dayBefore.setDate(dayBefore.getDate()-1);
+      if(datesSet[dateStr(dayBefore)]){
+        graceUsed = true;
+        cursor.setDate(cursor.getDate()-1);
+        continue;
+      }
+    }
+    break;
+  }
+  return {streak:streak, graceUsed:graceUsed};
 }
 
 var MILESTONE_DEFS = [
@@ -3487,7 +3505,8 @@ async function renderMotivationCards(){
   if(!row) return;
   row.style.display = 'grid';
 
-  var streak = await computeStreak();
+  var streakInfo = await computeStreak();
+  var streak = streakInfo.streak;
   var focusOn = PROF && PROF.hide_exact_kcal===true;
   if(focusOn){
     var streakQualLbl = streak>=14 ? 'Excellente r\u00e9gularit\u00e9' : streak>=7 ? 'Belle r\u00e9gularit\u00e9' : streak>=3 ? 'Bonne lanc\u00e9e' : streak>=1 ? 'C\'est parti' : '\u00c0 vous de commencer';
@@ -3497,7 +3516,7 @@ async function renderMotivationCards(){
   } else {
     document.getElementById('streak-val').style.fontSize = '';
     document.getElementById('streak-val').textContent = streak;
-    document.getElementById('streak-lbl').textContent = streak===1 ? 'jour de suite' : 'jours de suite';
+    document.getElementById('streak-lbl').textContent = (streak===1 ? 'jour de suite' : 'jours de suite') + (streakInfo.graceUsed ? ' \ud83d\udee1\ufe0f' : '');
   }
 
   if(p.poids_initial && p.poids && !isNaN(p.poids_initial) && !isNaN(p.poids) && p.poids_initial > 0){
@@ -6229,8 +6248,6 @@ function renderProfile(){
       : 'Construisez une journ\u00e9e type qui ne change jamais, \u00e0 la place des suggestions automatiques.';
   }
 
-  var focusCard = document.getElementById('focus-mode-card');
-  if(focusCard) focusCard.style.display = (p.role==='admin') ? 'block' : 'none';
   var focusSwitch = document.getElementById('focus-mode-switch');
   if(focusSwitch) focusSwitch.classList.toggle('on', p.hide_exact_kcal === true);
   var previewSwitch = document.getElementById('preview-kcal-switch');
@@ -6417,6 +6434,33 @@ function togP(p){var idx=setup.pathos.indexOf(p);var c=document.getElementById('
   document.getElementById('consent-row').style.display = hasRealPatho ? 'flex' : 'none';
   if(!hasRealPatho){ setup.healthConsent=false; document.getElementById('consent-box').classList.remove('on'); }
 }
+// toggleFocusMode() / togglePreviewKcal() -- les boutons existaient déjà
+// dans "Mon profil" (switches, onclick) mais appelaient des fonctions
+// jamais définies nulle part dans ce fichier : cliquer dessus provoquait
+// une erreur silencieuse, aucune écriture n'avait jamais lieu. La carte
+// elle-même était en plus masquée à tout le monde sauf les admins
+// (p.role==='admin'), rendant le Mode Focus totalement inaccessible en
+// self-service pour un vrai patient malgré la promesse faite sur la page
+// d'accueil.
+async function toggleFocusMode(){
+  var newVal = !(PROF && PROF.hide_exact_kcal === true);
+  var r = await sb.from('profiles').update({hide_exact_kcal:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.hide_exact_kcal = newVal;
+  var sw = document.getElementById('focus-mode-switch');
+  if(sw) sw.classList.toggle('on', newVal);
+  toast(newVal ? '🌿 Mode focus activé' : 'Mode focus désactivé');
+  if(typeof refreshDash==='function') refreshDash();
+}
+async function togglePreviewKcal(){
+  var newVal = !(PROF && PROF.preview_new_kcal === true);
+  var r = await sb.from('profiles').update({preview_new_kcal:newVal}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.preview_new_kcal = newVal;
+  var sw = document.getElementById('preview-kcal-switch');
+  if(sw) sw.classList.toggle('on', newVal);
+}
+
 function toggleHealthConsent(){
   setup.healthConsent = !setup.healthConsent;
   document.getElementById('consent-box').classList.toggle('on', setup.healthConsent);
