@@ -670,6 +670,20 @@ body {
 .toast { position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1916; border: 1px solid rgba(255,255,255,.08); color: #f5f3ee; padding: 9px 16px; border-radius: 7px; font-size: .8rem; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 500; opacity: 0; transition: all .25s ease; pointer-events: none; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Notification centrée type "push" -- distincte du .toast standard
+   (bref, en bas, utilisé partout ailleurs) : plus visible, reste 7-8s,
+   pour un événement ponctuel qui mérite d'être vu (objectif de défi
+   atteint). */
+.center-push { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.94); z-index: 900;
+  background: var(--card); border: 1px solid var(--border2); border-radius: 16px; padding: 18px 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.22); max-width: min(360px, 88vw); text-align: left;
+  opacity: 0; pointer-events: none; transition: opacity .3s ease, transform .3s ease; }
+.center-push.on { opacity: 1; transform: translate(-50%,-50%) scale(1); pointer-events: auto; }
+.center-push-ico { font-size: 1.8rem; margin-bottom: 8px; }
+.center-push-ttl { font-family: 'Lora', serif; font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+.center-push-txt { font-size: .84rem; color: var(--text2); line-height: 1.5; }
+.center-push-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--text3); font-size: .95rem; cursor: pointer; padding: 2px; }
+
 .empty { text-align: center; padding: 28px 16px; color: var(--text2); }
 .empty-i { font-size: 2rem; margin-bottom: 8px; }
 .empty p { font-size: .84rem; line-height: 1.6; }
@@ -713,10 +727,6 @@ body {
 
 <!-- DASHBOARD -->
 <div class="page on" id="pg-dashboard">
-
-  <!-- D&#201;FIS &#192; DEUX &#8212; alerte objectif du jour atteint, tout en haut de
-       l'accueil (admin-only pour l'instant, m&#234;me p&#233;rim&#232;tre que defis.html). -->
-  <div id="duo-challenge-alert-zone" style="margin-bottom:14px"></div>
 
   <!-- KCAL EN PREMIER &#8212; plus imm&#233;diatement utile au quotidien -->
   <div class="kcal-card" id="kcal-card">
@@ -1368,6 +1378,12 @@ body {
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="center-push" id="center-push">
+  <button type="button" class="center-push-close" onclick="hideCenterPush()" aria-label="Fermer">✕</button>
+  <div class="center-push-ico" id="center-push-ico"></div>
+  <div class="center-push-ttl" id="center-push-ttl"></div>
+  <div class="center-push-txt" id="center-push-txt"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="mode-focus.js?v=23"></script>
@@ -1466,6 +1482,21 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 var toastT=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2500);}
+
+var centerPushT = null;
+function showCenterPush(icon, title, text){
+  var el = document.getElementById('center-push');
+  document.getElementById('center-push-ico').textContent = icon;
+  document.getElementById('center-push-ttl').textContent = title;
+  document.getElementById('center-push-txt').innerHTML = text;
+  el.classList.add('on');
+  if(centerPushT) clearTimeout(centerPushT);
+  centerPushT = setTimeout(hideCenterPush, 7800);
+}
+function hideCenterPush(){
+  document.getElementById('center-push').classList.remove('on');
+  if(centerPushT){ clearTimeout(centerPushT); centerPushT = null; }
+}
 
 // \u2500\u2500 JOURNAL DES MISES \u00c0 JOUR \u2500\u2500 liste \u00e0 compl\u00e9ter \u00e0 chaque \u00e9volution
 // notable. La personne voit un pop-up uniquement si une version plus
@@ -3599,13 +3630,11 @@ function duoMeetsTarget(value, tpl){
 
 async function checkDuoChallengeDailyAlerts(){
   if(!(PROF && PROF.role==='admin')) return;
-  var zone = document.getElementById('duo-challenge-alert-zone');
-  if(!zone) return;
 
   var r = await sb.from('duo_challenges').select('*')
     .or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).eq('status','active');
   var challenges = r.data || [];
-  if(!challenges.length){ zone.innerHTML=''; return; }
+  if(!challenges.length) return;
 
   var td = today();
   var myJournalRes = await sb.from('journal')
@@ -3613,7 +3642,6 @@ async function checkDuoChallengeDailyAlerts(){
     .eq('user_id', USER.id).eq('date', td);
   var myEntriesToday = myJournalRes.data || [];
 
-  var cards = [];
   for(var i=0;i<challenges.length;i++){
     var c = challenges[i];
     var tpl = DUO_TEMPLATES_DASH[c.template_id];
@@ -3646,18 +3674,18 @@ async function checkDuoChallengeDailyAlerts(){
     var partnerRes = await sb.from('profiles').select('prenom').eq('id', partnerId).maybeSingle();
     var partnerName = (partnerRes.data && partnerRes.data.prenom) || 'votre partenaire';
 
-    cards.push('<div class="alert-item alert-good"><span class="alert-ico">🎉</span><div>'
-      + '<div class="alert-ttl">Objectif du défi atteint aujourd\'hui !</div>'
-      + esc(tpl.label) + ' avec <strong>' + esc(partnerName) + '</strong>.'
-      + '<div style="margin-top:6px">'
-        + '<a href="defis.html" style="font-size:.78rem;color:var(--gold);font-weight:600;text-decoration:none">Voir le défi &#8594;</a>'
-        + ' &#183; <a href="#" onclick="dismissDuoChallengeAlert(\''+dismissKey+'\');return false" style="font-size:.78rem;color:var(--text3);text-decoration:underline;margin-left:8px">Masquer</a>'
-      + '</div></div></div>');
+    // Notification centrée, ponctuelle (7-8s) -- une seule fois par jour
+    // et par défi (dismissKey marqué dès l'affichage, pas seulement au
+    // clic "Masquer") plutôt qu'une carte fixe dans les alertes.
+    showCenterPush('🎉', 'Objectif du défi atteint aujourd\'hui !',
+      esc(tpl.label) + ' avec <strong>' + esc(partnerName) + '</strong>.'
+      + '<br><a href="defis.html" style="color:var(--gold);font-weight:600;text-decoration:none">Voir le défi &#8594;</a>');
+    dismissDuoChallengeAlert(dismissKey, true);
   }
-  zone.innerHTML = cards.join('');
 }
-function dismissDuoChallengeAlert(key){
+function dismissDuoChallengeAlert(key, skipRefresh){
   try{ localStorage.setItem(key,'1'); }catch(e){}
+  if(skipRefresh) return;
   checkDuoChallengeDailyAlerts();
 }
 
