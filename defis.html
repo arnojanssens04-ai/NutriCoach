@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Défis à deux</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
+  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
+  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
+  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
+  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
+  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
+  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+
+.section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:16px 18px; margin-bottom:12px; }
+.tpl-opt { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:9px; cursor:pointer; margin-bottom:9px; transition:border-color .15s, background .15s; }
+.tpl-opt:hover, .tpl-opt.on { border-color:var(--gold); background:var(--gold-l); }
+.tpl-opt-icon { font-size:1.5rem; flex-shrink:0; }
+.tpl-opt-lbl { font-size:.86rem; font-weight:600; }
+.tpl-opt-sub { font-size:.72rem; color:var(--text2); margin-top:2px; }
+
+.btn { width:100%; padding:13px; border-radius:11px; border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.94rem; font-weight:700; cursor:pointer; margin-top:6px; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.btn-outline { width:100%; padding:12px; border-radius:11px; border:1px solid var(--border2); background:none; color:var(--text); font-size:.88rem; font-weight:600; cursor:pointer; margin-top:8px; }
+
+.code-box { text-align:center; padding:16px; background:var(--gold-l); border-radius:11px; margin-top:10px; }
+.code-val { font-family:'Lora',serif; font-size:1.6rem; font-weight:700; letter-spacing:3px; color:var(--gold); }
+.code-hint { font-size:.72rem; color:var(--text2); margin-top:6px; }
+
+.join-row { display:flex; gap:8px; margin-top:10px; }
+.join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:9px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
+
+.chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:16px 18px; margin-bottom:12px; }
+.chal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.chal-title { font-family:'Lora',serif; font-weight:700; font-size:.94rem; }
+.chal-status { font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; }
+.chal-status.pending { background:var(--bg2); color:var(--text2); }
+.chal-status.active { background:var(--gold-l); color:var(--gold); }
+.chal-status.succeeded { background:var(--sage-l); color:var(--sage); }
+.chal-status.failed { background:var(--rose-l); color:var(--rose); }
+.chal-sub { font-size:.76rem; color:var(--text2); margin-bottom:10px; }
+.chal-days { display:flex; gap:5px; flex-wrap:wrap; }
+.chal-day { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.66rem; font-weight:700; background:var(--bg2); color:var(--text3); }
+.chal-day.ok { background:var(--sage); color:#fff; }
+.chal-day.today { border:2px solid var(--gold); }
+
+.empty { text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem; }
+
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:#fff; padding:11px 20px; border-radius:10px; font-size:.85rem; opacity:0; pointer-events:none; transition:all .3s; z-index:999; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="dashboard.html" class="t-back">&larr; Profil</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>&#129309; Défis à deux</h1>
+    <p>Deux personnes s'engagent sur un même objectif — les deux réussissent ensemble, ou aucune. Aucune comparaison de chiffres entre vous : chacun ne voit que "objectif atteint" ou non, jamais le détail de ce que l'autre a mangé.</p>
+  </div>
+
+  <div class="section-lbl">Mes défis en cours</div>
+  <div id="my-challenges"><div class="empty">Chargement…</div></div>
+
+  <div class="section-lbl">Créer un défi</div>
+  <div class="card">
+    <div id="tpl-list"></div>
+    <button class="btn" id="create-btn" onclick="createChallenge()" disabled>Créer et obtenir mon code</button>
+    <div class="code-box" id="new-code-box" style="display:none">
+      <div class="code-val" id="new-code-val"></div>
+      <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi.</div>
+    </div>
+  </div>
+
+  <div class="section-lbl">Rejoindre un défi</div>
+  <div class="card">
+    <p style="font-size:.82rem;color:var(--text2)">Vous avez reçu un code ? Entrez-le ici pour rejoindre le défi.</p>
+    <div class="join-row">
+      <input type="text" id="join-code-input" placeholder="CODE" maxlength="6">
+      <button class="btn" style="width:auto;margin:0;padding:11px 18px" onclick="joinChallenge()">Rejoindre</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER = null;
+var selectedTpl = null;
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDaysStr(dateStr, n){ var d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// — Gabarits de défis — objectif QUALITATIF partagé, jamais un chiffre
+// comparé entre les deux personnes (score, poids, calories). "individual"
+// : chacun doit atteindre SA cible ce jour-là pour que le jour compte.
+// "combined" : la cible porte sur le TOTAL des deux personnes ce jour-là
+// (entraide — l'un peut compenser l'autre). "comparator" par défaut 'gte'
+// (atteindre au moins la cible) ; 'lte' pour les défis "pas plus de X".
+var DUO_TEMPLATES = {
+  veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'Sur une fenêtre de 10 jours', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:10, mode:'individual' },
+  veg_combined_400_7days: { icon:'🤝', label:'Entraide : 400g de légumes à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'veg', dailyTarget:400, requiredDays:7, windowDays:10, mode:'combined' },
+  fibres_30_7days: { icon:'🌾', label:'7 jours à 30g de fibres chacun', sub:'Sur une fenêtre de 10 jours', metric:'fibres', dailyTarget:30, requiredDays:7, windowDays:10, mode:'individual' },
+  fibres_combined_60_7days: { icon:'🤝', label:'Entraide : 60g de fibres à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'fibres', dailyTarget:60, requiredDays:7, windowDays:10, mode:'combined' },
+  prot_60_7days: { icon:'🍗', label:'7 jours à 60g de protéines chacun', sub:'Sur une fenêtre de 10 jours', metric:'protein', dailyTarget:60, requiredDays:7, windowDays:10, mode:'individual' },
+  prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:10, mode:'combined' },
+  petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'Sur une fenêtre de 8 jours', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:8, mode:'individual' },
+  ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'Sur une fenêtre de 8 jours', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:8, mode:'individual' },
+  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual' }
+};
+
+// Détection légumes / ultra-transformés — même esprit que dashboard.html,
+// copie volontairement réduite ici (convention du projet : chaque fichier
+// garde sa propre liste, jamais de dépendance croisée entre pages).
+var VEG_KEYWORDS = ['legume','carotte','courgette','brocoli','epinard','salade','tomate','poivron','haricot vert','chou','aubergine','concombre','celeri','poireau','endive','betterave','radis','fenouil','navet','artichaut','asperge','champignon'];
+function isVegFood(nom){
+  var n = String(nom||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return VEG_KEYWORDS.some(function(kw){ return n.indexOf(kw)>=0; });
+}
+var ULTRA_REGEX = /chips|crackers|soda|coca|pepsi|fanta|sprite|charcuterie|saucisse|nugget|pizza.*surgel|plat.*(cuisine|prepare)|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king|frites?|glace|sorbet|patisserie.*industri|donut|beignet|kebab|nutella|pate a tartiner|cereales?.*sucre|barre.*cereale|snack|cordon bleu|surimi/;
+function isUltraFood(entry){
+  if(entry.is_ultra_processed === true) return true;
+  if(entry.is_ultra_processed === false) return false;
+  var n = String(entry.aliment||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  return ULTRA_REGEX.test(n);
+}
+
+function renderTemplateList(){
+  var root = document.getElementById('tpl-list');
+  root.innerHTML = Object.keys(DUO_TEMPLATES).map(function(key){
+    var t = DUO_TEMPLATES[key];
+    return '<div class="tpl-opt" id="tpl-'+key+'" onclick="selectTpl(\''+key+'\')">'
+      + '<div class="tpl-opt-icon">'+t.icon+'</div>'
+      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+'</div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
+      + '</div>';
+  }).join('');
+}
+function selectTpl(key){
+  selectedTpl = key;
+  document.querySelectorAll('.tpl-opt').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById('tpl-'+key).classList.add('on');
+  document.getElementById('create-btn').disabled = false;
+}
+
+function genCode(){
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var out = '';
+  for(var i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
+async function createChallenge(){
+  if(!selectedTpl) return;
+  var code = genCode();
+  var r = await sb.from('duo_challenges').insert({
+    template_id: selectedTpl, creator_id: USER.id, invite_code: code, status: 'pending'
+  }).select().single();
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  document.getElementById('new-code-box').style.display = 'block';
+  document.getElementById('new-code-val').textContent = code;
+  loadMyChallenges();
+}
+
+// Rejoindre passe par une fonction Postgres (join_duo_challenge, security
+// definer) plutôt qu'une lecture directe de la table -- sans ça, la table
+// devrait rester lisible pour "tous les défis en attente" afin de pouvoir
+// chercher le code, ce qui exposerait la liste de TOUS les codes en
+// attente de TOUT le monde à n'importe quel utilisateur connecté (faille
+// corrigée le 2026-08-24). Ici, le code doit être connu (transmis en
+// privé) pour que la fonction trouve quoi que ce soit.
+async function joinChallenge(){
+  var code = (document.getElementById('join-code-input').value||'').trim().toUpperCase();
+  if(!code){ toast('Entrez un code'); return; }
+  var r = await sb.rpc('join_duo_challenge', { p_code: code });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Défi rejoint !');
+  document.getElementById('join-code-input').value = '';
+  loadMyChallenges();
+}
+
+// Calcule ma valeur pour UN jour donné et une métrique donnée, à partir
+// des entrées de MON PROPRE journal déjà chargées pour ce jour (jamais
+// celui du partenaire).
+function computeMetricValue(entriesForDay, metric){
+  entriesForDay = entriesForDay || [];
+  if(metric === 'fibres'){
+    return entriesForDay.reduce(function(s,e){ return s + (e.food_fibres_100||0)*(e.quantite||0)/100; }, 0);
+  }
+  if(metric === 'protein'){
+    return entriesForDay.reduce(function(s,e){ return s + (e.food_prot_100||0)*(e.quantite||0)/100; }, 0);
+  }
+  if(metric === 'veg'){
+    return entriesForDay.reduce(function(s,e){ return s + (isVegFood(e.aliment) ? (e.quantite||0) : 0); }, 0);
+  }
+  if(metric === 'breakfast_logged'){
+    return entriesForDay.some(function(e){ return e.repas==='breakfast'; }) ? 1 : 0;
+  }
+  if(metric === 'ultra_count'){
+    return entriesForDay.reduce(function(s,e){ return s + (isUltraFood(e) ? 1 : 0); }, 0);
+  }
+  if(metric === 'food_variety_count'){
+    var names = {};
+    entriesForDay.forEach(function(e){ names[String(e.aliment||'').toLowerCase().trim()] = true; });
+    return Object.keys(names).length;
+  }
+  return 0;
+}
+function meetsTarget(value, tpl){
+  return tpl.comparator === 'lte' ? (value <= tpl.dailyTarget) : (value >= tpl.dailyTarget);
+}
+
+// Rattrape TOUS les jours de la fenêtre qui n'ont pas encore de ligne de
+// progression pour MOI, pas seulement aujourd'hui -- avant ce correctif,
+// un jour non couvert par une ouverture de cette page précise ce jour-là
+// restait indéfiniment vide, même si le vrai journal était complet.
+async function syncProgressForWindow(challenge){
+  var tpl = DUO_TEMPLATES[challenge.template_id];
+  if(!tpl) return;
+  var start = challenge.start_date || todayStr();
+  var windowEnd = addDaysStr(start, tpl.windowDays-1);
+  var end = todayStr() < windowEnd ? todayStr() : windowEnd;
+  if(end < start) return;
+
+  var existing = await sb.from('duo_challenge_progress').select('date')
+    .eq('challenge_id', challenge.id).eq('user_id', USER.id).gte('date', start).lte('date', end);
+  var doneDates = {};
+  (existing.data||[]).forEach(function(r){ doneDates[r.date] = true; });
+
+  var missingDates = [];
+  var cursor = start;
+  while(cursor <= end){ if(!doneDates[cursor]) missingDates.push(cursor); cursor = addDaysStr(cursor, 1); }
+  if(!missingDates.length) return;
+
+  var journalRes = await sb.from('journal')
+    .select('date, aliment, quantite, food_fibres_100, food_prot_100, repas, is_ultra_processed')
+    .eq('user_id', USER.id).gte('date', start).lte('date', end);
+  var entries = journalRes.data || [];
+  var byDate = {};
+  entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+
+  var rowsToUpsert = missingDates.map(function(d){
+    var val = computeMetricValue(byDate[d], tpl.metric);
+    var met = tpl.mode === 'individual' ? meetsTarget(val, tpl) : false; // 'combined' : évalué à la lecture, somme des deux
+    return { challenge_id: challenge.id, user_id: USER.id, date: d, metric_value: val, met_target: met };
+  });
+  await sb.from('duo_challenge_progress').upsert(rowsToUpsert, { onConflict: 'challenge_id,user_id,date' });
+}
+
+async function evaluateAndRender(challenge, container){
+  var tpl = DUO_TEMPLATES[challenge.template_id];
+  if(!tpl){ container.innerHTML = ''; return; }
+
+  var progRes = await sb.from('duo_challenge_progress').select('*').eq('challenge_id', challenge.id);
+  var rows = progRes.data || [];
+  var byDate = {}; // date -> { creator: value|null, partner: value|null }
+  rows.forEach(function(row){
+    if(!byDate[row.date]) byDate[row.date] = {};
+    var slot = (row.user_id === challenge.creator_id) ? 'creator' : 'partner';
+    byDate[row.date][slot] = { value: row.metric_value, met: row.met_target };
+  });
+
+  var start = challenge.start_date || todayStr();
+  var successCount = 0;
+  var dayCells = [];
+  for(var i=0;i<tpl.windowDays;i++){
+    var d = addDaysStr(start, i);
+    var isFuture = d > todayStr();
+    var slot = byDate[d] || {};
+    var dayOk = false;
+    if(tpl.mode === 'individual'){
+      dayOk = !!(slot.creator && slot.creator.met && slot.partner && slot.partner.met);
+    } else {
+      var total = (slot.creator ? slot.creator.value : 0) + (slot.partner ? slot.partner.value : 0);
+      dayOk = (slot.creator!==undefined || slot.partner!==undefined) && total >= tpl.dailyTarget;
+    }
+    if(dayOk) successCount++;
+    var cls = 'chal-day' + (dayOk?' ok':'') + (d===todayStr()?' today':'');
+    dayCells.push('<div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(i+1))+'</div>');
+    if(isFuture) break;
+  }
+
+  var newStatus = null;
+  if(challenge.status === 'active'){
+    if(successCount >= tpl.requiredDays) newStatus = 'succeeded';
+    else if(addDaysStr(start, tpl.windowDays-1) < todayStr()) newStatus = 'failed';
+  }
+  if(newStatus){
+    await sb.from('duo_challenges').update({ status: newStatus }).eq('id', challenge.id);
+    challenge.status = newStatus;
+  }
+
+  var statusLbl = { pending:'En attente', active:'En cours', succeeded:'Réussi !', failed:'Non atteint' }[challenge.status] || challenge.status;
+  var iAmCreator = challenge.creator_id === USER.id;
+  var waitingPartner = challenge.status === 'pending';
+
+  container.innerHTML = '<div class="chal-card">'
+    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
+    + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : successCount+' / '+tpl.requiredDays+' jours réussis')+'</div>'
+    + (waitingPartner ? '' : '<div class="chal-days">'+dayCells.join('')+'</div>')
+    + '</div>';
+}
+
+async function loadMyChallenges(){
+  var root = document.getElementById('my-challenges');
+  var r = await sb.from('duo_challenges').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false});
+  if(r.error){ root.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
+  var list = r.data || [];
+  if(!list.length){ root.innerHTML = '<div class="empty">Aucun défi pour l\'instant — créez-en un ou rejoignez celui d\'un proche avec un code.</div>'; return; }
+
+  root.innerHTML = list.map(function(c){ return '<div id="chal-'+c.id+'"></div>'; }).join('');
+
+  for(var i=0;i<list.length;i++){
+    var c = list[i];
+    var el = document.getElementById('chal-'+c.id);
+    if(c.status === 'active'){
+      await syncProgressForWindow(c);
+    }
+    await evaluateAndRender(c, el);
+  }
+}
+
+// Réservé aux admins pour l'instant -- fonctionnalité pas encore ouverte
+// aux vrais patients, même principe que le reste des tests en cours.
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  sb.from('profiles').select('role').eq('id',USER.id).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){ window.location.href='dashboard.html'; return; }
+    renderTemplateList();
+    loadMyChallenges();
+  });
+});
+</script>
+</body>
+</html>
