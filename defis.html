@@ -50,18 +50,45 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:9px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
 
 .chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:16px 18px; margin-bottom:12px; }
-.chal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.chal-card.is-active { box-shadow:0 3px 14px rgba(45,79,28,0.1); border-color:rgba(45,79,28,0.22); }
+.chal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:10px; }
 .chal-title { font-family:'Lora',serif; font-weight:700; font-size:.94rem; }
-.chal-status { font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; }
+.chal-status { font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; }
 .chal-status.pending { background:var(--bg2); color:var(--text2); }
-.chal-status.active { background:var(--gold-l); color:var(--gold); }
-.chal-status.succeeded { background:var(--sage-l); color:var(--sage); }
+.chal-status.active { background:var(--gold); color:#fff; }
+.chal-status.succeeded { background:var(--sage); color:#fff; }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
 .chal-sub { font-size:.76rem; color:var(--text2); margin-bottom:10px; }
-.chal-days { display:flex; gap:5px; flex-wrap:wrap; }
+
+.chal-duo { display:flex; align-items:center; gap:8px; padding:9px 0 12px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+.chal-duo-avatars { display:flex; }
+.chal-duo-av { width:26px; height:26px; border-radius:50%; background:var(--gold-l); color:var(--gold); font-size:.66rem; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid var(--card); }
+.chal-duo-av + .chal-duo-av { margin-left:-8px; background:var(--sage-l); color:var(--sage); }
+.chal-duo-lbl { font-size:.78rem; color:var(--text2); }
+.chal-duo-lbl b { color:var(--text); font-weight:600; }
+
+.chal-today { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.chal-today-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); font-weight:600; margin-bottom:2px; }
+.chal-today-row { display:flex; justify-content:space-between; align-items:center; font-size:.8rem; }
+.chal-today-name { font-weight:600; }
+.chal-today-pill { font-size:.7rem; font-weight:700; padding:3px 9px; border-radius:999px; }
+.chal-today-pill.done { background:var(--sage-l); color:var(--sage); }
+.chal-today-pill.wait { background:var(--bg2); color:var(--text3); }
+
+.chal-days-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); font-weight:600; margin-bottom:6px; }
+.chal-days { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; }
 .chal-day { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.66rem; font-weight:700; background:var(--bg2); color:var(--text3); }
 .chal-day.ok { background:var(--sage); color:#fff; }
+.chal-day.missed { background:var(--card); border:1px solid var(--rose-l); color:var(--rose); opacity:.7; }
+.chal-day.future { background:var(--card); border:1px dashed var(--border2); color:var(--text3); }
 .chal-day.today { border:2px solid var(--gold); }
+
+.chal-expiry { font-size:.72rem; color:var(--text3); }
+
+.chal-cheer-btn { width:100%; margin-top:10px; padding:10px; border-radius:9px; border:1px solid var(--gold-l); background:var(--gold-l); color:var(--gold); font-size:.78rem; font-weight:600; cursor:pointer; }
+.chal-cheer-btn:hover { background:var(--gold); color:#fff; }
+
+.limit-note { font-size:.72rem; color:var(--text3); text-align:center; padding:10px 6px; }
 
 .empty { text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem; }
 
@@ -79,14 +106,14 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 <div class="wrap">
   <div class="hero">
     <h1>&#129309; Défis à deux</h1>
-    <p>Deux personnes s'engagent sur un même objectif — les deux réussissent ensemble, ou aucune. Aucune comparaison de chiffres entre vous : chacun ne voit que "objectif atteint" ou non, jamais le détail de ce que l'autre a mangé.</p>
+    <p>Partagez un objectif commun, sans pression ni chiffres comparés.</p>
   </div>
 
   <div class="section-lbl">Mes défis en cours</div>
   <div id="my-challenges"><div class="empty">Chargement…</div></div>
 
-  <div id="blocked-msg" class="card" style="display:none;text-align:center;color:var(--text2);font-size:.84rem">
-    Vous avez déjà un défi en cours. Terminez-le (ou attendez qu'il expire) avant d'en créer ou d'en rejoindre un nouveau.
+  <div id="blocked-msg" style="display:none">
+    <div class="limit-note">&#128274; Un seul défi actif à la fois — terminez ou laissez expirer celui-ci avant d'en créer ou d'en rejoindre un nouveau.</div>
   </div>
 
   <div id="create-join-sections">
@@ -290,6 +317,12 @@ async function syncProgressForWindow(challenge){
   await sb.from('duo_challenge_progress').upsert(rowsToUpsert, { onConflict: 'challenge_id,user_id,date' });
 }
 
+var METRIC_UNITS = { fibres:'g', protein:'g', veg:'g', ultra_count:' AUT', food_variety_count:' aliments', breakfast_logged:'' };
+function fmtMetricValue(metric, value){
+  if(metric === 'breakfast_logged') return value>=1 ? 'Noté' : 'Non noté';
+  return Math.round(value) + (METRIC_UNITS[metric]||'');
+}
+
 async function evaluateAndRender(challenge, container){
   var tpl = DUO_TEMPLATES[challenge.template_id];
   if(!tpl){ container.innerHTML = ''; return; }
@@ -306,9 +339,15 @@ async function evaluateAndRender(challenge, container){
   var start = challenge.start_date || todayStr();
   var successCount = 0;
   var dayCells = [];
+  // Toute la fenêtre est affichée (jours passés atteints/manqués + jours à
+  // venir) -- avant, la boucle s'arrêtait au premier jour futur, ce qui
+  // faisait apparaître seulement 2-3 cases pour un objectif "7 jours",
+  // décalage visuel entre le texte "X / 7 jours réussis" et le nombre de
+  // cases affichées.
   for(var i=0;i<tpl.windowDays;i++){
     var d = addDaysStr(start, i);
     var isFuture = d > todayStr();
+    var isToday = d === todayStr();
     var slot = byDate[d] || {};
     var dayOk = false;
     if(tpl.mode === 'individual'){
@@ -318,9 +357,12 @@ async function evaluateAndRender(challenge, container){
       dayOk = (slot.creator!==undefined || slot.partner!==undefined) && total >= tpl.dailyTarget;
     }
     if(dayOk) successCount++;
-    var cls = 'chal-day' + (dayOk?' ok':'') + (d===todayStr()?' today':'');
-    dayCells.push('<div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(i+1))+'</div>');
-    if(isFuture) break;
+    var cls = 'chal-day';
+    if(dayOk) cls += ' ok';
+    else if(isFuture) cls += ' future';
+    else if(!isToday) cls += ' missed';
+    if(isToday) cls += ' today';
+    dayCells.push('<div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(isFuture?'':'·'))+'</div>');
   }
 
   var newStatus = null;
@@ -337,11 +379,71 @@ async function evaluateAndRender(challenge, container){
   var iAmCreator = challenge.creator_id === USER.id;
   var waitingPartner = challenge.status === 'pending';
 
-  container.innerHTML = '<div class="chal-card">'
+  // Identité du binôme -- prénoms des deux participants, jamais affichée
+  // avant (aucun signe de présence du partenaire dans l'interface).
+  var partnerName = 'votre binôme', myFirstName = 'Vous';
+  if(challenge.partner_id){
+    var ids = [challenge.creator_id, challenge.partner_id];
+    var profRes = await sb.from('profiles').select('id, prenom').in('id', ids);
+    var byId = {};
+    (profRes.data||[]).forEach(function(p){ byId[p.id] = p.prenom || 'Sans nom'; });
+    partnerName = iAmCreator ? (byId[challenge.partner_id]||partnerName) : (byId[challenge.creator_id]||partnerName);
+  }
+
+  var todayData = byDate[todayStr()] || {};
+  var myTodaySlot = iAmCreator ? todayData.creator : todayData.partner;
+  var partnerTodaySlot = iAmCreator ? todayData.partner : todayData.creator;
+
+  var expiryDate = addDaysStr(start, tpl.windowDays-1);
+  var daysLeft = Math.max(0, Math.round((new Date(expiryDate+'T00:00:00') - new Date(todayStr()+'T00:00:00')) / 86400000));
+
+  var todayBlockHtml = '';
+  if(!waitingPartner && challenge.status !== 'succeeded' && challenge.status !== 'failed'){
+    if(tpl.mode === 'individual'){
+      todayBlockHtml = '<div class="chal-today">'
+        + '<div class="chal-today-lbl">Statut aujourd\'hui</div>'
+        + '<div class="chal-today-row"><span class="chal-today-name">Vous</span><span class="chal-today-pill '+(myTodaySlot&&myTodaySlot.met?'done':'wait')+'">'+(myTodaySlot ? (myTodaySlot.met?'Validé':fmtMetricValue(tpl.metric,myTodaySlot.value)) : 'En attente')+'</span></div>'
+        + '<div class="chal-today-row"><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-pill '+(partnerTodaySlot&&partnerTodaySlot.met?'done':'wait')+'">'+(partnerTodaySlot ? (partnerTodaySlot.met?'Validé':'En cours') : 'En attente')+'</span></div>'
+        + '</div>';
+    } else {
+      var myVal = myTodaySlot ? myTodaySlot.value : 0;
+      var partnerVal = partnerTodaySlot ? partnerTodaySlot.value : 0;
+      todayBlockHtml = '<div class="chal-today">'
+        + '<div class="chal-today-lbl">Contribution du jour (total combiné : '+fmtMetricValue(tpl.metric, myVal+partnerVal)+' / '+fmtMetricValue(tpl.metric, tpl.dailyTarget)+')</div>'
+        + '<div class="chal-today-row"><span class="chal-today-name">Vous</span><span class="chal-today-pill '+(myTodaySlot?'done':'wait')+'">'+(myTodaySlot ? fmtMetricValue(tpl.metric,myVal) : 'Pas encore')+'</span></div>'
+        + '<div class="chal-today-row"><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-pill '+(partnerTodaySlot?'done':'wait')+'">'+(partnerTodaySlot ? fmtMetricValue(tpl.metric,partnerVal) : 'Pas encore')+'</span></div>'
+        + '</div>';
+    }
+  }
+
+  var duoHtml = waitingPartner ? '' : '<div class="chal-duo">'
+    + '<div class="chal-duo-avatars"><div class="chal-duo-av">'+esc(myFirstName.slice(0,1))+'</div><div class="chal-duo-av">'+esc(partnerName.slice(0,1).toUpperCase())+'</div></div>'
+    + '<div class="chal-duo-lbl">Défi avec <b>'+esc(partnerName)+'</b></div>'
+    + '</div>';
+
+  container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+'">'
     + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
     + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : successCount+' / '+tpl.requiredDays+' jours réussis')+'</div>'
-    + (waitingPartner ? '' : '<div class="chal-days">'+dayCells.join('')+'</div>')
+    + duoHtml
+    + todayBlockHtml
+    + (waitingPartner ? '' : '<div class="chal-days-lbl">Progression sur la fenêtre</div><div class="chal-days">'+dayCells.join('')+'</div>')
+    + (waitingPartner || challenge.status==='succeeded' || challenge.status==='failed' ? '' : '<div class="chal-expiry">&#9203; Expire dans '+daysLeft+' jour'+(daysLeft>1?'s':'')+'</div>')
+    + (waitingPartner ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Envoyer un encouragement à '+esc(partnerName)+'</button>')
     + '</div>';
+}
+
+// Aucune messagerie interne à l'app pour l'instant -- plutôt que de
+// promettre une notification qui n'arriverait jamais au binôme, on
+// prépare un message prêt à copier/partager (via le presse-papiers natif),
+// que la personne peut envoyer par le canal de son choix (SMS, message...).
+function sendCheer(partnerName){
+  var msg = '👏 Bravo pour votre défi en cours sur Cap Santé, ' + partnerName + ' ! On continue ensemble 💪';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(msg).then(function(){ toast('✅ Message copié — collez-le où vous voulez l\'envoyer'); })
+      .catch(function(){ toast(msg); });
+  } else {
+    toast(msg);
+  }
 }
 
 // Tant qu'un défi n'est pas terminé (réussi/échoué/annulé) pour cet
