@@ -182,6 +182,58 @@ var USER = null;
 var selectedTpl = null;
 
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
+
+// Confettis discrets à l'atteinte d'un défi -- canvas pur, aucune
+// dépendance externe. Respecte prefers-reduced-motion (juste le toast,
+// sans particules) et se nettoie tout seul après la chute.
+function fireConfetti(){
+  toast('🎉 Défi réussi !');
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;z-index:998;pointer-events:none;width:100%;height:100%';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+
+  var colors = ['#477A45', '#F4B942', '#7667D8', '#20251F'];
+  var particles = [];
+  for(var i=0;i<70;i++){
+    particles.push({
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*canvas.height*0.4,
+      w: 5+Math.random()*5,
+      h: 8+Math.random()*6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      vy: 2+Math.random()*3,
+      vx: (Math.random()-0.5)*2,
+      rot: Math.random()*360,
+      vrot: (Math.random()-0.5)*10
+    });
+  }
+
+  var start = performance.now();
+  function tick(now){
+    var elapsed = now - start;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(function(p){
+      p.x += p.vx; p.y += p.vy; p.rot += p.vrot;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    if(elapsed < 3200){
+      requestAnimationFrame(tick);
+    } else {
+      canvas.remove();
+    }
+  }
+  requestAnimationFrame(tick);
+}
 function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function addDaysStr(dateStr, n){ var d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -405,6 +457,16 @@ async function evaluateAndRender(challenge, container){
   if(newStatus){
     await sb.from('duo_challenges').update({ status: newStatus }).eq('id', challenge.id);
     challenge.status = newStatus;
+  }
+
+  // Confettis à l'atteinte du défi -- une seule fois par défi (flag
+  // local), pas à chaque rechargement de la page une fois déjà fêté.
+  if(challenge.status === 'succeeded'){
+    var confettiKey = 'defiConfettiShown_'+challenge.id;
+    if(!localStorage.getItem(confettiKey)){
+      localStorage.setItem(confettiKey, '1');
+      fireConfetti();
+    }
   }
 
   var statusLbl = { pending:'En attente', active:'En cours', succeeded:'Réussi !', failed:'Non atteint' }[challenge.status] || challenge.status;
