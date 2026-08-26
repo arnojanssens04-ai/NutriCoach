@@ -42,6 +42,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .mode-ico { font-size:1.4rem; }
 .mode-lbl { font-size:.8rem; font-weight:700; }
 .mode-sub { font-size:.64rem; color:var(--text2); }
+.mode-locked-note { font-size:.72rem; color:var(--text3); text-align:center; margin:-14px 0 18px; }
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
 
 .tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
@@ -120,11 +121,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </header>
 
 <div class="wrap">
-  <div class="mode-switch">
-    <a href="defis-solo.html" class="mode-card"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></a>
-    <a href="defis.html" class="mode-card"><span class="mode-ico">🤝</span><span class="mode-lbl">Défi entraide</span><span class="mode-sub">À deux, ensemble</span></a>
+  <div class="mode-switch" id="mode-switch">
+    <a href="defis-solo.html" class="mode-card" id="mode-link-solo"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></a>
+    <a href="defis.html" class="mode-card" id="mode-link-entraide"><span class="mode-ico">🤝</span><span class="mode-lbl">Défi entraide</span><span class="mode-sub">À deux, ensemble</span></a>
     <div class="mode-card active"><span class="mode-ico">⚔️</span><span class="mode-lbl">Duel</span><span class="mode-sub">Jeu amical à deux</span></div>
   </div>
+  <p class="mode-locked-note" id="mode-locked-note" style="display:none">🔒 Combat en cours — terminez-le pour explorer les autres modes.</p>
 
   <div class="hero">
     <h1>&#127918; Combat amical</h1>
@@ -387,12 +389,27 @@ function fireConfetti(){
   requestAnimationFrame(tick);
 }
 
+// Tant qu'un combat est en attente ou actif, on masque les liens vers
+// les deux autres modes -- pas de distraction possible pendant un défi
+// en cours, seule la rubrique du mode actuel reste visible (déjà
+// non-cliquable, "active"). Même logique dupliquée sur
+// defis.html/defis-solo.html.
+function applyModeLock(locked){
+  var solo = document.getElementById('mode-link-solo');
+  var entraide = document.getElementById('mode-link-entraide');
+  var note = document.getElementById('mode-locked-note');
+  if(solo) solo.style.display = locked ? 'none' : '';
+  if(entraide) entraide.style.display = locked ? 'none' : '';
+  if(note) note.style.display = locked ? 'block' : 'none';
+}
+
 async function loadMyCombat(){
   var activeZone = document.getElementById('active-zone');
   var pickerZone = document.getElementById('picker-zone');
   var r = await sb.from('duo_combats').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false}).limit(1);
   if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
   var combat = (r.data && r.data.filter(function(c){ return c.status==='pending' || c.status==='active'; })[0]) || null;
+  applyModeLock(!!combat);
 
   if(!combat){
     activeZone.innerHTML = '';

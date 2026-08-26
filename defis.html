@@ -45,6 +45,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .mode-ico { font-size:1.4rem; }
 .mode-lbl { font-size:.8rem; font-weight:700; }
 .mode-sub { font-size:.64rem; color:var(--text2); }
+.mode-locked-note { font-size:.72rem; color:var(--text3); text-align:center; margin:-14px 0 18px; }
 
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
 
@@ -155,11 +156,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </header>
 
 <div class="wrap">
-  <div class="mode-switch">
-    <a href="defis-solo.html" class="mode-card"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></a>
+  <div class="mode-switch" id="mode-switch">
+    <a href="defis-solo.html" class="mode-card" id="mode-link-solo"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></a>
     <div class="mode-card active"><span class="mode-ico">🤝</span><span class="mode-lbl">Défi entraide</span><span class="mode-sub">À deux, ensemble</span></div>
-    <a href="combat.html" class="mode-card"><span class="mode-ico">⚔️</span><span class="mode-lbl">Duel</span><span class="mode-sub">Jeu amical à deux</span></a>
+    <a href="combat.html" class="mode-card" id="mode-link-duel"><span class="mode-ico">⚔️</span><span class="mode-lbl">Duel</span><span class="mode-sub">Jeu amical à deux</span></a>
   </div>
+  <p class="mode-locked-note" id="mode-locked-note" style="display:none">🔒 Défi en cours — terminez-le pour explorer les autres modes.</p>
 
   <div class="hero">
     <h1>&#129309; Défis à deux</h1>
@@ -760,6 +762,21 @@ function updateCreateJoinAvailability(list){
   var sections = document.getElementById('create-join-sections');
   if(blockedMsg) blockedMsg.style.display = hasBlocking ? 'block' : 'none';
   if(sections) sections.style.display = hasBlocking ? 'none' : 'block';
+  applyModeLock(hasBlocking);
+}
+
+// Tant qu'un défi entraide est en cours (en attente ou actif), on masque
+// les liens vers les deux autres modes -- pas de distraction possible
+// pendant un défi en cours, seule la rubrique du mode actuel reste
+// visible (déjà non-cliquable, "active"). Même logique dupliquée sur
+// defis-solo.html/combat.html pour leur propre mode.
+function applyModeLock(locked){
+  var solo = document.getElementById('mode-link-solo');
+  var duel = document.getElementById('mode-link-duel');
+  var note = document.getElementById('mode-locked-note');
+  if(solo) solo.style.display = locked ? 'none' : '';
+  if(duel) duel.style.display = locked ? 'none' : '';
+  if(note) note.style.display = locked ? 'block' : 'none';
 }
 
 async function loadMyChallenges(){
