@@ -728,9 +728,15 @@ async function evaluateAndRender(challenge, container){
         + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+cumPct+'%"></div></div>'
         + '</div>';
     } else {
+      // Le nombre de jours réussis peut dépasser requiredDays quand la
+      // fenêtre (ex: 10 jours) est plus longue que l'objectif (ex: 7
+      // jours) et que TOUS les jours de la fenêtre sont réussis --
+      // plafonné à l'affichage pour ne jamais montrer "10 jours réussis
+      // sur 7", qui n'a pas de sens même si l'objectif est bien atteint.
+      var displayedSuccessCount = Math.min(successCount, tpl.requiredDays);
       var progressPct = tpl.requiredDays>0 ? Math.min(100, Math.round(successCount/tpl.requiredDays*100)) : 0;
       progressHtml = '<div class="chal-progress-wrap">'
-        + '<div class="chal-progress-lbl">'+successCount+' jour'+(successCount>1?'s':'')+' réussi'+(successCount>1?'s':'')+' sur '+tpl.requiredDays+'</div>'
+        + '<div class="chal-progress-lbl">'+displayedSuccessCount+' jour'+(displayedSuccessCount>1?'s':'')+' réussi'+(displayedSuccessCount>1?'s':'')+' sur '+tpl.requiredDays+'</div>'
         + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+progressPct+'%"></div></div>'
         + '</div>';
     }
