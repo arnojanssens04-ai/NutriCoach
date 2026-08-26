@@ -436,13 +436,24 @@ function classifyPlateEntry(entry){
   var w = entry.quantite || 0;
   if(w<=0) return {category:'none', weight:0, fallback:false};
 
+  // Légumes/fruits/légumineuses vérifiés EN PREMIER, avant toute
+  // comparaison de macros dominantes -- beaucoup de légumes (brocoli,
+  // épinards, courgette...) ont, pour 100g, plus de protéines que de
+  // glucides (ex: brocoli cuit ~2.6g prot vs ~1.9g gluc en Ciqual). Avant
+  // ce correctif, ce cas tombait dans la branche "protéines dominantes"
+  // et finissait classé en "Sources de protéines" au lieu de "Légumes &
+  // fruits", malgré la regex VEGETABLE_REGEX qui le reconnaît pourtant --
+  // elle n'était testée que DANS la branche glucides, jamais avant.
+  if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)){
+    return {category:'veg', weight:w, fallback:false};
+  }
+
   var carbG = (entry.food_gluc_100 || 0) * w / 100;
   var protG = (entry.food_prot_100 || 0) * w / 100;
   var fatG = (entry.food_lip_100 || 0) * w / 100;
   var maxG = Math.max(carbG, protG, fatG);
 
   if(maxG<=0){
-    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:true};
     if(PROTEIN_SRC_REGEX.test(n)) return {category:'prot', weight:w, fallback:true};
     if(STARCH_REGEX.test(n)) return {category:'starch', weight:w, fallback:true};
     if(FAT_SRC_REGEX.test(n)) return {category:'fat', weight:w, fallback:true};
@@ -450,7 +461,6 @@ function classifyPlateEntry(entry){
   }
 
   if(carbG > protG && carbG >= fatG){
-    if(isLegume(entry.aliment) || FRUIT_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || VEGETABLE_REGEX.test(n)) return {category:'veg', weight:w, fallback:false};
     return {category:'starch', weight:w, fallback:false};
   }
   if(protG > carbG && protG >= fatG){
