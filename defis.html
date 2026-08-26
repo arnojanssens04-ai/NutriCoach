@@ -7,22 +7,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#f5f3ee; --bg2:#f0ede6; --card:#ffffff; --card2:#f8f6f1;
-  --border:rgba(26,25,22,0.1); --border2:rgba(26,25,22,0.18);
-  --gold:#2d4f1c; --gold-l:rgba(45,79,28,0.08);
-  --sage:#4a7a3a; --sage-l:rgba(74,122,58,0.1);
-  --text:#1a1916; --text2:#5c5852; --text3:#a09c94;
-  --rose:#8b2a2a; --rose-l:rgba(139,42,42,0.08);
-  --r:10px; --sh:0 1px 4px rgba(0,0,0,0.06);
+  --bg:#F7F6F1; --bg2:#EFEDE6; --card:#FFFFFF; --card2:#F7F6F1;
+  --border:rgba(32,37,31,0.08); --border2:rgba(32,37,31,0.14);
+  --text:#20251F; --text2:#687067; --text3:#9AA096;
+  --gold:#477A45; --gold-l:rgba(71,122,69,0.1);
+  --sage:#477A45; --sage-l:rgba(71,122,69,0.1);
+  --amber:#F4B942; --amber-l:rgba(244,185,66,0.16);
+  --social:#7667D8; --social-l:rgba(118,103,216,0.12);
+  --rose:#B4483F; --rose-l:rgba(180,72,63,0.1);
+  --r:20px; --r-btn:12px; --r-badge:8px;
+  --sh:0 8px 24px rgba(32,37,31,0.06);
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { background:var(--bg); }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px; }
 
-.topbar { position:sticky; top:0; z-index:100; background:rgba(245,243,238,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.topbar { position:sticky; top:0; z-index:100; background:rgba(247,246,241,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
 .t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
 .t-logo span { color:var(--gold); }
-.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:8px; }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:var(--r-btn); }
 .t-back:hover { border-color:var(--gold); color:var(--gold); }
 
 .wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
@@ -31,64 +34,90 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 .section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
 
-.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:16px 18px; margin-bottom:12px; }
-.tpl-opt { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:9px; cursor:pointer; margin-bottom:9px; transition:border-color .15s, background .15s; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
+.tpl-opt { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; cursor:pointer; margin-bottom:9px; transition:border-color .15s, background .15s; }
 .tpl-opt:hover, .tpl-opt.on { border-color:var(--gold); background:var(--gold-l); }
 .tpl-opt-icon { font-size:1.5rem; flex-shrink:0; }
 .tpl-opt-lbl { font-size:.86rem; font-weight:600; }
 .tpl-opt-sub { font-size:.72rem; color:var(--text2); margin-top:2px; }
 
-.btn { width:100%; padding:13px; border-radius:11px; border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.94rem; font-weight:700; cursor:pointer; margin-top:6px; }
+.btn { width:100%; padding:13px; border-radius:var(--r-btn); border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.94rem; font-weight:700; cursor:pointer; margin-top:6px; }
 .btn:disabled { opacity:.5; cursor:not-allowed; }
-.btn-outline { width:100%; padding:12px; border-radius:11px; border:1px solid var(--border2); background:none; color:var(--text); font-size:.88rem; font-weight:600; cursor:pointer; margin-top:8px; }
+.btn-outline { width:100%; padding:12px; border-radius:var(--r-btn); border:1px solid var(--border2); background:none; color:var(--text); font-size:.88rem; font-weight:600; cursor:pointer; margin-top:8px; }
 
-.code-box { text-align:center; padding:16px; background:var(--gold-l); border-radius:11px; margin-top:10px; }
+.code-box { text-align:center; padding:16px; background:var(--gold-l); border-radius:var(--r-btn); margin-top:10px; }
 .code-val { font-family:'Lora',serif; font-size:1.6rem; font-weight:700; letter-spacing:3px; color:var(--gold); }
 .code-hint { font-size:.72rem; color:var(--text2); margin-top:6px; }
 
 .join-row { display:flex; gap:8px; margin-top:10px; }
-.join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:9px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
+.join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:12px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
 
-.chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:16px 18px; margin-bottom:12px; }
-.chal-card.is-active { box-shadow:0 3px 14px rgba(45,79,28,0.1); border-color:rgba(45,79,28,0.22); }
-.chal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:10px; }
-.chal-title { font-family:'Lora',serif; font-weight:700; font-size:.94rem; }
-.chal-status { font-size:.66rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; }
+/* — Carte de défi — hiérarchie : 1) titre+statut 2) progression globale
+   3) contribution du jour 4) progression 7 jours 5) encouragement.
+   Bordure fine + ombre douce plutôt qu'un cadre lourd, rayons cohérents
+   (20px carte / 12px boutons / 8px badges). */
+.chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:20px 22px; margin-bottom:14px; }
+.chal-card.is-active { box-shadow:0 10px 28px rgba(71,122,69,0.1); }
+.chal-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px; gap:10px; }
+.chal-title { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; }
+.chal-status { font-size:.62rem; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; margin-top:2px; }
 .chal-status.pending { background:var(--bg2); color:var(--text2); }
-.chal-status.active { background:var(--gold); color:#fff; }
-.chal-status.succeeded { background:var(--sage); color:#fff; }
+.chal-status.active { background:var(--gold-l); color:var(--gold); }
+.chal-status.succeeded { background:var(--gold); color:#fff; }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
-.chal-sub { font-size:.76rem; color:var(--text2); margin-bottom:10px; }
+.chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:14px; }
 
-.chal-duo { display:flex; align-items:center; gap:8px; padding:9px 0 12px; border-bottom:1px solid var(--border); margin-bottom:12px; }
-.chal-duo-avatars { display:flex; }
-.chal-duo-av { width:26px; height:26px; border-radius:50%; background:var(--gold-l); color:var(--gold); font-size:.66rem; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid var(--card); }
-.chal-duo-av + .chal-duo-av { margin-left:-8px; background:var(--sage-l); color:var(--sage); }
-.chal-duo-lbl { font-size:.78rem; color:var(--text2); }
-.chal-duo-lbl b { color:var(--text); font-weight:600; }
+/* Progression globale — barre + texte, élément central de la carte */
+.chal-progress-wrap { margin-bottom:16px; }
+.chal-progress-lbl { font-size:.84rem; font-weight:600; margin-bottom:7px; }
+.chal-progress-track { height:8px; border-radius:999px; background:var(--bg2); overflow:hidden; }
+.chal-progress-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .4s ease; }
 
-.chal-today { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
-.chal-today-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); font-weight:600; margin-bottom:2px; }
-.chal-today-row { display:flex; justify-content:space-between; align-items:center; font-size:.8rem; }
-.chal-today-name { font-weight:600; }
-.chal-today-pill { font-size:.7rem; font-weight:700; padding:3px 9px; border-radius:999px; }
-.chal-today-pill.done { background:var(--sage-l); color:var(--sage); }
-.chal-today-pill.wait { background:var(--bg2); color:var(--text3); }
+.chal-duo { font-size:.72rem; color:var(--text3); margin-bottom:14px; }
+.chal-duo b { color:var(--text2); font-weight:600; }
 
-.chal-days-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); font-weight:600; margin-bottom:6px; }
-.chal-days { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; }
-.chal-day { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:.66rem; font-weight:700; background:var(--bg2); color:var(--text3); }
-.chal-day.ok { background:var(--sage); color:#fff; }
+.chal-today-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text3); font-weight:700; margin-bottom:8px; }
+.chal-today { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.chal-today-row { display:flex; align-items:center; gap:9px; font-size:.86rem; }
+.chal-today-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.chal-today-dot.me { background:var(--gold); }
+.chal-today-dot.partner { background:var(--social); }
+.chal-today-name { font-weight:600; flex:1; }
+.chal-today-val { font-variant-numeric:tabular-nums; color:var(--text2); font-weight:600; }
+.chal-today-val.pending { color:var(--text3); font-weight:500; }
+
+/* Total combiné / statut du jour — bloc dédié plutôt qu'une ligne perdue */
+.chal-total-block { background:var(--card2); border-radius:14px; padding:12px 14px; margin-bottom:14px; }
+.chal-total-lbl { font-size:.72rem; color:var(--text2); margin-bottom:3px; }
+.chal-total-val { font-family:'Lora',serif; font-size:1.15rem; font-weight:700; }
+.chal-total-sub { font-size:.74rem; color:var(--text2); margin-top:2px; }
+.chal-total-block.reached { background:var(--gold-l); }
+.chal-total-block.reached .chal-total-val { color:var(--gold); }
+
+.chal-days-lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text3); font-weight:700; margin-bottom:8px; }
+.chal-days { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.chal-day-col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.chal-day { width:26px; height:26px; border-radius:var(--r-badge); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; background:var(--bg2); color:var(--text3); }
+.chal-day.ok { background:var(--gold); color:#fff; }
 .chal-day.missed { background:var(--card); border:1px solid var(--rose-l); color:var(--rose); opacity:.7; }
 .chal-day.future { background:var(--card); border:1px dashed var(--border2); color:var(--text3); }
-.chal-day.today { border:2px solid var(--gold); }
+.chal-day.today { border:2px solid var(--amber); background:var(--amber-l); color:var(--text); }
+.chal-day-lbl { font-size:.6rem; color:var(--text3); font-weight:600; }
 
-.chal-expiry { font-size:.72rem; color:var(--text3); }
+.chal-expiry { font-size:.76rem; color:var(--text3); margin:12px 0 6px; }
 
-.chal-cheer-btn { width:100%; margin-top:10px; padding:10px; border-radius:9px; border:1px solid var(--gold-l); background:var(--gold-l); color:var(--gold); font-size:.78rem; font-weight:600; cursor:pointer; }
-.chal-cheer-btn:hover { background:var(--gold); color:#fff; }
+.chal-cheer-btn {
+  width:100%; margin-top:8px; min-height:48px; border:0; border-radius:var(--r-btn);
+  background:var(--amber); color:var(--text); font-size:.88rem; font-weight:700; cursor:pointer;
+  transition:transform 160ms ease, box-shadow 160ms ease;
+}
+.chal-cheer-btn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(244,185,66,0.35); }
 
-.limit-note { font-size:.72rem; color:var(--text3); text-align:center; padding:10px 6px; }
+.limit-note { font-size:.76rem; color:var(--text3); text-align:center; padding:10px 6px; cursor:default; }
+.limit-note summary { cursor:pointer; list-style:none; }
+.limit-note summary::-webkit-details-marker { display:none; }
+.limit-note[open] summary { margin-bottom:6px; }
+.limit-note .limit-detail { font-size:.72rem; color:var(--text3); line-height:1.5; }
 
 .empty { text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem; }
 
@@ -113,7 +142,10 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div id="my-challenges"><div class="empty">Chargement…</div></div>
 
   <div id="blocked-msg" style="display:none">
-    <div class="limit-note">&#128274; Un seul défi actif à la fois — terminez ou laissez expirer celui-ci avant d'en créer ou d'en rejoindre un nouveau.</div>
+    <details class="limit-note">
+      <summary>&#128274; Un seul défi actif à la fois</summary>
+      <div class="limit-detail">Terminez ou laissez expirer celui-ci avant d'en créer ou d'en rejoindre un nouveau.</div>
+    </details>
   </div>
 
   <div id="create-join-sections">
@@ -362,7 +394,7 @@ async function evaluateAndRender(challenge, container){
     else if(isFuture) cls += ' future';
     else if(!isToday) cls += ' missed';
     if(isToday) cls += ' today';
-    dayCells.push('<div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(isFuture?'':'·'))+'</div>');
+    dayCells.push('<div class="chal-day-col"><div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(isFuture?'':'·'))+'</div><div class="chal-day-lbl">J'+(i+1)+'</div></div>');
   }
 
   var newStatus = null;
@@ -396,39 +428,63 @@ async function evaluateAndRender(challenge, container){
 
   var expiryDate = addDaysStr(start, tpl.windowDays-1);
   var daysLeft = Math.max(0, Math.round((new Date(expiryDate+'T00:00:00') - new Date(todayStr()+'T00:00:00')) / 86400000));
+  // Date précise plutôt qu'un compte à rebours abstrait -- le compte à
+  // rebours reste utile seulement quand l'échéance est proche (<=3 jours).
+  var expiryLbl = daysLeft<=3
+    ? (daysLeft<=0 ? 'Se termine aujourd\'hui' : 'Se termine dans '+daysLeft+' jour'+(daysLeft>1?'s':''))
+    : 'Se termine le '+new Date(expiryDate+'T00:00:00').toLocaleDateString('fr-BE',{day:'numeric',month:'long'});
 
+  // 1) Progression globale -- élément central, une barre + un texte,
+  // avant tout le reste.
+  var progressPct = tpl.requiredDays>0 ? Math.min(100, Math.round(successCount/tpl.requiredDays*100)) : 0;
+  var progressHtml = waitingPartner ? '' : '<div class="chal-progress-wrap">'
+    + '<div class="chal-progress-lbl">'+successCount+' jour'+(successCount>1?'s':'')+' réussi'+(successCount>1?'s':'')+' sur '+tpl.requiredDays+'</div>'
+    + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+progressPct+'%"></div></div>'
+    + '</div>';
+
+  var duoHtml = waitingPartner ? '' : '<div class="chal-duo">Défi avec <b>'+esc(partnerName)+'</b></div>';
+
+  // 2) Contribution du jour -- point coloré fixe (vous = vert, binôme =
+  // violet), toujours la même couleur d'une carte à l'autre pour rester
+  // repérable sans dépendre uniquement de la couleur (texte en
+  // complément, jamais couleur seule).
   var todayBlockHtml = '';
   if(!waitingPartner && challenge.status !== 'succeeded' && challenge.status !== 'failed'){
     if(tpl.mode === 'individual'){
-      todayBlockHtml = '<div class="chal-today">'
-        + '<div class="chal-today-lbl">Statut aujourd\'hui</div>'
-        + '<div class="chal-today-row"><span class="chal-today-name">Vous</span><span class="chal-today-pill '+(myTodaySlot&&myTodaySlot.met?'done':'wait')+'">'+(myTodaySlot ? (myTodaySlot.met?'Validé':fmtMetricValue(tpl.metric,myTodaySlot.value)) : 'En attente')+'</span></div>'
-        + '<div class="chal-today-row"><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-pill '+(partnerTodaySlot&&partnerTodaySlot.met?'done':'wait')+'">'+(partnerTodaySlot ? (partnerTodaySlot.met?'Validé':'En cours') : 'En attente')+'</span></div>'
+      todayBlockHtml = '<div class="chal-today-lbl">Aujourd\'hui</div><div class="chal-today">'
+        + '<div class="chal-today-row"><span class="chal-today-dot me"></span><span class="chal-today-name">Vous</span><span class="chal-today-val'+(myTodaySlot?'':' pending')+'">'+(myTodaySlot ? (myTodaySlot.met?'Validé ✓':fmtMetricValue(tpl.metric,myTodaySlot.value)) : 'En attente')+'</span></div>'
+        + '<div class="chal-today-row"><span class="chal-today-dot partner"></span><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-val'+(partnerTodaySlot&&partnerTodaySlot.met?'':' pending')+'">'+(partnerTodaySlot ? (partnerTodaySlot.met?'Validé ✓':'En cours') : 'En attente')+'</span></div>'
         + '</div>';
     } else {
       var myVal = myTodaySlot ? myTodaySlot.value : 0;
       var partnerVal = partnerTodaySlot ? partnerTodaySlot.value : 0;
-      todayBlockHtml = '<div class="chal-today">'
-        + '<div class="chal-today-lbl">Contribution du jour (total combiné : '+fmtMetricValue(tpl.metric, myVal+partnerVal)+' / '+fmtMetricValue(tpl.metric, tpl.dailyTarget)+')</div>'
-        + '<div class="chal-today-row"><span class="chal-today-name">Vous</span><span class="chal-today-pill '+(myTodaySlot?'done':'wait')+'">'+(myTodaySlot ? fmtMetricValue(tpl.metric,myVal) : 'Pas encore')+'</span></div>'
-        + '<div class="chal-today-row"><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-pill '+(partnerTodaySlot?'done':'wait')+'">'+(partnerTodaySlot ? fmtMetricValue(tpl.metric,partnerVal) : 'Pas encore')+'</span></div>'
+      var totalVal = myVal + partnerVal;
+      var reached = totalVal >= tpl.dailyTarget;
+      todayBlockHtml = '<div class="chal-today-lbl">Aujourd\'hui</div><div class="chal-today">'
+        + '<div class="chal-today-row"><span class="chal-today-dot me"></span><span class="chal-today-name">Vous</span><span class="chal-today-val'+(myTodaySlot?'':' pending')+'">'+(myTodaySlot ? fmtMetricValue(tpl.metric,myVal) : 'Pas encore')+'</span></div>'
+        + '<div class="chal-today-row"><span class="chal-today-dot partner"></span><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-val'+(partnerTodaySlot?'':' pending')+'">'+(partnerTodaySlot ? fmtMetricValue(tpl.metric,partnerVal) : 'Pas encore')+'</span></div>'
+        + '</div>'
+        // 3) Bloc total dédié -- formulation neutre ("objectif atteint"),
+        // jamais l'idée qu'un dépassement est en soi meilleur.
+        + '<div class="chal-total-block'+(reached?' reached':'')+'">'
+          + '<div class="chal-total-lbl">Objectif commun du jour</div>'
+          + '<div class="chal-total-val">'+fmtMetricValue(tpl.metric, totalVal)+' sur '+fmtMetricValue(tpl.metric, tpl.dailyTarget)+'</div>'
+          + '<div class="chal-total-sub">'+(reached ? 'Objectif atteint aujourd\'hui' : 'Pas encore atteint aujourd\'hui')+'</div>'
         + '</div>';
     }
   }
 
-  var duoHtml = waitingPartner ? '' : '<div class="chal-duo">'
-    + '<div class="chal-duo-avatars"><div class="chal-duo-av">'+esc(myFirstName.slice(0,1))+'</div><div class="chal-duo-av">'+esc(partnerName.slice(0,1).toUpperCase())+'</div></div>'
-    + '<div class="chal-duo-lbl">Défi avec <b>'+esc(partnerName)+'</b></div>'
-    + '</div>';
+  var daysBlockHtml = waitingPartner ? '' : '<div class="chal-days-lbl">Progression sur la fenêtre</div><div class="chal-days">'+dayCells.join('')+'</div>'
+    + (waitingPartner || challenge.status==='succeeded' || challenge.status==='failed' ? '' : '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>');
 
   container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+'">'
     + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
-    + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : successCount+' / '+tpl.requiredDays+' jours réussis')+'</div>'
+    + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : esc(tpl.sub))+'</div>'
     + duoHtml
+    + progressHtml
     + todayBlockHtml
-    + (waitingPartner ? '' : '<div class="chal-days-lbl">Progression sur la fenêtre</div><div class="chal-days">'+dayCells.join('')+'</div>')
-    + (waitingPartner || challenge.status==='succeeded' || challenge.status==='failed' ? '' : '<div class="chal-expiry">&#9203; Expire dans '+daysLeft+' jour'+(daysLeft>1?'s':'')+'</div>')
-    + (waitingPartner ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Envoyer un encouragement à '+esc(partnerName)+'</button>')
+    + daysBlockHtml
+    + (waitingPartner ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Encourager '+esc(partnerName)+'</button>')
     + '</div>';
 }
 
