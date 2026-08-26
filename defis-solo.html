@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Défis solo</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F7F6F1; --bg2:#EFEDE6; --card:#FFFFFF; --card2:#F7F6F1;
+  --border:rgba(32,37,31,0.08); --border2:rgba(32,37,31,0.14);
+  --text:#20251F; --text2:#687067; --text3:#9AA096;
+  --gold:#477A45; --gold-l:rgba(71,122,69,0.1);
+  --amber:#F4B942; --amber-l:rgba(244,185,66,0.16);
+  --social:#7667D8; --social-l:rgba(118,103,216,0.12);
+  --rose:#B4483F; --rose-l:rgba(180,72,63,0.1);
+  --r:20px; --r-btn:12px; --r-badge:8px;
+  --sh:0 8px 24px rgba(32,37,31,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(247,246,241,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:var(--r-btn); }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:18px; }
+
+.section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
+
+/* Carte du défi actif */
+.chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:0 10px 28px rgba(71,122,69,0.1); padding:20px 22px; margin-bottom:14px; }
+.chal-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px; gap:10px; }
+.chal-title { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; }
+.chal-status { font-size:.62rem; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; margin-top:2px; }
+.chal-status.active { background:var(--gold-l); color:var(--gold); }
+.chal-status.succeeded { background:var(--gold); color:#fff; }
+.chal-status.failed { background:var(--rose-l); color:var(--rose); }
+.chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:16px; }
+.chal-tier-badge { display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700; color:var(--text2); background:var(--bg2); padding:3px 9px; border-radius:999px; margin-bottom:10px; }
+
+.chal-progress-wrap { margin-bottom:10px; }
+.chal-progress-lbl { font-size:.9rem; font-weight:600; margin-bottom:7px; }
+.chal-progress-track { height:9px; border-radius:999px; background:var(--bg2); overflow:hidden; }
+.chal-progress-fill { height:100%; border-radius:999px; background:var(--gold); transition:width .4s ease; }
+
+.chal-secondary { display:flex; align-items:center; gap:7px; font-size:.78rem; color:var(--text2); margin:10px 0 4px; }
+.chal-secondary .ok { color:var(--gold); font-weight:700; }
+
+.chal-expiry { font-size:.76rem; color:var(--text3); margin:10px 0 4px; }
+.chal-abandon { display:inline-block; margin-top:12px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
+
+/* Sélecteur de palier */
+.tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.tier-tab { flex:1; text-align:center; padding:12px 8px; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer; transition:border-color .15s, background .15s; }
+.tier-tab .ico { font-size:1.25rem; display:block; margin-bottom:3px; }
+.tier-tab .lbl { font-size:.78rem; font-weight:700; }
+.tier-tab .sub { font-size:.66rem; color:var(--text2); margin-top:1px; }
+.tier-tab.on { border-color:var(--gold); background:var(--gold-l); }
+
+.tpl-opt { display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border); border-radius:14px; cursor:pointer; margin-bottom:9px; background:var(--card); transition:border-color .15s, background .15s; }
+.tpl-opt:hover, .tpl-opt.on { border-color:var(--gold); background:var(--gold-l); }
+.tpl-opt-icon { font-size:1.5rem; flex-shrink:0; }
+.tpl-opt-lbl { font-size:.86rem; font-weight:600; }
+.tpl-opt-sub { font-size:.72rem; color:var(--text2); margin-top:2px; }
+
+.btn { width:100%; padding:13px; border-radius:var(--r-btn); border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.94rem; font-weight:700; cursor:pointer; margin-top:6px; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+
+.empty { text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem; }
+
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:#fff; padding:11px 20px; border-radius:10px; font-size:.85rem; opacity:0; pointer-events:none; transition:all .3s; z-index:999; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="defis.html" class="t-back">&larr; Défis</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>&#127793; Défis solo</h1>
+    <p>Un objectif court et concret pour votre assiette — jamais un chiffre de calories, jamais une interdiction. La difficulté vient de la qualité de la composition, pas de la durée.</p>
+  </div>
+
+  <div id="active-zone"></div>
+  <div id="picker-zone"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER = null;
+var selectedTier = 'easy';
+var selectedTpl = null;
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDaysStr(dateStr, n){ var d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function normTxt(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+
+// ── Paliers de difficulté ────────────────────────────────────────────────
+// La difficulté vient de la qualité de la composition (plusieurs familles
+// d'aliments dans le même repas), jamais de la durée ou d'une restriction
+// chiffrée -- tous les défis durent 7 jours.
+var TIER_META = {
+  easy:   { icon:'🌱', label:'Facile',        sub:'Un premier pas' },
+  medium: { icon:'🌿', label:'Intermédiaire', sub:'Plus de régularité' },
+  hard:   { icon:'✨', label:'Avancé',        sub:'Composer son assiette' }
+};
+
+// ── Détection par mots-clés -- même convention que defis.html/dashboard.html
+// (copie volontairement propre à ce fichier, pas de dépendance croisée). ──
+var VEG_COLOR_PATTERNS = [
+  { color:'vert',   re:/brocoli|epinard|courgette|haricot vert|poireau|celeri|salade|chou vert|concombre|petit pois|poivron vert/ },
+  { color:'orange', re:/carotte|potiron|courge|poivron orange|patate douce/ },
+  { color:'rouge',  re:/tomate|poivron rouge|radis/ },
+  { color:'blanc',  re:/chou.fleur|oignon(?! rouge)|champignon|navet|endive/ },
+  { color:'violet', re:/aubergine|chou rouge|oignon rouge|betterave/ }
+];
+function vegColorOf(n){ for(var i=0;i<VEG_COLOR_PATTERNS.length;i++){ if(VEG_COLOR_PATTERNS[i].re.test(n)) return VEG_COLOR_PATTERNS[i].color; } return null; }
+
+var FRUIT_REGEX = /pomme|poire|banane|orange|kiwi|fraise|ananas|mangue|raisin|pasteque|melon|peche|abricot|prune|cerise|figue|citron|lime|grenade|papaye|coing|litchi|mandarine|clementine|pamplemousse|framboise|myrtille|mure|groseille|cassis|datte/;
+var FRUIT_COLOR_PATTERNS = [
+  { color:'rouge',  re:/fraise|cerise|framboise|pomme rouge|grenade/ },
+  { color:'orange', re:/orange|mandarine|clementine|abricot|mangue|peche/ },
+  { color:'jaune',  re:/banane|ananas|citron|poire/ },
+  { color:'violet', re:/myrtille|mure|raisin noir|prune|cassis/ },
+  { color:'vert',   re:/kiwi|raisin vert|pomme/ }
+];
+function fruitColorOf(n){ for(var i=0;i<FRUIT_COLOR_PATTERNS.length;i++){ if(FRUIT_COLOR_PATTERNS[i].re.test(n)) return FRUIT_COLOR_PATTERNS[i].color; } return null; }
+
+var LEGUMINEUSE_REGEX = /lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame|pois casse/;
+var WHOLEGRAIN_REGEX = /complet|integral|avoine|quinoa|sarrasin|epeautre|boulgour|orge/;
+var GENERIC_STARCH_REGEX = /pain|pate|riz|pomme de terre|patate(?! douce)|semoule|polenta/;
+var NUTS_REGEX = /noix|amande|noisette|cajou|pistache|graine de courge|graine de tournesol|graine de chia|graine de lin|pignon|cacahuete|arachide/;
+var HERB_REGEX = /basilic|persil|coriandre|thym|romarin|origan|cumin|paprika|curcuma|gingembre|\bail\b|ciboulette|aneth|laurier|menthe fraiche/;
+var GOOD_FAT_REGEX = /avocat|huile.*(olive|colza|noix)|noix|amande|graine|saumon|maquereau|sardine/;
+var PROTEIN_PATTERNS = [
+  { name:'volaille',  vegetal:false, re:/poulet|dinde|volaille/ },
+  { name:'boeuf/veau',vegetal:false, re:/boeuf|veau/ },
+  { name:'porc',      vegetal:false, re:/porc|jambon|bacon/ },
+  { name:'poisson',   vegetal:false, re:/saumon|cabillaud|thon|sardine|maquereau|colin|lieu|sole|daurade|crevette|poisson/ },
+  { name:'oeuf',      vegetal:false, re:/oeuf/ },
+  { name:'laitier',   vegetal:false, re:/yaourt|fromage|skyr|kefir/ },
+  { name:'tofu/tempeh',vegetal:true, re:/tofu|tempeh|seitan/ },
+  { name:'legumineuse',vegetal:true, re:/lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame/ }
+];
+function proteinOf(n){ for(var i=0;i<PROTEIN_PATTERNS.length;i++){ if(PROTEIN_PATTERNS[i].re.test(n)) return PROTEIN_PATTERNS[i]; } return null; }
+var ULTRA_REGEX = /chips|crackers|soda|coca|pepsi|fanta|sprite|charcuterie|saucisse|nugget|pizza.*surgel|plat.*(cuisine|prepare)|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king|frites?|glace|sorbet|patisserie.*industri|donut|beignet|kebab|nutella|pate a tartiner|cereales?.*sucre|barre.*cereale|snack|cordon bleu|surimi/;
+function isUltraFood(entry){
+  if(entry.is_ultra_processed === true) return true;
+  if(entry.is_ultra_processed === false) return false;
+  return ULTRA_REGEX.test(normTxt(entry.aliment));
+}
+
+// Classe UNE entrée du journal en tags -- utilisé ensuite pour construire
+// les tags AGRÉGÉS par repas (voir buildMealGroups).
+function classifyEntry(e){
+  var n = normTxt(e.aliment);
+  var vegColor = vegColorOf(n);
+  var isFruit = FRUIT_REGEX.test(n);
+  var fruitColor = isFruit ? fruitColorOf(n) : null;
+  var protein = proteinOf(n);
+  return {
+    name: e.aliment, isVeg: !!vegColor, vegColor: vegColor,
+    isFruit: isFruit, fruitColor: fruitColor,
+    isLegumineuse: LEGUMINEUSE_REGEX.test(n),
+    isWholegrain: WHOLEGRAIN_REGEX.test(n),
+    isGenericStarch: GENERIC_STARCH_REGEX.test(n),
+    isNuts: NUTS_REGEX.test(n),
+    isHerb: HERB_REGEX.test(n),
+    isGoodFat: GOOD_FAT_REGEX.test(n),
+    protein: protein,
+    isUltra: isUltraFood(e)
+  };
+}
+
+// Regroupe les entrées de la semaine par (date, repas) et agrège les tags
+// -- nécessaire pour les défis "avancé" qui demandent PLUSIEURS familles
+// d'aliments dans LE MÊME repas (pas juste sur la journée).
+function buildMealGroups(entries){
+  var byMeal = {};
+  entries.forEach(function(e){
+    var key = e.date+'::'+e.repas;
+    if(!byMeal[key]) byMeal[key] = { date:e.date, repas:e.repas, entries:[] };
+    byMeal[key].entries.push(e);
+  });
+  return Object.keys(byMeal).map(function(key){
+    var g = byMeal[key];
+    var vegNames={}, vegColors={}, fruitNames={}, legumineuseNames={}, nutsNames={}, proteinNames={}, proteinVegNames={};
+    var wholegrainPresent=false, herbPresent=false, goodFatPresent=false, genericStarchPresent=false, allNonUltra=true;
+    g.entries.forEach(function(e){
+      var t = classifyEntry(e);
+      if(t.isVeg){ vegNames[t.name]=1; if(t.vegColor) vegColors[t.vegColor]=1; }
+      if(t.isFruit){ fruitNames[t.name]=1; }
+      if(t.isLegumineuse) legumineuseNames[t.name]=1;
+      if(t.isWholegrain) wholegrainPresent=true;
+      if(t.isGenericStarch) genericStarchPresent=true;
+      if(t.isNuts) nutsNames[t.name]=1;
+      if(t.isHerb) herbPresent=true;
+      if(t.isGoodFat) goodFatPresent=true;
+      if(t.protein){ proteinNames[t.protein.name]=1; if(t.protein.vegetal) proteinVegNames[t.protein.name]=1; }
+      if(t.isUltra) allNonUltra=false;
+    });
+    var completeFeculent = wholegrainPresent || Object.keys(legumineuseNames).length>0;
+    return {
+      date:g.date, repas:g.repas,
+      vegNames:vegNames, vegColors:vegColors, fruitNames:fruitNames, legumineuseNames:legumineuseNames,
+      nutsNames:nutsNames, proteinNames:proteinNames, proteinVegNames:proteinVegNames,
+      wholegrainPresent:wholegrainPresent, herbPresent:herbPresent, goodFatPresent:goodFatPresent,
+      completeFeculent:completeFeculent, anyFeculent: completeFeculent || genericStarchPresent,
+      allNonUltra: allNonUltra
+    };
+  });
+}
+function setSize(o){ return Object.keys(o).length; }
+function unionInto(target, obj){ Object.keys(obj).forEach(function(k){ target[k]=1; }); }
+
+// Calcule, pour un défi donné, la statistique {value, target, secondary}
+// à partir des groupes de repas de la semaine ET des entrées brutes.
+function computeSoloStats(mealGroups, entries, tpl){
+  var m = tpl.metric;
+  var dates = {};
+  entries.forEach(function(e){ dates[e.date]=1; });
+
+  function mealsWhere(fn){ return mealGroups.filter(fn); }
+  function unionVeg(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.vegNames); }); return u; }
+  function unionFruit(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.fruitNames); }); return u; }
+  function unionLegumineuse(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.legumineuseNames); }); return u; }
+  function unionNuts(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.nutsNames); }); return u; }
+  function unionProtein(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.proteinNames); }); return u; }
+  function unionProteinVeg(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.proteinVegNames); }); return u; }
+  function unionVegColors(){ var u={}; mealGroups.forEach(function(g){ unionInto(u,g.vegColors); }); return u; }
+  function daysWith(fn){ var d={}; mealGroups.filter(fn).forEach(function(g){ d[g.date]=1; }); return setSize(d); }
+
+  switch(m){
+    case 'veg_meals': return { value: mealsWhere(function(g){return setSize(g.vegNames)>0;}).length };
+    case 'fruit_days': return { value: daysWith(function(g){return setSize(g.fruitNames)>0;}) };
+    case 'legumineuse_meals': return { value: mealsWhere(function(g){return setSize(g.legumineuseNames)>0;}).length };
+    case 'wholegrain_meals': return { value: mealsWhere(function(g){return g.wholegrainPresent;}).length };
+    case 'nuts_days': return { value: daysWith(function(g){return setSize(g.nutsNames)>0;}) };
+    case 'veg_color_variety': return { value: setSize(unionVegColors()) };
+    case 'veg_fruit_legumineuse_meals': return { value: mealsWhere(function(g){return setSize(g.vegNames)>0||setSize(g.fruitNames)>0||setSize(g.legumineuseNames)>0;}).length };
+    case 'herb_meals': return { value: mealsWhere(function(g){return g.herbPresent;}).length };
+    case 'fruit_variety': return { value: setSize(unionFruit()) };
+    case 'legumineuse_meals_variety': return { value: mealsWhere(function(g){return setSize(g.legumineuseNames)>0;}).length, secondaryValue: setSize(unionLegumineuse()) };
+    case 'veg_variety': return { value: setSize(unionVeg()) };
+    case 'nuts_variety': return { value: setSize(unionNuts()) };
+    case 'protein_variety': return { value: setSize(unionProtein()) };
+    case 'structured_meals': return { value: mealsWhere(function(g){return (setSize(g.vegNames)>0||setSize(g.fruitNames)>0) && setSize(g.proteinNames)>0 && g.anyFeculent;}).length };
+    case 'homemade_simple_meals': return { value: mealsWhere(function(g){return g.allNonUltra;}).length };
+    case 'complete_plate_meals': return { value: mealsWhere(function(g){return setSize(g.vegColors)>=2 && setSize(g.proteinNames)>0 && g.completeFeculent;}).length };
+    case 'rainbow_veg': return { value: setSize(unionVeg()), secondaryValue: setSize(unionVegColors()) };
+    case 'legumineuse_creative': return { value: mealsWhere(function(g){return setSize(g.legumineuseNames)>0;}).length, secondaryValue: setSize(unionLegumineuse()) };
+    case 'complete_week_meals': return { value: mealsWhere(function(g){return g.wholegrainPresent && (setSize(g.vegNames)>0||setSize(g.fruitNames)>0) && setSize(g.proteinNames)>0;}).length };
+    case 'rich_bowl_meals': return { value: mealsWhere(function(g){ var u={}; unionInto(u,g.vegNames); unionInto(u,g.fruitNames); unionInto(u,g.legumineuseNames); unionInto(u,g.nutsNames); return setSize(u)>=5; }).length };
+    case 'homemade_veg_meals': return { value: mealsWhere(function(g){ var u={}; unionInto(u,g.vegNames); unionInto(u,g.fruitNames); return g.allNonUltra && setSize(u)>=2; }).length };
+    case 'protein_variety_vegetal': return { value: setSize(unionProtein()), secondaryValue: setSize(unionProteinVeg()) };
+    case 'flavor_meals': return { value: mealsWhere(function(g){return setSize(g.vegNames)>0 && g.herbPresent && g.goodFatPresent;}).length };
+    case 'complete_breakfast_meals': return { value: mealsWhere(function(g){return g.repas==='breakfast' && setSize(g.fruitNames)>0 && (setSize(g.vegNames)>0||setSize(g.legumineuseNames)>0||g.wholegrainPresent) && setSize(g.proteinNames)>0;}).length };
+    default: return { value: 0 };
+  }
+}
+
+// ── Catalogue des défis solo (27) -- durée fixe 7 jours pour tous, la
+// difficulté vient de la composition demandée, jamais de la durée. ──────
+var SOLO_TEMPLATES = [
+  // Facile
+  { id:'easy_veg_daily', tier:'easy', icon:'🥦', label:'Légumes au quotidien', sub:'Ajouter des légumes à 4 repas', metric:'veg_meals', target:4, unit:'repas' },
+  { id:'easy_fruit_day', tier:'easy', icon:'🍎', label:'Le fruit du jour', sub:'Enregistrer au moins un fruit 4 jours', metric:'fruit_days', target:4, unit:'jours' },
+  { id:'easy_legumineuse_discover', tier:'easy', icon:'🫘', label:'Découvrir les légumineuses', sub:'Ajouter des lentilles, pois chiches, haricots ou pois à 2 repas', metric:'legumineuse_meals', target:2, unit:'repas' },
+  { id:'easy_wholegrain', tier:'easy', icon:'🌾', label:'Un choix complet', sub:'Choisir une céréale complète 3 fois', metric:'wholegrain_meals', target:3, unit:'fois' },
+  { id:'easy_nuts', tier:'easy', icon:'🥜', label:'Noix ou graines', sub:'Ajouter des noix, graines ou oléagineux 3 jours', metric:'nuts_days', target:3, unit:'jours' },
+  { id:'easy_color', tier:'easy', icon:'🌈', label:'Une touche de couleur', sub:'Découvrir 4 couleurs de légumes', metric:'veg_color_variety', target:4, unit:'couleurs' },
+  { id:'easy_add_veg', tier:'easy', icon:'🥗', label:'Ajouter du végétal', sub:'Ajouter un fruit, légume ou légumineuse à 4 repas', metric:'veg_fruit_legumineuse_meals', target:4, unit:'repas' },
+  { id:'easy_flavor', tier:'easy', icon:'🌿', label:'Plus de saveur', sub:'Utiliser une herbe, épice ou aromate dans 3 repas', metric:'herb_meals', target:3, unit:'repas' },
+
+  // Intermédiaire
+  { id:'med_veg_regular', tier:'medium', icon:'🥦', label:'Légumes réguliers', sub:'Ajouter des légumes à 6 repas', metric:'veg_meals', target:6, unit:'repas' },
+  { id:'med_fruit_variety', tier:'medium', icon:'🍎', label:'Fruits variés', sub:'Manger des fruits de 4 types différents', metric:'fruit_variety', target:4, unit:'types' },
+  { id:'med_legumineuse_duo', tier:'medium', icon:'🫘', label:'Duo de légumineuses', sub:'Essayer 2 légumineuses différentes dans 4 repas', metric:'legumineuse_meals_variety', target:4, unit:'repas', secondaryTarget:2, secondaryLabel:'Au moins 2 légumineuses différentes' },
+  { id:'med_wholegrain_reflex', tier:'medium', icon:'🌾', label:'Le réflexe complet', sub:'Choisir une céréale complète 5 fois', metric:'wholegrain_meals', target:5, unit:'fois' },
+  { id:'med_palette', tier:'medium', icon:'🌈', label:'Palette végétale', sub:'Enregistrer 8 légumes différents', metric:'veg_variety', target:8, unit:'légumes' },
+  { id:'med_nuts_mix', tier:'medium', icon:'🥜', label:'Mélange croquant', sub:'Consommer 3 noix ou graines différentes', metric:'nuts_variety', target:3, unit:'variétés' },
+  { id:'med_protein_sources', tier:'medium', icon:'🐟', label:'Sources de protéines', sub:'Choisir 4 sources de protéines différentes', metric:'protein_variety', target:4, unit:'sources' },
+  { id:'med_structured_meal', tier:'medium', icon:'🍽️', label:'Repas structuré', sub:'Réussir 4 repas avec un végétal, une protéine et un féculent', metric:'structured_meals', target:4, unit:'repas' },
+  { id:'med_homemade', tier:'medium', icon:'🍲', label:'Cuisiner simplement', sub:'Préparer 3 repas à partir d\'aliments peu transformés', metric:'homemade_simple_meals', target:3, unit:'repas' },
+
+  // Avancé
+  { id:'hard_complete_plate', tier:'hard', icon:'🥗', label:'Assiette complète et colorée', sub:'Réussir 4 repas avec 2 couleurs de légumes + une protéine + un féculent complet ou une légumineuse', metric:'complete_plate_meals', target:4, unit:'repas' },
+  { id:'hard_rainbow_week', tier:'hard', icon:'🌈', label:'Arc-en-ciel de la semaine', sub:'Enregistrer 12 légumes différents, issus d\'au moins 5 couleurs', metric:'rainbow_veg', target:12, unit:'légumes', secondaryTarget:5, secondaryLabel:'Au moins 5 couleurs différentes' },
+  { id:'hard_legumineuse_creative', tier:'hard', icon:'🫘', label:'Légumineuses créatives', sub:'Réussir 4 repas avec des légumineuses, dont 3 variétés différentes', metric:'legumineuse_creative', target:4, unit:'repas', secondaryTarget:3, secondaryLabel:'Au moins 3 légumineuses différentes' },
+  { id:'hard_complete_week', tier:'hard', icon:'🌾', label:'Semaine plus complète', sub:'Réussir 5 repas associant une céréale complète, un végétal et une protéine', metric:'complete_week_meals', target:5, unit:'repas' },
+  { id:'hard_thoughtful_meals', tier:'hard', icon:'🍽️', label:'Des repas pensés', sub:'Réussir 5 repas composés d\'un végétal, d\'une source de protéines et d\'un féculent', metric:'structured_meals', target:5, unit:'repas' },
+  { id:'hard_rich_bowl', tier:'hard', icon:'🥜', label:'Le bol riche en diversité', sub:'Créer 3 repas contenant au moins 5 ingrédients végétaux différents', metric:'rich_bowl_meals', target:3, unit:'repas' },
+  { id:'hard_veg_cooking', tier:'hard', icon:'🧑‍🍳', label:'Cuisine végétale', sub:'Préparer 4 repas maison comprenant au moins 2 végétaux différents', metric:'homemade_veg_meals', target:4, unit:'repas' },
+  { id:'hard_protein_variety', tier:'hard', icon:'🐟', label:'Protéines en variété', sub:'Enregistrer 5 sources de protéines différentes, dont au moins 2 végétales', metric:'protein_variety_vegetal', target:5, unit:'sources', secondaryTarget:2, secondaryLabel:'Au moins 2 sources végétales' },
+  { id:'hard_flavor_color', tier:'hard', icon:'🌿', label:'Saveurs et couleurs', sub:'Préparer 4 repas avec 2 légumes, une herbe ou épice, et une source de bons gras', metric:'flavor_meals', target:4, unit:'repas' },
+  { id:'hard_complete_breakfast', tier:'hard', icon:'🥣', label:'Petit-déjeuner complet', sub:'Réussir 4 petits-déjeuners avec un fruit, une source de fibres et une source de protéines', metric:'complete_breakfast_meals', target:4, unit:'petits-déjeuners' }
+];
+
+function renderTierTabs(){
+  var root = document.getElementById('picker-zone');
+  var tabsHtml = '<div class="tier-tabs">' + Object.keys(TIER_META).map(function(t){
+    var tm = TIER_META[t];
+    return '<div class="tier-tab'+(t===selectedTier?' on':'')+'" onclick="selectTier(\''+t+'\')">'
+      + '<span class="ico">'+tm.icon+'</span><span class="lbl">'+tm.label+'</span><div class="sub">'+tm.sub+'</div></div>';
+  }).join('') + '</div>';
+  var listHtml = '<div id="tpl-list"></div><button class="btn" id="create-btn" onclick="createSoloChallenge()" disabled>Commencer ce défi</button>';
+  root.innerHTML = '<div class="section-lbl">Choisir un défi</div>' + tabsHtml + listHtml;
+  renderTemplateList();
+}
+function selectTier(t){ selectedTier = t; selectedTpl = null; renderTierTabs(); }
+function renderTemplateList(){
+  var root = document.getElementById('tpl-list');
+  var list = SOLO_TEMPLATES.filter(function(t){ return t.tier===selectedTier; });
+  root.innerHTML = list.map(function(t){
+    return '<div class="tpl-opt" id="tpl-'+t.id+'" onclick="selectTpl(\''+t.id+'\')">'
+      + '<div class="tpl-opt-icon">'+t.icon+'</div>'
+      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+'</div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
+      + '</div>';
+  }).join('');
+}
+function selectTpl(id){
+  selectedTpl = id;
+  document.querySelectorAll('.tpl-opt').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById('tpl-'+id).classList.add('on');
+  document.getElementById('create-btn').disabled = false;
+}
+
+async function createSoloChallenge(){
+  if(!selectedTpl) return;
+  var r = await sb.from('solo_challenges').insert({
+    user_id: USER.id, template_id: selectedTpl, status: 'active', start_date: todayStr()
+  });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('🌱 Défi lancé !');
+  loadMySoloChallenge();
+}
+async function abandonSoloChallenge(id){
+  var r = await sb.from('solo_challenges').update({ status:'abandoned' }).eq('id', id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  loadMySoloChallenge();
+}
+
+async function loadMySoloChallenge(){
+  var activeZone = document.getElementById('active-zone');
+  var pickerZone = document.getElementById('picker-zone');
+  var r = await sb.from('solo_challenges').select('*').eq('user_id', USER.id).eq('status','active').order('created_at',{ascending:false}).limit(1);
+  if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
+  var challenge = (r.data && r.data[0]) || null;
+
+  if(!challenge){
+    activeZone.innerHTML = '';
+    pickerZone.style.display = 'block';
+    renderTierTabs();
+    return;
+  }
+  pickerZone.style.display = 'none';
+
+  var tpl = SOLO_TEMPLATES.filter(function(t){ return t.id===challenge.template_id; })[0];
+  if(!tpl){ activeZone.innerHTML = ''; return; }
+
+  var windowEnd = addDaysStr(challenge.start_date, 6);
+  var journalRes = await sb.from('journal')
+    .select('date, repas, aliment, quantite, is_ultra_processed')
+    .eq('user_id', USER.id).gte('date', challenge.start_date).lte('date', windowEnd);
+  var entries = journalRes.data || [];
+  var mealGroups = buildMealGroups(entries);
+  var stats = computeSoloStats(mealGroups, entries, tpl);
+
+  var value = stats.value || 0;
+  var met = value >= tpl.target;
+  if(tpl.secondaryTarget){ met = met && (stats.secondaryValue||0) >= tpl.secondaryTarget; }
+
+  var windowOver = todayStr() > windowEnd;
+  var newStatus = null;
+  if(met) newStatus = 'succeeded';
+  else if(windowOver) newStatus = 'failed';
+  if(newStatus){
+    await sb.from('solo_challenges').update({ status:newStatus }).eq('id', challenge.id);
+    challenge.status = newStatus;
+  }
+
+  var statusLbl = { active:'En cours', succeeded:'Réussi !', failed:'Non atteint' }[challenge.status] || challenge.status;
+  var pct = tpl.target>0 ? Math.min(100, Math.round(value/tpl.target*100)) : 0;
+  var tm = TIER_META[tpl.tier];
+
+  var daysLeft = Math.max(0, Math.round((new Date(windowEnd+'T00:00:00') - new Date(todayStr()+'T00:00:00')) / 86400000));
+  var expiryLbl = challenge.status!=='active' ? '' : (daysLeft<=0 ? '&#8203;Dernier jour aujourd\'hui' : 'Se termine dans '+daysLeft+' jour'+(daysLeft>1?'s':''));
+
+  var secondaryHtml = '';
+  if(tpl.secondaryTarget){
+    var secOk = (stats.secondaryValue||0) >= tpl.secondaryTarget;
+    secondaryHtml = '<div class="chal-secondary"><span>'+(secOk?'✅':'⬜')+'</span><span class="'+(secOk?'ok':'')+'">'+esc(tpl.secondaryLabel)+' ('+(stats.secondaryValue||0)+'/'+tpl.secondaryTarget+')</span></div>';
+  }
+
+  activeZone.innerHTML = '<div class="section-lbl">Mon défi en cours</div>'
+    + '<div class="chal-card">'
+    + '<div class="chal-tier-badge">'+tm.icon+' '+tm.label+'</div>'
+    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
+    + '<div class="chal-sub">'+esc(tpl.sub)+'</div>'
+    + '<div class="chal-progress-wrap">'
+      + '<div class="chal-progress-lbl">'+value+' / '+tpl.target+' '+esc(tpl.unit)+'</div>'
+      + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+pct+'%"></div></div>'
+    + '</div>'
+    + secondaryHtml
+    + (expiryLbl ? '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>' : '')
+    + (challenge.status==='active' ? '<button type="button" class="chal-abandon" onclick="abandonSoloChallenge(\''+challenge.id+'\')">Abandonner ce défi</button>' : '')
+    + '</div>';
+}
+
+// Réservé aux admins pour l'instant -- fonctionnalité pas encore ouverte
+// aux vrais patients, même principe que le reste des tests en cours.
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  sb.from('profiles').select('role').eq('id',USER.id).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){ window.location.href='dashboard.html'; return; }
+    loadMySoloChallenge();
+  });
+});
+</script>
+</body>
+</html>

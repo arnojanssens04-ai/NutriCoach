@@ -136,6 +136,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div class="hero">
     <h1>&#129309; Défis à deux</h1>
     <p>Partagez un objectif commun, sans pression ni chiffres comparés.</p>
+    <a href="defis-solo.html" class="t-back" style="display:inline-block;margin-top:4px">&#127793; Voir les défis solo &rarr;</a>
   </div>
 
   <div class="section-lbl">Mes défis en cours</div>
@@ -244,16 +245,25 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 // "combined" : la cible porte sur le TOTAL des deux personnes ce jour-là
 // (entraide — l'un peut compenser l'autre). "comparator" par défaut 'gte'
 // (atteindre au moins la cible) ; 'lte' pour les défis "pas plus de X".
+// tier : mêmes paliers de difficulté que defis-solo.html (voir TIER_META
+// là-bas), affichés ici en badge sur chaque défi -- mais la mécanique de
+// suivi (jour par jour, individuel/combiné) reste inchangée pour ces 9
+// défis existants, contrairement aux nouveaux défis solo "avancé" qui
+// exigent plusieurs familles d'aliments DANS LE MÊME repas.
+var DUO_TIER_META = {
+  easy:   { icon:'🌱', label:'Facile' },
+  medium: { icon:'🌿', label:'Intermédiaire' }
+};
 var DUO_TEMPLATES = {
-  veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'Sur une fenêtre de 10 jours', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:10, mode:'individual' },
-  veg_combined_400_7days: { icon:'🤝', label:'Entraide : 400g de légumes à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'veg', dailyTarget:400, requiredDays:7, windowDays:10, mode:'combined' },
-  fibres_30_7days: { icon:'🌾', label:'7 jours à 30g de fibres chacun', sub:'Sur une fenêtre de 10 jours', metric:'fibres', dailyTarget:30, requiredDays:7, windowDays:10, mode:'individual' },
-  fibres_combined_60_7days: { icon:'🤝', label:'Entraide : 60g de fibres à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'fibres', dailyTarget:60, requiredDays:7, windowDays:10, mode:'combined' },
-  prot_60_7days: { icon:'🍗', label:'7 jours à 60g de protéines chacun', sub:'Sur une fenêtre de 10 jours', metric:'protein', dailyTarget:60, requiredDays:7, windowDays:10, mode:'individual' },
-  prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:10, mode:'combined' },
-  petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'Sur une fenêtre de 8 jours', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:8, mode:'individual' },
-  ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'Sur une fenêtre de 8 jours', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:8, mode:'individual' },
-  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual' }
+  veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'Sur une fenêtre de 10 jours', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:10, mode:'individual', tier:'easy' },
+  veg_combined_400_7days: { icon:'🤝', label:'Entraide : 400g de légumes à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'veg', dailyTarget:400, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
+  fibres_30_7days: { icon:'🌾', label:'7 jours à 30g de fibres chacun', sub:'Sur une fenêtre de 10 jours', metric:'fibres', dailyTarget:30, requiredDays:7, windowDays:10, mode:'individual', tier:'medium' },
+  fibres_combined_60_7days: { icon:'🤝', label:'Entraide : 60g de fibres à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'fibres', dailyTarget:60, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
+  prot_60_7days: { icon:'🍗', label:'7 jours à 60g de protéines chacun', sub:'Sur une fenêtre de 10 jours', metric:'protein', dailyTarget:60, requiredDays:7, windowDays:10, mode:'individual', tier:'medium' },
+  prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
+  petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'Sur une fenêtre de 8 jours', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:8, mode:'individual', tier:'easy' },
+  ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'Sur une fenêtre de 8 jours', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:8, mode:'individual', tier:'medium' },
+  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual', tier:'medium' }
 };
 
 // Détection légumes / ultra-transformés — même esprit que dashboard.html,
@@ -276,9 +286,10 @@ function renderTemplateList(){
   var root = document.getElementById('tpl-list');
   root.innerHTML = Object.keys(DUO_TEMPLATES).map(function(key){
     var t = DUO_TEMPLATES[key];
+    var tm = DUO_TIER_META[t.tier];
     return '<div class="tpl-opt" id="tpl-'+key+'" onclick="selectTpl(\''+key+'\')">'
       + '<div class="tpl-opt-icon">'+t.icon+'</div>'
-      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+'</div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
+      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+' <span style="font-size:.62rem;font-weight:700;color:var(--text2);background:var(--bg2);padding:2px 7px;border-radius:999px;vertical-align:middle">'+tm.icon+' '+tm.label+'</span></div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
       + '</div>';
   }).join('');
 }
