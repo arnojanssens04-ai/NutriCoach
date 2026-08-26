@@ -42,13 +42,25 @@ function selectTemplateVariant(template, observation, hasSupplement) {
     default: true
   };
 
+  // Premier palier ('when') qui matche, dans l'ordre du tableau -- puis,
+  // PARMI les variantes déjà écrites et validées qui partagent ce même
+  // palier (ex : 3 formulations différentes toutes en 'default'), un
+  // choix AU HASARD -- jamais un texte généré, seulement une sélection
+  // aléatoire dans un ensemble fixe. Reproduit la variété d'un vrai
+  // diététicien sans jamais improviser une phrase.
+  var matchedKey = null;
   for (var i = 0; i < variants.length; i++) {
     var key = variants[i].when;
     if (Object.prototype.hasOwnProperty.call(flags, key) && flags[key]) {
-      return variants[i];
+      matchedKey = key;
+      break;
     }
   }
-  return variants[variants.length - 1];
+  if (matchedKey === null) return variants[variants.length - 1];
+
+  var pool = variants.filter(function (v) { return v.when === matchedKey; });
+  if (!pool.length) return variants[variants.length - 1];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function renderNutritionAdvice(template, selectedFoods, flaggedFoodNames, observation, hasSupplement) {
