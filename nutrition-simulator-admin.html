@@ -1666,12 +1666,49 @@ function computeAUTSummaryData(entries, periodLabel){
   };
 }
 
+// Calcule, pour chaque entrée du journal, la quantité TOTALE réellement
+// consommée de chaque nutriment (pas juste la valeur pour 100g déjà
+// trackée) -- computeNutrientIntakeVsTarget (nutrition-signal-engine.js)
+// attend ces champs absolus (iron_mg, calcium_mg...) directement sur
+// chaque entrée. Sans cette étape, ce champ n'existe nulle part et les 8
+// règles fer/calcium/fibres/oméga-3/magnésium/zinc/potassium/protéines
+// restent inéligibles pour TOUT patient réel en permanence (même bug de
+// classe que nutrient_sources pour B12/C/D, corrigé séparément). Ne
+// modifie jamais l'entrée d'origine (nouvel objet), et ne fabrique
+// aucune valeur : si le champ source par 100g est absent (null), le
+// champ dérivé reste absent lui aussi plutôt que de forcer un 0 trompeur.
+function enrichJournalEntriesWithNutrientTotals(entries) {
+  return (entries || []).map(function (e) {
+    var q = (typeof e.quantite === 'number') ? e.quantite : 0;
+    var out = Object.assign({}, e);
+    function total(per100Field) {
+      return (typeof e[per100Field] === 'number') ? e[per100Field] * q / 100 : undefined;
+    }
+    var fer = total('food_fer_100'); if (fer !== undefined) out.iron_mg = fer;
+    var cal = total('food_cal_100'); if (cal !== undefined) out.calcium_mg = cal;
+    var fib = total('food_fibres_100'); if (fib !== undefined) out.fiber_g = fib;
+    var mg = total('food_mg_100'); if (mg !== undefined) out.magnesium_mg = mg;
+    var zn = total('food_zn_100'); if (zn !== undefined) out.zinc_mg = zn;
+    var pot = total('food_pot_100'); if (pot !== undefined) out.potassium_mg = pot;
+    // Oméga-3 = ALA + EPA + DHA (food_o3a_100/food_o3e_100/food_o3d_100),
+    // jamais les monoinsaturés (food_mono_100, nutriment distinct).
+    var o3a = total('food_o3a_100'), o3e = total('food_o3e_100'), o3d = total('food_o3d_100');
+    if (o3a !== undefined || o3e !== undefined || o3d !== undefined) {
+      out.omega3_g = (o3a || 0) + (o3e || 0) + (o3d || 0);
+    }
+    // Protéines déjà stockées en quantité ABSOLUE par entrée (pas pour
+    // 100g) dans journal.proteines -- aucun calcul supplémentaire.
+    if (typeof e.proteines === 'number') out.protein_g = e.proteines;
+    return out;
+  });
+}
+
 function loadRealJournalForAdmin(uid, adminProfile) {
   var referenceDate = todayIsoSim();
   var windowStart = shiftDateStrSim(referenceDate, -6);
 
   sb.from('journal')
-    .select('date, repas, aliment, quantite, kcal, is_ultra_processed, nutrient_sources')
+    .select('date, repas, aliment, quantite, kcal, proteines, is_ultra_processed, nutrient_sources, food_fer_100, food_cal_100, food_fibres_100, food_o3a_100, food_o3e_100, food_o3d_100, food_mg_100, food_zn_100, food_pot_100')
     .eq('user_id', uid)
     .gte('date', windowStart)
     .lte('date', referenceDate)
@@ -1770,7 +1807,7 @@ function loadPatientQueue(adminUid) {
 
       Promise.all([
         sb.from('journal')
-          .select('user_id, date, repas, aliment, quantite, kcal, is_ultra_processed, nutrient_sources')
+          .select('user_id, date, repas, aliment, quantite, kcal, proteines, is_ultra_processed, nutrient_sources, food_fer_100, food_cal_100, food_fibres_100, food_o3a_100, food_o3e_100, food_o3d_100, food_mg_100, food_zn_100, food_pot_100')
           .in('user_id', patientIds)
           .gte('date', windowStart)
           .lte('date', referenceDate),
@@ -1801,7 +1838,7 @@ function loadPatientQueue(adminUid) {
 
         var cards = [];
         patients.forEach(function (p) {
-          var journalEntries = journalByPatient[p.id] || [];
+          var journalEntries = enrichJournalEntriesWithNutrientTotals(journalByPatient[p.id] || []);
           if (!journalEntries.length) return;
 
           var profileForEngine = {

@@ -3159,6 +3159,31 @@ function selectVarietyFoodSuggestions(genericFoods, observedFoods, topN){
   return fresh.concat(overlapping).slice(0, topN || genericFoods.length);
 }
 
+// Calcule, pour chaque entrée du journal, la quantité TOTALE réellement
+// consommée de chaque nutriment -- computeNutrientIntakeVsTarget
+// (nutrition-signal-engine.js) attend ces champs absolus (iron_mg,
+// calcium_mg...) directement sur chaque entrée, qui n'existent nulle part
+// par défaut. Sans cette étape, les règles fer/calcium/fibres/oméga-3/
+// magnésium/zinc/potassium/protéines restent inéligibles pour TOUT
+// patient réel en permanence. Ne fabrique aucune valeur : si le champ
+// source par 100g est absent, le champ dérivé reste absent lui aussi.
+function enrichJournalEntriesWithNutrientTotals(entries){
+  return (entries||[]).map(function(e){
+    var q = (typeof e.quantite === 'number') ? e.quantite : 0;
+    var out = Object.assign({}, e);
+    function total(per100Field){ return (typeof e[per100Field] === 'number') ? e[per100Field]*q/100 : undefined; }
+    var fer = total('food_fer_100'); if(fer!==undefined) out.iron_mg = fer;
+    var cal = total('food_cal_100'); if(cal!==undefined) out.calcium_mg = cal;
+    var fib = total('food_fibres_100'); if(fib!==undefined) out.fiber_g = fib;
+    var mg = total('food_mg_100'); if(mg!==undefined) out.magnesium_mg = mg;
+    var zn = total('food_zn_100'); if(zn!==undefined) out.zinc_mg = zn;
+    var pot = total('food_pot_100'); if(pot!==undefined) out.potassium_mg = pot;
+    var o3a = total('food_o3a_100'), o3e = total('food_o3e_100'), o3d = total('food_o3d_100');
+    if(o3a!==undefined || o3e!==undefined || o3d!==undefined) out.omega3_g = (o3a||0)+(o3e||0)+(o3d||0);
+    if(typeof e.proteines === 'number') out.protein_g = e.proteines;
+    return out;
+  });
+}
 async function checkAdminNutritionBetaAlert(){
   var p = PROF||{};
   if(p.role!=='admin') return;
@@ -3167,11 +3192,11 @@ async function checkAdminNutritionBetaAlert(){
   var referenceDate = today();
   var since = new Date(); since.setDate(since.getDate()-13);
   var r = await sb.from('journal')
-    .select('date, repas, aliment, quantite, kcal, is_ultra_processed')
+    .select('date, repas, aliment, quantite, kcal, proteines, is_ultra_processed, nutrient_sources, food_fer_100, food_cal_100, food_fibres_100, food_o3a_100, food_o3e_100, food_o3d_100, food_mg_100, food_zn_100, food_pot_100')
     .eq('user_id', USER.id)
     .gte('date', dateStr(since))
     .lte('date', referenceDate);
-  var journalEntries = (r && r.data) || [];
+  var journalEntries = enrichJournalEntriesWithNutrientTotals((r && r.data) || []);
   if(!journalEntries.length) return;
 
   var profileForEngine = {
