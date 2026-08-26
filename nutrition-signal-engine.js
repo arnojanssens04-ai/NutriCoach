@@ -237,6 +237,16 @@ var NUTRIENT_DAILY_TARGETS_REFERENCE = {
   vitamin_b12_mcg: 2.4
 };
 
+// Cible réellement utilisée pour CE patient (calcTargets(), déjà affichée
+// partout ailleurs dans l'app -- Mon plan, Score Santé détaillé) si
+// fournie, sinon repli sur la référence générique ci-dessus. Évite la
+// contradiction "le conseil cite 14mg/j de fer alors que Mon plan affiche
+// 9mg/j pour la même personne" -- signalée le 2026-08-26.
+function resolveDailyTarget(nutrientTargets, key) {
+  if (nutrientTargets && typeof nutrientTargets[key] === 'number') return nutrientTargets[key];
+  return NUTRIENT_DAILY_TARGETS_REFERENCE[key];
+}
+
 /* -----------------------------------------------------------------------
    computeNutrientIntakeVsTarget(params)
 
@@ -393,12 +403,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_iron: function (journalEntries, referenceDate) {
+  low_source_presence_iron: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_iron',
       label: 'Apport en fer nettement inférieur à la référence',
       nutrientField: 'iron_mg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.iron_mg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'iron_mg'),
       unit: 'mg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -407,12 +417,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_calcium: function (journalEntries, referenceDate) {
+  low_source_presence_calcium: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_calcium',
       label: 'Apport en calcium nettement inférieur à la référence',
       nutrientField: 'calcium_mg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.calcium_mg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'calcium_mg'),
       unit: 'mg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -421,12 +431,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_fiber: function (journalEntries, referenceDate) {
+  low_source_presence_fiber: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_fiber',
       label: 'Apport en fibres nettement inférieur à la référence',
       nutrientField: 'fiber_g',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.fiber_g,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'fiber_g'),
       unit: 'g',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -435,12 +445,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_omega3: function (journalEntries, referenceDate) {
+  low_source_presence_omega3: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_omega3',
       label: 'Apport en oméga-3 nettement inférieur à la référence',
       nutrientField: 'omega3_g',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.omega3_g,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'omega3_g'),
       unit: 'g',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -449,12 +459,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_magnesium: function (journalEntries, referenceDate) {
+  low_source_presence_magnesium: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_magnesium',
       label: 'Apport en magnésium nettement inférieur à la référence',
       nutrientField: 'magnesium_mg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.magnesium_mg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'magnesium_mg'),
       unit: 'mg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -463,12 +473,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_zinc: function (journalEntries, referenceDate) {
+  low_source_presence_zinc: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_zinc',
       label: 'Apport en zinc nettement inférieur à la référence',
       nutrientField: 'zinc_mg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.zinc_mg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'zinc_mg'),
       unit: 'mg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -499,12 +509,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_potassium: function (journalEntries, referenceDate) {
+  low_source_presence_potassium: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_potassium',
       label: 'Apport en potassium nettement inférieur à la référence',
       nutrientField: 'potassium_mg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.potassium_mg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'potassium_mg'),
       unit: 'mg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -521,12 +531,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
   // elles restent traitées comme "jour non exploitable" (hasUnknown),
   // jamais comme une carence à 0 -- comportement normal en attendant que
   // le journal se remplisse avec le nouveau champ.
-  low_source_presence_vitamin_b12: function (journalEntries, referenceDate) {
+  low_source_presence_vitamin_b12: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_vitamin_b12',
       label: 'Apport en vitamine B12 nettement inférieur à la référence',
       nutrientField: 'vitamin_b12_mcg',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.vitamin_b12_mcg,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'vitamin_b12_mcg'),
       unit: 'µg',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,
@@ -535,12 +545,12 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
-  low_source_presence_protein: function (journalEntries, referenceDate) {
+  low_source_presence_protein: function (journalEntries, referenceDate, nutrientTargets) {
     return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_protein',
       label: 'Apport en protéines nettement inférieur à la référence',
       nutrientField: 'protein_g',
-      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.protein_g,
+      dailyTarget: resolveDailyTarget(nutrientTargets, 'protein_g'),
       unit: 'g',
       observationWindowDays: 14,
       insufficiencyRatio: 0.5,

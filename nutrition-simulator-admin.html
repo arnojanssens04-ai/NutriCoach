@@ -245,7 +245,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-food-definitions.js?v=2"></script>
 <script src="nutrition-template-definitions.js?v=3"></script>
 <script src="nutrition-rule-definitions.js?v=2"></script>
-<script src="nutrition-signal-engine.js?v=3"></script>
+<script src="nutrition-signal-engine.js?v=4"></script>
 <script src="nutrition-priority-engine.js?v=2"></script>
 <script src="nutrition-safety.js?v=2"></script>
 <script src="nutrition-rule-engine.js?v=2"></script>
@@ -253,7 +253,7 @@ main{ max-width:900px; margin:0 auto; padding:24px 20px 0; }
 <script src="nutrition-food-selector.js?v=2"></script>
 <script src="nutrition-advice-renderer.js?v=2"></script>
 <script src="nutrition-audit.js?v=2"></script>
-<script src="nutrition-simulator.js?v=2"></script>
+<script src="nutrition-simulator.js?v=3"></script>
 <script src="nutrition-simulator-fixtures.js?v=2"></script>
 <script src="aut-summary-card.js"></script>
 <!-- Chantier séparé (meal-pattern-*.js) — jamais chargé par les fichiers
@@ -1788,12 +1788,39 @@ function decidePatientAdvice(cardId, patientId, ruleId, referenceDate, decision,
   });
 }
 
+// Reproduit uniquement la partie MICRONUTRIMENTS de calcTargets()
+// (dashboard.html) -- mêmes cibles sexe/âge/pathologies-personnalisées
+// déjà affichées au patient dans Mon plan, pour que le moteur ne cite
+// jamais un chiffre différent de celui que la personne voit ailleurs dans
+// l'app (incohérence signalée le 2026-08-26). Volontairement PARTIEL :
+// ne reproduit pas l'ajustement ménopause de calcTargets() (nécessite
+// menophase/menoths, non chargés ici) -- repli sur la valeur adulte
+// standard dans ce cas précis, jamais une valeur inventée.
+function computeNutrientTargetsForPatient(p) {
+  var g = p.sexe || 'F', a = p.age || 35, act = p.activite || 'sedentary';
+  var pathos = p.pathologies || [];
+  var mgTarget = g === 'M' ? 380 : 300;
+  if (act === 'active' || act === 'sportif') mgTarget += 60;
+  return {
+    iron_mg: (g === 'F' && a < 50) ? 16 : 9,
+    calcium_mg: 1000,
+    potassium_mg: pathos.indexOf('hypertension') >= 0 ? 3500 : 2000,
+    magnesium_mg: mgTarget,
+    zinc_mg: g === 'M' ? 12 : 10,
+    fiber_g: 27,
+    // Repli 1.2g/kg (sédentaire/légèrement actif, seuil OMS + marge) --
+    // même valeur par défaut que calcTargets() hors profil sportif/actif,
+    // faute des données d'activité MET précises ici.
+    protein_g: p.poids ? Math.round(p.poids * 1.2) : undefined
+  };
+}
+
 function loadPatientQueue(adminUid) {
   var root = document.getElementById('patient-queue-root');
   var referenceDate = todayIsoSim();
   var windowStart = shiftDateStrSim(referenceDate, -13);
 
-  sb.from('profiles').select('id, prenom, nom, age, diet, role, supplements').neq('role', 'admin')
+  sb.from('profiles').select('id, prenom, nom, age, diet, role, supplements, sexe, poids, activite, pathologies').neq('role', 'admin')
     .then(function (profilesRes) {
       if (profilesRes.error) {
         root.innerHTML = '<div class="result-box blocked">Erreur de lecture des patients : ' + esc(profilesRes.error.message) + '</div>';
@@ -1846,7 +1873,8 @@ function loadPatientQueue(adminUid) {
             patientId: p.id, age: p.age || null, isPregnantOrBreastfeeding: false,
             allergies: [], intolerances: [], clinicalContext: [], symptoms: [],
             diet: p.diet || null, eligibleForAutomatedAdvice: true,
-            supplementedNutrients: Array.isArray(p.supplements) ? p.supplements : []
+            supplementedNutrients: Array.isArray(p.supplements) ? p.supplements : [],
+            nutrientTargets: computeNutrientTargetsForPatient(p)
           };
 
           var eligible = runNutritionSimulationForAllRules({

@@ -73,7 +73,13 @@ function runNutritionSimulation(params) {
   var trendResult;
   try {
     if (typeof NUTRITION_SIGNAL_RESOLVERS !== 'undefined' && NUTRITION_SIGNAL_RESOLVERS[rule.triggerPatternId]) {
-      trendResult = NUTRITION_SIGNAL_RESOLVERS[rule.triggerPatternId](params.journalEntries, params.referenceDate);
+      // nutrientTargets (calcTargets() du patient réel, si fourni par
+      // l'appelant) prend le pas sur la référence générique fixe dans les
+      // résolveurs à quantité -- évite la contradiction "le conseil cite
+      // 14mg/j de fer alors que Mon plan affiche 9mg/j pour cette même
+      // personne", signalée le 2026-08-26. Ignoré sans effet par les
+      // résolveurs qui n'acceptent pas ce 3e paramètre.
+      trendResult = NUTRITION_SIGNAL_RESOLVERS[rule.triggerPatternId](params.journalEntries, params.referenceDate, params.profile && params.profile.nutrientTargets);
     } else {
       trendResult = computeTrendResult(rule.triggerPatternId, params.journalEntries, params.referenceDate);
     }

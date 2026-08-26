@@ -1420,7 +1420,7 @@ body {
 <script src="nutrition-food-definitions.min.js?v=1"></script>
 <script src="nutrition-template-definitions.min.js?v=3"></script>
 <script src="nutrition-rule-definitions.min.js?v=2"></script>
-<script src="nutrition-signal-engine.min.js?v=3"></script>
+<script src="nutrition-signal-engine.min.js?v=4"></script>
 <script src="nutrition-priority-engine.min.js?v=1"></script>
 <script src="nutrition-safety.min.js?v=1"></script>
 <script src="nutrition-rule-engine.min.js?v=1"></script>
@@ -1428,7 +1428,7 @@ body {
 <script src="nutrition-food-selector.min.js?v=1"></script>
 <script src="nutrition-advice-renderer.min.js?v=2"></script>
 <script src="nutrition-audit.min.js?v=1"></script>
-<script src="nutrition-simulator.min.js?v=2"></script>
+<script src="nutrition-simulator.min.js?v=3"></script>
 <script src="aut-summary-card.js?v=1"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
@@ -3206,10 +3206,21 @@ async function checkAdminNutritionBetaAlert(){
   var journalEntries = enrichJournalEntriesWithNutrientTotals((r && r.data) || []);
   if(!journalEntries.length) return;
 
+  // Mêmes cibles que partout ailleurs dans l'app (Mon plan, Score Santé
+  // détaillé) -- calcTargets() est déjà sexe/âge/pathologies-personnalisé
+  // pour CET utilisateur. Sans ça, le moteur citait une référence
+  // générique fixe (ex: fer 14mg/j) différente de celle déjà affichée à
+  // la même personne ailleurs (ex: fer 9mg/j) -- incohérence signalée le
+  // 2026-08-26.
+  var tgt = calcTargets();
   var profileForEngine = {
     patientId: USER.id, age: p.age || null, isPregnantOrBreastfeeding: false,
     allergies: [], intolerances: [], clinicalContext: [], symptoms: [],
-    diet: p.diet || null, eligibleForAutomatedAdvice: true
+    diet: p.diet || null, eligibleForAutomatedAdvice: true,
+    nutrientTargets: {
+      iron_mg: tgt.fer, calcium_mg: tgt.cal, potassium_mg: tgt.pot,
+      magnesium_mg: tgt.mg, zinc_mg: tgt.zn, fiber_g: tgt.fibres, protein_g: tgt.prot
+    }
   };
 
   var eligible = runNutritionSimulationForAllRules({
