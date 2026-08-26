@@ -46,7 +46,11 @@ var ULTRA_PROCESSED_CATEGORY_DEFINITIONS = [
   { category: 'sugary_dessert_pastry', weeklyThreshold: 4,
     keywords: ['mousse au chocolat', 'chocolat industriel', 'patisserie industrielle', 'gateau industriel', 'viennoiserie industrielle', 'biscuit industriel', 'barre chocolatee', 'glace industrielle', 'donut', 'beignet industriel', 'macaron', 'brownie', 'blondie'] },
   { category: 'sugary_drink', weeklyThreshold: 3,
-    keywords: ['soda', 'cola', 'boisson sucree', 'boisson energisante', 'jus industriel', 'limonade', 'sirop'] },
+    // 'sirop' seul retiré -- capturait à tort le sirop d'agave (un
+    // édulcorant/condiment, jamais une boisson en soi), le sirop d'érable,
+    // etc. Uniquement les sirops explicitement destinés à être dilués en
+    // boisson (grenadine, menthe, diabolo).
+    keywords: ['soda', 'cola', 'boisson sucree', 'boisson energisante', 'jus industriel', 'limonade', 'sirop grenadine', 'sirop menthe', 'sirop diabolo', 'sirop pour boisson'] },
   { category: 'fast_food_meal', weeklyThreshold: 2,
     keywords: ['pizza industrielle', 'burger', 'plat prepare', 'nugget', 'kebab industriel', 'sandwich industriel'] },
   { category: 'salty_snack', weeklyThreshold: 3,
