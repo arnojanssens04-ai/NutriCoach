@@ -33,6 +33,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .hero-rules { font-size:.72rem; color:var(--text3); line-height:1.7; background:var(--card2); border-radius:14px; padding:12px 14px; margin-bottom:18px; }
 
 .section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
+
+/* Sélecteur de mode -- identique sur les 3 pages de défis, voir defis.html. */
+.mode-switch { display:flex; gap:8px; margin-bottom:20px; }
+.mode-card { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:14px 8px; border-radius:16px; border:1px solid var(--border); background:var(--card); text-decoration:none; color:var(--text); cursor:pointer; transition:border-color .15s, background .15s; }
+.mode-card:hover { border-color:var(--gold); }
+.mode-card.active { border-color:var(--gold); background:var(--gold-l); cursor:default; }
+.mode-ico { font-size:1.4rem; }
+.mode-lbl { font-size:.8rem; font-weight:700; }
+.mode-sub { font-size:.64rem; color:var(--text2); }
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
 
 .tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
@@ -111,6 +120,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </header>
 
 <div class="wrap">
+  <div class="mode-switch">
+    <a href="defis-solo.html" class="mode-card"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></a>
+    <a href="defis.html" class="mode-card"><span class="mode-ico">🤝</span><span class="mode-lbl">Défi entraide</span><span class="mode-sub">À deux, ensemble</span></a>
+    <div class="mode-card active"><span class="mode-ico">⚔️</span><span class="mode-lbl">Duel</span><span class="mode-sub">Jeu amical à deux</span></div>
+  </div>
+
   <div class="hero">
     <h1>&#127918; Combat amical</h1>
     <p>Un jeu privé et rapide entre vous deux — jamais un classement public, jamais un jugement.</p>

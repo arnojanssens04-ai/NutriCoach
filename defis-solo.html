@@ -33,6 +33,15 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 .section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
 
+/* Sélecteur de mode -- identique sur les 3 pages de défis, voir defis.html. */
+.mode-switch { display:flex; gap:8px; margin-bottom:20px; }
+.mode-card { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:14px 8px; border-radius:16px; border:1px solid var(--border); background:var(--card); text-decoration:none; color:var(--text); cursor:pointer; transition:border-color .15s, background .15s; }
+.mode-card:hover { border-color:var(--gold); }
+.mode-card.active { border-color:var(--gold); background:var(--gold-l); cursor:default; }
+.mode-ico { font-size:1.4rem; }
+.mode-lbl { font-size:.8rem; font-weight:700; }
+.mode-sub { font-size:.64rem; color:var(--text2); }
+
 /* Carte du défi actif */
 .chal-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:0 10px 28px rgba(71,122,69,0.1); padding:20px 22px; margin-bottom:14px; }
 .chal-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px; gap:10px; }
@@ -86,6 +95,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 </header>
 
 <div class="wrap">
+  <div class="mode-switch">
+    <div class="mode-card active"><span class="mode-ico">🌱</span><span class="mode-lbl">Défi seul</span><span class="mode-sub">Votre objectif</span></div>
+    <a href="defis.html" class="mode-card"><span class="mode-ico">🤝</span><span class="mode-lbl">Défi entraide</span><span class="mode-sub">À deux, ensemble</span></a>
+    <a href="combat.html" class="mode-card"><span class="mode-ico">⚔️</span><span class="mode-lbl">Duel</span><span class="mode-sub">Jeu amical à deux</span></a>
+  </div>
+
   <div class="hero">
     <h1>&#127793; Défis solo</h1>
     <p>Un objectif court et concret pour votre assiette — jamais un chiffre de calories, jamais une interdiction. La difficulté vient de la qualité de la composition, pas de la durée.</p>
