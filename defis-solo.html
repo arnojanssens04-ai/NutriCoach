@@ -65,6 +65,21 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .chal-expiry { font-size:.76rem; color:var(--text3); margin:10px 0 4px; }
 .chal-abandon { display:inline-block; margin-top:12px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
 
+/* Outils de test (admin) -- pas de nouvelle table : réutilise le vrai
+   journal (le calcul en direct est déjà testé), juste des dates
+   antidatées + des aliments ajoutés directement plutôt que via le
+   parcours normal, pour ne pas attendre 7 jours réels à chaque test. */
+.sim-panel { margin-top:16px; padding-top:14px; border-top:1px dashed var(--border2); }
+.sim-title { font-size:.72rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+.sim-row { display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.sim-row select, .sim-row input[type="date"], .sim-row input[type="text"] { flex:1; min-width:90px; padding:8px 9px; border:1px solid var(--border2); border-radius:9px; font-size:.78rem; }
+.sim-btn { padding:8px 12px; border-radius:9px; border:1px solid var(--border2); background:var(--card2); color:var(--text); font-size:.76rem; font-weight:600; cursor:pointer; }
+.sim-btn:hover { border-color:var(--gold); }
+.sim-btn.primary { background:var(--gold-l); border-color:var(--gold); color:var(--gold); }
+.sim-chips { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px; }
+.sim-chip { font-size:.7rem; padding:5px 10px; border-radius:999px; border:1px solid var(--border2); background:var(--card); cursor:pointer; }
+.sim-chip:hover { border-color:var(--gold); background:var(--gold-l); }
+
 /* Sélecteur de palier */
 .tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
 .tier-tab { flex:1; text-align:center; padding:12px 8px; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer; transition:border-color .15s, background .15s; }
@@ -369,6 +384,52 @@ async function createSoloChallenge(){
   toast('🌱 Défi lancé !');
   loadMySoloChallenge();
 }
+// ── Outils de test (admin) ───────────────────────────────────────────
+// Pas de nouvelle table ni de logique de calcul séparée -- réutilise le
+// vrai chemin (journal réel + computeSoloStats déjà éprouvé), juste avec
+// des dates antidatées et des aliments ajoutés directement. Ainsi ce
+// qu'on teste ici est EXACTEMENT ce qui tourne en production, jamais une
+// simulation parallèle qui pourrait diverger.
+var SIM_TEST_FOODS = ['Brocoli','Tomate','Carotte','Pomme','Lentilles','Poulet','Saumon','Oeufs','Yaourt nature','Riz complet','Amandes','Basilic','Avocat'];
+async function backdateSoloChallenge(id, days){
+  var newStart = addDaysStr(todayStr(), -(days-1));
+  var r = await sb.from('solo_challenges').update({ start_date:newStart }).eq('id', id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('⏪ Défi reculé au '+newStart);
+  loadMySoloChallenge();
+}
+async function testAddJournalEntry(date, repas, aliment){
+  if(!date || !repas || !aliment){ toast('Remplis date, repas et aliment'); return; }
+  var r = await sb.from('journal').insert({
+    user_id:USER.id, date:date, repas:repas, aliment:aliment, quantite:100,
+    kcal:0, proteines:0, glucides:0, lipides:0, is_ultra_processed:false
+  });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('🧪 '+aliment+' ajouté au '+date);
+  loadMySoloChallenge();
+}
+function testAddFromForm(){
+  var date = document.getElementById('sim-date').value;
+  var repas = document.getElementById('sim-repas').value;
+  var aliment = document.getElementById('sim-aliment').value.trim();
+  testAddJournalEntry(date, repas, aliment);
+}
+function renderSimPanel(challenge, windowStart, windowEnd, durationDays){
+  var chipsHtml = SIM_TEST_FOODS.map(function(f){
+    return '<span class="sim-chip" onclick="document.getElementById(\'sim-aliment\').value='+JSON.stringify(f)+'">'+f+'</span>';
+  }).join('');
+  return '<div class="sim-panel">'
+    + '<div class="sim-title">🧪 Outils de test (admin)</div>'
+    + '<div class="sim-row"><button type="button" class="sim-btn primary" onclick="backdateSoloChallenge(\''+challenge.id+'\','+durationDays+')">⏪ Faire commencer il y a '+(durationDays-1)+' jours</button></div>'
+    + '<div class="sim-chips">'+chipsHtml+'</div>'
+    + '<div class="sim-row">'
+      + '<input type="date" id="sim-date" value="'+windowStart+'" min="'+windowStart+'" max="'+windowEnd+'">'
+      + '<select id="sim-repas"><option value="breakfast">Petit-déj</option><option value="lunch">Déjeuner</option><option value="snack">Collation</option><option value="dinner">Souper</option></select>'
+    + '</div>'
+    + '<div class="sim-row"><input type="text" id="sim-aliment" placeholder="Nom de l\'aliment"><button type="button" class="sim-btn" onclick="testAddFromForm()">Ajouter</button></div>'
+    + '</div>';
+}
+
 async function abandonSoloChallenge(id){
   var r = await sb.from('solo_challenges').update({ status:'abandoned' }).eq('id', id);
   if(r.error){ toast('❌ '+r.error.message); return; }
@@ -453,6 +514,7 @@ async function loadMySoloChallenge(){
     + secondaryHtml
     + (expiryLbl ? '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>' : '')
     + (challenge.status==='active' ? '<button type="button" class="chal-abandon" onclick="abandonSoloChallenge(\''+challenge.id+'\')">Abandonner ce défi</button>' : '')
+    + (challenge.status==='active' ? renderSimPanel(challenge, challenge.start_date, windowEnd, 7) : '')
     + '</div>';
 }
 

@@ -97,6 +97,17 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .cbt-expiry { font-size:.76rem; color:var(--text3); margin:8px 0 4px; }
 .cbt-abandon { display:inline-block; margin-top:10px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
 
+/* Outils de test (admin) -- réutilise duo_combat_progress (la vraie table
+   déjà lue par loadMyCombat), chaque compte n'écrit que SES PROPRES
+   lignes (RLS déjà en place). */
+.sim-panel { margin-top:16px; padding-top:14px; border-top:1px dashed var(--border2); }
+.sim-title { font-size:.72rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+.sim-row { display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.sim-btn { padding:8px 12px; border-radius:9px; border:1px solid var(--border2); background:var(--card2); color:var(--text); font-size:.76rem; font-weight:600; cursor:pointer; }
+.sim-btn:hover { border-color:var(--gold); }
+.sim-btn.primary { background:var(--gold-l); border-color:var(--gold); color:var(--gold); }
+.sim-btn.danger { color:var(--rose); }
+
 .cbt-end-title { font-family:'Lora',serif; font-size:1.1rem; font-weight:700; text-align:center; margin-bottom:10px; }
 .cbt-end-stats { display:flex; gap:10px; justify-content:center; margin-top:12px; }
 .cbt-end-stat { text-align:center; background:var(--card2); border-radius:12px; padding:10px 16px; }
@@ -336,6 +347,42 @@ function selectTpl(id){
   document.getElementById('create-btn').disabled = false;
 }
 
+// ── Outils de test (admin) -- réutilise duo_combat_progress, la vraie
+// table déjà lue par loadMyCombat (aucun calcul parallèle). ────────────
+async function backdateCombat(id, durationDays){
+  var newStart = addDaysStr(todayStr(), -(durationDays-1));
+  var r = await sb.from('duo_combats').update({ start_date:newStart }).eq('id', id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('⏪ Combat reculé au '+newStart);
+  loadMyCombat();
+}
+async function fillMyCombatPoints(combatId, start, durationDays){
+  var rows = [];
+  for(var i=0;i<durationDays;i++){
+    rows.push({ combat_id:combatId, user_id:USER.id, date:addDaysStr(start,i), points:1 });
+  }
+  var r = await sb.from('duo_combat_progress').upsert(rows, { onConflict:'combat_id,user_id,date' });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Mes points remplis (1/jour)');
+  loadMyCombat();
+}
+async function clearMyCombatPoints(combatId){
+  var r = await sb.from('duo_combat_progress').delete().eq('combat_id', combatId).eq('user_id', USER.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('🗑️ Mes points vidés');
+  loadMyCombat();
+}
+function renderCombatSimPanel(combat, start){
+  return '<div class="sim-panel">'
+    + '<div class="sim-title">🧪 Outils de test (admin)</div>'
+    + '<div class="sim-row"><button type="button" class="sim-btn primary" onclick="backdateCombat(\''+combat.id+'\','+combat.duration_days+')">⏪ Faire commencer il y a '+(combat.duration_days-1)+' jours</button></div>'
+    + '<div class="sim-row">'
+      + '<button type="button" class="sim-btn" onclick="fillMyCombatPoints(\''+combat.id+'\',\''+start+'\','+combat.duration_days+')">✅ Remplir mes points (1/jour)</button>'
+      + '<button type="button" class="sim-btn danger" onclick="clearMyCombatPoints(\''+combat.id+'\')">🗑️ Vider mes points</button>'
+    + '</div>'
+    + '</div>';
+}
+
 async function createCombat(){
   if(!selectedTpl) return;
   var code = genCode();
@@ -516,7 +563,8 @@ async function loadMyCombat(){
       + '<div class="cbt-msg">'+msg+'</div>'
       + '<div class="cbt-day-dots">'+dayDots+'</div>'
       + (expiryLbl ? '<div class="cbt-expiry">&#128337; '+expiryLbl+'</div>' : '')
-      + '<button type="button" class="cbt-abandon" onclick="abandonCombat(\''+combat.id+'\')">Abandonner ce combat</button>';
+      + '<button type="button" class="cbt-abandon" onclick="abandonCombat(\''+combat.id+'\')">Abandonner ce combat</button>'
+      + renderCombatSimPanel(combat, start);
   }
 
   activeZone.innerHTML = '<div class="section-lbl">Mon combat</div><div class="cbt-card">'

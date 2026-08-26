@@ -136,6 +136,18 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 }
 .chal-cheer-btn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(244,185,66,0.35); }
 
+/* Outils de test (admin) -- réutilise duo_challenge_progress (déjà la
+   vraie table de suivi), chaque compte n'écrit toujours que SES PROPRES
+   lignes (permis par les RLS déjà en place) -- avec un 2e compte de test
+   pour le partenaire, chacun utilise ce même panneau depuis son côté. */
+.sim-panel { margin-top:16px; padding-top:14px; border-top:1px dashed var(--border2); }
+.sim-title { font-size:.72rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+.sim-row { display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.sim-btn { padding:8px 12px; border-radius:9px; border:1px solid var(--border2); background:var(--card2); color:var(--text); font-size:.76rem; font-weight:600; cursor:pointer; }
+.sim-btn:hover { border-color:var(--gold); }
+.sim-btn.primary { background:var(--gold-l); border-color:var(--gold); color:var(--gold); }
+.sim-btn.danger { color:var(--rose); }
+
 .limit-note { font-size:.76rem; color:var(--text3); text-align:center; padding:10px 6px; cursor:default; }
 .limit-note summary { cursor:pointer; list-style:none; }
 .limit-note summary::-webkit-details-marker { display:none; }
@@ -365,6 +377,53 @@ function genCode(){
   var out = '';
   for(var i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
   return out;
+}
+
+// ── Outils de test (admin) ───────────────────────────────────────────
+// Réutilise duo_challenge_progress, la vraie table déjà lue par
+// evaluateAndRender -- ce qu'on écrit ici est traité EXACTEMENT comme une
+// vraie journée, jamais un calcul parallèle. Chaque compte n'écrit que
+// SES PROPRES lignes (RLS déjà en place) : avec un 2e compte de test pour
+// le partenaire, ce même panneau sert depuis les deux côtés.
+async function backdateChallenge(id, windowDays){
+  var newStart = addDaysStr(todayStr(), -(windowDays-1));
+  var r = await sb.from('duo_challenges').update({ start_date:newStart }).eq('id', id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('⏪ Défi reculé au '+newStart);
+  loadMyChallenges();
+}
+async function fillMyProgressChallenge(challengeId, templateId, start){
+  var tpl = DUO_TEMPLATES[templateId];
+  if(!tpl) return;
+  var rows = [];
+  for(var i=0;i<tpl.windowDays;i++){
+    var d = addDaysStr(start, i);
+    var val = 0, met = false;
+    if(tpl.mode === 'individual'){ val = tpl.dailyTarget; met = meetsTarget(val, tpl); }
+    else if(tpl.mode === 'combined'){ val = tpl.dailyTarget; } // seul suffit à faire dépasser le total du jour
+    else if(tpl.mode === 'combined_cumulative'){ val = (i===0) ? tpl.dailyTarget : 0; } // atteint la cible cumulée dès le jour 1
+    rows.push({ challenge_id:challengeId, user_id:USER.id, date:d, metric_value:val, met_target:met });
+  }
+  var r = await sb.from('duo_challenge_progress').upsert(rows, { onConflict:'challenge_id,user_id,date' });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Mes jours remplis');
+  loadMyChallenges();
+}
+async function clearMyProgressChallenge(challengeId){
+  var r = await sb.from('duo_challenge_progress').delete().eq('challenge_id', challengeId).eq('user_id', USER.id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('🗑️ Mes jours vidés');
+  loadMyChallenges();
+}
+function renderDuoSimPanel(challenge, tpl, start){
+  return '<div class="sim-panel">'
+    + '<div class="sim-title">🧪 Outils de test (admin)</div>'
+    + '<div class="sim-row"><button type="button" class="sim-btn primary" onclick="backdateChallenge(\''+challenge.id+'\','+tpl.windowDays+')">⏪ Faire commencer il y a '+(tpl.windowDays-1)+' jours</button></div>'
+    + '<div class="sim-row">'
+      + '<button type="button" class="sim-btn" onclick="fillMyProgressChallenge(\''+challenge.id+'\',\''+challenge.template_id+'\',\''+start+'\')">✅ Remplir mes jours</button>'
+      + '<button type="button" class="sim-btn danger" onclick="clearMyProgressChallenge(\''+challenge.id+'\')">🗑️ Vider mes jours</button>'
+    + '</div>'
+    + '</div>';
 }
 
 async function createChallenge(){
@@ -736,6 +795,7 @@ async function evaluateAndRender(challenge, container){
     + todayBlockHtml
     + daysBlockHtml
     + (waitingPartner ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Encourager '+esc(partnerName)+'</button>')
+    + (challenge.status==='active' ? renderDuoSimPanel(challenge, tpl, start) : '')
     + '</div>';
 }
 
