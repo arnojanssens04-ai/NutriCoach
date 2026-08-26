@@ -1418,9 +1418,9 @@ body {
 <script src="trend-definitions.js?v=1"></script>
 <script src="trend-engine.js?v=1"></script>
 <script src="nutrition-food-definitions.min.js?v=1"></script>
-<script src="nutrition-template-definitions.min.js?v=2"></script>
+<script src="nutrition-template-definitions.min.js?v=3"></script>
 <script src="nutrition-rule-definitions.min.js?v=2"></script>
-<script src="nutrition-signal-engine.min.js?v=2"></script>
+<script src="nutrition-signal-engine.min.js?v=3"></script>
 <script src="nutrition-priority-engine.min.js?v=1"></script>
 <script src="nutrition-safety.min.js?v=1"></script>
 <script src="nutrition-rule-engine.min.js?v=1"></script>
@@ -2553,6 +2553,12 @@ async function addEntry(food,qty,isHomemade){
     food_fibres_100:fibresVal,food_mg_100:pN(food.mg),food_sucres_100:pN(food.sucres||food.sugar||0),
     food_o6_100:pN(food.o6),food_vitc_100:pN(food.vitc),
     food_na_100:pN(food.na),food_zn_100:pN(food.zn),
+    // vitb12 peut être encore null (aliment Ciqual pas encore traité par
+    // l'enrichissement automatique) -- 0 est une vraie valeur possible
+    // (aliment 100% végétal non enrichi), pN() traite null comme 0 : la
+    // distinction "pas encore mesuré" vs "vraiment nul" n'existe pas
+    // encore côté journal, comme pour les autres champs food_*_100.
+    food_vitb12_100:pN(food.vitb12),
     nutrient_sources: computeNutrientSources(food.nom),
     // "Fait maison" (case cochée par l'utilisateur au moment d'ajouter
     // l'aliment) force false, quelle que soit la classification par défaut
@@ -3180,6 +3186,7 @@ function enrichJournalEntriesWithNutrientTotals(entries){
     var pot = total('food_pot_100'); if(pot!==undefined) out.potassium_mg = pot;
     var o3a = total('food_o3a_100'), o3e = total('food_o3e_100'), o3d = total('food_o3d_100');
     if(o3a!==undefined || o3e!==undefined || o3d!==undefined) out.omega3_g = (o3a||0)+(o3e||0)+(o3d||0);
+    var b12 = total('food_vitb12_100'); if(b12!==undefined) out.vitamin_b12_mcg = b12;
     if(typeof e.proteines === 'number') out.protein_g = e.proteines;
     return out;
   });
@@ -3192,7 +3199,7 @@ async function checkAdminNutritionBetaAlert(){
   var referenceDate = today();
   var since = new Date(); since.setDate(since.getDate()-13);
   var r = await sb.from('journal')
-    .select('date, repas, aliment, quantite, kcal, proteines, is_ultra_processed, nutrient_sources, food_fer_100, food_cal_100, food_fibres_100, food_o3a_100, food_o3e_100, food_o3d_100, food_mg_100, food_zn_100, food_pot_100')
+    .select('date, repas, aliment, quantite, kcal, proteines, is_ultra_processed, nutrient_sources, food_fer_100, food_cal_100, food_fibres_100, food_o3a_100, food_o3e_100, food_o3d_100, food_mg_100, food_zn_100, food_pot_100, food_vitb12_100')
     .eq('user_id', USER.id)
     .gte('date', dateStr(since))
     .lte('date', referenceDate);
@@ -7046,7 +7053,11 @@ fetch('ciqual.json')
     DB = raw.map(function(r){
       return {code:r[0],nom:r[1],kcal:r[2],prot:r[3],gluc:r[4],lip:r[5],
         ags:r[6],mono:r[7],o3a:r[8],o3e:r[9],o3d:r[10],fer:r[11],cal:r[12],pot:r[13],
-        fibres:r[14],mg:r[15],na:r[16],zn:r[17],o6:r[18],vitc:r[19]};
+        fibres:r[14],mg:r[15],na:r[16],zn:r[17],o6:r[18],vitc:r[19],
+        // vitb12 n'existe pas dans le fichier Ciqual source (aucune colonne) --
+        // rempli uniquement par l'overlay ciqual_micronutriments, voir
+        // loadCiqualMicronutrimentsOverlay().
+        vitb12:null};
     });
     console.log('Ciqual charg\u00e9 : '+DB.length+' aliments');
     loadCustomFoods();
@@ -7066,7 +7077,7 @@ function loadCustomFoods(){
     var custom = r.data.map(function(c){
       return {code:'custom_'+c.id, nom:c.nom_fr||c.nom, nom_original:c.nom, nom_fr:c.nom_fr||null,
         kcal:c.kcal, prot:c.prot, gluc:c.gluc, lip:c.lip,
-        ags:c.ags||0, mono:c.mono||0, o3a:c.o3||0, o3e:0, o3d:0, o6:c.o6||0, vitc:c.vitc||0,
+        ags:c.ags||0, mono:c.mono||0, o3a:c.o3||0, o3e:0, o3d:0, o6:c.o6||0, vitc:c.vitc||0, vitb12:c.vitb12||0,
         fer:c.fer||0, cal:c.cal||0, pot:c.pot||0,
         fibres:c.fibres||0, mg:c.mg||0, na:c.na||0, zn:c.zn||0, sucres:c.sucres||0,
         is_ultra_processed: (typeof c.is_ultra_processed==='boolean') ? c.is_ultra_processed : null};
@@ -7094,6 +7105,7 @@ function loadCiqualMicronutrimentsOverlay(){
       if(o){
         if(o.o6!=null) food.o6 = o.o6;
         if(o.vitc!=null) food.vitc = o.vitc;
+        if(o.vitb12!=null) food.vitb12 = o.vitb12;
       }
     });
     console.log('Micronutriments enrichis automatiquement : '+r.data.length+' aliments');

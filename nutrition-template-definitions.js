@@ -152,17 +152,21 @@ var NUTRITION_ADVICE_TEMPLATES = {
     ],
     allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
+  // Bascule sur le modèle "quantité" (comme fer/calcium) maintenant que
+  // food_vitb12_100 existe (enrichissement Ciqual, voir
+  // enrich-ciqual-micronutriments) -- avg_intake/daily_target/unit au lieu
+  // de occurrence_days/evaluated_days.
   increase_vitamin_b12_sources_v1: {
     id: 'increase_vitamin_b12_sources_v1',
     status: 'active',
     variants: [
-      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine B12 a été indiqué dans votre profil. Aliments sources repérés {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Cette observation reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
-      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine B12 repéré dans le journal ({{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) — observation du journal, pas un diagnostic, aucune quantité en µg n\'est mesurée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
-      { when: 'default', bodyTemplate: '💡 Point d\'attention : La vitamine B12. Aucune source habituelle identifiée sur les {{evaluated_days}} derniers jours analysés (présente {{occurrence_days}} jour(s)). Idées à intégrer selon vos préférences : {{foods}}. Constat indicatif basé sur votre journal, à faire valider avec votre diététicien.' },
-      { when: 'default', bodyTemplate: '🥄 Un petit coup de pouce en vitamine B12 ? Repérée {{occurrence_days}} jour(s) sur {{evaluated_days}} dans vos repas récents. Idées simples pour vos prochains repas : {{foods}}. (Mention indicative — à échanger avec votre professionnel)' },
-      { when: 'default', bodyTemplate: '🔬 Observation micronutriments : La vitamine B12. La vitamine B12 contribue à l\'énergie et au bon fonctionnement du système nerveux, mais elle n\'apparaît que {{occurrence_days}} jour(s) sur {{evaluated_days}} dans vos repas enregistrés. Pour en ajouter facilement : {{foods}}. Il s\'agit d\'une observation de fréquence dans votre journal, sans dosage médical.' }
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine B12 a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en vitamine B12 estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: '💡 Point d\'attention : La vitamine B12. Apport estimé à {{avg_intake}}{{unit}}/jour en moyenne, sous la référence générique de {{daily_target}}{{unit}}/jour sur la période analysée. Idées à intégrer selon vos préférences : {{foods}}. Constat indicatif basé sur votre journal, à faire valider avec votre diététicien.' },
+      { when: 'default', bodyTemplate: '🥄 Un petit coup de pouce en vitamine B12 ? Apport moyen de {{avg_intake}}{{unit}}/jour, sous la référence de {{daily_target}}{{unit}}/jour ces derniers jours. Idées simples pour vos prochains repas : {{foods}}. (Mention indicative — à échanger avec votre professionnel)' },
+      { when: 'default', bodyTemplate: '🔬 Observation micronutriments : La vitamine B12. La vitamine B12 contribue à l\'énergie et au bon fonctionnement du système nerveux, mais l\'apport moyen relevé ({{avg_intake}}{{unit}}/jour) reste sous la référence générique de {{daily_target}}{{unit}}/jour sur la période. Pour en ajouter facilement : {{foods}}. Il s\'agit d\'une observation de votre journal, sans dosage médical.' }
     ],
-    allowedVariables: ['foods', 'occurrence_days', 'evaluated_days']
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_protein_sources_v1: {
     id: 'increase_protein_sources_v1',

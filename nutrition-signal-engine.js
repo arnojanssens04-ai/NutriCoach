@@ -229,7 +229,12 @@ var NUTRIENT_DAILY_TARGETS_REFERENCE = {
   zinc_mg: 10,
   fiber_g: 27,
   omega3_g: 2.0,
-  protein_g: 56
+  protein_g: 56,
+  // Référence générique adulte (ANSES/EFSA ~4µg/j, RDA US 2.4µg/j) --
+  // valeur volontairement du côté prudent (RDA US, plus basse), cohérent
+  // avec les autres références déjà génériques et non personnalisées de
+  // cette table.
+  vitamin_b12_mcg: 2.4
 };
 
 /* -----------------------------------------------------------------------
@@ -508,13 +513,24 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       journalEntries: journalEntries, referenceDate: referenceDate
     });
   },
+  // Bascule de computeNutrientSourceRarity (présence de mots-clés) vers
+  // computeNutrientIntakeVsTarget (quantité réelle en µg/j) maintenant que
+  // food_vitb12_100 existe (enrichissement Ciqual + aliments personnalisés,
+  // voir enrich-ciqual-micronutriments). Même mécanique que fer/calcium.
+  // Les entrées de journal écrites AVANT ce correctif n'ont pas ce champ :
+  // elles restent traitées comme "jour non exploitable" (hasUnknown),
+  // jamais comme une carence à 0 -- comportement normal en attendant que
+  // le journal se remplisse avec le nouveau champ.
   low_source_presence_vitamin_b12: function (journalEntries, referenceDate) {
-    return computeNutrientSourceRarity({
+    return computeNutrientIntakeVsTarget({
       patternId: 'low_source_presence_vitamin_b12',
-      label: 'Sources alimentaires de vitamine B12 peu présentes',
-      nutrientCode: 'vitamin_b12',
+      label: 'Apport en vitamine B12 nettement inférieur à la référence',
+      nutrientField: 'vitamin_b12_mcg',
+      dailyTarget: NUTRIENT_DAILY_TARGETS_REFERENCE.vitamin_b12_mcg,
+      unit: 'µg',
       observationWindowDays: 14,
-      neutralMessage: 'Les sources alimentaires de vitamine B12 apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
+      insufficiencyRatio: 0.5,
+      neutralMessage: 'L\'apport moyen en vitamine B12 sur la période analysée est nettement inférieur à une référence journalière générique.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
     });
