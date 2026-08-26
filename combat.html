@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cap Santé — Combat amical</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F7F6F1; --bg2:#EFEDE6; --card:#FFFFFF; --card2:#F7F6F1;
+  --border:rgba(32,37,31,0.08); --border2:rgba(32,37,31,0.14);
+  --text:#20251F; --text2:#687067; --text3:#9AA096;
+  --gold:#477A45; --gold-l:rgba(71,122,69,0.1);
+  --amber:#F4B942; --amber-l:rgba(244,185,66,0.16);
+  --social:#7667D8; --social-l:rgba(118,103,216,0.12);
+  --rose:#B4483F; --rose-l:rgba(180,72,63,0.1);
+  --r:20px; --r-btn:12px; --r-badge:8px;
+  --sh:0 8px 24px rgba(32,37,31,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { background:var(--bg); }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; padding-bottom:60px; }
+
+.topbar { position:sticky; top:0; z-index:100; background:rgba(247,246,241,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(16px); padding:0 20px; height:58px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo { font-family:'Lora',serif; font-size:1.4rem; font-weight:700; }
+.t-logo span { color:var(--gold); }
+.t-back { font-size:.8rem; color:var(--text2); text-decoration:none; padding:7px 14px; border:1px solid var(--border); border-radius:var(--r-btn); }
+.t-back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width:640px; margin:0 auto; padding:20px 16px; }
+.hero h1 { font-family:'Lora',serif; font-size:1.5rem; margin-bottom:5px; }
+.hero p { font-size:.82rem; color:var(--text2); line-height:1.55; margin-bottom:14px; }
+.hero-rules { font-size:.72rem; color:var(--text3); line-height:1.7; background:var(--card2); border-radius:14px; padding:12px 14px; margin-bottom:18px; }
+
+.section-lbl { font-family:'Lora',serif; font-size:1.02rem; font-weight:600; margin:22px 0 10px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
+
+.tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.tier-tab { flex:1; text-align:center; padding:12px 8px; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer; }
+.tier-tab .ico { font-size:1.25rem; display:block; margin-bottom:3px; }
+.tier-tab .lbl { font-size:.78rem; font-weight:700; }
+.tier-tab.on { border-color:var(--gold); background:var(--gold-l); }
+
+.tpl-opt { display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border); border-radius:14px; cursor:pointer; margin-bottom:9px; background:var(--card); }
+.tpl-opt:hover, .tpl-opt.on { border-color:var(--gold); background:var(--gold-l); }
+.tpl-opt-icon { font-size:1.4rem; flex-shrink:0; }
+.tpl-opt-lbl { font-size:.86rem; font-weight:600; }
+.tpl-opt-sub { font-size:.72rem; color:var(--text2); margin-top:2px; }
+
+.duration-row { display:flex; gap:8px; margin:14px 0 4px; }
+.duration-opt { flex:1; text-align:center; padding:11px; border-radius:12px; border:1px solid var(--border2); cursor:pointer; font-size:.86rem; font-weight:700; }
+.duration-opt.on { border-color:var(--gold); background:var(--gold-l); color:var(--gold); }
+
+.btn { width:100%; padding:13px; border-radius:var(--r-btn); border:none; background:var(--gold); color:#fff; font-family:'Lora',serif; font-size:.94rem; font-weight:700; cursor:pointer; margin-top:6px; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.code-box { text-align:center; padding:16px; background:var(--gold-l); border-radius:var(--r-btn); margin-top:10px; }
+.code-val { font-family:'Lora',serif; font-size:1.6rem; font-weight:700; letter-spacing:3px; color:var(--gold); }
+.code-hint { font-size:.72rem; color:var(--text2); margin-top:6px; }
+.join-row { display:flex; gap:8px; margin-top:10px; }
+.join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:12px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
+
+/* Carte de combat actif */
+.cbt-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:0 10px 28px rgba(71,122,69,0.1); padding:20px 22px; margin-bottom:14px; }
+.cbt-hdr { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:4px; }
+.cbt-title { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; }
+.cbt-status { font-size:.62rem; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; margin-top:2px; }
+.cbt-status.pending { background:var(--bg2); color:var(--text2); }
+.cbt-status.active { background:var(--gold-l); color:var(--gold); }
+.cbt-status.finished { background:var(--gold); color:#fff; }
+.cbt-sub { font-size:.78rem; color:var(--text2); margin-bottom:16px; }
+
+.cbt-names { display:flex; justify-content:space-between; font-size:.82rem; font-weight:700; margin-bottom:6px; }
+.cbt-names .me { color:var(--gold); }
+.cbt-names .partner { color:var(--social); }
+.cbt-bar { height:14px; border-radius:999px; background:var(--bg2); overflow:hidden; display:flex; margin-bottom:6px; }
+.cbt-bar-me { height:100%; background:var(--gold); transition:width .5s ease; }
+.cbt-bar-partner { height:100%; background:var(--social); transition:width .5s ease; }
+.cbt-scores { display:flex; justify-content:space-between; font-size:.9rem; font-weight:700; font-variant-numeric:tabular-nums; margin-bottom:10px; }
+.cbt-scores .me { color:var(--gold); }
+.cbt-scores .partner { color:var(--social); }
+.cbt-msg { text-align:center; font-size:.82rem; font-weight:600; color:var(--text2); background:var(--card2); border-radius:12px; padding:9px; margin-bottom:12px; }
+
+.cbt-day-dots { display:flex; gap:5px; margin-bottom:10px; }
+.cbt-day-dot { flex:1; height:6px; border-radius:999px; background:var(--bg2); }
+.cbt-day-dot.done { background:var(--gold); }
+
+.cbt-expiry { font-size:.76rem; color:var(--text3); margin:8px 0 4px; }
+.cbt-abandon { display:inline-block; margin-top:10px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
+
+.cbt-end-title { font-family:'Lora',serif; font-size:1.1rem; font-weight:700; text-align:center; margin-bottom:10px; }
+.cbt-end-stats { display:flex; gap:10px; justify-content:center; margin-top:12px; }
+.cbt-end-stat { text-align:center; background:var(--card2); border-radius:12px; padding:10px 16px; }
+.cbt-end-stat .v { font-family:'Lora',serif; font-size:1.2rem; font-weight:700; }
+.cbt-end-stat .l { font-size:.68rem; color:var(--text2); margin-top:2px; }
+
+.limit-note { font-size:.76rem; color:var(--text3); text-align:center; padding:10px 6px; }
+.limit-note summary { cursor:pointer; list-style:none; }
+.limit-note summary::-webkit-details-marker { display:none; }
+.limit-note .limit-detail { font-size:.72rem; color:var(--text3); line-height:1.5; margin-top:6px; }
+
+.empty { text-align:center; padding:30px 10px; color:var(--text3); font-size:.84rem; }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:#fff; padding:11px 20px; border-radius:10px; font-size:.85rem; opacity:0; pointer-events:none; transition:all .3s; z-index:999; }
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <a href="defis.html" class="t-back">&larr; Défis</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>&#127918; Combat amical</h1>
+    <p>Un jeu privé et rapide entre vous deux — jamais un classement public, jamais un jugement.</p>
+    <div class="hero-rules">
+      &#127918; Durée : 3, 5 ou 7 jours maximum · Seuls les jours validés comptent · Aucun objectif lié aux calories, au poids ou à l'eau · Les deux personnes peuvent abandonner sans pénalité · Pas de classement public · Le résultat est une célébration, jamais un jugement.
+    </div>
+  </div>
+
+  <div id="active-zone"></div>
+  <div id="picker-zone"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var USER = null;
+var selectedTier = 'easy';
+var selectedTpl = null;
+var selectedDuration = 7;
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDaysStr(dateStr, n){ var d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function normTxt(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function genCode(){ var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out=''; for(var i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)]; return out; }
+
+// ── Détection par mots-clés -- copie propre à ce fichier (même
+// convention que defis.html/defis-solo.html). ──────────────────────────
+var VEG_COLOR_PATTERNS = [
+  { color:'vert',   re:/brocoli|epinard|courgette|haricot vert|poireau|celeri|salade|chou vert|concombre|petit pois|poivron vert/ },
+  { color:'orange', re:/carotte|potiron|courge|poivron orange|patate douce/ },
+  { color:'rouge',  re:/tomate|poivron rouge|radis/ },
+  { color:'blanc',  re:/chou.fleur|oignon(?! rouge)|champignon|navet|endive/ },
+  { color:'violet', re:/aubergine|chou rouge|oignon rouge|betterave/ }
+];
+function vegColorOf(n){ for(var i=0;i<VEG_COLOR_PATTERNS.length;i++){ if(VEG_COLOR_PATTERNS[i].re.test(n)) return VEG_COLOR_PATTERNS[i].color; } return null; }
+var FRUIT_REGEX = /pomme|poire|banane|orange|kiwi|fraise|ananas|mangue|raisin|pasteque|melon|peche|abricot|prune|cerise|figue|citron|lime|grenade|papaye|coing|litchi|mandarine|clementine|pamplemousse|framboise|myrtille|mure|groseille|cassis|datte/;
+var LEGUMINEUSE_REGEX = /lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame|pois casse/;
+var WHOLEGRAIN_REGEX = /complet|integral|avoine|quinoa|sarrasin|epeautre|boulgour|orge/;
+var GENERIC_STARCH_REGEX = /pain|pate|riz|pomme de terre|patate(?! douce)|semoule|polenta/;
+var NUTS_REGEX = /noix|amande|noisette|cajou|pistache|graine de courge|graine de tournesol|graine de chia|graine de lin|pignon|cacahuete|arachide/;
+var PROTEIN_PATTERNS = [
+  { name:'volaille',   re:/poulet|dinde|volaille/ },
+  { name:'boeuf/veau', re:/boeuf|veau/ },
+  { name:'porc',       re:/porc|jambon|bacon/ },
+  { name:'poisson',    re:/saumon|cabillaud|thon|sardine|maquereau|colin|lieu|sole|daurade|crevette|poisson/ },
+  { name:'oeuf',       re:/oeuf/ },
+  { name:'laitier',    re:/yaourt|fromage|skyr|kefir/ },
+  { name:'tofu/tempeh',re:/tofu|tempeh|seitan/ },
+  { name:'legumineuse',re:/lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame/ }
+];
+function proteinOf(n){ for(var i=0;i<PROTEIN_PATTERNS.length;i++){ if(PROTEIN_PATTERNS[i].re.test(n)) return PROTEIN_PATTERNS[i].name; } return null; }
+var ULTRA_REGEX = /chips|crackers|soda|coca|pepsi|fanta|sprite|charcuterie|saucisse|nugget|pizza.*surgel|plat.*(cuisine|prepare)|barre.*chocolat|bonbon|confiserie|biscuit|cake|gateau.*industri|viennoiserie|hot.?dog|hamburger|mcdo|burger king|frites?|glace|sorbet|patisserie.*industri|donut|beignet|kebab|nutella|pate a tartiner|cereales?.*sucre|barre.*cereale|snack|cordon bleu|surimi/;
+function isUltraFood(entry){
+  if(entry.is_ultra_processed === true) return true;
+  if(entry.is_ultra_processed === false) return false;
+  return ULTRA_REGEX.test(normTxt(entry.aliment));
+}
+function structuredMealPresent(dayEntries){
+  var byMeal = {};
+  dayEntries.forEach(function(e){ if(!byMeal[e.repas]) byMeal[e.repas]=[]; byMeal[e.repas].push(e); });
+  return Object.keys(byMeal).some(function(repas){
+    var hasVeg=false, hasProtein=false, hasFeculent=false;
+    byMeal[repas].forEach(function(e){
+      var n = normTxt(e.aliment);
+      if(vegColorOf(n) || FRUIT_REGEX.test(n)) hasVeg=true;
+      if(proteinOf(n)) hasProtein=true;
+      if(WHOLEGRAIN_REGEX.test(n) || LEGUMINEUSE_REGEX.test(n) || GENERIC_STARCH_REGEX.test(n)) hasFeculent=true;
+    });
+    return hasVeg && hasProtein && hasFeculent;
+  });
+}
+function homemadeMealPresent(dayEntries){
+  var byMeal = {};
+  dayEntries.forEach(function(e){ if(!byMeal[e.repas]) byMeal[e.repas]=[]; byMeal[e.repas].push(e); });
+  return Object.keys(byMeal).some(function(repas){
+    return byMeal[repas].length>0 && byMeal[repas].every(function(e){ return !isUltraFood(e); });
+  });
+}
+
+// ── Paliers (pas de "Avancé" en Combat -- doit rester lisible, rapide,
+// amusant, jamais une règle complexe qui pousse à sur-enregistrer). ────
+var TIER_META = { easy:{icon:'🌱',label:'Facile'}, medium:{icon:'🌿',label:'Intermédiaire'} };
+
+// ── Catalogue des duels (16) ─────────────────────────────────────────
+// mechanic 'presence' : 1 point le jour où la condition est vraie (déjà
+// plafonné à 1/jour puisqu'on ne regarde qu'une seule fois par jour).
+// mechanic 'new_item' : 1 point le jour où AU MOINS un élément nouveau
+// (jamais vu un jour précédent de ce duel) apparaît -- plafonné à 1/jour
+// même si plusieurs nouveautés le même jour, pour empêcher qu'ajouter
+// beaucoup d'aliments le même jour ne crée un écart énorme.
+var COMBAT_TEMPLATES = [
+  { id:'veg_meal',     tier:'easy', icon:'⚔️', label:'Duel légumes',            sub:'1 point par jour avec des légumes',              mechanic:'presence', check:'veg' },
+  { id:'fruit_day',    tier:'easy', icon:'⚔️', label:'Duel fruits',             sub:'1 point par jour avec un fruit',                 mechanic:'presence', check:'fruit' },
+  { id:'new_color',    tier:'easy', icon:'⚔️', label:'Duel couleurs',           sub:'1 point par nouvelle couleur de légume',         mechanic:'new_item', classify:'vegColor' },
+  { id:'breakfast',    tier:'easy', icon:'⚔️', label:'Duel petit-déjeuner',     sub:'1 point par petit-déjeuner enregistré',          mechanic:'presence', check:'breakfast' },
+  { id:'structured',   tier:'easy', icon:'⚔️', label:'Duel repas structuré',    sub:'1 point par jour avec légume + féculent + protéine', mechanic:'presence', check:'structured' },
+  { id:'wholegrain',   tier:'easy', icon:'⚔️', label:'Duel céréales complètes',  sub:'1 point par jour avec un choix complet',         mechanic:'presence', check:'wholegrain' },
+  { id:'legumineuse',  tier:'easy', icon:'⚔️', label:'Duel légumineuses',       sub:'1 point par jour avec une légumineuse',          mechanic:'presence', check:'legumineuse' },
+  { id:'nuts',         tier:'easy', icon:'⚔️', label:'Duel noix et graines',    sub:'1 point par jour avec noix ou graines',          mechanic:'presence', check:'nuts' },
+
+  { id:'veg_diversity',tier:'medium', icon:'⚔️', label:'Duel diversité végétale', sub:'1 point par nouvel aliment végétal (légume ou fruit)', mechanic:'new_item', classify:'vegFruitItem' },
+  { id:'rainbow',      tier:'medium', icon:'⚔️', label:'Duel arc-en-ciel',        sub:'1 point par nouvelle couleur végétale, une fois par jour', mechanic:'new_item', classify:'vegColor' },
+  { id:'veg_variety',  tier:'medium', icon:'⚔️', label:'Duel légumes variés',     sub:'1 point par nouveau légume enregistré',          mechanic:'new_item', classify:'vegItem' },
+  { id:'homemade',     tier:'medium', icon:'⚔️', label:'Duel repas maison',       sub:'1 point par jour avec un repas simple, peu transformé', mechanic:'presence', check:'homemade' },
+  { id:'legumineuse_v',tier:'medium', icon:'⚔️', label:'Duel légumineuses variées', sub:'1 point par nouvelle variété de légumineuse',  mechanic:'new_item', classify:'legumineuseItem' },
+  { id:'protein_v',    tier:'medium', icon:'⚔️', label:'Duel protéines variées',  sub:'1 point par nouvelle source de protéines',       mechanic:'new_item', classify:'proteinSource' },
+  { id:'breakfast_v',  tier:'medium', icon:'⚔️', label:'Duel petit-déjeuner varié', sub:'1 point par nouvel aliment au petit-déjeuner', mechanic:'new_item', classify:'breakfastItem' },
+  { id:'complete_meal',tier:'medium', icon:'⚔️', label:'Duel assiette complète',  sub:'1 point par repas validé avec légume, féculent et protéine', mechanic:'presence', check:'structured' }
+];
+
+function checkPresence(dayEntries, check){
+  if(check==='veg') return dayEntries.some(function(e){ return !!vegColorOf(normTxt(e.aliment)); });
+  if(check==='fruit') return dayEntries.some(function(e){ return FRUIT_REGEX.test(normTxt(e.aliment)); });
+  if(check==='breakfast') return dayEntries.some(function(e){ return e.repas==='breakfast'; });
+  if(check==='structured') return structuredMealPresent(dayEntries);
+  if(check==='wholegrain') return dayEntries.some(function(e){ return WHOLEGRAIN_REGEX.test(normTxt(e.aliment)); });
+  if(check==='legumineuse') return dayEntries.some(function(e){ return LEGUMINEUSE_REGEX.test(normTxt(e.aliment)); });
+  if(check==='nuts') return dayEntries.some(function(e){ return NUTS_REGEX.test(normTxt(e.aliment)); });
+  if(check==='homemade') return homemadeMealPresent(dayEntries);
+  return false;
+}
+// Renvoie les clés "découvertes" aujourd'hui pour une classification
+// donnée (une entrée peut contribuer plusieurs clés, ex: 2 couleurs).
+function itemsForClassify(dayEntries, classify){
+  var keys = [];
+  dayEntries.forEach(function(e){
+    var n = normTxt(e.aliment);
+    if(classify==='vegColor'){ var c=vegColorOf(n); if(c) keys.push(c); }
+    else if(classify==='vegFruitItem'){ if(vegColorOf(n)||FRUIT_REGEX.test(n)) keys.push(e.aliment); }
+    else if(classify==='vegItem'){ if(vegColorOf(n)) keys.push(e.aliment); }
+    else if(classify==='legumineuseItem'){ if(LEGUMINEUSE_REGEX.test(n)) keys.push(e.aliment); }
+    else if(classify==='proteinSource'){ var p=proteinOf(n); if(p) keys.push(p); }
+    else if(classify==='breakfastItem'){ if(e.repas==='breakfast') keys.push(e.aliment); }
+  });
+  return keys;
+}
+
+// Calcule, pour UNE personne, les points JOUR PAR JOUR sur toute la
+// fenêtre du combat -- traitement chronologique obligatoire pour la
+// mécanique "nouveauté" (discoveredSet construit au fil des jours,
+// jamais recalculé hors ordre).
+function computeCombatDailyPoints(entries, tpl, startDate, durationDays){
+  var byDate = {};
+  entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+  var discovered = {};
+  var points = [];
+  for(var i=0;i<durationDays;i++){
+    var d = addDaysStr(startDate, i);
+    var dayEntries = byDate[d] || [];
+    var pt = 0;
+    if(tpl.mechanic==='presence'){
+      pt = checkPresence(dayEntries, tpl.check) ? 1 : 0;
+    } else {
+      var keys = itemsForClassify(dayEntries, tpl.classify);
+      var hasNew = keys.some(function(k){ return !discovered[k]; });
+      pt = hasNew ? 1 : 0;
+      keys.forEach(function(k){ discovered[k]=1; });
+    }
+    points.push({ date:d, points:pt });
+  }
+  return points;
+}
+
+function renderTierTabs(){
+  var root = document.getElementById('picker-zone');
+  var tabsHtml = '<div class="tier-tabs">' + Object.keys(TIER_META).map(function(t){
+    var tm = TIER_META[t];
+    return '<div class="tier-tab'+(t===selectedTier?' on':'')+'" onclick="selectTier(\''+t+'\')"><span class="ico">'+tm.icon+'</span><span class="lbl">'+tm.label+'</span></div>';
+  }).join('') + '</div>';
+  root.innerHTML = '<div class="section-lbl">Créer un combat</div><div class="card">'
+    + tabsHtml + '<div id="tpl-list"></div>'
+    + '<div class="duration-row" id="duration-row">' + [3,5,7].map(function(n){
+        return '<div class="duration-opt'+(n===selectedDuration?' on':'')+'" onclick="selectDuration('+n+')">'+n+' jours</div>';
+      }).join('') + '</div>'
+    + '<button class="btn" id="create-btn" onclick="createCombat()" disabled>Créer et obtenir mon code</button>'
+    + '<div class="code-box" id="new-code-box" style="display:none"><div class="code-val" id="new-code-val"></div><div class="code-hint">Envoyez ce code à la personne que vous défiez.</div></div>'
+    + '</div>'
+    + '<div class="section-lbl">Rejoindre un combat</div>'
+    + '<div class="card"><p style="font-size:.82rem;color:var(--text2)">Vous avez reçu un code ? Entrez-le ici.</p>'
+    + '<div class="join-row"><input type="text" id="join-code-input" placeholder="CODE" maxlength="6"><button class="btn" style="width:auto;margin:0;padding:11px 18px" onclick="joinCombat()">Rejoindre</button></div></div>';
+  renderTemplateList();
+}
+function selectTier(t){ selectedTier=t; selectedTpl=null; renderTierTabs(); }
+function selectDuration(n){ selectedDuration=n; renderTierTabs(); }
+function renderTemplateList(){
+  var root = document.getElementById('tpl-list');
+  var list = COMBAT_TEMPLATES.filter(function(t){ return t.tier===selectedTier; });
+  root.innerHTML = list.map(function(t){
+    return '<div class="tpl-opt" id="tpl-'+t.id+'" onclick="selectTpl(\''+t.id+'\')">'
+      + '<div class="tpl-opt-icon">'+t.icon+'</div>'
+      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+'</div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
+      + '</div>';
+  }).join('');
+}
+function selectTpl(id){
+  selectedTpl = id;
+  document.querySelectorAll('.tpl-opt').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById('tpl-'+id).classList.add('on');
+  document.getElementById('create-btn').disabled = false;
+}
+
+async function createCombat(){
+  if(!selectedTpl) return;
+  var code = genCode();
+  var r = await sb.from('duo_combats').insert({
+    template_id: selectedTpl, creator_id: USER.id, invite_code: code, status:'pending', duration_days: selectedDuration
+  }).select().single();
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  document.getElementById('new-code-box').style.display = 'block';
+  document.getElementById('new-code-val').textContent = code;
+  loadMyCombat();
+}
+// Même principe de sécurité que join_duo_challenge : passe par une
+// fonction Postgres security definer plutôt qu'une lecture directe, pour
+// ne jamais exposer la liste des codes en attente de tout le monde.
+async function joinCombat(){
+  var code = (document.getElementById('join-code-input').value||'').trim().toUpperCase();
+  if(!code){ toast('Entrez un code'); return; }
+  var r = await sb.rpc('join_duo_combat', { p_code: code });
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('✅ Combat rejoint !');
+  document.getElementById('join-code-input').value = '';
+  loadMyCombat();
+}
+async function abandonCombat(id){
+  var r = await sb.from('duo_combats').update({ status:'finished' }).eq('id', id);
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('Combat terminé.');
+  loadMyCombat();
+}
+
+function fireConfetti(){
+  toast('🎉 Combat terminé !');
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;z-index:998;pointer-events:none;width:100%;height:100%';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  var colors = ['#477A45','#F4B942','#7667D8','#20251F'];
+  var particles = [];
+  for(var i=0;i<70;i++){
+    particles.push({ x:Math.random()*canvas.width, y:-20-Math.random()*canvas.height*0.4, w:5+Math.random()*5, h:8+Math.random()*6,
+      color:colors[Math.floor(Math.random()*colors.length)], vy:2+Math.random()*3, vx:(Math.random()-0.5)*2, rot:Math.random()*360, vrot:(Math.random()-0.5)*10 });
+  }
+  var start = performance.now();
+  function tick(now){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.rot+=p.vrot; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    if(now-start < 3200) requestAnimationFrame(tick); else canvas.remove();
+  }
+  requestAnimationFrame(tick);
+}
+
+async function loadMyCombat(){
+  var activeZone = document.getElementById('active-zone');
+  var pickerZone = document.getElementById('picker-zone');
+  var r = await sb.from('duo_combats').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false}).limit(1);
+  if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
+  var combat = (r.data && r.data.filter(function(c){ return c.status==='pending' || c.status==='active'; })[0]) || null;
+
+  if(!combat){
+    activeZone.innerHTML = '';
+    pickerZone.style.display = 'block';
+    renderTierTabs();
+    return;
+  }
+  pickerZone.style.display = 'none';
+
+  var tpl = COMBAT_TEMPLATES.filter(function(t){ return t.id===combat.template_id; })[0];
+  if(!tpl){ activeZone.innerHTML = ''; return; }
+
+  var iAmCreator = combat.creator_id === USER.id;
+  var waitingPartner = combat.status === 'pending';
+
+  if(waitingPartner){
+    activeZone.innerHTML = '<div class="section-lbl">Mon combat</div><div class="cbt-card">'
+      + '<div class="cbt-hdr"><span class="cbt-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="cbt-status pending">En attente</span></div>'
+      + '<div class="cbt-sub">En attente qu\'une personne rejoigne avec le code '+esc(combat.invite_code)+'</div>'
+      + '<button type="button" class="cbt-abandon" onclick="abandonCombat(\''+combat.id+'\')">Annuler ce combat</button>'
+      + '</div>';
+    return;
+  }
+
+  var partnerName = 'votre adversaire';
+  var ids = [combat.creator_id, combat.partner_id];
+  var profRes = await sb.from('profiles').select('id, prenom').in('id', ids);
+  var byId = {};
+  (profRes.data||[]).forEach(function(p){ byId[p.id] = p.prenom || 'Sans nom'; });
+  partnerName = iAmCreator ? (byId[combat.partner_id]||partnerName) : (byId[combat.creator_id]||partnerName);
+
+  var start = combat.start_date || todayStr();
+  var windowEnd = addDaysStr(start, combat.duration_days-1);
+  var end = todayStr() < windowEnd ? todayStr() : windowEnd;
+
+  // Ma progression -- calculée depuis MON SEUL journal (jamais celui de
+  // l'adversaire), synchronisée jour par jour comme les défis à deux.
+  if(end >= start){
+    var myJournalRes = await sb.from('journal')
+      .select('date, repas, aliment, is_ultra_processed')
+      .eq('user_id', USER.id).gte('date', start).lte('date', end);
+    var myDailyPoints = computeCombatDailyPoints(myJournalRes.data||[], tpl, start, Math.min(combat.duration_days, (new Date(end+'T00:00:00')-new Date(start+'T00:00:00'))/86400000+1));
+    var rowsToUpsert = myDailyPoints.map(function(p){ return { combat_id:combat.id, user_id:USER.id, date:p.date, points:p.points }; });
+    if(rowsToUpsert.length) await sb.from('duo_combat_progress').upsert(rowsToUpsert, { onConflict:'combat_id,user_id,date' });
+  }
+
+  var progRes = await sb.from('duo_combat_progress').select('*').eq('combat_id', combat.id);
+  var rows = progRes.data || [];
+  var myScore = 0, partnerScore = 0, daysPlayed = {};
+  rows.forEach(function(row){
+    if(row.user_id === USER.id) myScore += row.points; else partnerScore += row.points;
+    if(row.points>0) daysPlayed[row.date]=1;
+  });
+
+  var windowOver = todayStr() > windowEnd;
+  var newStatus = windowOver ? 'finished' : null;
+  if(newStatus){
+    await sb.from('duo_combats').update({ status:newStatus }).eq('id', combat.id);
+    combat.status = newStatus;
+  }
+
+  if(combat.status === 'finished'){
+    var confettiKey = 'combatConfettiShown_'+combat.id;
+    if(!localStorage.getItem(confettiKey)){ localStorage.setItem(confettiKey,'1'); fireConfetti(); }
+  }
+
+  var totalPts = myScore + partnerScore;
+  var myPct = totalPts>0 ? Math.round(myScore/totalPts*100) : 50;
+  var partnerPct = 100 - myPct;
+
+  var msg;
+  if(combat.status === 'finished'){
+    msg = null;
+  } else if(myScore === partnerScore){
+    msg = 'Égalité parfaite — le duel reste ouvert 🤝';
+  } else if(myScore > partnerScore){
+    msg = 'Vous prenez une petite avance 🌿';
+  } else {
+    msg = esc(partnerName)+' prend une petite avance 🌿';
+  }
+
+  var dayDots = '';
+  for(var i=0;i<combat.duration_days;i++){
+    var d = addDaysStr(start, i);
+    dayDots += '<div class="cbt-day-dot'+(daysPlayed[d]?' done':'')+'"></div>';
+  }
+
+  var daysLeft = Math.max(0, Math.round((new Date(windowEnd+'T00:00:00') - new Date(todayStr()+'T00:00:00')) / 86400000));
+  var expiryLbl = combat.status!=='active' ? '' : (daysLeft<=0 ? 'Dernier jour aujourd\'hui' : 'Se termine dans '+daysLeft+' jour'+(daysLeft>1?'s':''));
+
+  var bodyHtml;
+  if(combat.status === 'finished'){
+    var discoveredCount = Object.keys(daysPlayed).length; // approximation positive, jamais un chiffre individuel négatif
+    bodyHtml = '<div class="cbt-end-title">Défi terminé — bravo à vous deux d\'avoir participé !</div>'
+      + '<div class="cbt-scores"><span class="me">Vous · '+myScore+' pts</span><span class="partner">'+esc(partnerName)+' · '+partnerScore+' pts</span></div>'
+      + '<div class="cbt-end-stats">'
+        + '<div class="cbt-end-stat"><div class="v">'+discoveredCount+'</div><div class="l">jours joués à deux</div></div>'
+        + '<div class="cbt-end-stat"><div class="v">'+totalPts+'</div><div class="l">réussites cumulées</div></div>'
+      + '</div>';
+  } else {
+    bodyHtml = '<div class="cbt-names"><span class="me">Vous</span><span class="partner">'+esc(partnerName)+'</span></div>'
+      + '<div class="cbt-bar"><div class="cbt-bar-me" style="width:'+myPct+'%"></div><div class="cbt-bar-partner" style="width:'+partnerPct+'%"></div></div>'
+      + '<div class="cbt-scores"><span class="me">'+myScore+' points</span><span class="partner">'+partnerScore+' points</span></div>'
+      + '<div class="cbt-msg">'+msg+'</div>'
+      + '<div class="cbt-day-dots">'+dayDots+'</div>'
+      + (expiryLbl ? '<div class="cbt-expiry">&#128337; '+expiryLbl+'</div>' : '')
+      + '<button type="button" class="cbt-abandon" onclick="abandonCombat(\''+combat.id+'\')">Abandonner ce combat</button>';
+  }
+
+  activeZone.innerHTML = '<div class="section-lbl">Mon combat</div><div class="cbt-card">'
+    + '<div class="cbt-hdr"><span class="cbt-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="cbt-status '+combat.status+'">'+(combat.status==='active'?'En cours':'Terminé')+'</span></div>'
+    + '<div class="cbt-sub">'+esc(tpl.sub)+'</div>'
+    + bodyHtml
+    + '</div>';
+}
+
+// Réservé aux admins pour l'instant -- fonctionnalité pas encore ouverte
+// aux vrais patients, même principe que le reste des tests en cours.
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){ window.location.href='index.html'; return; }
+  USER = r.data.session.user;
+  sb.from('profiles').select('role').eq('id',USER.id).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){ window.location.href='dashboard.html'; return; }
+    loadMyCombat();
+  });
+});
+</script>
+</body>
+</html>
