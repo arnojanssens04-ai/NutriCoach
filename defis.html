@@ -252,7 +252,8 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 // exigent plusieurs familles d'aliments DANS LE MÊME repas.
 var DUO_TIER_META = {
   easy:   { icon:'🌱', label:'Facile' },
-  medium: { icon:'🌿', label:'Intermédiaire' }
+  medium: { icon:'🌿', label:'Intermédiaire' },
+  hard:   { icon:'✨', label:'Avancé' }
 };
 var DUO_TEMPLATES = {
   veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'Sur une fenêtre de 10 jours', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:10, mode:'individual', tier:'easy' },
@@ -263,7 +264,20 @@ var DUO_TEMPLATES = {
   prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
   petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'Sur une fenêtre de 8 jours', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:8, mode:'individual', tier:'easy' },
   ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'Sur une fenêtre de 8 jours', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:8, mode:'individual', tier:'medium' },
-  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual', tier:'medium' }
+  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual', tier:'medium' },
+
+  // Entraide difficile -- palier "Avancé" : composition multi-famille
+  // DANS LE MÊME repas (comme les défis solo avancés), jamais une simple
+  // quantité. mode:'combined_cumulative' : dailyTarget sert ici de CIBLE
+  // CUMULÉE sur toute la fenêtre (pas un seuil par jour) -- chaque
+  // personne calcule sa propre valeur du jour depuis SON journal
+  // uniquement, jamais le détail des aliments de l'autre.
+  plate_combined_8_7days: { icon:'🤝', label:'Entraide : assiettes complètes à deux', sub:'Réussir 8 repas à deux avec 2 couleurs de légumes, une protéine et un féculent complet ou une légumineuse', metric:'complete_plate_meals', dailyTarget:8, windowDays:7, mode:'combined_cumulative', tier:'hard' },
+  legumineuse_combined_8_7days: { icon:'🤝', label:'Entraide : légumineuses à deux', sub:'Réussir 8 repas à deux avec des légumineuses', metric:'legumineuse_meals', dailyTarget:8, windowDays:7, mode:'combined_cumulative', tier:'hard' },
+  homemade_veg_combined_6_7days: { icon:'🤝', label:'Entraide : cuisine végétale à deux', sub:'Réussir 6 repas maison à deux avec au moins 2 légumes ou fruits différents', metric:'homemade_veg_meals', dailyTarget:6, windowDays:7, mode:'combined_cumulative', tier:'hard' },
+  breakfast_combined_8_7days: { icon:'🤝', label:'Entraide : petit-déjeuner complet à deux', sub:'Cumuler 8 petits-déjeuners à deux avec fruit, source de fibres et protéines', metric:'complete_breakfast_meals', dailyTarget:8, windowDays:7, mode:'combined_cumulative', tier:'hard' },
+  structured_combined_10_7days: { icon:'🤝', label:'Entraide : repas pensés à deux', sub:'Réussir 10 repas à deux avec un légume ou fruit, une protéine et un féculent', metric:'structured_meals', dailyTarget:10, windowDays:7, mode:'combined_cumulative', tier:'hard' },
+  complete_week_combined_10_7days: { icon:'🤝', label:'Entraide : semaine plus complète à deux', sub:'Cumuler 10 repas à deux incluant une céréale complète ou une légumineuse', metric:'complete_week_meals_broad', dailyTarget:10, windowDays:7, mode:'combined_cumulative', tier:'hard' }
 };
 
 // Détection légumes / ultra-transformés — même esprit que dashboard.html,
@@ -339,8 +353,82 @@ async function joinChallenge(){
 // Calcule ma valeur pour UN jour donné et une métrique donnée, à partir
 // des entrées de MON PROPRE journal déjà chargées pour ce jour (jamais
 // celui du partenaire).
+// ── Détection légumineuses/céréales complètes/protéines -- nécessaire
+// pour les défis "Entraide difficile" (composition multi-famille dans LE
+// MÊME repas), même logique que defis-solo.html (copie propre à ce
+// fichier, convention du projet). ──────────────────────────────────────
+var VEG_COLOR_PATTERNS = [
+  { color:'vert',   re:/brocoli|epinard|courgette|haricot vert|poireau|celeri|salade|chou vert|concombre|petit pois|poivron vert/ },
+  { color:'orange', re:/carotte|potiron|courge|poivron orange|patate douce/ },
+  { color:'rouge',  re:/tomate|poivron rouge|radis/ },
+  { color:'blanc',  re:/chou.fleur|oignon(?! rouge)|champignon|navet|endive/ },
+  { color:'violet', re:/aubergine|chou rouge|oignon rouge|betterave/ }
+];
+function vegColorOf(n){ for(var i=0;i<VEG_COLOR_PATTERNS.length;i++){ if(VEG_COLOR_PATTERNS[i].re.test(n)) return VEG_COLOR_PATTERNS[i].color; } return null; }
+var FRUIT_REGEX2 = /pomme|poire|banane|orange|kiwi|fraise|ananas|mangue|raisin|pasteque|melon|peche|abricot|prune|cerise|figue|citron|lime|grenade|papaye|coing|litchi|mandarine|clementine|pamplemousse|framboise|myrtille|mure|groseille|cassis|datte/;
+var LEGUMINEUSE_REGEX2 = /lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame|pois casse/;
+var WHOLEGRAIN_REGEX2 = /complet|integral|avoine|quinoa|sarrasin|epeautre|boulgour|orge/;
+var GENERIC_STARCH_REGEX2 = /pain|pate|riz|pomme de terre|patate(?! douce)|semoule|polenta/;
+var PROTEIN_PATTERNS2 = [
+  { name:'volaille',   vegetal:false, re:/poulet|dinde|volaille/ },
+  { name:'boeuf/veau', vegetal:false, re:/boeuf|veau/ },
+  { name:'porc',       vegetal:false, re:/porc|jambon|bacon/ },
+  { name:'poisson',    vegetal:false, re:/saumon|cabillaud|thon|sardine|maquereau|colin|lieu|sole|daurade|crevette|poisson/ },
+  { name:'oeuf',       vegetal:false, re:/oeuf/ },
+  { name:'laitier',    vegetal:false, re:/yaourt|fromage|skyr|kefir/ },
+  { name:'tofu/tempeh',vegetal:true,  re:/tofu|tempeh|seitan/ },
+  { name:'legumineuse',vegetal:true,  re:/lentille|pois chiche|haricot rouge|haricot blanc|haricot noir|feve|soja|edamame/ }
+];
+function proteinOf2(n){ for(var i=0;i<PROTEIN_PATTERNS2.length;i++){ if(PROTEIN_PATTERNS2[i].re.test(n)) return PROTEIN_PATTERNS2[i]; } return null; }
+var COMPOSITE_METRICS = ['complete_plate_meals','legumineuse_meals','homemade_veg_meals','structured_meals','complete_breakfast_meals','complete_week_meals_broad'];
+
+// Regroupe les entrées d'UN SEUL JOUR par repas et compte, pour la
+// métrique composite demandée, le nombre de repas CE JOUR-LÀ qui
+// remplissent la condition -- syncProgressForWindow synchronise ensuite
+// cette valeur jour par jour comme n'importe quelle autre métrique
+// combinée : le total sur la fenêtre est la somme de ces valeurs
+// journalières des deux personnes, jamais un partage du détail réel des
+// aliments de l'autre (même principe de confidentialité que le reste de
+// cette page).
+function computeCompositeMetricValue(entriesForDay, metric){
+  var byMeal = {};
+  (entriesForDay||[]).forEach(function(e){
+    if(!byMeal[e.repas]) byMeal[e.repas] = [];
+    byMeal[e.repas].push(e);
+  });
+  var count = 0;
+  Object.keys(byMeal).forEach(function(repas){
+    var vegColors={}, hasFruit=false, hasLegumineuse=false, hasWholegrain=false, hasGenericStarch=false, hasProtein=false, allNonUltra=true, vegFruitCount=0;
+    byMeal[repas].forEach(function(e){
+      var n = String(e.aliment||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      var vc = vegColorOf(n);
+      if(vc){ vegColors[vc]=1; vegFruitCount++; }
+      if(FRUIT_REGEX2.test(n)){ hasFruit=true; vegFruitCount++; }
+      if(LEGUMINEUSE_REGEX2.test(n)) hasLegumineuse=true;
+      if(WHOLEGRAIN_REGEX2.test(n)) hasWholegrain=true;
+      if(GENERIC_STARCH_REGEX2.test(n)) hasGenericStarch=true;
+      if(proteinOf2(n)) hasProtein=true;
+      if(isUltraFood(e)) allNonUltra=false;
+    });
+    var completeFeculent = hasWholegrain || hasLegumineuse;
+    var anyFeculent = completeFeculent || hasGenericStarch;
+    var met = false;
+    if(metric==='complete_plate_meals') met = Object.keys(vegColors).length>=2 && hasProtein && completeFeculent;
+    else if(metric==='legumineuse_meals') met = hasLegumineuse;
+    else if(metric==='homemade_veg_meals') met = allNonUltra && vegFruitCount>=2;
+    else if(metric==='structured_meals') met = vegFruitCount>0 && hasProtein && anyFeculent;
+    else if(metric==='complete_breakfast_meals') met = repas==='breakfast' && hasFruit && (Object.keys(vegColors).length>0 || hasLegumineuse || hasWholegrain) && hasProtein;
+    else if(metric==='complete_week_meals_broad') met = (hasWholegrain||hasLegumineuse) && vegFruitCount>0 && hasProtein;
+    if(met) count++;
+  });
+  return count;
+}
+
 function computeMetricValue(entriesForDay, metric){
   entriesForDay = entriesForDay || [];
+  if(COMPOSITE_METRICS.indexOf(metric)!==-1){
+    return computeCompositeMetricValue(entriesForDay, metric);
+  }
   if(metric === 'fibres'){
     return entriesForDay.reduce(function(s,e){ return s + (e.food_fibres_100||0)*(e.quantite||0)/100; }, 0);
   }
@@ -412,7 +500,9 @@ async function syncProgressForWindow(challenge){
   await sb.from('duo_challenge_progress').upsert(rowsToUpsert, { onConflict: 'challenge_id,user_id,date' });
 }
 
-var METRIC_UNITS = { fibres:'g', protein:'g', veg:'g', ultra_count:' AUT', food_variety_count:' aliments', breakfast_logged:'' };
+var METRIC_UNITS = { fibres:'g', protein:'g', veg:'g', ultra_count:' AUT', food_variety_count:' aliments', breakfast_logged:'',
+  complete_plate_meals:' repas', legumineuse_meals:' repas', homemade_veg_meals:' repas', structured_meals:' repas',
+  complete_breakfast_meals:' petits-déj', complete_week_meals_broad:' repas' };
 function fmtMetricValue(metric, value){
   if(metric === 'breakfast_logged') return value>=1 ? 'Noté' : 'Non noté';
   return Math.round(value) + (METRIC_UNITS[metric]||'');
@@ -434,35 +524,50 @@ async function evaluateAndRender(challenge, container){
   var start = challenge.start_date || todayStr();
   var successCount = 0;
   var dayCells = [];
-  // Toute la fenêtre est affichée (jours passés atteints/manqués + jours à
-  // venir) -- avant, la boucle s'arrêtait au premier jour futur, ce qui
-  // faisait apparaître seulement 2-3 cases pour un objectif "7 jours",
-  // décalage visuel entre le texte "X / 7 jours réussis" et le nombre de
-  // cases affichées.
-  for(var i=0;i<tpl.windowDays;i++){
-    var d = addDaysStr(start, i);
-    var isFuture = d > todayStr();
-    var isToday = d === todayStr();
-    var slot = byDate[d] || {};
-    var dayOk = false;
-    if(tpl.mode === 'individual'){
-      dayOk = !!(slot.creator && slot.creator.met && slot.partner && slot.partner.met);
-    } else {
-      var total = (slot.creator ? slot.creator.value : 0) + (slot.partner ? slot.partner.value : 0);
-      dayOk = (slot.creator!==undefined || slot.partner!==undefined) && total >= tpl.dailyTarget;
+  // Cumul sur TOUTE la fenêtre (pas un seuil par jour) -- uniquement pour
+  // les défis "Entraide difficile" (mode combined_cumulative), qui
+  // comptent des repas qualifiants au fil de la semaine plutôt qu'un
+  // total journalier à atteindre chaque jour.
+  var cumulativeTotal = 0;
+  if(tpl.mode === 'combined_cumulative'){
+    Object.keys(byDate).forEach(function(d){
+      var slot = byDate[d];
+      cumulativeTotal += (slot.creator ? slot.creator.value : 0) + (slot.partner ? slot.partner.value : 0);
+    });
+  } else {
+    // Toute la fenêtre est affichée (jours passés atteints/manqués + jours à
+    // venir) -- avant, la boucle s'arrêtait au premier jour futur, ce qui
+    // faisait apparaître seulement 2-3 cases pour un objectif "7 jours",
+    // décalage visuel entre le texte "X / 7 jours réussis" et le nombre de
+    // cases affichées.
+    for(var i=0;i<tpl.windowDays;i++){
+      var d = addDaysStr(start, i);
+      var isFuture = d > todayStr();
+      var isToday = d === todayStr();
+      var slot = byDate[d] || {};
+      var dayOk = false;
+      if(tpl.mode === 'individual'){
+        dayOk = !!(slot.creator && slot.creator.met && slot.partner && slot.partner.met);
+      } else {
+        var total = (slot.creator ? slot.creator.value : 0) + (slot.partner ? slot.partner.value : 0);
+        dayOk = (slot.creator!==undefined || slot.partner!==undefined) && total >= tpl.dailyTarget;
+      }
+      if(dayOk) successCount++;
+      var cls = 'chal-day';
+      if(dayOk) cls += ' ok';
+      else if(isFuture) cls += ' future';
+      else if(!isToday) cls += ' missed';
+      if(isToday) cls += ' today';
+      dayCells.push('<div class="chal-day-col"><div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(isFuture?'':'·'))+'</div><div class="chal-day-lbl">J'+(i+1)+'</div></div>');
     }
-    if(dayOk) successCount++;
-    var cls = 'chal-day';
-    if(dayOk) cls += ' ok';
-    else if(isFuture) cls += ' future';
-    else if(!isToday) cls += ' missed';
-    if(isToday) cls += ' today';
-    dayCells.push('<div class="chal-day-col"><div class="'+cls+'" title="'+d+'">'+(dayOk?'✓':(isFuture?'':'·'))+'</div><div class="chal-day-lbl">J'+(i+1)+'</div></div>');
   }
 
   var newStatus = null;
   if(challenge.status === 'active'){
-    if(successCount >= tpl.requiredDays) newStatus = 'succeeded';
+    if(tpl.mode === 'combined_cumulative'){
+      if(cumulativeTotal >= tpl.dailyTarget) newStatus = 'succeeded';
+      else if(addDaysStr(start, tpl.windowDays-1) < todayStr()) newStatus = 'failed';
+    } else if(successCount >= tpl.requiredDays) newStatus = 'succeeded';
     else if(addDaysStr(start, tpl.windowDays-1) < todayStr()) newStatus = 'failed';
   }
   if(newStatus){
@@ -509,11 +614,22 @@ async function evaluateAndRender(challenge, container){
 
   // 1) Progression globale -- élément central, une barre + un texte,
   // avant tout le reste.
-  var progressPct = tpl.requiredDays>0 ? Math.min(100, Math.round(successCount/tpl.requiredDays*100)) : 0;
-  var progressHtml = waitingPartner ? '' : '<div class="chal-progress-wrap">'
-    + '<div class="chal-progress-lbl">'+successCount+' jour'+(successCount>1?'s':'')+' réussi'+(successCount>1?'s':'')+' sur '+tpl.requiredDays+'</div>'
-    + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+progressPct+'%"></div></div>'
-    + '</div>';
+  var progressHtml = '';
+  if(!waitingPartner){
+    if(tpl.mode === 'combined_cumulative'){
+      var cumPct = tpl.dailyTarget>0 ? Math.min(100, Math.round(cumulativeTotal/tpl.dailyTarget*100)) : 0;
+      progressHtml = '<div class="chal-progress-wrap">'
+        + '<div class="chal-progress-lbl">'+fmtMetricValue(tpl.metric,cumulativeTotal)+' sur '+fmtMetricValue(tpl.metric,tpl.dailyTarget)+' (à deux)</div>'
+        + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+cumPct+'%"></div></div>'
+        + '</div>';
+    } else {
+      var progressPct = tpl.requiredDays>0 ? Math.min(100, Math.round(successCount/tpl.requiredDays*100)) : 0;
+      progressHtml = '<div class="chal-progress-wrap">'
+        + '<div class="chal-progress-lbl">'+successCount+' jour'+(successCount>1?'s':'')+' réussi'+(successCount>1?'s':'')+' sur '+tpl.requiredDays+'</div>'
+        + '<div class="chal-progress-track"><div class="chal-progress-fill" style="width:'+progressPct+'%"></div></div>'
+        + '</div>';
+    }
+  }
 
   var duoHtml = waitingPartner ? '' : '<div class="chal-duo">Défi avec <b>'+esc(partnerName)+'</b></div>';
 
@@ -527,6 +643,15 @@ async function evaluateAndRender(challenge, container){
       todayBlockHtml = '<div class="chal-today-lbl">Aujourd\'hui</div><div class="chal-today">'
         + '<div class="chal-today-row"><span class="chal-today-dot me"></span><span class="chal-today-name">Vous</span><span class="chal-today-val'+(myTodaySlot?'':' pending')+'">'+(myTodaySlot ? (myTodaySlot.met?'Validé ✓':fmtMetricValue(tpl.metric,myTodaySlot.value)) : 'En attente')+'</span></div>'
         + '<div class="chal-today-row"><span class="chal-today-dot partner"></span><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-val'+(partnerTodaySlot&&partnerTodaySlot.met?'':' pending')+'">'+(partnerTodaySlot ? (partnerTodaySlot.met?'Validé ✓':'En cours') : 'En attente')+'</span></div>'
+        + '</div>';
+    } else if(tpl.mode === 'combined_cumulative'){
+      // Pas de "cible du jour" ici (la cible porte sur toute la semaine,
+      // voir progressHtml) -- juste la contribution du jour de chacun.
+      var myValC = myTodaySlot ? myTodaySlot.value : 0;
+      var partnerValC = partnerTodaySlot ? partnerTodaySlot.value : 0;
+      todayBlockHtml = '<div class="chal-today-lbl">Aujourd\'hui</div><div class="chal-today">'
+        + '<div class="chal-today-row"><span class="chal-today-dot me"></span><span class="chal-today-name">Vous</span><span class="chal-today-val'+(myTodaySlot?'':' pending')+'">'+(myTodaySlot ? fmtMetricValue(tpl.metric,myValC) : 'Pas encore')+'</span></div>'
+        + '<div class="chal-today-row"><span class="chal-today-dot partner"></span><span class="chal-today-name">'+esc(partnerName)+'</span><span class="chal-today-val'+(partnerTodaySlot?'':' pending')+'">'+(partnerTodaySlot ? fmtMetricValue(tpl.metric,partnerValC) : 'Pas encore')+'</span></div>'
         + '</div>';
     } else {
       var myVal = myTodaySlot ? myTodaySlot.value : 0;
@@ -547,8 +672,15 @@ async function evaluateAndRender(challenge, container){
     }
   }
 
-  var daysBlockHtml = waitingPartner ? '' : '<div class="chal-days-lbl">Progression sur la fenêtre</div><div class="chal-days">'+dayCells.join('')+'</div>'
-    + (waitingPartner || challenge.status==='succeeded' || challenge.status==='failed' ? '' : '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>');
+  var daysBlockHtml = '';
+  if(!waitingPartner){
+    if(tpl.mode === 'combined_cumulative'){
+      daysBlockHtml = (challenge.status==='succeeded' || challenge.status==='failed') ? '' : '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>';
+    } else {
+      daysBlockHtml = '<div class="chal-days-lbl">Progression sur la fenêtre</div><div class="chal-days">'+dayCells.join('')+'</div>'
+        + (challenge.status==='succeeded' || challenge.status==='failed' ? '' : '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>');
+    }
+  }
 
   container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+'">'
     + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
