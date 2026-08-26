@@ -1052,7 +1052,7 @@ body {
       <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journ&#233;e type qui ne change jamais, &#224; la place des suggestions automatiques.</div>
     </div>
   </a>
-  <a href="defis.html" id="defis-link" style="display:none;text-decoration:none;color:inherit">
+  <a href="defis.html?v=2" id="defis-link" style="display:none;text-decoration:none;color:inherit">
     <div class="prof-card" style="cursor:pointer">
       <div class="prof-card-hdr"><span>&#129309; D&#233;fis &#224; deux <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
       <div class="prof-card-body" style="font-size:.82rem;color:var(--text2)">Relevez un objectif commun avec un proche &#8212; vous r&#233;ussissez ensemble, ou aucun des deux.</div>
@@ -3766,7 +3766,7 @@ async function checkDuoChallengeDailyAlerts(){
     // clic "Masquer") plutôt qu'une carte fixe dans les alertes.
     showCenterPush('🎉', 'Objectif du défi atteint aujourd\'hui !',
       esc(tpl.label) + ' avec <strong>' + esc(partnerName) + '</strong>.'
-      + '<br><a href="defis.html" style="color:var(--gold);font-weight:600;text-decoration:none">Voir le défi &#8594;</a>');
+      + '<br><a href="defis.html?v=2" style="color:var(--gold);font-weight:600;text-decoration:none">Voir le défi &#8594;</a>');
     dismissDuoChallengeAlert(dismissKey, true);
   }
 }
