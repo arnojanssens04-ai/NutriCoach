@@ -108,21 +108,21 @@ var NUTRITION_ADVICE_TEMPLATES = {
     id: 'increase_vitamin_c_sources_v1',
     status: 'active',
     variants: [
-      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine C a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en mg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
-      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine C n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
-      { when: 'default', bodyTemplate: 'Sources de vitamine C peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine C a été indiqué dans votre profil. Aliments sources repérés {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Cette observation reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine C repéré dans le journal ({{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) — observation du journal, pas un diagnostic, aucune quantité en mg n\'est mesurée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine C repérées seulement {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (observation du journal, pas un diagnostic — aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
     ],
-    allowedVariables: ['foods']
+    allowedVariables: ['foods', 'occurrence_days', 'evaluated_days']
   },
   increase_vitamin_d_sources_v1: {
     id: 'increase_vitamin_d_sources_v1',
     status: 'active',
     variants: [
-      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine D a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en µg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
-      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine D n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
-      { when: 'default', bodyTemplate: 'Sources de vitamine D peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine D a été indiqué dans votre profil. Aliments sources repérés {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Cette observation reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine D repéré dans le journal ({{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) — observation du journal, pas un diagnostic, aucune quantité en µg n\'est mesurée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine D repérées seulement {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
     ],
-    allowedVariables: ['foods']
+    allowedVariables: ['foods', 'occurrence_days', 'evaluated_days']
   },
   increase_potassium_sources_v1: {
     id: 'increase_potassium_sources_v1',
@@ -138,11 +138,11 @@ var NUTRITION_ADVICE_TEMPLATES = {
     id: 'increase_vitamin_b12_sources_v1',
     status: 'active',
     variants: [
-      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine B12 a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en µg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
-      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine B12 n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
-      { when: 'default', bodyTemplate: 'Sources de vitamine B12 peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine B12 a été indiqué dans votre profil. Aliments sources repérés {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Cette observation reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine B12 repéré dans le journal ({{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) — observation du journal, pas un diagnostic, aucune quantité en µg n\'est mesurée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine B12 repérées seulement {{occurrence_days}} jour(s) sur {{evaluated_days}} analysé(s) (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
     ],
-    allowedVariables: ['foods']
+    allowedVariables: ['foods', 'occurrence_days', 'evaluated_days']
   },
   increase_protein_sources_v1: {
     id: 'increase_protein_sources_v1',

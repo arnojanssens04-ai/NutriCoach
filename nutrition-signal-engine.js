@@ -477,7 +477,7 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       patternId: 'low_source_presence_vitamin_c',
       label: 'Sources alimentaires de vitamine C peu présentes',
       nutrientCode: 'vitamin_c',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
       neutralMessage: 'Les sources alimentaires de vitamine C apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -488,7 +488,7 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       patternId: 'low_source_presence_vitamin_d',
       label: 'Sources alimentaires de vitamine D peu présentes',
       nutrientCode: 'vitamin_d',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
       neutralMessage: 'Les sources alimentaires de vitamine D apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate
@@ -513,7 +513,7 @@ var NUTRITION_SIGNAL_RESOLVERS = {
       patternId: 'low_source_presence_vitamin_b12',
       label: 'Sources alimentaires de vitamine B12 peu présentes',
       nutrientCode: 'vitamin_b12',
-      observationWindowDays: 7,
+      observationWindowDays: 14,
       neutralMessage: 'Les sources alimentaires de vitamine B12 apparaissent peu souvent dans les repas enregistrés sur la période analysée.',
       insufficientDataMessage: 'Les données disponibles ne permettent pas d\'évaluer ce signal pour la période analysée.',
       journalEntries: journalEntries, referenceDate: referenceDate

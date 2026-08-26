@@ -85,10 +85,20 @@ function renderNutritionAdvice(template, selectedFoods, flaggedFoodNames, observ
   // inventées ici). Uniquement substitués si le gabarit les autorise ET
   // que l'observation les fournit réellement -- sinon on bloque plutôt
   // que d'afficher un placeholder brut ou une valeur à 0 trompeuse.
-  ['avg_intake', 'daily_target'].forEach(function (key) {
+  // {{occurrence_days}} / {{evaluated_days}} -- pour les nutriments à
+  // détection par présence de sources (B12/C/D, computeNutrientSourceRarity),
+  // seule "quantité" mesurable : le nombre de jours où une source a
+  // réellement été repérée sur le nombre de jours analysables, JAMAIS
+  // masqué même si occurrenceDays vaut 0 (0 est une valeur affichée
+  // comme les autres, pas un cas bloquant).
+  var numericFields = {
+    avg_intake: 'avgIntake', daily_target: 'dailyTarget',
+    occurrence_days: 'occurrenceDays', evaluated_days: 'evaluatedDays'
+  };
+  Object.keys(numericFields).forEach(function (key) {
     var placeholder = '{{' + key + '}}';
-    if (body.indexOf(placeholder) === -1) return;
-    var field = key === 'avg_intake' ? 'avgIntake' : 'dailyTarget';
+    if (body === null || body.indexOf(placeholder) === -1) return;
+    var field = numericFields[key];
     if (allowed.indexOf(key) === -1 || !observation || typeof observation[field] !== 'number') {
       body = null;
       return;
