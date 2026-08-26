@@ -47,6 +47,16 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .mode-sub { font-size:.64rem; color:var(--text2); }
 
 .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--sh); padding:18px 20px; margin-bottom:12px; }
+
+/* Onglets de palier -- même composant que defis-solo.html/combat.html,
+   pour classer "Créer un défi" en Facile / Intermédiaire / Avancé plutôt
+   qu'une longue liste plate. */
+.tier-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.tier-tab { flex:1; text-align:center; padding:12px 8px; border-radius:14px; border:1px solid var(--border); background:var(--card); cursor:pointer; }
+.tier-tab .ico { font-size:1.25rem; display:block; margin-bottom:3px; }
+.tier-tab .lbl { font-size:.78rem; font-weight:700; }
+.tier-tab.on { border-color:var(--gold); background:var(--gold-l); }
+
 .tpl-opt { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; cursor:pointer; margin-bottom:9px; transition:border-color .15s, background .15s; }
 .tpl-opt:hover, .tpl-opt.on { border-color:var(--gold); background:var(--gold-l); }
 .tpl-opt-icon { font-size:1.5rem; flex-shrink:0; }
@@ -169,6 +179,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
   <div id="create-join-sections">
     <div class="section-lbl">Créer un défi</div>
     <div class="card">
+      <div class="tier-tabs" id="duo-tier-tabs"></div>
       <div id="tpl-list"></div>
       <button class="btn" id="create-btn" onclick="createChallenge()" disabled>Créer et obtenir mon code</button>
       <div class="code-box" id="new-code-box" style="display:none">
@@ -198,6 +209,7 @@ var sb = supabase.createClient(SURL, SKEY);
 
 var USER = null;
 var selectedTpl = null;
+var selectedDuoTier = 'easy';
 
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
 
@@ -313,14 +325,29 @@ function isUltraFood(entry){
   return ULTRA_REGEX.test(n);
 }
 
+function renderDuoTierTabs(){
+  var root = document.getElementById('duo-tier-tabs');
+  if(!root) return;
+  root.innerHTML = Object.keys(DUO_TIER_META).map(function(t){
+    var tm = DUO_TIER_META[t];
+    return '<div class="tier-tab'+(t===selectedDuoTier?' on':'')+'" onclick="selectDuoTier(\''+t+'\')"><span class="ico">'+tm.icon+'</span><span class="lbl">'+tm.label+'</span></div>';
+  }).join('');
+}
+function selectDuoTier(t){
+  selectedDuoTier = t;
+  selectedTpl = null;
+  document.getElementById('create-btn').disabled = true;
+  renderDuoTierTabs();
+  renderTemplateList();
+}
 function renderTemplateList(){
   var root = document.getElementById('tpl-list');
-  root.innerHTML = Object.keys(DUO_TEMPLATES).map(function(key){
+  var list = Object.keys(DUO_TEMPLATES).filter(function(key){ return DUO_TEMPLATES[key].tier===selectedDuoTier; });
+  root.innerHTML = list.map(function(key){
     var t = DUO_TEMPLATES[key];
-    var tm = DUO_TIER_META[t.tier];
     return '<div class="tpl-opt" id="tpl-'+key+'" onclick="selectTpl(\''+key+'\')">'
       + '<div class="tpl-opt-icon">'+t.icon+'</div>'
-      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+' <span style="font-size:.62rem;font-weight:700;color:var(--text2);background:var(--bg2);padding:2px 7px;border-radius:999px;vertical-align:middle">'+tm.icon+' '+tm.label+'</span></div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
+      + '<div><div class="tpl-opt-lbl">'+esc(t.label)+'</div><div class="tpl-opt-sub">'+esc(t.sub)+'</div></div>'
       + '</div>';
   }).join('');
 }
@@ -786,6 +813,7 @@ sb.auth.getSession().then(function(r){
   USER = r.data.session.user;
   sb.from('profiles').select('role').eq('id',USER.id).single().then(function(res){
     if(!res.data || res.data.role !== 'admin'){ window.location.href='dashboard.html'; return; }
+    renderDuoTierTabs();
     renderTemplateList();
     loadMyChallenges();
   });
