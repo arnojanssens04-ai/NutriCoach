@@ -1695,7 +1695,8 @@ function loadRealJournalForAdmin(uid, adminProfile) {
           clinicalContext: [],
           symptoms: [],
           diet: (adminProfile && adminProfile.diet) || null,
-          eligibleForAutomatedAdvice: true
+          eligibleForAutomatedAdvice: true,
+          supplementedNutrients: (adminProfile && Array.isArray(adminProfile.supplements)) ? adminProfile.supplements : []
         },
         journalEntries: journal
       };
@@ -1754,7 +1755,7 @@ function loadPatientQueue(adminUid) {
   var referenceDate = todayIsoSim();
   var windowStart = shiftDateStrSim(referenceDate, -13);
 
-  sb.from('profiles').select('id, prenom, nom, age, diet, role').neq('role', 'admin')
+  sb.from('profiles').select('id, prenom, nom, age, diet, role, supplements').neq('role', 'admin')
     .then(function (profilesRes) {
       if (profilesRes.error) {
         root.innerHTML = '<div class="result-box blocked">Erreur de lecture des patients : ' + esc(profilesRes.error.message) + '</div>';
@@ -1806,7 +1807,8 @@ function loadPatientQueue(adminUid) {
           var profileForEngine = {
             patientId: p.id, age: p.age || null, isPregnantOrBreastfeeding: false,
             allergies: [], intolerances: [], clinicalContext: [], symptoms: [],
-            diet: p.diet || null, eligibleForAutomatedAdvice: true
+            diet: p.diet || null, eligibleForAutomatedAdvice: true,
+            supplementedNutrients: Array.isArray(p.supplements) ? p.supplements : []
           };
 
           var eligible = runNutritionSimulationForAllRules({
@@ -1849,7 +1851,7 @@ sb.auth.getSession().then(function (r) {
     return;
   }
   var uid = r.data.session.user.id;
-  sb.from('profiles').select('role, age, diet').eq('id', uid).single().then(function (res) {
+  sb.from('profiles').select('role, age, diet, supplements').eq('id', uid).single().then(function (res) {
     if (!res.data || res.data.role !== 'admin') {
       document.getElementById('access-denied').style.display = 'block';
       return;

@@ -1116,6 +1116,13 @@ body {
       </div>
     </div>
   </div>
+  <div class="prof-card" id="supplements-card" style="display:none">
+    <div class="prof-card-hdr"><span>&#128138; Compl&#233;ments alimentaires <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
+      <p style="margin-bottom:12px">Indiquez les nutriments pour lesquels vous prenez d&#233;j&#224; un compl&#233;ment &#8212; sans cette information, l'app ne peut pas le savoir et pourrait sugg&#233;rer d'ajouter des aliments pour un nutriment d&#233;j&#224; couvert par ailleurs.</p>
+      <div id="supplements-chip-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+  </div>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>&#9881;&#65039; Compte</span></div>
     <div class="prof-card-body">
@@ -6485,6 +6492,11 @@ function renderProfile(){
   if(nutritionSportConsentSwitch) nutritionSportConsentSwitch.classList.toggle('on', p.consent_nutrition_advice_sport === true);
   var autConsentSwitch = document.getElementById('aut-consent-switch');
   if(autConsentSwitch) autConsentSwitch.classList.toggle('on', p.consent_nutrition_advice === true);
+  var supplementsCard = document.getElementById('supplements-card');
+  if(supplementsCard){
+    supplementsCard.style.display = (p.role==='admin') ? 'block' : 'none';
+    if(p.role==='admin') renderSupplementsChips(p.supplements||[]);
+  }
   var autConsentCard = document.getElementById('aut-consent-card');
   if(autConsentCard) autConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
 
@@ -6675,6 +6687,39 @@ async function toggleFocusMode(){
   if(sw) sw.classList.toggle('on', newVal);
   toast(newVal ? '🌿 Mode focus activé' : 'Mode focus désactivé');
   if(typeof refreshDash==='function') refreshDash();
+}
+// Compléments alimentaires déjà pris -- profiles.supplements (text[]),
+// utilisé uniquement pour adapter le TEXTE d'un conseil déjà généré
+// (nutrition-advice-renderer.js, variante "hasSupplement"), jamais pour
+// bloquer l'observation elle-même : la personne peut prendre un
+// complément insuffisant, en changer, l'arrêter -- l'app ne le sait
+// jamais avec certitude, elle affiche juste un texte cohérent avec ce qui
+// a été déclaré.
+var SUPPLEMENT_NUTRIENTS = [
+  {code:'iron', label:'Fer'}, {code:'calcium', label:'Calcium'}, {code:'fiber', label:'Fibres'},
+  {code:'omega3', label:'Oméga-3'}, {code:'magnesium', label:'Magnésium'}, {code:'zinc', label:'Zinc'},
+  {code:'potassium', label:'Potassium'}, {code:'protein', label:'Protéines'},
+  {code:'vitamin_c', label:'Vitamine C'}, {code:'vitamin_d', label:'Vitamine D'}, {code:'vitamin_b12', label:'Vitamine B12'}
+];
+function renderSupplementsChips(current){
+  var root = document.getElementById('supplements-chip-list');
+  if(!root) return;
+  root.innerHTML = SUPPLEMENT_NUTRIENTS.map(function(n){
+    var on = current.indexOf(n.code) >= 0;
+    var style = on
+      ? 'background:var(--gold);color:#fff;border-color:var(--gold)'
+      : 'background:var(--bg2);color:var(--text2);border-color:var(--border)';
+    return '<span onclick="toggleSupplementNutrient(\''+n.code+'\')" style="cursor:pointer;padding:6px 12px;border-radius:999px;font-size:.76rem;font-weight:600;border:1px solid;transition:all .15s;'+style+'">'+(on?'✓ ':'')+n.label+'</span>';
+  }).join('');
+}
+async function toggleSupplementNutrient(code){
+  var current = (PROF && Array.isArray(PROF.supplements)) ? PROF.supplements.slice() : [];
+  var idx = current.indexOf(code);
+  if(idx>=0) current.splice(idx,1); else current.push(code);
+  var r = await sb.from('profiles').update({supplements:current}).eq('id',USER.id);
+  if(r.error){ toast('❌ Erreur : '+r.error.message); return; }
+  PROF.supplements = current;
+  renderSupplementsChips(current);
 }
 // toggleAutConsent() / toggleNutritionAdvicePathologyConsent() /
 // toggleNutritionAdviceSportConsent() -- même constat que toggleFocusMode :

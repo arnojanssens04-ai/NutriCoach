@@ -130,7 +130,15 @@ function runNutritionSimulation(params) {
 
   var templates = (typeof NUTRITION_ADVICE_TEMPLATES !== 'undefined') ? NUTRITION_ADVICE_TEMPLATES : {};
   var template = templates[rule.templateId];
-  var rendered = renderNutritionAdvice(template, selection.selected, flaggedFoodNames);
+  // Complément déjà signalé par la personne pour CE nutriment précis
+  // (profile.supplementedNutrients, rempli côté profil patient) -- permet
+  // au gabarit de choisir une formulation adaptée plutôt que de répéter
+  // une suggestion alimentaire alors qu'un complément est déjà pris.
+  // Jamais utilisé pour bloquer l'observation elle-même, uniquement pour
+  // choisir le texte affiché.
+  var hasSupplement = !!(rule.nutrientCode && params.profile && Array.isArray(params.profile.supplementedNutrients)
+    && params.profile.supplementedNutrients.indexOf(rule.nutrientCode) !== -1);
+  var rendered = renderNutritionAdvice(template, selection.selected, flaggedFoodNames, trendResult, hasSupplement);
 
   if (rendered.blockReason) {
     return {

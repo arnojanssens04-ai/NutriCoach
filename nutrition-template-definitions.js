@@ -29,82 +29,130 @@ var NUTRITION_ADVICE_TEMPLATES = {
   // un seul placeholder {{foods}}, formulation conditionnelle et non
   // prescriptive, jamais de diagnostic de carence, jamais d'impératif,
   // jamais d'affirmation de cause à effet sur la santé.
+  // ── Gabarits à VARIANTES (variants[]) ──────────────────────────────────
+  // Toujours des textes FIXES et pré-validés (aucune génération libre) —
+  // seule la SÉLECTION entre plusieurs formulations déjà écrites dépend
+  // du contexte objectif (occurrenceRate du signal, complément déjà
+  // signalé par la personne). "when" ne référence QUE des clés fixes
+  // reconnues par nutrition-advice-renderer.js (jamais de code exécuté) :
+  // 'hasSupplement' (profiles.supplements contient ce nutrientCode),
+  // 'veryLow' (observation nettement plus basse que le seuil de
+  // déclenchement), 'default' (catch-all, toujours en dernier). Les
+  // nutriments à cible en GRAMMES/MG (fer, calcium, fibres...) peuvent
+  // en plus interpoler {{avg_intake}}/{{daily_target}}/{{unit}} — valeurs
+  // NUMÉRIQUES déjà calculées par computeNutrientIntakeVsTarget
+  // (nutrition-signal-engine.js), jamais une quantité inventée. Les
+  // nutriments à détection par PRÉSENCE DE SOURCES (B12/C/D) n'ont pas de
+  // quantité mesurable — le texte l'explicite au lieu de laisser un vide.
   increase_iron_sources_v1: {
     id: 'increase_iron_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en fer nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en fer a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en fer estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en fer estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_calcium_sources_v1: {
     id: 'increase_calcium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en calcium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en calcium a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en calcium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en calcium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_fiber_sources_v1: {
     id: 'increase_fiber_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en fibres nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en fibres a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en fibres estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en fibres estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_omega3_sources_v1: {
     id: 'increase_omega3_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en oméga-3 nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en oméga-3 a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en oméga-3 estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en oméga-3 estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_magnesium_sources_v1: {
     id: 'increase_magnesium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en magnésium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en magnésium a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en magnésium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en magnésium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_zinc_sources_v1: {
     id: 'increase_zinc_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en zinc nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en zinc a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en zinc estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en zinc estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_vitamin_c_sources_v1: {
     id: 'increase_vitamin_c_sources_v1',
     status: 'active',
-    bodyTemplate: 'Sources de vitamine C peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine C a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en mg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine C n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine C peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en mg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
     allowedVariables: ['foods']
   },
   increase_vitamin_d_sources_v1: {
     id: 'increase_vitamin_d_sources_v1',
     status: 'active',
-    bodyTemplate: 'Sources de vitamine D peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine D a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en µg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine D n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine D peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
     allowedVariables: ['foods']
   },
   increase_potassium_sources_v1: {
     id: 'increase_potassium_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en potassium nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en potassium a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en potassium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en potassium estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_vitamin_b12_sources_v1: {
     id: 'increase_vitamin_b12_sources_v1',
     status: 'active',
-    bodyTemplate: 'Sources de vitamine B12 peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément en vitamine B12 a été indiqué dans votre profil. Cette observation du journal (fréquence des aliments sources sur la période, aucune quantité en µg n\'est mesurée) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Aucun aliment habituellement source de vitamine B12 n\'a été repéré dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Sources de vitamine B12 peu présentes dans le journal sur la période analysée (observation du journal, pas un diagnostic — aucune quantité en µg n\'est mesurée, seule la présence de ces aliments est observée). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
     allowedVariables: ['foods']
   },
   increase_protein_sources_v1: {
     id: 'increase_protein_sources_v1',
     status: 'active',
-    bodyTemplate: 'Apport en protéines nettement sous la référence sur la période analysée (observation du journal, pas un diagnostic). '
-      + 'Aliments à ajouter : {{foods}}. À discuter avec un professionnel.',
-    allowedVariables: ['foods']
+    variants: [
+      { when: 'hasSupplement', bodyTemplate: 'Un complément protéiné a été indiqué dans votre profil. Cette observation du journal (apport moyen estimé à {{avg_intake}}{{unit}}/jour, référence générique {{daily_target}}{{unit}}/jour) reste affichée à titre informatif et ne porte pas d\'appréciation sur le complément lui-même. À discuter avec un professionnel.' },
+      { when: 'veryLow', bodyTemplate: 'Apport en protéines estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, très en dessous de la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' },
+      { when: 'default', bodyTemplate: 'Apport en protéines estimé à {{avg_intake}}{{unit}}/jour en moyenne sur la période analysée, nettement sous la référence générique de {{daily_target}}{{unit}}/jour (observation du journal, pas un diagnostic). Aliments à ajouter : {{foods}}. À discuter avec un professionnel.' }
+    ],
+    allowedVariables: ['foods', 'avg_intake', 'daily_target', 'unit']
   },
   increase_hydration_v1: {
     id: 'increase_hydration_v1',
