@@ -282,7 +282,7 @@ function renderRiskBanner(){
     +atRisk.map(function(r){
       var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
       return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
-        +'<a class="risk-contact-link" href="chat-admin.html?v=2&u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a></div>';
+        +'<a class="risk-contact-link" href="chat-admin.html?v=3&u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a></div>';
     }).join('')
     +'</div>';
 }
@@ -314,7 +314,7 @@ function renderParlerBanner(){
       var u = ALL_USERS.find(function(x){ return x.id===r.uid; });
       return '<div class="risk-user-row"><span>'+esc(u?userLabel(u):'Utilisateur inconnu')+'</span>'
         +'<span style="display:flex;gap:8px">'
-        +'<a class="risk-contact-link" href="chat-admin.html?v=2&u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a>'
+        +'<a class="risk-contact-link" href="chat-admin.html?v=3&u='+r.uid+'" target="_blank">\ud83d\udcac Contacter</a>'
         +'<button class="risk-contact-link" style="border:none;cursor:pointer;background:none" onclick="markParlerTraite(\''+r.bilanId+'\')">\u2705 Marqu\u00e9 comme trait\u00e9</button>'
         +'</span></div>';
     }).join('')
@@ -552,7 +552,7 @@ function renderBilans(filterId){
         +(contexteBadge?'<div style="margin-top:6px">'+contexteBadge+'</div>':'')
       +'</div><div style="text-align:right">'
         +'<div class="bc-weight">'+(b.poids||'\u2014')+' kg'+(mensu.length?'<span class="bc-mensu">'+mensu.join(' \u00b7 ')+'</span>':'')+'</div>'
-        +(u?'<a class="bc-contact" href="chat-admin.html?v=2&u='+b.user_id+'" target="_blank">\ud83d\udcac Contacter</a>':'')
+        +(u?'<a class="bc-contact" href="chat-admin.html?v=3&u='+b.user_id+'" target="_blank">\ud83d\udcac Contacter</a>':'')
       +'</div></div>'
       +kcalHtml
       +'<div class="ws-block" id="ws-'+b.id+'"><span class="ws-loading">Chargement du r\u00e9sum\u00e9 de la semaine\u2026</span></div>'
