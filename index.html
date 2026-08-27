@@ -272,16 +272,36 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .auth-hdr p { font-size: .85rem; color: var(--ink2); }
 
 .tabs {
-  display: grid; grid-template-columns: 1fr 1fr;
+  position: relative; display: grid; grid-template-columns: 1fr 1fr;
   background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
-  padding: 5px; margin-bottom: 24px; gap: 5px;
+  padding: 5px; margin-bottom: 24px;
 }
+.tab-pill {
+  position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(50% - 5px);
+  background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform .28s cubic-bezier(.65,0,.35,1); z-index: 0;
+}
+.tabs.signup-on .tab-pill { transform: translateX(calc(100% + 5px)); }
 .tab {
+  position: relative; z-index: 1;
   padding: 10px; border-radius: 8px; font-family: 'Inter', sans-serif;
   font-size: .86rem; font-weight: 600; color: var(--ink3); cursor: pointer; border: none;
-  background: transparent; transition: all .2s;
+  background: transparent; transition: color .2s;
 }
-.tab.on { background: #fff; color: var(--cap); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.tab.on { color: var(--cap); }
+
+/* &#9472;&#9472; Connexion via Google &#9472;&#9472; */
+.oauth-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; margin-bottom: 18px; background: #fff; border: 1px solid var(--line2);
+  border-radius: 11px; font-family: 'Inter', sans-serif; font-size: .88rem; font-weight: 600;
+  color: var(--ink); cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.oauth-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(22,36,27,0.1); border-color: var(--line2); }
+.oauth-btn svg { flex-shrink: 0; width: 18px; height: 18px; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.auth-divider span { font-size: .72rem; color: var(--ink3); white-space: nowrap; }
 
 .form { display: none; }
 .form.on { display: block; animation: fu .22s ease both; }
@@ -659,7 +679,14 @@ footer a { color: var(--ink3); text-decoration: underline; }
     <p id="auth-intro-sub">Cr&#233;ez votre compte en moins d'une minute &#8212; aucune carte bancaire requise pendant la b&#234;ta.</p>
   </div>
   <div class="auth-wrap">
+    <button class="oauth-btn" onclick="authGoogle()">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.5 29.6 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5 44.5 35.3 44.5 24c0-1.2-.1-2.4-.3-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.5 29.6 3.5 24 3.5c-7.4 0-13.8 4.1-17.1 10.2z"/><path fill="#4CAF50" d="M24 44.5c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.4c-2 1.4-4.6 2.3-7.6 2.3-5.2 0-9.6-3.3-11.3-7.9l-6.6 5.1C9.9 40.2 16.4 44.5 24 44.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C41.5 35.9 44.5 30.4 44.5 24c0-1.2-.1-2.4-.3-3.5z"/></svg>
+      Continuer avec Google
+    </button>
+    <div class="auth-divider"><span>ou par email</span></div>
+    <div class="msg err" id="oauth-msg"></div>
     <div class="tabs" id="auth-tabs">
+      <span class="tab-pill"></span>
       <button class="tab on" onclick="sw('login')">Connexion</button>
       <button class="tab"    onclick="sw('signup')">Inscription</button>
     </div>
@@ -899,9 +926,28 @@ function sw(t) {
   document.querySelectorAll('.tab').forEach(function(b, i) {
     b.classList.toggle('on', isL ? i === 0 : i === 1);
   });
+  document.getElementById('auth-tabs').classList.toggle('signup-on', !isL);
   document.getElementById('fl').classList.toggle('on', isL);
   document.getElementById('fs').classList.toggle('on', !isL);
   document.querySelectorAll('.msg').forEach(function(m) { m.classList.remove('on'); });
+}
+
+// Connexion/inscription via Google -- un seul flux OAuth sert les deux cas
+// (Supabase crée le compte automatiquement au premier passage). Nécessite
+// que le fournisseur Google soit activé côté Supabase (Authentication >
+// Providers > Google, avec un client ID/secret Google Cloud) -- sans quoi
+// Supabase renverra une erreur explicite affichée ici.
+async function authGoogle(){
+  var msg = document.getElementById('oauth-msg');
+  msg.classList.remove('on');
+  var r = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/dashboard.html' }
+  });
+  if (r.error) {
+    msg.textContent = 'Connexion Google indisponible : ' + r.error.message;
+    msg.classList.add('on');
+  }
 }
 
 function showMsg(id, text, type) {
