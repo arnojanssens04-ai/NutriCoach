@@ -95,6 +95,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .chal-card.just-succeeded { animation:chalCardGlow 1s ease-out; }
 @media (prefers-reduced-motion: reduce) { .chal-status.succeeded.just-fresh, .chal-card.just-succeeded { animation:none; } }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
+.chal-status.cancelled { background:var(--bg2); color:var(--text2); }
+.chal-abandon { display:inline-block; margin-top:12px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
 .chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:14px; }
 
 /* Progression globale — barre + texte, élément central de la carte */
@@ -498,6 +500,22 @@ async function joinChallenge(){
   toast('❌ Code invalide ou défi déjà rejoint');
 }
 
+// Contrairement au Duel (compétitif, "vous avez gagné" a du sens en cas
+// d'abandon du partenaire), le défi entraide est coopératif -- il n'y a
+// jamais de gagnant. Si l'un des deux abandonne, le défi commun est
+// simplement annulé pour les deux, sans notion de victoire.
+async function abandonDuoChallenge(id){
+  var r = await sb.from('duo_challenges').update({ status:'failed', abandoned_by:USER.id }).eq('id', id);
+  if(r.error){
+    // Colonne abandoned_by pas encore migrée -- on se rabat sur
+    // l'annulation minimale plutôt que de bloquer l'abandon.
+    r = await sb.from('duo_challenges').update({ status:'failed' }).eq('id', id);
+  }
+  if(r.error){ toast('❌ '+r.error.message); return; }
+  toast('Défi annulé.');
+  loadMyChallenges();
+}
+
 // Calcule ma valeur pour UN jour donné et une métrique donnée, à partir
 // des entrées de MON PROPRE journal déjà chargées pour ce jour (jamais
 // celui du partenaire).
@@ -743,9 +761,17 @@ async function evaluateAndRender(challenge, container){
     }
   }
 
-  var statusLbl = { pending:'En attente', active:'En cours', succeeded:'Réussi !', failed:'Non atteint' }[challenge.status] || challenge.status;
   var iAmCreator = challenge.creator_id === USER.id;
   var waitingPartner = challenge.status === 'pending';
+
+  // Un abandon n'est ni une réussite ni un échec au sens habituel --
+  // affiché à part ("Annulé"), jamais avec la couleur/le ton de "Non
+  // atteint" qui suggérerait un objectif manqué malgré les efforts.
+  var iAbandoned = !!(challenge.abandoned_by && challenge.abandoned_by === USER.id);
+  var partnerAbandoned = !!(challenge.abandoned_by && challenge.abandoned_by !== USER.id);
+  var isCancelled = challenge.status === 'failed' && !!challenge.abandoned_by;
+  var displayStatus = isCancelled ? 'cancelled' : challenge.status;
+  var statusLbl = { pending:'En attente', active:'En cours', succeeded:'Réussi !', failed:'Non atteint', cancelled:'Annulé' }[displayStatus] || displayStatus;
 
   // Identité du binôme -- prénoms des deux participants, jamais affichée
   // avant (aucun signe de présence du partenaire dans l'interface).
@@ -846,14 +872,19 @@ async function evaluateAndRender(challenge, container){
     }
   }
 
+  var subHtml = waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code)
+    : isCancelled ? (iAbandoned ? 'Vous avez abandonné ce défi.' : esc(partnerName)+' a abandonné le défi — celui-ci est annulé.')
+    : esc(tpl.sub);
+
   container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+(justSucceeded?' just-succeeded':'')+'">'
-    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+(justSucceeded?' just-fresh':'')+'">'+statusLbl+'</span></div>'
-    + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : esc(tpl.sub))+'</div>'
+    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+displayStatus+(justSucceeded?' just-fresh':'')+'">'+statusLbl+'</span></div>'
+    + '<div class="chal-sub">'+subHtml+'</div>'
     + duoHtml
     + progressHtml
     + todayBlockHtml
     + daysBlockHtml
-    + (waitingPartner ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Encourager '+esc(partnerName)+'</button>')
+    + (waitingPartner || isCancelled ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Encourager '+esc(partnerName)+'</button>')
+    + (challenge.status==='active' ? '<button type="button" class="chal-abandon" onclick="abandonDuoChallenge(\''+challenge.id+'\')">Abandonner ce défi</button>' : '')
     + (challenge.status==='active' ? renderDuoSimPanel(challenge, tpl, start) : '')
     + '</div>';
 }

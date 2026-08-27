@@ -426,14 +426,19 @@ async function joinCombat(){
   loadMyCombat();
 }
 async function abandonCombat(id){
-  var r = await sb.from('duo_combats').update({ status:'finished' }).eq('id', id);
+  var r = await sb.from('duo_combats').update({ status:'finished', abandoned_by:USER.id }).eq('id', id);
+  if(r.error){
+    // Colonne abandoned_by pas encore migrée (migration_duo_combats_abandoned_by.sql)
+    // -- on se rabat sur la fin neutre plutôt que de bloquer l'abandon.
+    r = await sb.from('duo_combats').update({ status:'finished' }).eq('id', id);
+  }
   if(r.error){ toast('❌ '+r.error.message); return; }
   toast('Combat terminé.');
   loadMyCombat();
 }
 
-function fireConfetti(){
-  toast('🎉 Combat terminé !');
+function fireConfetti(msg){
+  toast(msg || '🎉 Combat terminé !');
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var canvas = document.createElement('canvas');
   canvas.style.cssText = 'position:fixed;inset:0;z-index:998;pointer-events:none;width:100%;height:100%';
@@ -537,10 +542,21 @@ async function loadMyCombat(){
     combat.status = newStatus;
   }
 
+  // Un abandon n'est pas une fin "neutre" comme l'expiration du temps --
+  // si c'est le partenaire qui a abandonné, l'autre a gagné par forfait et
+  // le mérite de le savoir clairement (et de la fête qui va avec). Si
+  // c'est MOI qui ai abandonné, pas de confettis ni de célébration.
+  var iAbandoned = !!(combat.abandoned_by && combat.abandoned_by === USER.id);
+  var partnerAbandoned = !!(combat.abandoned_by && combat.abandoned_by !== USER.id);
+
   var justFinished = false;
-  if(combat.status === 'finished'){
+  if(combat.status === 'finished' && !iAbandoned){
     var confettiKey = 'combatConfettiShown_'+combat.id;
-    if(!localStorage.getItem(confettiKey)){ localStorage.setItem(confettiKey,'1'); justFinished = true; fireConfetti(); }
+    if(!localStorage.getItem(confettiKey)){
+      localStorage.setItem(confettiKey,'1');
+      justFinished = true;
+      fireConfetti(partnerAbandoned ? ('🎉 '+partnerName+' a abandonné — vous avez gagné !') : '🎉 Combat terminé !');
+    }
   }
 
   var totalPts = myScore + partnerScore;
@@ -570,7 +586,10 @@ async function loadMyCombat(){
   var bodyHtml;
   if(combat.status === 'finished'){
     var discoveredCount = Object.keys(daysPlayed).length; // approximation positive, jamais un chiffre individuel négatif
-    bodyHtml = '<div class="cbt-end-title">Défi terminé — bravo à vous deux d\'avoir participé !</div>'
+    var endTitle = iAbandoned ? 'Vous avez abandonné ce combat.'
+      : partnerAbandoned ? (esc(partnerName)+' a abandonné le duel — vous avez gagné ! 🎉')
+      : 'Défi terminé — bravo à vous deux d\'avoir participé !';
+    bodyHtml = '<div class="cbt-end-title">'+endTitle+'</div>'
       + '<div class="cbt-scores"><span class="me">Vous · '+myScore+' pts</span><span class="partner">'+esc(partnerName)+' · '+partnerScore+' pts</span></div>'
       + '<div class="cbt-end-stats">'
         + '<div class="cbt-end-stat"><div class="v">'+discoveredCount+'</div><div class="l">jours joués à deux</div></div>'
