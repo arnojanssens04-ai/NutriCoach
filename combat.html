@@ -77,6 +77,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .cbt-status.pending { background:var(--bg2); color:var(--text2); }
 .cbt-status.active { background:var(--gold-l); color:var(--gold); }
 .cbt-status.finished { background:var(--gold); color:#fff; }
+@keyframes chalStatusPop { 0%{ transform:scale(.4); opacity:0; } 60%{ transform:scale(1.18); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+@keyframes chalCardGlow { 0%{ box-shadow:0 0 0 0 rgba(71,122,69,.5); } 100%{ box-shadow:0 0 0 22px rgba(71,122,69,0); } }
+.cbt-status.finished.just-fresh { animation:chalStatusPop .5s cubic-bezier(.34,1.56,.64,1); }
+.cbt-card.just-finished { animation:chalCardGlow 1s ease-out; }
+@media (prefers-reduced-motion: reduce) { .cbt-status.finished.just-fresh, .cbt-card.just-finished { animation:none; } }
 .cbt-sub { font-size:.78rem; color:var(--text2); margin-bottom:16px; }
 
 .cbt-names { display:flex; justify-content:space-between; font-size:.82rem; font-weight:700; margin-bottom:6px; }
@@ -518,9 +523,10 @@ async function loadMyCombat(){
     combat.status = newStatus;
   }
 
+  var justFinished = false;
   if(combat.status === 'finished'){
     var confettiKey = 'combatConfettiShown_'+combat.id;
-    if(!localStorage.getItem(confettiKey)){ localStorage.setItem(confettiKey,'1'); fireConfetti(); }
+    if(!localStorage.getItem(confettiKey)){ localStorage.setItem(confettiKey,'1'); justFinished = true; fireConfetti(); }
   }
 
   var totalPts = myScore + partnerScore;
@@ -567,8 +573,8 @@ async function loadMyCombat(){
       + renderCombatSimPanel(combat, start);
   }
 
-  activeZone.innerHTML = '<div class="section-lbl">Mon combat</div><div class="cbt-card">'
-    + '<div class="cbt-hdr"><span class="cbt-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="cbt-status '+combat.status+'">'+(combat.status==='active'?'En cours':'Terminé')+'</span></div>'
+  activeZone.innerHTML = '<div class="section-lbl">Mon combat</div><div class="cbt-card'+(justFinished?' just-finished':'')+'">'
+    + '<div class="cbt-hdr"><span class="cbt-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="cbt-status '+combat.status+(justFinished?' just-fresh':'')+'">'+(combat.status==='active'?'En cours':'Terminé')+'</span></div>'
     + '<div class="cbt-sub">'+esc(tpl.sub)+'</div>'
     + bodyHtml
     + '</div>';

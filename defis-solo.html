@@ -50,6 +50,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .chal-status { font-size:.62rem; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; flex-shrink:0; margin-top:2px; }
 .chal-status.active { background:var(--gold-l); color:var(--gold); }
 .chal-status.succeeded { background:var(--gold); color:#fff; }
+@keyframes chalStatusPop { 0%{ transform:scale(.4); opacity:0; } 60%{ transform:scale(1.18); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+@keyframes chalCardGlow { 0%{ box-shadow:0 0 0 0 rgba(71,122,69,.5); } 100%{ box-shadow:0 0 0 22px rgba(71,122,69,0); } }
+.chal-status.succeeded.just-fresh { animation:chalStatusPop .5s cubic-bezier(.34,1.56,.64,1); }
+.chal-card.just-succeeded { animation:chalCardGlow 1s ease-out; }
+@media (prefers-reduced-motion: reduce) { .chal-status.succeeded.just-fresh, .chal-card.just-succeeded { animation:none; } }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
 .chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:16px; }
 .chal-tier-badge { display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700; color:var(--text2); background:var(--bg2); padding:3px 9px; border-radius:999px; margin-bottom:10px; }
@@ -140,6 +145,34 @@ var selectedTier = 'easy';
 var selectedTpl = null;
 
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2600); }
+
+// Confettis discrets à l'atteinte d'un défi -- canvas pur, aucune
+// dépendance externe. Respecte prefers-reduced-motion (juste le toast,
+// sans particules) et se nettoie tout seul après la chute. Copié tel quel
+// depuis defis.html/combat.html pour la même sensation sur les 3 modes.
+function fireConfetti(){
+  toast('🎉 Défi réussi !');
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;z-index:998;pointer-events:none;width:100%;height:100%';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  var colors = ['#477A45','#F4B942','#7667D8','#20251F'];
+  var particles = [];
+  for(var i=0;i<70;i++){
+    particles.push({ x:Math.random()*canvas.width, y:-20-Math.random()*canvas.height*0.4, w:5+Math.random()*5, h:8+Math.random()*6,
+      color:colors[Math.floor(Math.random()*colors.length)], vy:2+Math.random()*3, vx:(Math.random()-0.5)*2, rot:Math.random()*360, vrot:(Math.random()-0.5)*10 });
+  }
+  var start = performance.now();
+  function tick(now){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.rot+=p.vrot; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    if(now-start < 3200) requestAnimationFrame(tick); else canvas.remove();
+  }
+  requestAnimationFrame(tick);
+}
+
 function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function addDaysStr(dateStr, n){ var d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -490,6 +523,20 @@ async function loadMySoloChallenge(){
     challenge.status = newStatus;
   }
 
+  // Confettis + animation de carte à l'atteinte du défi -- une seule fois
+  // par défi (flag local), pas à chaque rechargement de la page une fois
+  // déjà fêté. Même principe que defis.html/combat.html, manquant ici
+  // jusqu'ici (les défis solo se terminaient sans aucune célébration).
+  var justSucceeded = false;
+  if(challenge.status === 'succeeded'){
+    var confettiKey = 'soloConfettiShown_'+challenge.id;
+    if(!localStorage.getItem(confettiKey)){
+      localStorage.setItem(confettiKey, '1');
+      justSucceeded = true;
+      fireConfetti();
+    }
+  }
+
   var statusLbl = { active:'En cours', succeeded:'Réussi !', failed:'Non atteint' }[challenge.status] || challenge.status;
   var pct = tpl.target>0 ? Math.min(100, Math.round(value/tpl.target*100)) : 0;
   var tm = TIER_META[tpl.tier];
@@ -504,9 +551,9 @@ async function loadMySoloChallenge(){
   }
 
   activeZone.innerHTML = '<div class="section-lbl">Mon défi en cours</div>'
-    + '<div class="chal-card">'
+    + '<div class="chal-card'+(justSucceeded?' just-succeeded':'')+'">'
     + '<div class="chal-tier-badge">'+tm.icon+' '+tm.label+'</div>'
-    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
+    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+(justSucceeded?' just-fresh':'')+'">'+statusLbl+'</span></div>'
     + '<div class="chal-sub">'+esc(tpl.sub)+'</div>'
     + '<div class="chal-progress-wrap">'
       + '<div class="chal-progress-lbl">'+value+' / '+tpl.target+' '+esc(tpl.unit)+'</div>'

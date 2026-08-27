@@ -87,6 +87,11 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .chal-status.pending { background:var(--bg2); color:var(--text2); }
 .chal-status.active { background:var(--gold-l); color:var(--gold); }
 .chal-status.succeeded { background:var(--gold); color:#fff; }
+@keyframes chalStatusPop { 0%{ transform:scale(.4); opacity:0; } 60%{ transform:scale(1.18); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+@keyframes chalCardGlow { 0%{ box-shadow:0 0 0 0 rgba(71,122,69,.5); } 100%{ box-shadow:0 0 0 22px rgba(71,122,69,0); } }
+.chal-status.succeeded.just-fresh { animation:chalStatusPop .5s cubic-bezier(.34,1.56,.64,1); }
+.chal-card.just-succeeded { animation:chalCardGlow 1s ease-out; }
+@media (prefers-reduced-motion: reduce) { .chal-status.succeeded.just-fresh, .chal-card.just-succeeded { animation:none; } }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
 .chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:14px; }
 
@@ -687,12 +692,15 @@ async function evaluateAndRender(challenge, container){
     if(!fRes.error) challenge.finished_at = finishedNowIso;
   }
 
-  // Confettis à l'atteinte du défi -- une seule fois par défi (flag
-  // local), pas à chaque rechargement de la page une fois déjà fêté.
+  // Confettis + animation de carte à l'atteinte du défi -- une seule fois
+  // par défi (flag local), pas à chaque rechargement de la page une fois
+  // déjà fêté.
+  var justSucceeded = false;
   if(challenge.status === 'succeeded'){
     var confettiKey = 'defiConfettiShown_'+challenge.id;
     if(!localStorage.getItem(confettiKey)){
       localStorage.setItem(confettiKey, '1');
+      justSucceeded = true;
       fireConfetti();
     }
   }
@@ -800,8 +808,8 @@ async function evaluateAndRender(challenge, container){
     }
   }
 
-  container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+'">'
-    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+'">'+statusLbl+'</span></div>'
+  container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+(justSucceeded?' just-succeeded':'')+'">'
+    + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+challenge.status+(justSucceeded?' just-fresh':'')+'">'+statusLbl+'</span></div>'
     + '<div class="chal-sub">'+(waitingPartner ? 'En attente qu\'une personne rejoigne avec le code '+esc(challenge.invite_code) : esc(tpl.sub))+'</div>'
     + duoHtml
     + progressHtml
