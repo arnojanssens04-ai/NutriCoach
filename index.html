@@ -373,6 +373,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
   filter: blur(30px);
 }
 .hero-text, .hero-visual { position: relative; z-index: 1; }
+#particles-js { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 @media (max-width: 940px) { .hero-2026 { grid-template-columns: 1fr; padding-top: 40px; text-align: center; } }
 .hero-h1 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-display); line-height: 1.18; letter-spacing: -.6px; color: var(--text-dark); margin-bottom: 20px; }
 .hero-h1 em { font-style: normal; color: var(--primary-green); }
@@ -518,6 +519,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
 
 <!-- HERO -->
 <section class="hero-2026" id="philosophie">
+  <div id="particles-js"></div>
   <div class="hero-text">
     <h1 class="hero-h1">La nutrition adapt&#233;e &#224; votre sant&#233;.<br><em>Pas une moyenne g&#233;n&#233;rique.</em></h1>
     <p class="hero-sub">Un suivi personnalis&#233; selon votre profil et vos objectifs, une prise en compte de vos pathologies (Diab&#232;te T2, Hypertension) et un Mode Focus sans stress calorique.</p>
@@ -763,6 +765,36 @@ function initTilt(el){
 }
 if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && window.matchMedia('(hover: hover)').matches) {
   initTilt(document.getElementById('scanDemo'));
+}
+
+// Fond de particules tr&#232;s discret sur le hero -- tons verts de la charte
+// Cap Sant&#233; (pas le bleu/cyan "tech" par d&#233;faut), densit&#233; faible, aucune
+// interactivit&#233; (juste un mouvement ambiant), et compl&#232;tement d&#233;sactiv&#233; si
+// l'utilisateur pr&#233;f&#232;re moins d'animations.
+if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+  var particlesScript = document.createElement('script');
+  particlesScript.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
+  particlesScript.async = true;
+  particlesScript.onload = function () {
+    if (typeof window.particlesJS !== 'function') return;
+    window.particlesJS('particles-js', {
+      particles: {
+        number: { value: 34, density: { enable: true, value_area: 900 } },
+        color: { value: '#2D5A43' },
+        shape: { type: 'circle' },
+        opacity: { value: 0.28, random: true },
+        size: { value: 2.4, random: true },
+        line_linked: { enable: true, distance: 150, color: '#4A7A3A', opacity: 0.14, width: 1 },
+        move: { enable: true, speed: 0.6, random: true, out_mode: 'out' }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }
+      },
+      retina_detect: true
+    });
+  };
+  document.body.appendChild(particlesScript);
 }
 
 // Bascule mensuel/annuel de la section Tarifs -- la pastille glissante est
