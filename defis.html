@@ -71,6 +71,8 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .code-box { text-align:center; padding:16px; background:var(--gold-l); border-radius:var(--r-btn); margin-top:10px; }
 .code-val { font-family:'Lora',serif; font-size:1.6rem; font-weight:700; letter-spacing:3px; color:var(--gold); }
 .code-hint { font-size:.72rem; color:var(--text2); margin-top:6px; }
+.code-copy-btn { margin-top:10px; padding:8px 16px; background:var(--card); border:1px solid var(--border2); border-radius:999px; font-family:'Inter',sans-serif; font-size:.78rem; font-weight:600; color:var(--gold); cursor:pointer; }
+.code-copy-btn:hover { background:var(--gold-l); }
 
 .join-row { display:flex; gap:8px; margin-top:10px; }
 .join-row input { flex:1; padding:11px 14px; border:1px solid var(--border2); border-radius:12px; font-size:.94rem; text-transform:uppercase; letter-spacing:2px; text-align:center; }
@@ -203,6 +205,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <button class="btn" id="create-btn" onclick="createChallenge()" disabled>Créer et obtenir mon code</button>
       <div class="code-box" id="new-code-box" style="display:none">
         <div class="code-val" id="new-code-val"></div>
+        <button type="button" class="code-copy-btn" onclick="copyInviteCode()">📋 Copier le code</button>
         <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi.</div>
       </div>
     </div>
@@ -443,6 +446,19 @@ async function createChallenge(){
   loadMyChallenges();
 }
 
+// Copie le code tel qu'il est réellement stocké en base (via textContent),
+// plutôt que de compter sur une recopie manuelle à l'écran -- élimine tout
+// risque de confusion entre caractères qui se ressemblent visuellement.
+function copyInviteCode(){
+  var code = document.getElementById('new-code-val').textContent.trim();
+  if(!code) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(function(){ toast('✅ Code copié'); }).catch(function(){ toast(code); });
+  } else {
+    toast(code);
+  }
+}
+
 // Rejoindre passe par une fonction Postgres (join_duo_challenge, security
 // definer) plutôt qu'une lecture directe de la table -- sans ça, la table
 // devrait rester lisible pour "tous les défis en attente" afin de pouvoir
@@ -451,7 +467,11 @@ async function createChallenge(){
 // corrigée le 2026-08-24). Ici, le code doit être connu (transmis en
 // privé) pour que la fonction trouve quoi que ce soit.
 async function joinChallenge(){
-  var code = (document.getElementById('join-code-input').value||'').trim().toUpperCase();
+  // .replace supprime tout espace/retour à la ligne, pas seulement en
+  // bordure -- un code collé depuis un SMS/message peut arriver avec des
+  // espaces au milieu selon l'appareil, ce qui ferait échouer une
+  // comparaison exacte côté serveur sans que ce soit visible à l'écran.
+  var code = (document.getElementById('join-code-input').value||'').replace(/\s+/g,'').toUpperCase();
   if(!code){ toast('Entrez un code'); return; }
   var r = await sb.rpc('join_duo_challenge', { p_code: code });
   if(r.error){ toast('❌ '+r.error.message); return; }
