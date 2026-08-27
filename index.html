@@ -463,6 +463,30 @@ footer a { color: var(--ink3); text-decoration: underline; }
 .final-cta-card p { font-size: .95rem; color: rgba(255,255,255,0.78); margin-bottom: 28px; }
 .btn-cta-white { font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 700; padding: 14px 30px; border-radius: 999px; border: none; background: #fff; color: var(--primary-green); cursor: pointer; box-shadow: 0 10px 26px rgba(0,0,0,0.18); transition: transform .15s; }
 .btn-cta-white:hover { transform: translateY(-2px); }
+
+/* &#9472;&#9472; TARIFS &#9472;&#9472; */
+.pricing-wrap { max-width: 620px; margin: 0 auto; padding: 96px 24px 70px; text-align: center; }
+.pricing-hdr { max-width: 460px; margin: 0 auto 34px; }
+.pricing-hdr .eyebrow { justify-content: center; }
+.pricing-hdr h2 { font-family: 'Lora', serif; font-weight: 700; font-size: var(--fs-h1); letter-spacing: -.5px; color: var(--text-dark); margin-bottom: 12px; }
+.pricing-hdr p { font-size: .95rem; color: var(--text-muted); line-height: 1.6; }
+
+.pricing-toggle { display: flex; justify-content: center; margin-bottom: 30px; }
+.pt-track { position: relative; display: inline-flex; background: var(--bg2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.pt-pill { position: absolute; top: 4px; left: 4px; height: calc(100% - 8px); width: 0; background: var(--primary-green); border-radius: 999px; transition: left .3s cubic-bezier(.65,0,.35,1), width .3s cubic-bezier(.65,0,.35,1); z-index: 0; }
+.pt-btn { position: relative; z-index: 1; border: none; background: transparent; padding: 10px 20px; border-radius: 999px; font-family: 'Inter', sans-serif; font-size: .85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .2s; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.pt-btn.on { color: #fff; }
+.pt-save { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft-green); color: var(--primary-green); transition: background .2s, color .2s; }
+.pt-btn.on .pt-save { background: rgba(255,255,255,0.25); color: #fff; }
+
+.pricing-card { background: var(--bg-card); border-radius: 26px; padding: 44px 36px; box-shadow: 0 16px 40px -10px rgba(45,90,68,0.12); border: 1px solid var(--line); }
+.pricing-trial { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; color: var(--primary-green); background: var(--accent-soft-green); padding: 6px 14px; border-radius: 999px; margin-bottom: 22px; font-weight: 600; }
+.pricing-amount { display: flex; align-items: baseline; justify-content: center; gap: 4px; font-family: 'Lora', serif; color: var(--text-dark); }
+.pricing-currency { font-size: 1.6rem; font-weight: 600; align-self: flex-start; margin-top: 8px; }
+.pricing-value { font-size: 3.6rem; font-weight: 700; letter-spacing: -1px; }
+.pricing-period { font-size: 1rem; color: var(--text-muted); font-family: 'Inter', sans-serif; font-weight: 500; align-self: flex-end; margin-bottom: 10px; }
+.pricing-note { margin-top: 10px; font-size: .82rem; color: var(--text-muted); }
+.pricing-card .btn-cta { margin-top: 24px; }
 </style>
 </head>
 <body>
@@ -473,7 +497,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
     <ul class="hd-nav">
       <li><a href="#philosophie">Notre philosophie</a></li>
       <li><a href="#fonctionnalites">Fonctionnalit&#233;s</a></li>
-      <li><a href="#cabinet">Tarifs</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
     </ul>
   </nav>
   <div class="hd-actions">
@@ -485,7 +509,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
 <div class="hd-mobile-panel" id="hdMobilePanel">
   <a href="#philosophie" onclick="closeMobileNav()">Notre philosophie</a>
   <a href="#fonctionnalites" onclick="closeMobileNav()">Fonctionnalit&#233;s</a>
-  <a href="#cabinet" onclick="closeMobileNav()">Tarifs</a>
+  <a href="#tarifs" onclick="closeMobileNav()">Tarifs</a>
   <div class="hd-mobile-actions">
     <button class="btn-ghost" onclick="closeMobileNav();goAuth('login')">Se connecter</button>
     <button class="btn-cta" onclick="closeMobileNav();goAuth('signup')">Essai gratuit</button>
@@ -497,7 +521,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
   <div class="hero-text">
     <h1 class="hero-h1">La nutrition adapt&#233;e &#224; votre sant&#233;.<br><em>Pas une moyenne g&#233;n&#233;rique.</em></h1>
     <p class="hero-sub">Un suivi personnalis&#233; selon votre profil et vos objectifs, une prise en compte de vos pathologies (Diab&#232;te T2, Hypertension) et un Mode Focus sans stress calorique.</p>
-    <button class="btn-cta" style="padding:15px 28px;font-size:.92rem" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (7 jours)</button>
+    <button class="btn-cta" style="padding:15px 28px;font-size:.92rem" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (14 jours)</button>
     <div class="hero-cta-sub">Sans engagement<span class="dotsep">&#8226;</span>Bas&#233; sur les donn&#233;es nutritionnelles officielles CIQUAL</div>
   </div>
   <div class="hero-visual">
@@ -565,6 +589,32 @@ footer a { color: var(--ink3); text-decoration: underline; }
   </div>
 </section>
 
+<!-- TARIFS -->
+<section class="pricing-wrap" id="tarifs">
+  <div class="pricing-hdr reveal">
+    <div class="eyebrow">Tarifs</div>
+    <h2>Un tarif simple, sans surprise.</h2>
+    <p>14 jours d'essai gratuit, sans carte bancaire. Ensuite, un seul tarif au choix, mensuel ou annuel.</p>
+  </div>
+
+  <div class="pricing-toggle reveal">
+    <div class="pt-track">
+      <span class="pt-pill" id="ptPill"></span>
+      <button class="pt-btn on" id="ptMonthly" onclick="setBilling('monthly')">Mensuel</button>
+      <button class="pt-btn" id="ptYearly" onclick="setBilling('yearly')">Annuel <span class="pt-save">-34%</span></button>
+    </div>
+  </div>
+
+  <div class="pricing-card reveal">
+    <div class="pricing-trial">14 jours d'essai gratuit</div>
+    <div class="pricing-amount">
+      <span class="pricing-currency">&#8364;</span><span class="pricing-value" id="priceValue">9,99</span><span class="pricing-period" id="pricePeriod">/mois</span>
+    </div>
+    <div class="pricing-note" id="priceNote">Sans engagement, r&#233;siliable &#224; tout moment.</div>
+    <button class="btn-cta" style="width:100%;padding:15px;font-size:.95rem" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit</button>
+  </div>
+</section>
+
 <!-- SECTION CABINET -- fonctionnalite d'export non encore developpee : section
      conservee en aper&#231;u de roadmap, explicitement marquee "Bient&#244;t
      disponible", sans mockup de donn&#233;es chiffr&#233;es inventees (voir echange
@@ -597,7 +647,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
   <div class="final-cta-card reveal">
     <h2>Prenez soin de votre sant&#233; d&#232;s aujourd'hui.</h2>
     <p>Sans engagement &#8226; Con&#231;u par des professionnels</p>
-    <button class="btn-cta-white" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (7 jours)</button>
+    <button class="btn-cta-white" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (14 jours)</button>
   </div>
 </section>
 <!-- SECTION 6 &#8212; Activation, sans d&#233;tour. -->
@@ -714,6 +764,33 @@ function initTilt(el){
 if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && window.matchMedia('(hover: hover)').matches) {
   initTilt(document.getElementById('scanDemo'));
 }
+
+// Bascule mensuel/annuel de la section Tarifs -- la pastille glissante est
+// positionn&#233;e via JS (et non 50%/50% en CSS) car les deux boutons n'ont pas
+// la m&#234;me largeur ("Annuel" porte un badge de r&#233;duction en plus). Plac&#233; dans
+// ce premier bloc (ind&#233;pendant du chargement du script Supabase) pour que le
+// prix reste lisible m&#234;me si le CDN externe est lent ou indisponible.
+function setBilling(period){
+  var monthly = period === 'monthly';
+  var mBtn = document.getElementById('ptMonthly');
+  var yBtn = document.getElementById('ptYearly');
+  mBtn.classList.toggle('on', monthly);
+  yBtn.classList.toggle('on', !monthly);
+  var target = monthly ? mBtn : yBtn;
+  var pill = document.getElementById('ptPill');
+  pill.style.left = target.offsetLeft + 'px';
+  pill.style.width = target.offsetWidth + 'px';
+  document.getElementById('priceValue').textContent = monthly ? '9,99' : '79';
+  document.getElementById('pricePeriod').textContent = monthly ? '/mois' : '/an';
+  document.getElementById('priceNote').textContent = monthly
+    ? 'Sans engagement, résiliable à tout moment.'
+    : 'Soit environ 6,58€/mois, facturé en une fois.';
+}
+setBilling('monthly');
+window.addEventListener('resize', function(){
+  var monthly = document.getElementById('ptMonthly').classList.contains('on');
+  setBilling(monthly ? 'monthly' : 'yearly');
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
