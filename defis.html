@@ -678,6 +678,13 @@ async function evaluateAndRender(challenge, container){
   if(newStatus){
     await sb.from('duo_challenges').update({ status: newStatus }).eq('id', challenge.id);
     challenge.status = newStatus;
+    // Tentative "best effort" : la colonne finished_at nécessite la
+    // migration dédiée (voir migration_duo_challenges_finished_at.sql). Si
+    // elle n'est pas encore appliquée, cet appel échoue silencieusement
+    // sans jamais bloquer la mise à jour du statut ci-dessus.
+    var finishedNowIso = new Date().toISOString();
+    var fRes = await sb.from('duo_challenges').update({ finished_at: finishedNowIso }).eq('id', challenge.id);
+    if(!fRes.error) challenge.finished_at = finishedNowIso;
   }
 
   // Confettis à l'atteinte du défi -- une seule fois par défi (flag
@@ -845,21 +852,38 @@ function applyModeLock(locked){
   if(note) note.style.display = locked ? 'block' : 'none';
 }
 
+// Un défi réussi/échoué ne doit pas rester affiché indéfiniment dans "Mes
+// défis en cours" -- il disparaît dès qu'un autre défi (plus récent) est en
+// attente/actif, ou au plus tard 1h après sa fin (voir finished_at, posé
+// juste au-dessus au moment de la transition de statut). Un défi déjà
+// terminé sans finished_at connu (ancien défi, ou migration pas encore
+// appliquée) est traité comme expiré -- masqué immédiatement plutôt que de
+// rester bloqué pour toujours, ce qui était le bug initial.
+function isChallengeStillVisible(c, hasBlocking){
+  if(c.status === 'pending' || c.status === 'active') return true;
+  if(hasBlocking) return false;
+  if(!c.finished_at) return false;
+  return (Date.now() - new Date(c.finished_at).getTime()) < 60*60*1000;
+}
+
 async function loadMyChallenges(){
   var root = document.getElementById('my-challenges');
   var r = await sb.from('duo_challenges').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false});
   if(r.error){ root.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
   var list = r.data || [];
-  if(!list.length){
+  var hasBlocking = list.some(function(c){ return c.status === 'pending' || c.status === 'active'; });
+  var visibleList = list.filter(function(c){ return isChallengeStillVisible(c, hasBlocking); });
+
+  if(!visibleList.length){
     root.innerHTML = '<div class="empty">Aucun défi pour l\'instant — créez-en un ou rejoignez celui d\'un proche avec un code.</div>';
     updateCreateJoinAvailability(list);
     return;
   }
 
-  root.innerHTML = list.map(function(c){ return '<div id="chal-'+c.id+'"></div>'; }).join('');
+  root.innerHTML = visibleList.map(function(c){ return '<div id="chal-'+c.id+'"></div>'; }).join('');
 
-  for(var i=0;i<list.length;i++){
-    var c = list[i];
+  for(var i=0;i<visibleList.length;i++){
+    var c = visibleList[i];
     var el = document.getElementById('chal-'+c.id);
     if(c.status === 'active'){
       await syncProgressForWindow(c);
