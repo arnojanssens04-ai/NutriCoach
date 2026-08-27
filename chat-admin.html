@@ -328,7 +328,7 @@ function renderThread(uid){
     ) : '';
 
     var avHtml = !m.is_admin_sender ? '<div class="bubble-av">'+esc((userLabel(uid)||'?').trim().charAt(0).toUpperCase()||'?')+'</div>' : '';
-    var senderHtml = '<div class="bubble-sender">'+(m.is_admin_sender ? 'Vous (Support)' : esc(userLabel(uid)))+'</div>';
+    var senderHtml = !m.is_admin_sender ? '<div class="bubble-sender">'+esc(userLabel(uid))+'</div>' : '';
 
     return '<div class="bubble-row '+side+'">'+avHtml+'<div>'+senderHtml
       +'<div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+textHtml+attachHtml+'</div>'
