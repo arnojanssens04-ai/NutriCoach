@@ -426,9 +426,10 @@ async function joinCombat(){
   loadMyCombat();
 }
 async function abandonCombat(id){
-  var r = await sb.from('duo_combats').update({ status:'finished', abandoned_by:USER.id }).eq('id', id);
+  var r = await sb.from('duo_combats').update({ status:'finished', abandoned_by:USER.id, finished_at:new Date().toISOString() }).eq('id', id);
   if(r.error){
-    // Colonne abandoned_by pas encore migrée (migration_duo_combats_abandoned_by.sql)
+    // Colonnes abandoned_by/finished_at pas encore migrées (voir
+    // migration_abandoned_by.sql / migration_duo_combats_finished_at.sql)
     // -- on se rabat sur la fin neutre plutôt que de bloquer l'abandon.
     r = await sb.from('duo_combats').update({ status:'finished' }).eq('id', id);
   }
@@ -474,13 +475,29 @@ function applyModeLock(locked){
   if(note) note.style.display = locked ? 'block' : 'none';
 }
 
+// Un combat "finished" (abandon ou fin naturelle) doit rester visible
+// assez longtemps pour que l'autre personne voie le message de fin
+// (qui a gagné, qui a abandonné...) -- avant, le filtre ne gardait QUE
+// pending/active, donc la carte de fin (confettis compris) n'était en
+// fait JAMAIS atteignable, pour personne. Même règle de visibilité "1h
+// après la fin" que les défis à deux (voir isChallengeStillVisible dans
+// defis.html) -- au-delà, on redevient libre de lancer un nouveau duel.
+function pickVisibleCombat(list){
+  var active = list.filter(function(c){ return c.status==='pending' || c.status==='active'; })[0];
+  if(active) return active;
+  var recentlyFinished = list.filter(function(c){
+    return c.status==='finished' && c.finished_at && (Date.now() - new Date(c.finished_at).getTime()) < 60*60*1000;
+  })[0];
+  return recentlyFinished || null;
+}
+
 async function loadMyCombat(){
   var activeZone = document.getElementById('active-zone');
   var pickerZone = document.getElementById('picker-zone');
-  var r = await sb.from('duo_combats').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false}).limit(1);
+  var r = await sb.from('duo_combats').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false}).limit(5);
   if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
-  var combat = (r.data && r.data.filter(function(c){ return c.status==='pending' || c.status==='active'; })[0]) || null;
-  applyModeLock(!!combat);
+  var combat = pickVisibleCombat(r.data || []);
+  applyModeLock(!!combat && combat.status !== 'finished');
 
   if(!combat){
     activeZone.innerHTML = '';
@@ -536,9 +553,16 @@ async function loadMyCombat(){
   });
 
   var windowOver = todayStr() > windowEnd;
-  var newStatus = windowOver ? 'finished' : null;
+  var newStatus = (combat.status === 'active' && windowOver) ? 'finished' : null;
   if(newStatus){
-    await sb.from('duo_combats').update({ status:newStatus }).eq('id', combat.id);
+    var finishedNowIso1 = new Date().toISOString();
+    var statusRes = await sb.from('duo_combats').update({ status:newStatus, finished_at:finishedNowIso1 }).eq('id', combat.id);
+    if(statusRes.error){
+      // Colonne finished_at pas encore migrée -- au moins le statut passe.
+      await sb.from('duo_combats').update({ status:newStatus }).eq('id', combat.id);
+    } else {
+      combat.finished_at = finishedNowIso1;
+    }
     combat.status = newStatus;
   }
 
