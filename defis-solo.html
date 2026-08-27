@@ -314,10 +314,10 @@ function computeSoloStats(mealGroups, entries, tpl){
 var SOLO_TEMPLATES = [
   // Facile
   { id:'easy_veg_daily', tier:'easy', icon:'🥦', label:'Légumes au quotidien', sub:'Ajouter des légumes à 4 repas', metric:'veg_meals', target:4, unit:'repas' },
-  { id:'easy_fruit_day', tier:'easy', icon:'🍎', label:'Le fruit du jour', sub:'Enregistrer au moins un fruit 4 jours', metric:'fruit_days', target:4, unit:'jours' },
+  { id:'easy_fruit_day', tier:'easy', icon:'🍎', label:'Le fruit du jour', sub:'Enregistrer au moins un fruit 4 jours', metric:'fruit_days', target:4, unit:'jours', windowDays:4 },
   { id:'easy_legumineuse_discover', tier:'easy', icon:'🫘', label:'Découvrir les légumineuses', sub:'Ajouter des lentilles, pois chiches, haricots ou pois à 2 repas', metric:'legumineuse_meals', target:2, unit:'repas' },
   { id:'easy_wholegrain', tier:'easy', icon:'🌾', label:'Un choix complet', sub:'Choisir une céréale complète 3 fois', metric:'wholegrain_meals', target:3, unit:'fois' },
-  { id:'easy_nuts', tier:'easy', icon:'🥜', label:'Noix ou graines', sub:'Ajouter des noix, graines ou oléagineux 3 jours', metric:'nuts_days', target:3, unit:'jours' },
+  { id:'easy_nuts', tier:'easy', icon:'🥜', label:'Noix ou graines', sub:'Ajouter des noix, graines ou oléagineux 3 jours', metric:'nuts_days', target:3, unit:'jours', windowDays:3 },
   { id:'easy_color', tier:'easy', icon:'🌈', label:'Une touche de couleur', sub:'Découvrir 4 couleurs de légumes', metric:'veg_color_variety', target:4, unit:'couleurs' },
   { id:'easy_add_veg', tier:'easy', icon:'🥗', label:'Ajouter du végétal', sub:'Ajouter un fruit, légume ou légumineuse à 4 repas', metric:'veg_fruit_legumineuse_meals', target:4, unit:'repas' },
   { id:'easy_flavor', tier:'easy', icon:'🌿', label:'Plus de saveur', sub:'Utiliser une herbe, épice ou aromate dans 3 repas', metric:'herb_meals', target:3, unit:'repas' },
@@ -468,7 +468,8 @@ async function loadMySoloChallenge(){
   var tpl = SOLO_TEMPLATES.filter(function(t){ return t.id===challenge.template_id; })[0];
   if(!tpl){ activeZone.innerHTML = ''; return; }
 
-  var windowEnd = addDaysStr(challenge.start_date, 6);
+  var windowDays = tpl.windowDays || 7;
+  var windowEnd = addDaysStr(challenge.start_date, windowDays-1);
   var journalRes = await sb.from('journal')
     .select('date, repas, aliment, quantite, is_ultra_processed')
     .eq('user_id', USER.id).gte('date', challenge.start_date).lte('date', windowEnd);
@@ -514,7 +515,7 @@ async function loadMySoloChallenge(){
     + secondaryHtml
     + (expiryLbl ? '<div class="chal-expiry">&#128337; '+expiryLbl+'</div>' : '')
     + (challenge.status==='active' ? '<button type="button" class="chal-abandon" onclick="abandonSoloChallenge(\''+challenge.id+'\')">Abandonner ce défi</button>' : '')
-    + (challenge.status==='active' ? renderSimPanel(challenge, challenge.start_date, windowEnd, 7) : '')
+    + (challenge.status==='active' ? renderSimPanel(challenge, challenge.start_date, windowEnd, windowDays) : '')
     + '</div>';
 }
 
