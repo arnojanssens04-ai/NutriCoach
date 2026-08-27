@@ -466,6 +466,12 @@ function copyInviteCode(){
 // attente de TOUT le monde à n'importe quel utilisateur connecté (faille
 // corrigée le 2026-08-24). Ici, le code doit être connu (transmis en
 // privé) pour que la fonction trouve quoi que ce soit.
+// Un code peut appartenir à un défi entraide (table duo_challenges) OU à un
+// Duel (table duo_combats) -- la personne qui reçoit un lien/code ne sait
+// pas forcément lequel, et ne doit pas avoir à deviner la bonne page. On
+// essaie donc les deux jointures ; si c'est un code de Duel, on rejoint
+// puis on redirige automatiquement vers combat.html (voir aussi le même
+// mécanisme en sens inverse dans combat.html).
 async function joinChallenge(){
   // .replace supprime tout espace/retour à la ligne, pas seulement en
   // bordure -- un code collé depuis un SMS/message peut arriver avec des
@@ -473,11 +479,23 @@ async function joinChallenge(){
   // comparaison exacte côté serveur sans que ce soit visible à l'écran.
   var code = (document.getElementById('join-code-input').value||'').replace(/\s+/g,'').toUpperCase();
   if(!code){ toast('Entrez un code'); return; }
+
   var r = await sb.rpc('join_duo_challenge', { p_code: code });
-  if(r.error){ toast('❌ '+r.error.message); return; }
-  toast('✅ Défi rejoint !');
-  document.getElementById('join-code-input').value = '';
-  loadMyChallenges();
+  if(!r.error){
+    toast('✅ Défi rejoint !');
+    document.getElementById('join-code-input').value = '';
+    loadMyChallenges();
+    return;
+  }
+
+  var r2 = await sb.rpc('join_duo_combat', { p_code: code });
+  if(!r2.error){
+    toast('✅ Duel rejoint ! Redirection…');
+    window.location.href = 'combat.html';
+    return;
+  }
+
+  toast('❌ Code invalide ou défi déjà rejoint');
 }
 
 // Calcule ma valeur pour UN jour donné et une métrique donnée, à partir

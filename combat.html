@@ -402,11 +402,25 @@ async function createCombat(){
 // Même principe de sécurité que join_duo_challenge : passe par une
 // fonction Postgres security definer plutôt qu'une lecture directe, pour
 // ne jamais exposer la liste des codes en attente de tout le monde.
+// Même mécanisme croisé que joinChallenge() dans defis.html : un code peut
+// appartenir à un défi entraide plutôt qu'à un Duel -- on essaie les deux
+// tables, et on redirige vers defis.html si c'est finalement un code
+// d'entraide.
 async function joinCombat(){
-  var code = (document.getElementById('join-code-input').value||'').trim().toUpperCase();
+  var code = (document.getElementById('join-code-input').value||'').replace(/\s+/g,'').toUpperCase();
   if(!code){ toast('Entrez un code'); return; }
+
   var r = await sb.rpc('join_duo_combat', { p_code: code });
-  if(r.error){ toast('❌ '+r.error.message); return; }
+  if(r.error){
+    var r2 = await sb.rpc('join_duo_challenge', { p_code: code });
+    if(!r2.error){
+      toast('✅ Défi rejoint ! Redirection…');
+      window.location.href = 'defis.html';
+      return;
+    }
+    toast('❌ Code invalide ou défi déjà rejoint');
+    return;
+  }
   toast('✅ Combat rejoint !');
   document.getElementById('join-code-input').value = '';
   loadMyCombat();
