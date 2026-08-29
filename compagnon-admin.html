@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compagnon — prototype (admin)</title>
+<!--
+  compagnon-admin.html — PROTOTYPE ADMIN CONFINÉ — Cap Santé
+
+  Idée testée : un petit renard compagnon affiché sur le dashboard, dont
+  l'humeur reflète l'apport calorique du jour par rapport à l'objectif
+  personnel, et dont le "stade de croissance" reflète la régularité de
+  journalisation (jours actifs récents) plutôt qu'une perte de poids
+  chiffrée. Objectif : donner un signal de progression positif à quelqu'un
+  qui n'a peut-être jamais rien rempli, sans jamais afficher de chiffre nu.
+
+  Garde-fous volontaires (cohérence avec le Mode Focus anti-TCA déjà en
+  place ailleurs dans l'app) :
+  - AUCUN état "triste"/"affamé"/"trop plein" — seulement des degrés
+    d'énergie/d'épanouissement, jamais une émotion négative liée à la
+    quantité mangée. Manger plus n'est jamais associé à un signal négatif.
+  - Le stade de croissance dépend de la RÉGULARITÉ (jours où au moins un
+    repas a été noté), jamais du poids ou des calories cumulées — pour ne
+    jamais transformer le compagnon en compteur de perte de poids déguisé.
+  - Page réservée aux administrateurs, non liée depuis dashboard.html —
+    sert uniquement à visualiser/tester le concept avant toute décision de
+    l'intégrer réellement au dashboard patient.
+-->
+<style>
+:root{
+  --bg:#F7F6F1; --bg2:#EFEDE6; --card:#FFFFFF; --card2:#F7F6F1;
+  --border:rgba(32,37,31,0.08); --border2:rgba(32,37,31,0.14);
+  --text:#20251F; --text2:#687067; --text3:#9AA096;
+  --gold:#477A45; --gold-l:rgba(71,122,69,0.1);
+  --terracotta:#E07A5F; --terracotta-l:rgba(224,122,95,0.12);
+  --rose:#B4483F; --rose-l:rgba(180,72,63,0.1);
+  --sh:0 8px 24px rgba(32,37,31,0.06);
+}
+*{ box-sizing:border-box; }
+body{ background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; margin:0; padding:0 0 60px; }
+.t-header{ position:sticky; top:0; z-index:10; background:rgba(247,246,241,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; }
+.t-logo{ font-weight:700; }
+.t-logo span{ color:var(--gold); }
+.proto-flag{ font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--rose); background:var(--rose-l); border:1px solid rgba(180,72,63,0.25); padding:2px 9px; border-radius:999px; }
+.t-back{ font-size:.8rem; color:var(--text2); text-decoration:none; padding:6px 13px; border:1px solid var(--border2); border-radius:8px; }
+.t-back:hover{ background:var(--bg2); }
+main{ max-width:640px; margin:0 auto; padding:24px 20px 0; }
+.page-title{ font-size:1.3rem; font-weight:700; margin-bottom:6px; }
+.page-sub{ font-size:.85rem; color:var(--text2); line-height:1.6; margin-bottom:22px; }
+#access-denied{ display:none; padding:60px 20px; text-align:center; color:var(--text2); }
+#app-root{ display:none; }
+
+.stage-card{ background:var(--card); border:1px solid var(--border); border-radius:22px; box-shadow:var(--sh); padding:28px 20px 22px; text-align:center; margin-bottom:20px; }
+.stage-mood-lbl{ font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--gold); background:var(--gold-l); display:inline-block; padding:4px 12px; border-radius:999px; margin-bottom:6px; }
+.stage-growth-lbl{ font-size:.78rem; color:var(--text3); margin-bottom:14px; }
+
+.fox-stage{ position:relative; width:220px; height:190px; margin:0 auto; }
+.fox-shadow{ position:absolute; bottom:6px; left:50%; width:110px; height:16px; background:rgba(32,37,31,0.1); border-radius:50%; transform:translateX(-50%); }
+.fox-svg{ position:relative; width:100%; height:100%; transform-origin:bottom center; transition:transform .4s ease; }
+
+/* — Respiration douce, toujours active (même endormi) — */
+.fox-body-grp{ transform-origin:50% 70%; animation:foxBreathe 3.4s ease-in-out infinite; }
+@keyframes foxBreathe{ 0%,100%{ transform:scaleY(1); } 50%{ transform:scaleY(1.025); } }
+
+/* — Clignement occasionnel — */
+.fox-eyelids rect{ transform-origin:center; transform:scaleY(0); }
+.fox-svg:not(.mood-sleepy) .fox-eyelids rect{ animation:foxBlink 4.6s ease-in-out infinite; }
+@keyframes foxBlink{ 0%,92%,100%{ transform:scaleY(0); } 95%{ transform:scaleY(1); } }
+
+/* — Queue : immobile par défaut, remue en mode "épanoui" — */
+.fox-tail{ transform-origin:78% 68%; }
+.mood-thriving .fox-tail{ animation:foxTailWag 0.9s ease-in-out infinite; }
+@keyframes foxTailWag{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(14deg); } }
+
+/* — États d'humeur : jamais de posture "triste", seulement des degrés
+     d'énergie/d'épanouissement — */
+.mood-sleepy .fox-body-grp{ animation-duration:5s; }
+.mood-sleepy .fox-svg{ transform:scale(0.97) translateY(6px); }
+.mood-calm .fox-svg{ transform:scale(1); }
+.mood-thriving .fox-svg{ animation:foxHop 1.8s ease-in-out infinite; }
+@keyframes foxHop{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-7px); } }
+.mood-content .fox-svg{ transform:scale(1.02) translateY(3px); }
+.mood-content .fox-body-grp{ animation-duration:4.2s; }
+
+/* — Stades de croissance : uniquement la taille + un petit éclat au stade
+     final, jamais un visuel négatif aux stades précoces — */
+.growth-kit .fox-stage{ transform:scale(0.62); }
+.growth-growing .fox-stage{ transform:scale(0.82); }
+.growth-adult .fox-stage{ transform:scale(1); }
+.growth-radiant .fox-stage{ transform:scale(1.04); }
+.fox-sparkle{ opacity:0; }
+.growth-radiant .fox-sparkle{ opacity:1; animation:foxSparkle 2.2s ease-in-out infinite; }
+@keyframes foxSparkle{ 0%,100%{ opacity:.3; transform:scale(0.9); } 50%{ opacity:1; transform:scale(1.15); } }
+
+@media (prefers-reduced-motion: reduce){
+  .fox-body-grp, .mood-thriving .fox-tail, .mood-thriving .fox-svg, .fox-sparkle, .fox-svg:not(.mood-sleepy) .fox-eyelids rect{ animation:none!important; }
+}
+
+.mood-caption{ font-size:.92rem; color:var(--text); margin-top:14px; line-height:1.5; }
+.mood-caption b{ color:var(--gold); }
+
+.section-lbl{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); margin:22px 0 8px; }
+.card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:14px; }
+
+.real-data-box{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.real-data-box .lbl{ font-size:.82rem; color:var(--text2); }
+.toggle-btn{ padding:8px 16px; border-radius:999px; border:1px solid var(--border2); background:var(--bg2); font-size:.8rem; font-weight:600; color:var(--text2); cursor:pointer; }
+.toggle-btn.on{ background:var(--gold); color:#fff; border-color:var(--gold); }
+
+.sim-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.sim-row:last-child{ margin-bottom:0; }
+.sim-btn{ flex:1; min-width:100px; padding:9px 10px; border-radius:9px; border:1px solid var(--border2); background:var(--card2); font-size:.78rem; font-weight:600; color:var(--text2); cursor:pointer; text-align:center; }
+.sim-btn.on{ background:var(--terracotta); color:#fff; border-color:var(--terracotta); }
+.sim-sub{ font-size:.72rem; color:var(--text3); margin-bottom:8px; }
+
+.real-vals{ display:flex; justify-content:space-between; font-size:.82rem; color:var(--text2); margin-top:10px; }
+.real-vals b{ color:var(--text); }
+</style>
+</head>
+<body>
+
+<header class="t-header">
+  <div class="t-logo">Cap<span>Santé</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="proto-flag">Prototype</span>
+    <a href="admin.html" class="t-back">&#8592; Admin</a>
+  </div>
+</header>
+
+<div id="access-denied">Accès réservé aux administrateurs.</div>
+
+<main id="app-root">
+  <div class="page-title">&#128058; Compagnon — prototype de test</div>
+  <div class="page-sub">Idée en évaluation, pas encore intégrée au dashboard patient : un petit renard dont l'humeur reflète l'apport du jour par rapport à l'objectif personnel (utile surtout en Mode Focus, comme substitut au chiffre exact), et dont la taille reflète la régularité de journalisation — jamais le poids ni les calories cumulées.</div>
+
+  <div class="stage-card" id="stage-card">
+    <div class="stage-mood-lbl" id="mood-lbl">Calme</div>
+    <div class="stage-growth-lbl" id="growth-lbl">Stade : Jeune renard</div>
+    <div class="fox-stage">
+      <div class="fox-shadow"></div>
+      <svg class="fox-svg mood-calm" id="fox-svg" viewBox="0 0 220 190" xmlns="http://www.w3.org/2000/svg">
+        <g class="fox-body-grp">
+          <!-- queue -->
+          <g class="fox-tail">
+            <path d="M162 128 C 198 118, 208 90, 190 66 C 210 82, 206 122, 168 138 Z" fill="#E07A5F"/>
+            <path d="M188 74 C 200 84, 200 104, 186 120 C 194 106, 192 88, 182 78 Z" fill="#FBF9F5"/>
+          </g>
+          <!-- corps -->
+          <ellipse cx="108" cy="128" rx="52" ry="38" fill="#E07A5F"/>
+          <ellipse cx="108" cy="146" rx="34" ry="18" fill="#FBF9F5"/>
+          <!-- pattes -->
+          <rect x="82" y="156" width="12" height="20" rx="6" fill="#20251F"/>
+          <rect x="126" y="156" width="12" height="20" rx="6" fill="#20251F"/>
+          <!-- tête -->
+          <g>
+            <path d="M64 70 L78 96 L96 84 Z" fill="#E07A5F"/>
+            <path d="M69 76 L77 92 L88 85 Z" fill="#20251F"/>
+            <path d="M150 70 L136 96 L118 84 Z" fill="#E07A5F"/>
+            <path d="M145 76 L137 92 L126 85 Z" fill="#20251F"/>
+            <ellipse cx="107" cy="100" rx="44" ry="38" fill="#E07A5F"/>
+            <path d="M90 118 L107 138 L124 118 Z" fill="#FBF9F5"/>
+            <ellipse cx="107" cy="122" rx="26" ry="18" fill="#FBF9F5"/>
+            <!-- yeux -->
+            <g class="fox-eyes">
+              <circle cx="90" cy="98" r="5.5" fill="#20251F"/>
+              <circle cx="124" cy="98" r="5.5" fill="#20251F"/>
+            </g>
+            <g class="fox-eyelids">
+              <rect x="83" y="90" width="14" height="14" fill="#E07A5F"/>
+              <rect x="117" y="90" width="14" height="14" fill="#E07A5F"/>
+            </g>
+            <!-- nez -->
+            <ellipse cx="107" cy="118" rx="4.5" ry="3.5" fill="#20251F"/>
+            <!-- joues -->
+            <circle cx="78" cy="112" r="6" fill="var(--terracotta-l)"/>
+            <circle cx="136" cy="112" r="6" fill="var(--terracotta-l)"/>
+          </g>
+        </g>
+        <g class="fox-sparkle">
+          <path d="M182 40 L185 48 L193 51 L185 54 L182 62 L179 54 L171 51 L179 48 Z" fill="#F4B942"/>
+        </g>
+      </svg>
+    </div>
+    <div class="mood-caption" id="mood-caption">Votre renard se sent <b>calme</b> aujourd'hui.</div>
+  </div>
+
+  <div class="section-lbl">Données réelles</div>
+  <div class="card">
+    <div class="real-data-box">
+      <span class="lbl">Utiliser mes vraies données (aujourd'hui)</span>
+      <button type="button" class="toggle-btn on" id="real-toggle" onclick="toggleRealData()">Activé</button>
+    </div>
+    <div class="real-vals" id="real-vals" style="display:none">
+      <span>Consommé : <b id="real-kcal">—</b> kcal</span>
+      <span>Objectif : <b id="real-target">—</b> kcal</span>
+      <span>Jours actifs (30j) : <b id="real-days">—</b></span>
+    </div>
+  </div>
+
+  <div class="section-lbl">&#129514; Simuler une humeur (test admin)</div>
+  <div class="card">
+    <div class="sim-sub">Passe automatiquement en mode simulation (désactive "mes vraies données").</div>
+    <div class="sim-row">
+      <button type="button" class="sim-btn" onclick="simMood('sleepy')" id="sim-mood-sleepy">&#128564; Endormi</button>
+      <button type="button" class="sim-btn" onclick="simMood('calm')" id="sim-mood-calm">&#128522; Calme</button>
+      <button type="button" class="sim-btn" onclick="simMood('thriving')" id="sim-mood-thriving">&#129321; Épanoui</button>
+      <button type="button" class="sim-btn" onclick="simMood('content')" id="sim-mood-content">&#128524; Repu</button>
+    </div>
+  </div>
+
+  <div class="section-lbl">&#127793; Simuler un stade de croissance (test admin)</div>
+  <div class="card">
+    <div class="sim-row">
+      <button type="button" class="sim-btn" onclick="simGrowth('kit')" id="sim-growth-kit">Bébé (0-6j)</button>
+      <button type="button" class="sim-btn" onclick="simGrowth('growing')" id="sim-growth-growing">Jeune (7-19j)</button>
+      <button type="button" class="sim-btn" onclick="simGrowth('adult')" id="sim-growth-adult">Adulte (20-29j)</button>
+      <button type="button" class="sim-btn" onclick="simGrowth('radiant')" id="sim-growth-radiant">Rayonnant (30j+)</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
+var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
+var sb = supabase.createClient(SURL, SKEY);
+
+var MOOD_META = {
+  sleepy:   { lbl:'Endormi',  caption:'Votre renard fait une petite sieste — pas encore de repas noté aujourd\'hui.' },
+  calm:     { lbl:'Calme',    caption:'Votre renard se sent <b>calme</b> aujourd\'hui.' },
+  thriving: { lbl:'Épanoui',  caption:'Votre renard est <b>en pleine forme</b> — vous êtes tout près de votre objectif du jour !' },
+  content:  { lbl:'Repu',     caption:'Votre renard est <b>repu et content</b> — belle journée d\'alimentation.' }
+};
+var GROWTH_META = {
+  kit:      'Stade : Bébé renard',
+  growing:  'Stade : Jeune renard',
+  adult:    'Stade : Renard adulte',
+  radiant:  'Stade : Renard rayonnant &#10024;'
+};
+
+var useRealData = true;
+var currentMood = 'calm';
+var currentGrowth = 'growing';
+
+// Ratio apport/objectif -> humeur. Aucun palier n'est "négatif" : on ne
+// fait que graduer l'énergie, jamais associer "manger plus" à un signal
+// défavorable (voir note en tête de fichier).
+function moodFromRatio(ratio){
+  if(ratio < 0.4) return 'sleepy';
+  if(ratio < 0.9) return 'calm';
+  if(ratio <= 1.15) return 'thriving';
+  return 'content';
+}
+// Jours actifs (régularité de journalisation, jamais le poids/calories
+// cumulées) -> stade de croissance.
+function growthFromActiveDays(days){
+  if(days < 7) return 'kit';
+  if(days < 20) return 'growing';
+  if(days < 30) return 'adult';
+  return 'radiant';
+}
+
+function renderFox(mood, growth){
+  var svg = document.getElementById('fox-svg');
+  svg.className = 'fox-svg mood-' + mood;
+  document.getElementById('stage-card').className = 'stage-card growth-' + growth;
+  document.getElementById('mood-lbl').textContent = MOOD_META[mood].lbl;
+  document.getElementById('mood-caption').innerHTML = MOOD_META[mood].caption;
+  document.getElementById('growth-lbl').innerHTML = GROWTH_META[growth];
+
+  document.querySelectorAll('.sim-btn[id^="sim-mood-"]').forEach(function(b){ b.classList.remove('on'); });
+  document.querySelectorAll('.sim-btn[id^="sim-growth-"]').forEach(function(b){ b.classList.remove('on'); });
+  var mb = document.getElementById('sim-mood-'+mood); if(mb) mb.classList.add('on');
+  var gb = document.getElementById('sim-growth-'+growth); if(gb) gb.classList.add('on');
+}
+
+function simMood(mood){
+  useRealData = false;
+  document.getElementById('real-toggle').classList.remove('on');
+  document.getElementById('real-toggle').textContent = 'Désactivé';
+  document.getElementById('real-vals').style.display = 'none';
+  currentMood = mood;
+  renderFox(currentMood, currentGrowth);
+}
+function simGrowth(growth){
+  useRealData = false;
+  document.getElementById('real-toggle').classList.remove('on');
+  document.getElementById('real-toggle').textContent = 'Désactivé';
+  document.getElementById('real-vals').style.display = 'none';
+  currentGrowth = growth;
+  renderFox(currentMood, currentGrowth);
+}
+
+function toggleRealData(){
+  useRealData = !useRealData;
+  var btn = document.getElementById('real-toggle');
+  btn.classList.toggle('on', useRealData);
+  btn.textContent = useRealData ? 'Activé' : 'Désactivé';
+  document.getElementById('real-vals').style.display = useRealData ? 'flex' : 'none';
+  if(useRealData) loadRealData();
+}
+
+// Réplique volontairement PARTIELLE de calcTargets() (dashboard.html) --
+// kcal uniquement, sans plan fixe ni ajustement adaptatif cumulatif -- un
+// prototype de test n'a pas besoin de la précision exacte du dashboard
+// réel, seulement d'un ordre de grandeur plausible pour prévisualiser les
+// états. Si ce concept est un jour intégré au vrai dashboard, il devra
+// réutiliser calcTargets() telle quelle plutôt que cette version.
+function estimateKcalTarget(p){
+  var w=p.poids||70, h=p.taille||170, a=p.age||35, g=p.sexe||'F';
+  var act=p.activite||'sedentary';
+  var bmr = g==='M' ? 10*w+6.25*h-5*a+5 : 10*w+6.25*h-5*a-161;
+  var af = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, sportif:1.9};
+  var tdee = bmr*(af[act]||1.2);
+  var pathos = p.pathologies||[];
+  var objectif = p.objectif || (pathos.indexOf('obesity')>=0 ? 'perte' : 'maintien');
+  var kcal = tdee;
+  if(objectif==='perte') kcal = tdee-200;
+  if(objectif==='prise') kcal = tdee+300;
+  return Math.max(1200, Math.min(5000, Math.round(kcal)));
+}
+
+async function loadRealData(){
+  var sess = await sb.auth.getSession();
+  var uid = sess.data.session.user.id;
+
+  var profRes = await sb.from('profiles').select('poids,taille,age,sexe,activite,objectif,pathologies').eq('id',uid).single();
+  var p = profRes.data || {};
+  var target = estimateKcalTarget(p);
+
+  var today = new Date();
+  var todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var since = new Date(today.getTime() - 29*86400000);
+  var sinceStr = since.getFullYear()+'-'+String(since.getMonth()+1).padStart(2,'0')+'-'+String(since.getDate()).padStart(2,'0');
+
+  var journalRes = await sb.from('journal').select('date, quantite, food_kcal_100').eq('user_id',uid).gte('date', sinceStr).lte('date', todayStr);
+  var entries = journalRes.data || [];
+
+  var kcalToday = 0;
+  var activeDays = {};
+  entries.forEach(function(e){
+    if(e.date === todayStr && e.food_kcal_100 != null){
+      kcalToday += (e.food_kcal_100 * (e.quantite||0) / 100);
+    }
+    activeDays[e.date] = 1;
+  });
+  kcalToday = Math.round(kcalToday);
+  var activeDaysCount = Object.keys(activeDays).length;
+
+  document.getElementById('real-kcal').textContent = kcalToday;
+  document.getElementById('real-target').textContent = target;
+  document.getElementById('real-days').textContent = activeDaysCount;
+
+  if(!useRealData) return; // l'admin a basculé en simulation entre-temps
+  currentMood = moodFromRatio(target>0 ? kcalToday/target : 0);
+  currentGrowth = growthFromActiveDays(activeDaysCount);
+  renderFox(currentMood, currentGrowth);
+}
+
+sb.auth.getSession().then(function(r){
+  if(!r.data || !r.data.session){
+    document.getElementById('access-denied').style.display = 'block';
+    return;
+  }
+  var uid = r.data.session.user.id;
+  sb.from('profiles').select('role').eq('id',uid).single().then(function(res){
+    if(!res.data || res.data.role !== 'admin'){
+      document.getElementById('access-denied').style.display = 'block';
+      return;
+    }
+    document.getElementById('app-root').style.display = 'block';
+    renderFox(currentMood, currentGrowth);
+    loadRealData();
+  });
+});
+</script>
+</body>
+</html>
