@@ -518,22 +518,24 @@ footer a { color: var(--ink3); text-decoration: underline; }
     <ul class="hd-nav">
       <li><a href="#philosophie">Notre philosophie</a></li>
       <li><a href="#fonctionnalites">Fonctionnalit&#233;s</a></li>
-      <li><a href="#tarifs">Tarifs</a></li>
+      <!-- Masqué temporairement à la demande -- section conservée intacte
+           plus bas (id="tarifs"), juste pas encore montrée. -->
+      <li style="display:none"><a href="#tarifs">Tarifs</a></li>
     </ul>
   </nav>
   <div class="hd-actions">
     <button class="btn-ghost" onclick="goAuth('login')">Se connecter</button>
-    <button class="btn-cta" onclick="goAuth('signup')">Essai gratuit</button>
+    <button class="btn-cta" onclick="goAuth('signup')">Rejoindre la b&#234;ta</button>
     <button class="hd-burger" id="hdBurger" aria-label="Menu" aria-expanded="false" onclick="toggleMobileNav()"><span></span></button>
   </div>
 </header>
 <div class="hd-mobile-panel" id="hdMobilePanel">
   <a href="#philosophie" onclick="closeMobileNav()">Notre philosophie</a>
   <a href="#fonctionnalites" onclick="closeMobileNav()">Fonctionnalit&#233;s</a>
-  <a href="#tarifs" onclick="closeMobileNav()">Tarifs</a>
+  <a href="#tarifs" onclick="closeMobileNav()" style="display:none">Tarifs</a>
   <div class="hd-mobile-actions">
     <button class="btn-ghost" onclick="closeMobileNav();goAuth('login')">Se connecter</button>
-    <button class="btn-cta" onclick="closeMobileNav();goAuth('signup')">Essai gratuit</button>
+    <button class="btn-cta" onclick="closeMobileNav();goAuth('signup')">Rejoindre la b&#234;ta</button>
   </div>
 </div>
 
@@ -542,8 +544,8 @@ footer a { color: var(--ink3); text-decoration: underline; }
   <div id="particles-js"></div>
   <div class="hero-text">
     <h1 class="hero-h1">La nutrition adapt&#233;e &#224; votre sant&#233;.<br><em>Pas une moyenne g&#233;n&#233;rique.</em></h1>
-    <p class="hero-sub">Un suivi personnalis&#233; selon votre profil et vos objectifs, une prise en compte de vos pathologies (Diab&#232;te T2, Hypertension) et un Mode Focus sans stress calorique.</p>
-    <button class="btn-cta" style="padding:15px 28px;font-size:.92rem" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (14 jours)</button>
+    <p class="hero-sub">Un suivi personnalis&#233; selon votre profil et vos objectifs, une prise en compte de certaines pathologies, sans jamais mettre la pression sur les calories.</p>
+    <button class="btn-cta" style="padding:15px 28px;font-size:.92rem" onclick="goAuth('signup')">Rejoindre la b&#234;ta</button>
     <div class="hero-cta-sub">Sans engagement<span class="dotsep">&#8226;</span>Bas&#233; sur les donn&#233;es nutritionnelles officielles CIQUAL</div>
   </div>
   <div class="hero-visual">
@@ -598,21 +600,22 @@ footer a { color: var(--ink3); text-decoration: underline; }
     </div>
     <div class="pillar-card reveal">
       <div class="pillar-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.7 0-3 .5-4.5 2-1.5-1.5-2.8-2-4.5-2A5.5 5.5 0 0 0 2 8.5C2 10.8 3.5 12.5 5 14l7 7Z"/><path d="M3.5 9h4l2-3 3 6 2-3h4.5"/></svg></div>
-      <h3>Prise en charge des pathologies<br>(Diab&#232;te T2 &amp; Cardiovasculaire)</h3>
-      <p>Chaque repas affiche son Tampon Glyc&#233;mique &#8212; stable ou &#224; surveiller, avec ce qui l'explique. Un Score de Protection Cardiaque suit sodium, lipides et fibres pour les profils concern&#233;s.</p>
+      <h3>Prise en charge de certaines pathologies</h3>
+      <p>Des indicateurs adapt&#233;s &#224; votre situation de sant&#233; s'affichent sur vos repas quand c'est pertinent, pour mieux comprendre votre alimentation selon votre profil.</p>
       <div class="pillar-tags"><span class="pillar-tag">Tampon glyc&#233;mique</span><span class="pillar-tag">Score cardio</span></div>
     </div>
     <div class="pillar-card warm reveal">
       <div class="pillar-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13V7a1 1 0 0 1 1-1h6a7 7 0 0 1 7 7 7 7 0 0 1-7 7Z"/><path d="M4 13c4-1 8-4 10-9"/></svg></div>
-      <h3>Mode Focus (S&#233;r&#233;nit&#233; anti-TCA)</h3>
+      <h3>Sans pression calorique</h3>
       <p>Une assiette &#233;quilibr&#233;e &#224; visualiser, plut&#244;t qu'un chiffre de calories &#224; ne pas d&#233;passer. L'alternative au comptage anxieux, pens&#233;e pour durer sans &#233;puiser.</p>
       <div class="pillar-tags"><span class="pillar-tag">Sans stress calorique</span></div>
     </div>
   </div>
 </section>
 
-<!-- TARIFS -->
-<section class="pricing-wrap" id="tarifs">
+<!-- TARIFS -- masqué temporairement à la demande (2026-09-02), contenu
+     conservé intact pour réactivation ultérieure. -->
+<section class="pricing-wrap" id="tarifs" style="display:none">
   <div class="pricing-hdr reveal">
     <div class="eyebrow">Tarifs</div>
     <h2>Un tarif simple, sans surprise.</h2>
@@ -669,7 +672,7 @@ footer a { color: var(--ink3); text-decoration: underline; }
   <div class="final-cta-card reveal">
     <h2>Prenez soin de votre sant&#233; d&#232;s aujourd'hui.</h2>
     <p>Sans engagement &#8226; Con&#231;u par des professionnels</p>
-    <button class="btn-cta-white" onclick="goAuth('signup')">D&#233;marrer mon essai gratuit (14 jours)</button>
+    <button class="btn-cta-white" onclick="goAuth('signup')">Rejoindre la b&#234;ta</button>
   </div>
 </section>
 <!-- SECTION 6 &#8212; Activation, sans d&#233;tour. -->
