@@ -96,6 +96,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 @media (prefers-reduced-motion: reduce) { .chal-status.succeeded.just-fresh, .chal-card.just-succeeded { animation:none; } }
 .chal-status.failed { background:var(--rose-l); color:var(--rose); }
 .chal-status.cancelled { background:var(--bg2); color:var(--text2); }
+/* Échec : un mouvement doux, jamais de rouge clignotant ni de secousse
+   agressive -- un simple "affaissement" léger, cohérent avec le ton jamais
+   culpabilisant du reste de l'app. */
+@keyframes chalCardSettle { 0%{ transform:translateY(0); } 40%{ transform:translateY(3px); } 100%{ transform:translateY(0); } }
+.chal-card.just-failed { animation:chalCardSettle .7s ease-out; }
+@media (prefers-reduced-motion: reduce) { .chal-card.just-failed { animation:none; } }
 .chal-abandon { display:inline-block; margin-top:12px; font-size:.74rem; color:var(--text3); text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; }
 .chal-sub { font-size:.78rem; color:var(--text2); margin-bottom:14px; }
 
@@ -309,15 +315,15 @@ var DUO_TIER_META = {
   hard:   { icon:'✨', label:'Avancé' }
 };
 var DUO_TEMPLATES = {
-  veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'Sur une fenêtre de 10 jours', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:10, mode:'individual', tier:'easy' },
-  veg_combined_400_7days: { icon:'🤝', label:'Entraide : 400g de légumes à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'veg', dailyTarget:400, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
-  fibres_30_7days: { icon:'🌾', label:'7 jours à 30g de fibres chacun', sub:'Sur une fenêtre de 10 jours', metric:'fibres', dailyTarget:30, requiredDays:7, windowDays:10, mode:'individual', tier:'medium' },
-  fibres_combined_60_7days: { icon:'🤝', label:'Entraide : 60g de fibres à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'fibres', dailyTarget:60, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
-  prot_60_7days: { icon:'🍗', label:'7 jours à 60g de protéines chacun', sub:'Sur une fenêtre de 10 jours', metric:'protein', dailyTarget:60, requiredDays:7, windowDays:10, mode:'individual', tier:'medium' },
-  prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné — l\'un peut compenser l\'autre', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:10, mode:'combined', tier:'medium' },
-  petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'Sur une fenêtre de 8 jours', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:8, mode:'individual', tier:'easy' },
-  ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'Sur une fenêtre de 8 jours', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:8, mode:'individual', tier:'medium' },
-  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'Sur une fenêtre de 8 jours', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:8, mode:'individual', tier:'medium' },
+  veg_250_4days: { icon:'🥦', label:'4 jours à 250g de légumes chacun', sub:'4 jours d\'affilée, sans exception', metric:'veg', dailyTarget:250, requiredDays:4, windowDays:4, mode:'individual', tier:'easy' },
+  veg_combined_400_7days: { icon:'🤝', label:'Entraide : 400g de légumes à deux, 7 jours', sub:'La cible porte sur votre total combiné, chaque jour — l\'un peut compenser l\'autre, mais aucun jour ne peut être manqué', metric:'veg', dailyTarget:400, requiredDays:7, windowDays:7, mode:'combined', tier:'medium' },
+  fibres_30_7days: { icon:'🌾', label:'7 jours à 30g de fibres chacun', sub:'7 jours d\'affilée, sans exception', metric:'fibres', dailyTarget:30, requiredDays:7, windowDays:7, mode:'individual', tier:'medium' },
+  fibres_combined_60_7days: { icon:'🤝', label:'Entraide : 60g de fibres à deux, 7 jours', sub:'La cible porte sur votre total combiné, chaque jour — l\'un peut compenser l\'autre, mais aucun jour ne peut être manqué', metric:'fibres', dailyTarget:60, requiredDays:7, windowDays:7, mode:'combined', tier:'medium' },
+  prot_60_7days: { icon:'🍗', label:'7 jours à 60g de protéines chacun', sub:'7 jours d\'affilée, sans exception', metric:'protein', dailyTarget:60, requiredDays:7, windowDays:7, mode:'individual', tier:'medium' },
+  prot_combined_140_7days: { icon:'🤝', label:'Entraide : 140g de protéines à deux, 7 jours', sub:'La cible porte sur votre total combiné, chaque jour — l\'un peut compenser l\'autre, mais aucun jour ne peut être manqué', metric:'protein', dailyTarget:140, requiredDays:7, windowDays:7, mode:'combined', tier:'medium' },
+  petit_dej_5days: { icon:'🌅', label:'5 jours avec un petit-déjeuner enregistré chacun', sub:'5 jours d\'affilée, sans exception', metric:'breakfast_logged', dailyTarget:1, requiredDays:5, windowDays:5, mode:'individual', tier:'easy' },
+  ultra_max1_5days: { icon:'🌿', label:'5 jours avec au plus 1 aliment ultra-transformé chacun', sub:'5 jours d\'affilée, sans exception', metric:'ultra_count', dailyTarget:1, comparator:'lte', requiredDays:5, windowDays:5, mode:'individual', tier:'medium' },
+  diversite_8_5days: { icon:'🌈', label:'5 jours avec au moins 8 aliments différents chacun', sub:'5 jours d\'affilée, sans exception', metric:'food_variety_count', dailyTarget:8, requiredDays:5, windowDays:5, mode:'individual', tier:'medium' },
 
   // Entraide difficile -- palier "Avancé" : composition multi-famille
   // DANS LE MÊME repas (comme les défis solo avancés), jamais une simple
@@ -706,6 +712,7 @@ async function evaluateAndRender(challenge, container){
     // faisait apparaître seulement 2-3 cases pour un objectif "7 jours",
     // décalage visuel entre le texte "X / 7 jours réussis" et le nombre de
     // cases affichées.
+    var missedCount = 0;
     for(var i=0;i<tpl.windowDays;i++){
       var d = addDaysStr(start, i);
       var isFuture = d > todayStr();
@@ -719,6 +726,7 @@ async function evaluateAndRender(challenge, container){
         dayOk = (slot.creator!==undefined || slot.partner!==undefined) && total >= tpl.dailyTarget;
       }
       if(dayOk) successCount++;
+      else if(!isFuture && !isToday) missedCount++;
       var cls = 'chal-day';
       if(dayOk) cls += ' ok';
       else if(isFuture) cls += ' future';
@@ -734,6 +742,11 @@ async function evaluateAndRender(challenge, container){
       if(cumulativeTotal >= tpl.dailyTarget) newStatus = 'succeeded';
       else if(addDaysStr(start, tpl.windowDays-1) < todayStr()) newStatus = 'failed';
     } else if(successCount >= tpl.requiredDays) newStatus = 'succeeded';
+    // Un seul jour manqué dans la fenêtre suffit désormais à faire échouer
+    // le défi tout de suite, sans attendre la fin de la fenêtre -- la
+    // fenêtre étant maintenant strictement égale au nombre de jours
+    // annoncé (voir DUO_TEMPLATES), il n'y a plus de jours "de rattrapage".
+    else if(missedCount > 0) newStatus = 'failed';
     else if(addDaysStr(start, tpl.windowDays-1) < todayStr()) newStatus = 'failed';
   }
   if(newStatus){
@@ -758,6 +771,20 @@ async function evaluateAndRender(challenge, container){
       localStorage.setItem(confettiKey, '1');
       justSucceeded = true;
       fireConfetti();
+    }
+  }
+
+  // Animation d'échec -- volontairement douce (un léger mouvement, jamais
+  // de rouge clignotant ni de ton culpabilisant), une seule fois par défi.
+  // Ne se déclenche jamais pour un abandon (déjà traité à part comme
+  // "Annulé", pas comme un échec).
+  var justFailed = false;
+  if(challenge.status === 'failed' && !challenge.abandoned_by){
+    var failKey = 'defiFailAnimShown_'+challenge.id;
+    if(!localStorage.getItem(failKey)){
+      localStorage.setItem(failKey, '1');
+      justFailed = true;
+      toast('🌱 Défi non atteint — un jour a été manqué. Vous pouvez retenter quand vous voulez.');
     }
   }
 
@@ -876,7 +903,7 @@ async function evaluateAndRender(challenge, container){
     : isCancelled ? (iAbandoned ? 'Vous avez abandonné ce défi.' : esc(partnerName)+' a abandonné le défi — celui-ci est annulé.')
     : esc(tpl.sub);
 
-  container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+(justSucceeded?' just-succeeded':'')+'">'
+  container.innerHTML = '<div class="chal-card'+(challenge.status==='active'?' is-active':'')+(justSucceeded?' just-succeeded':'')+(justFailed?' just-failed':'')+'">'
     + '<div class="chal-hdr"><span class="chal-title">'+tpl.icon+' '+esc(tpl.label)+'</span><span class="chal-status '+displayStatus+(justSucceeded?' just-fresh':'')+'">'+statusLbl+'</span></div>'
     + '<div class="chal-sub">'+subHtml+'</div>'
     + duoHtml
