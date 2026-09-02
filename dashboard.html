@@ -536,6 +536,31 @@ body {
 .prof-card-body { padding: 14px 16px; }
 .ptag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 999px; background: var(--sage-l); color: var(--sage); font-size: .74rem; font-weight: 500; margin: 3px; border: 1px solid rgba(122,155,124,0.2); }
 
+/* — Carte "Défi en cours" (condensation "Mon compte", 2026-09-02) — */
+.active-chal-card { background: var(--gold-l); border: 1px solid rgba(71,122,69,0.25); border-radius: var(--r); margin-bottom: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.active-chal-lbl { font-size: .85rem; font-weight: 600; color: var(--text); }
+.active-chal-lbl small { display: block; font-weight: 500; color: var(--text2); font-size: .72rem; margin-top: 2px; }
+
+/* — Réglages regroupés en lignes dans une seule carte, au lieu d'une carte
+     par réglage — chaque ligne garde son propre id (les fonctions de
+     toggle existantes, ex: toggleFocusMode(), n'ont pas changé). — */
+.settings-row { padding: 13px 0; border-top: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.settings-row:first-child { padding-top: 0; border-top: none; }
+.settings-row-txt { flex: 1; }
+.settings-row-lbl { font-weight: 600; color: var(--text); font-size: .85rem; margin-bottom: 3px; }
+.settings-row-sub { font-size: .72rem; color: var(--text2); line-height: 1.45; }
+
+/* — Accordéon "Réglages avancés" : replié par défaut, pour les réglages
+     qu'on touche une fois puis qu'on oublie. — */
+.advanced-toggle { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; user-select: none; }
+.advanced-toggle span:first-child { font-family: 'Lora', serif; font-size: .9rem; color: var(--text2); }
+.advanced-chevron { transition: transform .2s; color: var(--text3); flex-shrink: 0; }
+.advanced-toggle.open .advanced-chevron { transform: rotate(180deg); }
+.advanced-content { display: none; border-top: 1px solid var(--border); }
+.advanced-content.open { display: block; }
+.advanced-content > a, .advanced-content > div { border-bottom: 1px solid var(--border); }
+.advanced-content > a:last-child, .advanced-content > div:last-child { border-bottom: none; }
+
 .btn-outline {
   padding: 8px 14px; border-radius: 9px;
   border: 1px solid var(--border); background: none;
@@ -1027,6 +1052,17 @@ body {
     <div class="prof-sub" id="p-sub"></div>
     <div class="prof-stats" id="p-stats"></div>
   </div>
+  <!-- Défi en cours -- résumé condensé, jamais le calcul détaillé (déjà
+       fait sur defis.html/defis-solo.html/combat.html) : juste "y a-t-il
+       quelque chose en cours, et où". Admin-only pour l'instant, comme les
+       3 pages de défis elles-mêmes. -->
+  <div class="active-chal-card" id="active-challenge-card" style="display:none">
+    <a href="defis-solo.html" id="active-chal-link" style="text-decoration:none;color:inherit;flex:1">
+      <div class="active-chal-lbl" id="active-chal-lbl">Chargement…</div>
+    </a>
+    <span style="color:var(--gold);font-size:.8rem;flex-shrink:0">&#8594;</span>
+  </div>
+
   <div class="prof-card">
     <div class="prof-card-hdr">
       <span>&#127973; Pathologies suivies</span>
@@ -1040,89 +1076,89 @@ body {
       <div class="pw-chart" id="pw-chart"></div>
     </div>
   </div>
-  <a href="met.html" style="text-decoration:none;color:inherit;display:block">
-    <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>&#127919; Pr&#233;cision calorique</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
-      <div class="prof-card-body" id="p-met-status" style="font-size:.82rem;color:var(--text2)">Renseignez vos activit&#233;s sportives pr&#233;cises (v&#233;lo, course, pas/jour...) pour un objectif calorique exact.</div>
+
+  <!-- Réglages -- regroupés en lignes dans une seule carte au lieu d'une
+       carte par réglage (condensation "Mon compte", 2026-09-02). Chaque
+       ligne garde son id d'origine ; les fonctions de toggle et la logique
+       d'affichage conditionnel (rôle admin) référencées ailleurs dans ce
+       fichier n'ont pas changé. -->
+  <div class="prof-card">
+    <div class="prof-card-hdr"><span>&#9881;&#65039; R&#233;glages</span></div>
+    <div class="prof-card-body">
+      <div class="settings-row" id="focus-mode-card">
+        <div class="settings-row-txt">
+          <div class="settings-row-lbl">Mode focus</div>
+          <div class="settings-row-sub">Masque le chiffre exact des calories sur votre tableau de bord.</div>
+        </div>
+        <div class="switch" id="focus-mode-switch" onclick="toggleFocusMode()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s"></div>
+      </div>
+      <div class="settings-row" id="nutrition-advice-consent-card" style="display:none">
+        <div class="settings-row-txt">
+          <div class="settings-row-lbl">Adapter les conseils &#224; mes pathologies <span style="font-size:.6rem;background:var(--rose-l);color:var(--rose);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></div>
+          <div class="settings-row-sub">R&#233;serv&#233; pour l'instant, en pr&#233;paration.</div>
+        </div>
+        <div class="switch" id="nutrition-advice-pathology-consent-switch" onclick="toggleNutritionAdvicePathologyConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-txt">
+          <div class="settings-row-lbl">Adapter les conseils &#224; mon activit&#233; sportive <span style="font-size:.6rem;background:var(--rose-l);color:var(--rose);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></div>
+          <div class="settings-row-sub">R&#233;serv&#233; pour l'instant, en pr&#233;paration.</div>
+        </div>
+        <div class="switch" id="nutrition-advice-sport-consent-switch" onclick="toggleNutritionAdviceSportConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s"></div>
+      </div>
+      <div class="settings-row" id="aut-consent-card" style="display:none">
+        <div class="settings-row-txt">
+          <div class="settings-row-lbl">Analyser mon journal <span style="font-size:.6rem;background:var(--rose-l);color:var(--rose);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></div>
+          <div class="settings-row-sub">D&#233;tecte les aliments ultra-transform&#233;s et propose des alternatives.</div>
+        </div>
+        <div class="switch" id="aut-consent-switch" onclick="toggleAutConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s"></div>
+      </div>
+      <div class="settings-row" id="cycle-tracking-card">
+        <div class="settings-row-txt">
+          <div class="settings-row-lbl">Suivi du cycle (optionnel)</div>
+          <div class="settings-row-sub">Ajoute une question discr&#232;te &#224; votre bilan hebdomadaire, jamais activ&#233;e sans votre accord.</div>
+        </div>
+        <div class="switch" id="cycle-tracking-switch" onclick="toggleCycleTracking()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s"></div>
+      </div>
     </div>
-  </a>
-  <a href="plan-fixe.html" style="text-decoration:none;color:inherit;display:block">
-    <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>&#128204; Mon plan fixe</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
-      <div class="prof-card-body" id="p-planfixe-status" style="font-size:.82rem;color:var(--text2)">Construisez une journ&#233;e type qui ne change jamais, &#224; la place des suggestions automatiques.</div>
+  </div>
+
+  <!-- Réglages avancés -- repliés par défaut : consultés une fois puis
+       oubliés, pas besoin qu'ils pèsent sur le défilement de la page. -->
+  <div class="prof-card">
+    <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvancedSettings()">
+      <span>Voir les r&#233;glages avanc&#233;s</span>
+      <svg class="advanced-chevron" id="advanced-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
-  </a>
-  <a href="defis.html?v=2" id="defis-link" style="display:none;text-decoration:none;color:inherit">
-    <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>&#129309; D&#233;fis &#224; deux <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
-      <div class="prof-card-body" style="font-size:.82rem;color:var(--text2)">Relevez un objectif commun avec un proche &#8212; vous r&#233;ussissez ensemble, ou aucun des deux.</div>
-    </div>
-  </a>
-  <a href="bilan-dieteticien.html" id="bilan-dieteticien-link" style="display:none;text-decoration:none;color:inherit">
-    <div class="prof-card" style="cursor:pointer">
-      <div class="prof-card-hdr"><span>&#128203; Bilan di&#233;t&#233;ticien <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
-      <div class="prof-card-body" style="font-size:.82rem;color:var(--text2)">Un r&#233;sum&#233; clair de votre alimentation des 7 derniers jours, pr&#234;t &#224; partager en consultation.</div>
-    </div>
-  </a>
-  <div class="prof-card" id="cycle-tracking-card">
-    <div class="prof-card-hdr"><span>&#127819; Suivi du cycle (optionnel)</span></div>
-    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:12px">Ajoute une question discr&#232;te dans votre bilan hebdomadaire (phase du cycle) &#8212; utile pour votre di&#233;t&#233;ticien, jamais affich&#233; ni activ&#233; sans votre accord.</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Activer cette question dans mon bilan</span>
-        <div class="switch" id="cycle-tracking-switch" onclick="toggleCycleTracking()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
+    <div class="advanced-content" id="advanced-content">
+      <a href="met.html" style="text-decoration:none;color:inherit;display:block">
+        <div class="prof-card-body" style="cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#127919; Pr&#233;cision calorique</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
+          <div id="p-met-status" style="font-size:.78rem;color:var(--text2)">Renseignez vos activit&#233;s sportives pr&#233;cises (v&#233;lo, course, pas/jour...) pour un objectif calorique exact.</div>
+        </div>
+      </a>
+      <a href="plan-fixe.html" style="text-decoration:none;color:inherit;display:block">
+        <div class="prof-card-body" style="cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#128204; Mon plan fixe</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
+          <div id="p-planfixe-status" style="font-size:.78rem;color:var(--text2)">Construisez une journ&#233;e type qui ne change jamais, &#224; la place des suggestions automatiques.</div>
+        </div>
+      </a>
+      <a href="bilan-dieteticien.html" id="bilan-dieteticien-link" style="display:none;text-decoration:none;color:inherit">
+        <div class="prof-card-body" style="cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#128203; Bilan di&#233;t&#233;ticien <span style="font-size:.6rem;background:var(--rose-l);color:var(--rose);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
+          <div style="font-size:.78rem;color:var(--text2)">Un r&#233;sum&#233; clair de votre alimentation des 7 derniers jours, pr&#234;t &#224; partager en consultation.</div>
+        </div>
+      </a>
+      <div id="supplements-card" style="display:none">
+        <div class="prof-card-body">
+          <div style="display:flex;align-items:center;margin-bottom:8px"><span style="font-family:'Lora',serif;font-size:.88rem">&#128138; Compl&#233;ments alimentaires <span style="font-size:.6rem;background:var(--rose-l);color:var(--rose);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle;margin-left:6px">Test admin</span></span></div>
+          <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px">Indiquez les nutriments pour lesquels vous prenez d&#233;j&#224; un compl&#233;ment, pour que l'app ne sugg&#232;re pas d'aliments pour un nutriment d&#233;j&#224; couvert.</div>
+          <div id="supplements-chip-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="prof-card" id="focus-mode-card">
-    <div class="prof-card-hdr"><span>&#127807; Mode focus</span></div>
-    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:12px">Masque le chiffre exact des calories sur votre tableau de bord &#8212; pour vous concentrer sur la qualit&#233; de vos repas plut&#244;t que sur un chiffre &#224; g&#233;rer en temps r&#233;el. Le suivi continue normalement en arri&#232;re-plan pour votre bilan.</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Activer le mode focus</span>
-        <div class="switch" id="focus-mode-switch" onclick="toggleFocusMode()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="prof-card" id="nutrition-advice-consent-card" style="display:none">
-    <div class="prof-card-hdr"><span>&#127807; Conseils alimentaires personnalis&#233;s <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
-    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:14px">R&#233;serv&#233; pour l'instant &#224; l'adaptation des conseils &#224; vos pathologies et votre activit&#233; sportive d&#233;clar&#233;es &#8212; en pr&#233;paration, aucun impact sur votre compte tant que ce n'est pas activ&#233;.</p>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mes pathologies d&#233;clar&#233;es</span>
-        <div class="switch" id="nutrition-advice-pathology-consent-switch" onclick="toggleNutritionAdvicePathologyConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <span style="font-weight:600;color:var(--text)">Adaptation de ces conseils &#224; mon activit&#233; sportive d&#233;clar&#233;e</span>
-        <div class="switch" id="nutrition-advice-sport-consent-switch" onclick="toggleNutritionAdviceSportConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="prof-card" id="aut-consent-card" style="display:none">
-    <div class="prof-card-hdr"><span>&#127807; Analyse de mon journal <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
-    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:12px">Autorise l'app &#224; analyser votre journal des 7 derniers jours pour vous montrer la part d'aliments ultra-transform&#233;s et vous proposer des alternatives concr&#232;tes &#8212; jamais li&#233; &#224; vos pathologies d&#233;clar&#233;es (voir ci-dessus pour ce consentement distinct).</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-weight:600;color:var(--text)">Analyser mon journal (aliments ultra-transform&#233;s)</span>
-        <div class="switch" id="aut-consent-switch" onclick="toggleAutConsent()" style="width:46px;height:26px;border-radius:999px;background:var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="prof-card" id="supplements-card" style="display:none">
-    <div class="prof-card-hdr"><span>&#128138; Compl&#233;ments alimentaires <span style="font-size:.62rem;background:var(--rose-l);color:var(--rose);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px;vertical-align:middle">Test admin</span></span></div>
-    <div class="prof-card-body" style="font-size:.82rem;color:var(--text2);line-height:1.55">
-      <p style="margin-bottom:12px">Indiquez les nutriments pour lesquels vous prenez d&#233;j&#224; un compl&#233;ment &#8212; sans cette information, l'app ne peut pas le savoir et pourrait sugg&#233;rer d'ajouter des aliments pour un nutriment d&#233;j&#224; couvert par ailleurs.</p>
-      <div id="supplements-chip-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-    </div>
-  </div>
   <div class="prof-card">
     <div class="prof-card-hdr"><span>&#9881;&#65039; Compte</span></div>
     <div class="prof-card-body">
@@ -6548,9 +6584,11 @@ function renderProfile(){
   var cycleSwitch = document.getElementById('cycle-tracking-switch');
   if(cycleSwitch) cycleSwitch.classList.toggle('on', p.suivi_cycle_actif === true);
   var nutritionConsentCard = document.getElementById('nutrition-advice-consent-card');
-  if(nutritionConsentCard) nutritionConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
-  var defisLink = document.getElementById('defis-link');
-  if(defisLink) defisLink.style.display = (p.role==='admin') ? 'block' : 'none';
+  // .settings-row est en flex (libellé + interrupteur côte à côte) --
+  // 'block' écraserait cette mise en page en ligne, contrairement aux
+  // anciennes .prof-card indépendantes où 'block' suffisait.
+  if(nutritionConsentCard) nutritionConsentCard.style.display = (p.role==='admin') ? 'flex' : 'none';
+  loadActiveChallengeSummary();
   var bilanDietLink = document.getElementById('bilan-dieteticien-link');
   if(bilanDietLink) bilanDietLink.style.display = (p.role==='admin') ? 'block' : 'none';
   var nutritionPathologyConsentSwitch = document.getElementById('nutrition-advice-pathology-consent-switch');
@@ -6565,7 +6603,7 @@ function renderProfile(){
     if(p.role==='admin') renderSupplementsChips(p.supplements||[]);
   }
   var autConsentCard = document.getElementById('aut-consent-card');
-  if(autConsentCard) autConsentCard.style.display = (p.role==='admin') ? 'block' : 'none';
+  if(autConsentCard) autConsentCard.style.display = (p.role==='admin') ? 'flex' : 'none';
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');
@@ -6573,6 +6611,51 @@ function renderProfile(){
   else pEl.innerHTML=pathos.map(function(pp){var m=PATHO_META[pp];return m?'<span class="ptag">'+m.i+' '+m.l+'</span>':'';}).join('');
 
   renderWeightEvolution();
+}
+
+// Replie/d\u00e9plie la carte "R\u00e9glages avanc\u00e9s" -- pas de m\u00e9morisation entre
+// visites (repli\u00e9e \u00e0 chaque chargement), volontairement : ce sont des
+// r\u00e9glages qu'on consulte rarement, pas la peine de retenir un \u00e9tat.
+function toggleAdvancedSettings(){
+  document.getElementById('advanced-toggle').classList.toggle('open');
+  document.getElementById('advanced-content').classList.toggle('open');
+}
+
+// R\u00e9sum\u00e9 condens\u00e9 du d\u00e9fi en cours pour "Mon compte" -- ne recalcule
+// jamais une progression (d\u00e9j\u00e0 fait sur defis.html/defis-solo.html/
+// combat.html, qui restent la seule source de v\u00e9rit\u00e9) : juste "y a-t-il
+// quelque chose en cours, et sur quelle page le retrouver". Admin-only
+// pour l'instant, comme les 3 pages de d\u00e9fis elles-m\u00eames.
+async function loadActiveChallengeSummary(){
+  var card = document.getElementById('active-challenge-card');
+  if(!card) return;
+  if(!(PROF && PROF.role==='admin')){ card.style.display='none'; return; }
+
+  var results = await Promise.all([
+    sb.from('solo_challenges').select('id').eq('user_id',USER.id).eq('status','active').limit(1),
+    sb.from('duo_challenges').select('id,status').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1),
+    sb.from('duo_combats').select('id,status').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+  ]);
+  var solo = results[0].data && results[0].data[0];
+  var duo = results[1].data && results[1].data[0];
+  var combat = results[2].data && results[2].data[0];
+
+  var lbl = document.getElementById('active-chal-lbl');
+  var link = document.getElementById('active-chal-link');
+  card.style.display = 'flex';
+  if(solo){
+    lbl.innerHTML = '&#127793; D&#233;fi solo en cours <small>Voir ma progression</small>';
+    link.href = 'defis-solo.html';
+  } else if(duo){
+    lbl.innerHTML = (duo.status==='pending' ? '&#129309; D&#233;fi &#224; deux en attente d\'un bin&#244;me' : '&#129309; D&#233;fi &#224; deux en cours') + ' <small>Voir le d&#233;fi</small>';
+    link.href = 'defis.html?v=2';
+  } else if(combat){
+    lbl.innerHTML = (combat.status==='pending' ? '&#9876;&#65039; Duel en attente d\'un adversaire' : '&#9876;&#65039; Duel en cours') + ' <small>Voir le duel</small>';
+    link.href = 'combat.html';
+  } else {
+    lbl.innerHTML = 'Aucun d&#233;fi en cours <small>D&#233;couvrir les d&#233;fis &#8594;</small>';
+    link.href = 'defis-solo.html';
+  }
 }
 
 // (Toggle, avertissement et banni\u00e8re du mode focus d\u00e9plac\u00e9s dans mode-focus.js)
