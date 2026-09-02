@@ -1043,6 +1043,17 @@ sb.auth.onAuthStateChange(function(event, session) {
   if (event === 'PASSWORD_RECOVERY') {
     inRecoveryMode = true;
     showRecoveryForm();
+    return;
+  }
+  // Après une connexion Google (ou tout retour OAuth), la session
+  // s'établit de façon asynchrone une fois le fragment d'URL traité par
+  // le client Supabase -- le seul appel getSession() au chargement de la
+  // page (plus bas) peut arriver AVANT que ce traitement soit terminé et
+  // ne rien trouver. Sans cet événement, la page restait bloquée sur
+  // l'accueil après une connexion Google réussie (bug signalé le
+  // 2026-09-02).
+  if (event === 'SIGNED_IN' && session && !inRecoveryMode) {
+    window.location.href = 'dashboard.html';
   }
 });
 
