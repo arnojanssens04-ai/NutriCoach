@@ -3242,10 +3242,25 @@ async function checkAdminNutritionBetaAlert(){
   var top = eligible[0];
   var snoozeKey = 'nutritionBetaAlertSnoozedUntil_' + top.ruleId;
   var stopKey = 'nutritionBetaAlertStopped_' + top.ruleId;
+  // "Déjà vu aujourd'hui" -- indépendant de snoozeKey (posé seulement si
+  // l'admin clique "Oui"/"Non"). Sans cette garde, refreshDash() étant
+  // appelé à chaque ouverture d'onglet/ajout de repas, la popup pouvait
+  // réapparaître plusieurs fois dans la même journée tant qu'aucune des
+  // deux réponses n'avait été cliquée -- bug signalé le 2026-08-28.
+  var lastShownKey = 'nutritionBetaAlertLastShown_' + top.ruleId;
+  // "Déjà vu il y a au moins 5 jours, sans que ça ait changé depuis" --
+  // sert à distinguer un premier constat d'un rappel qui persiste, pour ne
+  // jamais reformuler le même texte comme si c'était une découverte.
+  var everSeenKey = 'nutritionBetaAlertEverSeen_' + top.ruleId;
+  var isPersisting = false;
   try {
     if(localStorage.getItem(stopKey)) return;
     var snoozedUntil = localStorage.getItem(snoozeKey);
     if(snoozedUntil && referenceDate < snoozedUntil) return;
+    if(localStorage.getItem(lastShownKey) === referenceDate) return;
+    isPersisting = !!(snoozedUntil && referenceDate >= snoozedUntil);
+    localStorage.setItem(lastShownKey, referenceDate);
+    localStorage.setItem(everSeenKey, '1');
   } catch(e){ /* localStorage indisponible, on affiche quand même */ }
 
   var meta = NUTRITION_BETA_ALERT_META[top.ruleId] || { icon: '🧪', title: top.ruleId };
@@ -3280,7 +3295,7 @@ async function checkAdminNutritionBetaAlert(){
     }
   }
   var snoozeUntilDate = dateStr(new Date(new Date(referenceDate+'T00:00:00').getTime() + 5*86400000));
-  showNutritionBetaAlert(meta, top.result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey);
+  showNutritionBetaAlert(meta, top.result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey, isPersisting);
 }
 
 // Fréquence des aliments réellement enregistrés (champ `aliment`, déjà
@@ -3311,7 +3326,15 @@ function nutritionBetaAlertRespond(el, snoozeKey, snoozeUntilDate, stopKey, want
   } catch(e){ /* localStorage indisponible, sans effet ce coup-ci */ }
   el.closest('div[style*=fixed]').remove();
 }
-function showNutritionBetaAlert(meta, result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey){
+function showNutritionBetaAlert(meta, result, foods, observedFoods, snoozeKey, snoozeUntilDate, stopKey, isPersisting){
+  // Si ce même point d'attention est encore là après un "revoir dans 5
+  // jours" resté sans effet, on ne présente jamais le texte comme une
+  // découverte inédite -- ce bandeau (fixe, écrit une fois ici, jamais
+  // généré) précède le corps du conseil pour signaler la persistance, sans
+  // toucher au texte confiné du moteur lui-même.
+  var persistingHtml = isPersisting
+    ? '<div style="font-size:.72rem;color:#8a2f2f;background:rgba(138,47,47,0.08);border:1px solid rgba(138,47,47,0.2);border-radius:10px;padding:8px 12px;margin-bottom:14px;line-height:1.5">⏳ Toujours observé depuis notre dernier point il y a quelques jours.</div>'
+    : '';
   // Les deux listes ci-dessous n'ont AUCUN lien entre elles : "foods"
   // vient d'une liste générique fixe du moteur (ex. varied_staple_foods_v1),
   // "observedFoods" vient du vrai journal — jamais un remplacement
@@ -3342,10 +3365,11 @@ function showNutritionBetaAlert(meta, result, foods, observedFoods, snoozeKey, s
     +'<div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#8a2f2f;background:rgba(138,47,47,0.1);border:1px solid rgba(138,47,47,0.25);border-radius:999px;padding:3px 10px;display:inline-block;margin-bottom:14px">🧪 Bêta admin — jamais montré à un patient</div>'
     +'<div style="font-size:3rem;margin-bottom:14px">'+meta.icon+'</div>'
     +'<div style="font-family:\'Lora\',serif;font-size:1.3rem;font-weight:700;margin-bottom:10px">'+esc(meta.title)+'</div>'
+    +persistingHtml
     +'<p style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:16px">'+esc(result.advice.body)+'</p>'
     +observedHtml
     +foodsHtml
-    +'<p style="font-size:.8rem;color:var(--text2);font-weight:600;margin-bottom:10px">Souhaitez-vous améliorer ça ?</p>'
+    +'<p style="font-size:.8rem;color:var(--text2);font-weight:600;margin-bottom:10px">'+(isPersisting ? 'Toujours envie d\'y travailler ?' : 'Souhaitez-vous améliorer ça ?')+'</p>'
     +'<div style="display:flex;flex-direction:column;gap:8px">'
     +'<button onclick="nutritionBetaAlertRespond(this,\''+safeSnoozeKey+'\',\''+safeSnoozeUntil+'\',\''+safeStopKey+'\',true)" style="padding:11px 24px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">✅ Oui — revoir dans 5 jours</button>'
     +'<button onclick="nutritionBetaAlertRespond(this,\''+safeSnoozeKey+'\',\''+safeSnoozeUntil+'\',\''+safeStopKey+'\',false)" style="padding:11px 24px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:\'Lora\',serif;font-size:.95rem;font-weight:600;cursor:pointer">🚫 Non — arrêter ces messages</button>'
