@@ -3964,13 +3964,11 @@ async function refreshDash(){
   var previewNewKcal = PROF && PROF.role==='admin' && PROF.preview_new_kcal===true;
 
   if(previewNewKcal){
-    // NOUVEAU \u2014 plage dynamique. Ex : \u00e0 800 kcal \u2192 "800 \u2013 1000" ; \u00e0 1250
-    // kcal \u2192 "1200 \u2013 1400". Avant d'avoir mang\u00e9, la plage se cale sur
-    // l'objectif du jour pour rester un rep\u00e8re utile.
-    var basis = kcalRound>0 ? kcalRound : tgt.kcal;
-    var rangeLow = Math.floor(basis/200)*200;
-    var rangeHigh = rangeLow+200;
-    document.getElementById('d-target').textContent=rangeLow+' \u2013 '+rangeHigh;
+    // La plage dynamique ("800 \u2013 1000 kcal") a \u00e9t\u00e9 retir\u00e9e \u00e0 la demande de
+    // l'utilisateur (jug\u00e9e inutile) -- on affiche \u00e0 nouveau la cible exacte
+    // ici aussi, seuls les badges/couleur de barre ci-dessous restent
+    // sp\u00e9cifiques \u00e0 cet aper\u00e7u admin.
+    document.getElementById('d-target').textContent=tgt.kcal;
     if(SATIETY_TODAY){
       restContainer.innerHTML = '<span class="kcal-done-badge">\u2713 Rassasi\u00e9(e) aujourd\'hui</span>';
     } else if(kcalRound>0 && ratioKcal>1.15){
@@ -4138,7 +4136,8 @@ async function refreshDash(){
     var foods=byMeal[mid]||[];
     var mk=foods.reduce(function(s,e){return s+(e.kcal||0);},0);
     var pct=tgt.kcal>0?Math.min(100,mk/(tgt.kcal/4)*100):0;
-    var kcalPart = hideKcalHere ? '' : ' \u00b7 <span>'+mk.toFixed(0)+' kcal</span>';
+    // Les kcal n'apparaissent plus \u00e0 c\u00f4t\u00e9 du nombre d'aliments (redondant
+    // avec le rappel en bas de carte, voir badgeKcalCaption).
     var progBar = hideKcalHere ? '' : '<div class="meal-prog"><div class="meal-prog-fill" style="width:'+pct+'%"></div></div>';
     // Moteur de tags par repas (glyc\u00e9mie, ultra-transform\u00e9, sodium/HTA) \u2014
     // calcul\u00e9 \u00e0 partir des m\u00eames entr\u00e9es que le kcal ci-dessus, jamais
@@ -4148,9 +4147,9 @@ async function refreshDash(){
     // Sous le badge "Repas équilibré", on rappelle les kcal de CE repas --
     // évite d'avoir à remonter les yeux vers l'en-tête de la carte pour
     // savoir combien ce repas précis a apporté.
-    var badgeKcalCaption = (!hideKcalHere && foods.length && /Repas équilibré/.test(mealGlyc))
+    var badgeKcalCaption = (!hideKcalHere && foods.length)
       ? '<div class="meal-glyc-tip">'+mk.toFixed(0)+' kcal pour ce repas</div>' : '';
-    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+kcalPart+'</div>'+progBar+mealGlyc+badgeKcalCaption+'</div>';
+    return '<div class="meal-card" onclick="goJournal(\''+mid+'\')"><div class="meal-card-top"><span class="meal-ico">'+meta.i+'</span><div class="meal-add">+</div></div><div class="meal-name">'+meta.l+'</div><div class="meal-kcal">'+foods.length+' aliment'+(foods.length!==1?'s':'')+'</div>'+progBar+mealGlyc+badgeKcalCaption+'</div>';
   }).join('');
   // Alerts
   var alerts=genAlerts(T,tgt,pathos,entries,SATIETY_TODAY);
