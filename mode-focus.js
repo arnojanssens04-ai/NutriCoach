@@ -306,9 +306,9 @@ async function openAlternativesDrawer(mealKey){
     +'<button onclick="document.getElementById(\'alt-drawer-ov\').remove()" style="background:var(--bg2);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer">\u2715</button></div>'
     +'<div class="alt-section-lbl">\ud83d\udd01 Vos classiques</div>'
     +'<div id="alt-classiques">Chargement\u2026</div>'
-    +'<div class="alt-section-lbl">\ud83e\udd57 \u00c9quivalents di\u00e9t\u00e9ticien</div>'
-    +'<div id="alt-dietitian">Chargement\u2026</div>'
-    +'<button class="alt-surprise" onclick="document.getElementById(\'alt-drawer-ov\').remove();changeMealRecipe(\''+mealKey+'\')">\ud83c\udfb2 Surprends-moi</button>'
+    +'<div class="alt-section-lbl muted">\ud83e\udd57 \u00c9quivalents di\u00e9t\u00e9ticien</div>'
+    +'<div id="alt-dietitian" class="alt-dietitian-list">Chargement\u2026</div>'
+    +'<button class="alt-surprise" onclick="document.getElementById(\'alt-drawer-ov\').remove();changeMealRecipe(\''+mealKey+'\')"><span class="alt-surprise-ico">\ud83c\udfb2</span><span>Surprends-moi</span></button>'
     +'</div>';
   document.body.appendChild(ov);
 
@@ -334,7 +334,7 @@ async function openAlternativesDrawer(mealKey){
     dietEl.innerHTML = '<div class="alt-empty">Aucune recette di\u00e9t\u00e9ticien disponible pour ce repas pour l\'instant.</div>';
   } else {
     dietEl.innerHTML = equivalents.map(function(r,idx){
-      return '<div class="alt-item" onclick="applyDietitianRecipe(\''+mealKey+'\','+idx+')">'
+      return '<div class="alt-item alt-item-compact" onclick="applyDietitianRecipe(\''+mealKey+'\','+idx+')">'
         +'<span class="alt-item-ico">\ud83e\udd57</span>'
         +'<div class="alt-item-body"><div class="alt-item-name">'+esc(r.nom)+'</div>'
         +'<div class="alt-item-sub">Suggestion de l\'\u00e9quipe</div></div></div>';
@@ -359,19 +359,34 @@ async function computeVosClassiques(mealKey){
   var byDate = {};
   entries.forEach(function(e){ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
 
+  // Regroupe par ALIMENTS, en ignorant la quantit\u00e9 pr\u00e9cise -- la m\u00eame
+  // portion r\u00e9elle varie l\u00e9g\u00e8rement d'une fois \u00e0 l'autre (155g un jour,
+  // 160g le lendemain), donc inclure la quantit\u00e9 dans la signature
+  // fragmentait un repas r\u00e9ellement habituel en plusieurs groupes s\u00e9par\u00e9s
+  // qui ne comptaient jamais plus d'une occurrence chacun. "Vos classiques"
+  // affichait alors n'importe quel repas r\u00e9cent, jamais un vrai sch\u00e9ma
+  // r\u00e9current -- corrig\u00e9 le 2026-09-03.
   function signature(dayEntries){
-    return dayEntries.map(function(e){ return e.aliment+'|'+Math.round(e.quantite); }).sort().join('||');
+    return dayEntries.map(function(e){ return e.aliment; }).sort().join('||');
   }
   var groups = {};
-  Object.keys(byDate).forEach(function(d){
+  // Ordre chronologique -- pour qu'un groupe garde les quantit\u00e9s de sa
+  // toute DERNI\u00c8RE occurrence (plus pertinentes que la premi\u00e8re fois),
+  // tout en comptant bien toutes les fois o\u00f9 cette combinaison est revenue.
+  Object.keys(byDate).sort().forEach(function(d){
     var sig = signature(byDate[d]);
     if(!groups[sig]) groups[sig] = { entries: byDate[d], count: 0 };
+    groups[sig].entries = byDate[d];
     groups[sig].count++;
   });
 
-  return Object.keys(groups).map(function(k){ return groups[k]; })
-    .sort(function(a,b){ return b.count-a.count; })
-    .slice(0,3);
+  var allGroups = Object.keys(groups).map(function(k){ return groups[k]; })
+    .sort(function(a,b){ return b.count-a.count; });
+  // Priorit\u00e9 aux combinaisons r\u00e9ellement revenues au moins 2 fois -- s'il
+  // n'y en a aucune encore (historique trop r\u00e9cent), on retombe sur les
+  // repas les plus r\u00e9cents plut\u00f4t que de n'afficher rien du tout.
+  var recurring = allGroups.filter(function(g){ return g.count>=2; });
+  return (recurring.length ? recurring : allGroups).slice(0,3);
 }
 
 async function fetchDietitianEquivalents(mealKey){

@@ -319,14 +319,27 @@ body {
 .alt-drawer-hdr span { font-family:'Lora',serif; font-weight:700; font-size:1.05rem; }
 .alt-section-lbl { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--sage); margin:16px 0 8px; }
 .alt-section-lbl:first-of-type { margin-top:0; }
+/* "Équivalents diététicien" volontairement moins mis en avant que "Vos
+   classiques" -- libellé plus discret, cartes plus compactes en dessous. */
+.alt-section-lbl.muted { color:var(--text3); font-weight:600; }
 .alt-item { display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:11px; border:1px solid var(--border2); background:var(--card2); cursor:pointer; margin-bottom:8px; transition:all .15s; }
 .alt-item:hover { border-color:var(--gold); background:var(--gold-l); }
 .alt-item-ico { font-size:1.1rem; flex-shrink:0; }
 .alt-item-body { flex:1; min-width:0; }
 .alt-item-name { font-size:.86rem; font-weight:600; color:var(--text); }
 .alt-item-sub { font-size:.72rem; color:var(--text3); margin-top:1px; }
+.alt-item.alt-item-compact { padding:8px 10px; background:transparent; box-shadow:none; }
+.alt-item.alt-item-compact .alt-item-ico { font-size:.9rem; opacity:.7; }
+.alt-item.alt-item-compact .alt-item-name { font-size:.79rem; font-weight:500; color:var(--text2); }
+.alt-item.alt-item-compact .alt-item-sub { font-size:.68rem; }
+.alt-item.alt-item-compact:hover { background:var(--card2); border-color:var(--border2); }
 .alt-empty { font-size:.78rem; color:var(--text3); padding:8px 0 4px; }
-.alt-surprise { width:100%; padding:10px; border-radius:10px; border:1px dashed var(--border2); background:none; color:var(--text2); font-size:.82rem; cursor:pointer; margin-top:6px; }
+/* "Surprends-moi" -- volontairement le geste le plus visible du tiroir
+   (bouton plein, plus grand, icône agrandie), plutôt qu'un lien discret en
+   pointillés perdu sous les deux listes. */
+.alt-surprise { width:100%; padding:18px; border-radius:16px; border:none; background:linear-gradient(135deg,var(--gold),var(--sage)); color:#fff; font-family:'Lora',serif; font-size:1.02rem; font-weight:700; cursor:pointer; margin-top:16px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 8px 22px rgba(71,122,69,0.3); transition:transform .15s, box-shadow .15s; }
+.alt-surprise:hover { transform:translateY(-1px); box-shadow:0 10px 26px rgba(71,122,69,0.38); }
+.alt-surprise-ico { font-size:1.5rem; }
 .switch.on { background:var(--gold) !important; }
 .switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
 .switch.on::after { left:23px; }
@@ -1451,7 +1464,7 @@ body {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="mode-focus.js?v=25"></script>
+<script src="mode-focus.js?v=26"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
