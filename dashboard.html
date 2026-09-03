@@ -3227,7 +3227,25 @@ function enrichJournalEntriesWithNutrientTotals(entries){
     return out;
   });
 }
+// refreshDash() est appelé depuis plusieurs endroits (changement d'onglet,
+// ajout de repas, connexion...) -- si deux appels se chevauchent, les deux
+// exécutions de checkAdminNutritionBetaAlert() passaient la vérification
+// "déjà vu aujourd'hui" avant que l'une des deux ait eu le temps d'écrire
+// le flag dans localStorage (l'appel réseau vers le journal, awaité plus
+// bas, laisse largement le temps à un second appel de démarrer). Ce verrou
+// simple empêche deux exécutions concurrentes -- bug signalé le
+// 2026-09-03 (notif calcium revue juste après une reconnexion).
+var nutritionBetaAlertCheckRunning = false;
 async function checkAdminNutritionBetaAlert(){
+  if(nutritionBetaAlertCheckRunning) return;
+  nutritionBetaAlertCheckRunning = true;
+  try {
+    await checkAdminNutritionBetaAlertInner();
+  } finally {
+    nutritionBetaAlertCheckRunning = false;
+  }
+}
+async function checkAdminNutritionBetaAlertInner(){
   var p = PROF||{};
   if(p.role!=='admin') return;
   if(typeof runNutritionSimulationForAllRules !== 'function') return;
