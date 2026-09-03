@@ -244,8 +244,8 @@ body {
   padding: 18px 20px;
   margin-bottom: 14px;
   box-shadow: var(--sh);
-  display: flex; align-items: center; justify-content: center; gap: 20px;
 }
+.kcal-top { display: flex; align-items: center; justify-content: center; gap: 20px; }
 .kcal-ring-wrap { flex-shrink:0; position:relative; width:110px; height:110px; }
 .kcal-ring-wrap svg { width:110px; height:110px; transform:rotate(-90deg); }
 .kr-bg  { fill:none; stroke:rgba(0,0,0,.07); stroke-width:9; }
@@ -333,22 +333,27 @@ body {
 .prog-track { height:5px; background:rgba(0,0,0,.07); border-radius:99px; overflow:hidden; }
 .prog-fill  { height:100%; border-radius:99px; background:var(--gold); transition:width .7s cubic-bezier(.4,0,.2,1), background .4s ease; }
 
-/* &#9472;&#9472; MACROS &#9472;&#9472; */
-.macros-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
-.macros-row.with-fibres { grid-template-columns: repeat(2,1fr); }
+/* — MACROS — désormais des lignes fines dans la carte kcal (au lieu d'une
+     rangée de cartes séparée en dessous), pour utiliser l'espace déjà
+     réservé au cercle de calories plutôt que d'ajouter une section entière
+     sous la carte. */
+.macros-row { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 .macro-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 14px 12px;
-  text-align: center;
-  box-shadow: var(--sh);
+  display: flex; align-items: center; gap: 10px;
+  opacity: 0; transform: translateY(6px);
+  animation: macroRowIn .45s cubic-bezier(.4,0,.2,1) forwards;
 }
-.macro-ico { font-size: 1.1rem; margin-bottom: 5px; }
-.macro-val { font-family: 'Lora', serif; font-size: 1.2rem; font-weight: 700; }
-.macro-lbl { font-size: .62rem; color: var(--text2); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
-.macro-prog { height: 3px; background: rgba(0,0,0,.07); border-radius: 99px; margin-top: 7px; overflow: hidden; }
-.macro-prog-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+.macro-card:nth-child(1) { animation-delay: .05s; }
+.macro-card:nth-child(2) { animation-delay: .12s; }
+.macro-card:nth-child(3) { animation-delay: .19s; }
+.macro-card:nth-child(4) { animation-delay: .26s; }
+@keyframes macroRowIn { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .macro-card { animation: none; opacity: 1; transform: none; } }
+.macro-ico { display: none; }
+.macro-lbl { font-size: .74rem; color: var(--text2); width: 68px; flex-shrink: 0; }
+.macro-prog { flex: 1; height: 5px; background: rgba(0,0,0,.07); border-radius: 99px; overflow: hidden; }
+.macro-prog-fill { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.macro-val { font-family: 'Lora', serif; font-size: .88rem; font-weight: 700; width: 42px; flex-shrink: 0; text-align: right; }
 
 /* &#9472;&#9472; MEALS &#9472;&#9472; */
 .meals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
@@ -755,20 +760,48 @@ body {
 
   <!-- KCAL EN PREMIER &#8212; plus imm&#233;diatement utile au quotidien -->
   <div class="kcal-card" id="kcal-card">
-    <div class="kcal-ring-wrap">
-      <svg viewBox="0 0 110 110">
-        <circle class="kr-bg" cx="55" cy="55" r="46"/>
-        <circle class="kr-fill" id="ring-kcal" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
-      </svg>
-      <div class="kr-center">
-        <span class="kr-num" id="d-kcal">0</span>
-        <span class="kr-unit">kcal</span>
+    <div class="kcal-top">
+      <div class="kcal-ring-wrap">
+        <svg viewBox="0 0 110 110">
+          <circle class="kr-bg" cx="55" cy="55" r="46"/>
+          <circle class="kr-fill" id="ring-kcal" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+        </svg>
+        <div class="kr-center">
+          <span class="kr-num" id="d-kcal">0</span>
+          <span class="kr-unit">kcal</span>
+        </div>
+      </div>
+      <div class="kcal-info">
+        <div class="kcal-obj">Cible : <span id="d-target">&#8212;</span> kcal</div>
+        <div class="kcal-rest" id="kcal-rest-container"><span id="d-reste">&#8212;</span> <span class="kcal-rest-lbl">restants</span></div>
+        <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
       </div>
     </div>
-    <div class="kcal-info">
-      <div class="kcal-obj">Cible : <span id="d-target">&#8212;</span> kcal</div>
-      <div class="kcal-rest" id="kcal-rest-container"><span id="d-reste">&#8212;</span> <span class="kcal-rest-lbl">restants</span></div>
-      <div class="prog-track"><div class="prog-fill" id="prog-kcal" style="width:0%"></div></div>
+    <!-- Macros -- fusionnées dans la même carte que l'anneau de calories
+         (au lieu d'une rangée de cartes séparée juste en dessous), pour
+         utiliser l'espace déjà réservé à côté de l'anneau plutôt que
+         d'ajouter une section entière en plus. -->
+    <div class="macros-row" id="macros-row">
+      <div class="macro-card" id="macro-card-gluc">
+        <div class="macro-lbl" id="gluc-lbl">Glucides</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
+        <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
+      </div>
+      <div class="macro-card" id="macro-card-fibres" style="display:none">
+        <div class="macro-lbl">Fibres</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="mp-fibres" style="width:0%;background:var(--sage)"></div></div>
+        <div class="macro-val" id="d-fibres-card" style="color:var(--sage)">0g</div>
+      </div>
+      <div class="macro-card" id="macro-card-prot">
+        <div class="macro-lbl">Prot&#233;ines</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
+        <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
+      </div>
+      <div class="macro-card" id="macro-card-lip">
+        <div class="macro-lbl">Lipides</div>
+        <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
+        <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
+      </div>
     </div>
   </div>
 
@@ -925,32 +958,6 @@ body {
   </div>
 
   <div id="diabete-buffer-badge" style="display:none;margin-bottom:10px"></div>
-  <div class="macros-row" id="macros-row">
-    <div class="macro-card" id="macro-card-prot" style="order:3">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-prot" style="color:var(--cyan)">0g</div>
-      <div class="macro-lbl">Prot&#233;ines</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-prot" style="width:0%;background:var(--cyan)"></div></div>
-    </div>
-    <div class="macro-card" id="macro-card-gluc" style="order:1">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-gluc" style="color:var(--sage)">0g</div>
-      <div class="macro-lbl" id="gluc-lbl">Glucides</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-gluc" style="width:0%;background:var(--sage)"></div></div>
-    </div>
-    <div class="macro-card" id="macro-card-lip" style="order:4">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-lip" style="color:var(--gold)">0g</div>
-      <div class="macro-lbl">Lipides</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-lip" style="width:0%;background:var(--gold)"></div></div>
-    </div>
-    <div class="macro-card" id="macro-card-fibres" style="order:2;display:none">
-      <div class="macro-ico"> </div>
-      <div class="macro-val" id="d-fibres-card" style="color:var(--sage)">0g</div>
-      <div class="macro-lbl">Fibres</div>
-      <div class="macro-prog"><div class="macro-prog-fill" id="mp-fibres" style="width:0%;background:var(--sage)"></div></div>
-    </div>
-  </div>
 
   <div class="stitle">Mes repas</div>
   <div class="meals-grid" id="meals-grid"></div>
@@ -3895,11 +3902,23 @@ async function refreshDash(){
   renderCardioProtection(T, tgt, pathos);
 
   // MODE FOCUS \u2014 si activ\u00e9 (par la personne elle-m\u00eame ou son di\u00e9t\u00e9ticien
-  // depuis le chat), on masque enti\u00e8rement la carte kcal au profit d'une
-  // vue neutre. Le calcul continue derri\u00e8re pour le bilan, simplement il
-  // n'est plus le premier r\u00e9flexe visuel de la journ\u00e9e.
+  // depuis le chat), on masque le cercle de calories (anneau + cible +
+  // restants) au profit d'une vue neutre -- mais les macros (glucides/
+  // prot\u00e9ines/lipides en grammes) restent affich\u00e9es, contrairement aux
+  // calories : ce ne sont pas "un chiffre \u00e0 g\u00e9rer en temps r\u00e9el" de la
+  // m\u00eame fa\u00e7on, et la personne a explicitement demand\u00e9 \u00e0 les garder m\u00eame
+  // en Mode focus. Le calcul continue derri\u00e8re pour le bilan dans tous les
+  // cas, simplement les calories ne sont plus le premier r\u00e9flexe visuel.
   var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
-  document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
+  document.getElementById('kcal-card').style.display = 'block';
+  var kcalTopEl = document.querySelector('#kcal-card .kcal-top');
+  if(kcalTopEl) kcalTopEl.style.display = hideExactKcal ? 'none' : 'flex';
+  var macrosRowEl = document.getElementById('macros-row');
+  if(macrosRowEl){
+    macrosRowEl.style.marginTop = hideExactKcal ? '0' : '';
+    macrosRowEl.style.paddingTop = hideExactKcal ? '0' : '';
+    macrosRowEl.style.borderTop = hideExactKcal ? 'none' : '';
+  }
 
   if(hideExactKcal){
     if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries, T, tgt);
