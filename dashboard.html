@@ -3931,7 +3931,6 @@ async function refreshDash(){
   // en Mode focus. Le calcul continue derri\u00e8re pour le bilan dans tous les
   // cas, simplement les calories ne sont plus le premier r\u00e9flexe visuel.
   var hideExactKcal = PROF && PROF.hide_exact_kcal === true;
-  document.getElementById('kcal-card').style.display = 'block';
   var kcalTopEl = document.querySelector('#kcal-card .kcal-top');
   if(kcalTopEl) kcalTopEl.style.display = hideExactKcal ? 'none' : 'flex';
   // En Mode focus, les macros ne doivent plus être la toute première chose
@@ -3959,6 +3958,12 @@ async function refreshDash(){
       }
     }
   }
+  // Une fois les macros déplacées hors de la carte kcal en Mode focus, il
+  // ne reste plus dedans que le cercle masqué -- une carte blanche vide
+  // pour rien en haut de page. On la masque entièrement dans ce cas
+  // (jamais quand les macros y sont encore, sinon elles disparaîtraient
+  // avec elle).
+  document.getElementById('kcal-card').style.display = hideExactKcal ? 'none' : 'block';
 
   if(hideExactKcal){
     if(typeof renderBalancedPlate==='function') renderBalancedPlate(entries, T, tgt);
