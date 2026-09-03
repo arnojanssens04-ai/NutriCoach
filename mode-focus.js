@@ -566,7 +566,7 @@ async function renderWeeklyTrend(){
   }
 
   var since = days[0];
-  var r = await sb.from('journal').select('date,aliment,quantite,food_gluc_100,food_prot_100,food_lip_100').eq('user_id',USER.id).gte('date',since);
+  var r = await sb.from('journal').select('date,repas,aliment,quantite,food_gluc_100,food_prot_100,food_lip_100').eq('user_id',USER.id).gte('date',since);
   var allEntries = r.data || [];
   if(!allEntries.length){ card.style.display='none'; return; }
 
@@ -574,6 +574,15 @@ async function renderWeeklyTrend(){
   var dayStatus = days.map(function(dateStr){
     var dayEntries = allEntries.filter(function(e){ return e.date===dateStr; });
     if(!dayEntries.length) return 'none';
+    // Reste blanc ("none") tant que les 3 repas principaux ne sont pas
+    // enregistrés ce jour-là -- avant, le seuil portait sur le poids total
+    // (250g), ce qui pouvait classer en "mid"/"low" (marron) une journée
+    // pas encore terminée avec seulement 1-2 repas notés, donnant
+    // l'impression à tort d'une journée déjà "échouée". On attend le 3e
+    // repas avant de juger la structure de la journée.
+    var mealsLoggedThatDay = {};
+    dayEntries.forEach(function(e){ if(e.repas) mealsLoggedThatDay[e.repas]=1; });
+    if(Object.keys(mealsLoggedThatDay).length < 3) return 'none';
     var vegW=0, protW=0, starchW=0, fatW=0;
     dayEntries.forEach(function(e){
       var w = e.quantite||0;
@@ -590,8 +599,6 @@ async function renderWeeklyTrend(){
       else if(classification.category==='starch') starchW+=classification.weight;
       else if(classification.category==='fat') fatW+=classification.weight;
     });
-    var totalW = vegW+protW+starchW+fatW;
-    if(totalW<250) return 'none'; // pas assez mang\u00e9 ce jour-l\u00e0 pour juger la structure avec confiance
     // M\u00eame logique que la carte du jour \u2014 progression vers la cible en
     // grammes de chaque cat\u00e9gorie (plafonn\u00e9e \u00e0 100%), pas une proportion
     // relative compar\u00e9e \u00e0 un pourcentage cible. Avant, les deux cartes

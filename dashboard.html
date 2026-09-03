@@ -338,6 +338,10 @@ body {
      réservé au cercle de calories plutôt que d'ajouter une section entière
      sous la carte. */
 .macros-row { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+/* En Mode focus, .macros-row est détachée de la carte kcal (repositionnée
+   plus bas dans la page, voir #macros-row-anchor) -- redevient sa propre
+   carte autonome plutôt qu'une section à l'intérieur d'une autre. */
+.macros-row.standalone { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); padding: 14px 16px; margin: 0 0 14px; }
 .macro-card {
   display: flex; align-items: center; gap: 10px;
   opacity: 0; transform: translateY(6px);
@@ -936,7 +940,7 @@ body {
       <div class="qn-mini-row" id="qn-mini-row">
         <div class="qn-mini-item" id="qn-mini-diversite"><span class="qn-mini-dot"></span>Diversit&#233;</div>
         <div class="qn-mini-item" id="qn-mini-fibres"><span class="qn-mini-dot"></span>Fibres</div>
-        <div class="qn-mini-item" id="qn-mini-legumes"><span class="qn-mini-dot"></span>L&#233;gumes</div>
+        <div class="qn-mini-item" id="qn-mini-legumes"><span class="qn-mini-dot"></span>L&#233;gumes / Fruits</div>
         <div class="qn-mini-item" id="qn-mini-ultra"><span class="qn-mini-dot"></span>Peu transform&#233;</div>
       </div>
       <div class="extra-score-tip" id="qn-tip">Commencez &#224; remplir votre journal pour voir votre score.</div>
@@ -958,6 +962,11 @@ body {
   </div>
 
   <div id="diabete-buffer-badge" style="display:none;margin-bottom:10px"></div>
+
+  <!-- En Mode focus, #macros-row est déplacé ici par JS (voir renderDash)
+       -- pas à la toute première place de la page, après les cartes
+       spécifiques au Mode focus plutôt qu'avant elles. -->
+  <div id="macros-row-anchor"></div>
 
   <div class="stitle">Mes repas</div>
   <div class="meals-grid" id="meals-grid"></div>
@@ -1442,7 +1451,7 @@ body {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="mode-focus.js?v=24"></script>
+<script src="mode-focus.js?v=25"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
@@ -2254,6 +2263,7 @@ function calcNutritionalQuality(entries, tgt){
   // Cumul des valeurs nutritionnelles de la journ\u00e9e
   var T = {kcal:0, prot:0, gluc:0, lip:0, ags:0, fibres:0, sucres:0};
   var totalVegGrams = 0;
+  var totalFruitGrams = 0;
   var foodGroups = {};   // diversit\u00e9 alimentaire
   var alcoholKcal = 0;   // calories alcool
 
@@ -2275,6 +2285,12 @@ function calcNutritionalQuality(entries, tgt){
     // c'est CETTE copie-ci qui alimente la carte "Qualit\u00e9 nutritionnelle".
     var estLegume = isLegume(e.aliment);
     if(estLegume) totalVegGrams += e.quantite||0;
+    // — Fruits — comptés avec les légumes pour cette puce "Légumes /
+    // Fruits" (demande explicite du 2026-09-03) : un jour riche en fruits
+    // mais pauvre en légumes doit aussi pouvoir valider ce critère, pas
+    // seulement les légumes seuls comme avant.
+    var estFruit = /pomme|poire|banane|orange|kiwi|fraise|raisin|peche|abricot|cerise|framboise|myrtille|mangue|ananas/.test(n);
+    if(estFruit) totalFruitGrams += e.quantite||0;
 
     // \u2500\u2500 Groupes alimentaires (diversit\u00e9) \u2500\u2500 v\u00e9rifie L'ALIMENT EN COURS,
     // pas un total cumul\u00e9 \u2014 avant, "legumes" d\u00e9pendait de totalVegGrams
@@ -2318,11 +2334,16 @@ function calcNutritionalQuality(entries, tgt){
   score += Math.round(Math.min(1, fibreRatio) * 15);
   if(fibreRatio<0.5) tips.push({priority:2, msg:'Quelques fibres en plus (l\u00e9gumes, l\u00e9gumineuses, c\u00e9r\u00e9ales compl\u00e8tes) donneraient un coup de pouce \u00e0 votre digestion.'});
 
-  // 3. L\u00e9gumes \u2014 15 pts
-  var vegRatio = totalVegGrams/200;
+  // 3. L\u00e9gumes / Fruits \u2014 15 pts (les deux comptent d\u00e9sormais ensemble,
+  // demande explicite du 2026-09-03 -- avant, seuls les l\u00e9gumes comptaient)
+  var totalVegFruitGrams = totalVegGrams + totalFruitGrams;
+  // Cible provisoire 300g (au lieu de 200g) -- les fruits comptant
+  // d\u00e9sormais avec les l\u00e9gumes, 200g \u00e9tait devenu trop facile \u00e0 atteindre.
+  // Pas encore la vraie r\u00e9f\u00e9rence OMS (400g) -- \u00e0 ajuster plus tard.
+  var vegRatio = totalVegFruitGrams/300;
   score += Math.round(Math.min(1, vegRatio) * 15);
-  if(totalVegGrams<100) tips.push({priority:3, msg:'Une portion de l\u00e9gumes au d\u00e9jeuner et une au souper compl\u00e9teraient bien votre journ\u00e9e.'});
-  else if(totalVegGrams<150) tips.push({priority:6, msg:'Belle place aux l\u00e9gumes aujourd\'hui \u2014 encore un petit effort pour viser les 200g.'});
+  if(totalVegFruitGrams<150) tips.push({priority:3, msg:'Une portion de l\u00e9gumes ou de fruits au d\u00e9jeuner et une au souper compl\u00e9teraient bien votre journ\u00e9e.'});
+  else if(totalVegFruitGrams<225) tips.push({priority:6, msg:'Belle place aux l\u00e9gumes/fruits aujourd\'hui \u2014 encore un petit effort pour viser les 300g.'});
 
   // 4. Diversit\u00e9 alimentaire \u2014 15 pts
   var groupCount = Object.keys(foodGroups).length;
@@ -2418,7 +2439,7 @@ function calcNutritionalQuality(entries, tgt){
   var praisePool = [];
   if(groupCount>=4) praisePool.push('Belle diversit\u00e9 alimentaire aujourd\'hui');
   if(fibreRatio>=0.8) praisePool.push('Vos apports en fibres sont sur la bonne voie');
-  if(vegRatio>=0.75) praisePool.push('Bonne place aux l\u00e9gumes aujourd\'hui');
+  if(vegRatio>=0.75) praisePool.push('Bonne place aux l\u00e9gumes/fruits aujourd\'hui');
   if(ultraCount===0) praisePool.push('Journ\u00e9e sans aliment ultra-transform\u00e9, bravo');
   if(protRatio>=0.8) praisePool.push('Vos apports en prot\u00e9ines sont bien couverts');
   var praise = praisePool.length ? praisePool[0] : null;
@@ -3913,11 +3934,30 @@ async function refreshDash(){
   document.getElementById('kcal-card').style.display = 'block';
   var kcalTopEl = document.querySelector('#kcal-card .kcal-top');
   if(kcalTopEl) kcalTopEl.style.display = hideExactKcal ? 'none' : 'flex';
+  // En Mode focus, les macros ne doivent plus être la toute première chose
+  // visible sur la page (elles restaient en haut, dans la carte kcal, même
+  // une fois l'anneau masqué) -- déplacées après les cartes propres au Mode
+  // focus (assiette équilibrée, tendance hebdo...), juste avant "Mes repas".
   var macrosRowEl = document.getElementById('macros-row');
-  if(macrosRowEl){
-    macrosRowEl.style.marginTop = hideExactKcal ? '0' : '';
-    macrosRowEl.style.paddingTop = hideExactKcal ? '0' : '';
-    macrosRowEl.style.borderTop = hideExactKcal ? 'none' : '';
+  var macrosAnchorEl = document.getElementById('macros-row-anchor');
+  if(macrosRowEl && macrosAnchorEl){
+    if(hideExactKcal){
+      macrosRowEl.classList.add('standalone');
+      macrosRowEl.style.marginTop = '';
+      macrosRowEl.style.paddingTop = '';
+      macrosRowEl.style.borderTop = '';
+      if(macrosRowEl.nextSibling !== macrosAnchorEl && macrosRowEl !== macrosAnchorEl.previousSibling){
+        macrosAnchorEl.parentNode.insertBefore(macrosRowEl, macrosAnchorEl);
+      }
+    } else {
+      macrosRowEl.classList.remove('standalone');
+      macrosRowEl.style.marginTop = '';
+      macrosRowEl.style.paddingTop = '';
+      macrosRowEl.style.borderTop = '';
+      if(kcalTopEl && macrosRowEl.previousSibling !== kcalTopEl){
+        kcalTopEl.parentNode.insertBefore(macrosRowEl, kcalTopEl.nextSibling);
+      }
+    }
   }
 
   if(hideExactKcal){
