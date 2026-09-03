@@ -107,6 +107,8 @@ function ensureAUTSummaryStyle(){
     '.aut-stat-impact strong{ color:#334155; font-weight:600; }',
 
     '.aut-rec-list{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }',
+    '.aut-rec-empty{ font-size:.82rem; color:#334155; background:#f0fdf4; border:1px solid #dcfce7;',
+    'border-radius:12px; padding:14px; margin-top:14px; line-height:1.5; }',
     '.aut-rec-card{ background:#f0fdf4; border:1px solid #dcfce7; border-radius:12px;',
     'padding:14px; display:flex; flex-direction:column; gap:10px; }',
     '.aut-rec-head{ display:flex; gap:9px; align-items:flex-start; }',
@@ -204,7 +206,13 @@ function renderAUTCard(data, callbacks){
 
     + '<div class="aut-section">'
       + '<div class="aut-section-lbl"><span aria-hidden="true">💡</span>Pistes d\'amélioration ciblées</div>'
-      + '<div class="aut-rec-list">' + data.recommendations.map(renderRecCard).join('') + '</div>'
+      + (data.recommendations.length
+          ? '<div class="aut-rec-list">' + data.recommendations.map(renderRecCard).join('') + '</div>'
+          // Aucun aliment ultra-transformé récurrent cette semaine -- les
+          // écarts éventuels sont restés ponctuels, jamais un schéma à
+          // signaler comme "à améliorer". Message positif plutôt qu'une
+          // section vide sans explication.
+          : '<div class="aut-rec-empty">Pas d\'aliment ultra-transformé revenu plusieurs fois cette semaine — vos éventuels écarts sont restés ponctuels, rien à corriger ici. 🌿</div>')
     + '</div>'
 
     + '<details class="aut-details">'

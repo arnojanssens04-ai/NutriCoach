@@ -1481,7 +1481,7 @@ body {
 <script src="nutrition-advice-renderer.min.js?v=2"></script>
 <script src="nutrition-audit.min.js?v=1"></script>
 <script src="nutrition-simulator.min.js?v=3"></script>
-<script src="aut-summary-card.js?v=1"></script>
+<script src="aut-summary-card.js?v=2"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -7015,13 +7015,32 @@ function computeAUTSummaryData(entries, periodLabel){
       total: items.reduce(function(s,i){ return s+i.count; },0) };
   }).sort(function(a,b){ return b.total-a.total; });
 
-  var recommendations = groups.slice(0,2).map(function(g){
+  // Un aliment ultra-transformé mangé UNE SEULE fois sur la période est un
+  // écart ponctuel, pas un schéma à corriger -- le proposer comme "piste
+  // d'amélioration" (avec une alternative à appliquer) revient à traiter
+  // un plaisir occasionnel comme un problème, ce qui contredit le ton
+  // jamais culpabilisant du reste de l'app. On ne retient donc, pour
+  // chaque catégorie, que les aliments consommés au moins 2 fois -- et une
+  // catégorie n'apparaît en piste d'amélioration que si elle contient au
+  // moins un aliment réellement récurrent (jamais la simple addition de
+  // deux occurrences isolées d'aliments différents). Décision du
+  // 2026-09-03, à la demande explicite de l'utilisateur.
+  var recurringGroups = groups
+    .map(function(g){
+      var recurringItems = g.items.filter(function(i){ return i.count>=2; });
+      var recurringTotal = recurringItems.reduce(function(s,i){ return s+i.count; },0);
+      return { key:g.key, label:g.label, recurringItems:recurringItems, recurringTotal:recurringTotal };
+    })
+    .filter(function(g){ return g.recurringItems.length>0; })
+    .sort(function(a,b){ return b.recurringTotal-a.recurringTotal; });
+
+  var recommendations = recurringGroups.slice(0,2).map(function(g){
     var alt = (typeof ULTRA_PROCESSED_CATEGORY_ALTERNATIVES!=='undefined') ? ULTRA_PROCESSED_CATEGORY_ALTERNATIVES[g.key] : null;
     var altText = (alt && alt.length) ? alt.slice(0,2).map(function(a){ return a.label; }).join(' & ') : 'Privilégiez une version faite maison ou peu transformée.';
     return {
       id: g.key,
       title: g.label,
-      subtitle: g.items.slice(0,2).map(function(i){ return i.name+' ('+i.count+'×)'; }).join(', '),
+      subtitle: g.recurringItems.slice(0,2).map(function(i){ return i.name+' ('+i.count+'×)'; }).join(', '),
       alternative: altText,
       _altFirstFood: alt && alt[0] ? alt[0].label : null
     };
