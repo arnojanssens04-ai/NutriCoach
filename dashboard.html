@@ -1086,7 +1086,10 @@ body {
        quelque chose en cours, et où". Admin-only pour l'instant, comme les
        3 pages de défis elles-mêmes. -->
   <div class="active-chal-card" id="active-challenge-card" style="display:none">
-    <div id="active-chal-lbl" style="flex:1">Chargement…</div>
+    <a href="defis-solo.html" id="active-chal-link" style="text-decoration:none;color:inherit;flex:1">
+      <div class="active-chal-lbl" id="active-chal-lbl">Chargement…</div>
+    </a>
+    <span style="color:var(--gold);font-size:.8rem;flex-shrink:0">&#8594;</span>
   </div>
 
   <div class="prof-card">
@@ -6732,15 +6735,20 @@ async function loadActiveChallengeSummary(){
   var combat = results[2].data && results[2].data[0];
 
   var lbl = document.getElementById('active-chal-lbl');
+  var link = document.getElementById('active-chal-link');
   card.style.display = 'flex';
   if(solo){
-    lbl.innerHTML = '&#127793; D&#233;fi solo en cours';
+    lbl.innerHTML = '&#127793; D&#233;fi solo en cours <small>Voir ma progression</small>';
+    link.href = 'defis-solo.html';
   } else if(duo){
-    lbl.innerHTML = (duo.status==='pending' ? '&#129309; D&#233;fi &#224; deux en attente d\'un bin&#244;me' : '&#129309; D&#233;fi &#224; deux en cours');
+    lbl.innerHTML = (duo.status==='pending' ? '&#129309; D&#233;fi &#224; deux en attente d\'un bin&#244;me' : '&#129309; D&#233;fi &#224; deux en cours') + ' <small>Voir le d&#233;fi</small>';
+    link.href = 'defis.html?v=2';
   } else if(combat){
-    lbl.innerHTML = (combat.status==='pending' ? '&#9876;&#65039; Duel en attente d\'un adversaire' : '&#9876;&#65039; Duel en cours');
+    lbl.innerHTML = (combat.status==='pending' ? '&#9876;&#65039; Duel en attente d\'un adversaire' : '&#9876;&#65039; Duel en cours') + ' <small>Voir le duel</small>';
+    link.href = 'combat.html';
   } else {
-    lbl.innerHTML = 'Aucun d&#233;fi en cours';
+    lbl.innerHTML = 'Aucun d&#233;fi en cours <small>D&#233;couvrir les d&#233;fis &#8594;</small>';
+    link.href = 'defis-solo.html';
   }
 }
 
