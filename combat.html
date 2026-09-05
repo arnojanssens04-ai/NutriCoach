@@ -133,7 +133,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 <header class="topbar">
   <div class="t-logo">Cap<span>Santé</span></div>
-  <a href="defis.html" class="t-back">&larr; Défis</a>
+  <a href="defis.html" class="t-back" id="t-back-link">&larr; Défis</a>
 </header>
 
 <div class="wrap">
@@ -470,9 +470,11 @@ function applyModeLock(locked){
   var solo = document.getElementById('mode-link-solo');
   var entraide = document.getElementById('mode-link-entraide');
   var note = document.getElementById('mode-locked-note');
+  var back = document.getElementById('t-back-link');
   if(solo) solo.style.display = locked ? 'none' : '';
   if(entraide) entraide.style.display = locked ? 'none' : '';
   if(note) note.style.display = locked ? 'block' : 'none';
+  if(back){ back.href = locked ? 'dashboard.html' : 'defis.html'; back.innerHTML = locked ? '&larr; Profil' : '&larr; D&#233;fis'; }
 }
 
 // Un combat "finished" (abandon ou fin naturelle) doit rester visible

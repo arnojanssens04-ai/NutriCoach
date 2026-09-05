@@ -112,7 +112,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 
 <header class="topbar">
   <div class="t-logo">Cap<span>Santé</span></div>
-  <a href="defis.html" class="t-back">&larr; Défis</a>
+  <a href="defis.html" class="t-back" id="t-back-link">&larr; Défis</a>
 </header>
 
 <div class="wrap">
@@ -477,9 +477,14 @@ function applyModeLock(locked){
   var entraide = document.getElementById('mode-link-entraide');
   var duel = document.getElementById('mode-link-duel');
   var note = document.getElementById('mode-locked-note');
+  var back = document.getElementById('t-back-link');
   if(entraide) entraide.style.display = locked ? 'none' : '';
   if(duel) duel.style.display = locked ? 'none' : '';
   if(note) note.style.display = locked ? 'block' : 'none';
+  // Défi en cours : le sélecteur de mode est verrouillé, donc "← Défis"
+  // (qui mène au choix du mode) ne sert plus à rien -- direction le
+  // profil, où se trouve le résumé du défi en cours.
+  if(back){ back.href = locked ? 'dashboard.html' : 'defis.html'; back.innerHTML = locked ? '&larr; Profil' : '&larr; D&#233;fis'; }
 }
 
 // Un seul défi à la fois, tous modes confondus -- avant, cette page ne
