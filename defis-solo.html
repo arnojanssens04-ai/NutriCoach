@@ -194,8 +194,8 @@ var VEG_COLOR_PATTERNS = [
   { color:'vert',   re:/brocoli|epinard|courgette|haricot vert|poireau|celeri|salade|chou vert|concombre|petit pois|poivron vert/ },
   { color:'orange', re:/carotte|potiron|courge|poivron orange|patate douce/ },
   { color:'rouge',  re:/tomate|poivron rouge|radis/ },
-  { color:'blanc',  re:/chou.fleur|oignon(?! rouge)|champignon|navet|endive/ },
-  { color:'violet', re:/aubergine|chou rouge|oignon rouge|betterave/ }
+  { color:'blanc',  re:/chou.fleur|oignon(?!s? rouges?)|champignon|navet|endive/ },
+  { color:'violet', re:/aubergine|chou rouge|oignons? rouges?|betterave/ }
 ];
 function vegColorOf(n){ for(var i=0;i<VEG_COLOR_PATTERNS.length;i++){ if(VEG_COLOR_PATTERNS[i].re.test(n)) return VEG_COLOR_PATTERNS[i].color; } return null; }
 
@@ -482,18 +482,36 @@ function applyModeLock(locked){
   if(note) note.style.display = locked ? 'block' : 'none';
 }
 
+// Un seul défi à la fois, tous modes confondus -- avant, cette page ne
+// vérifiait que sa PROPRE table (solo_challenges), donc un défi entraide
+// ou un Duel déjà en cours n'empêchait jamais de créer AUSSI un défi solo
+// en parallèle. Bug signalé le 2026-09-05.
+async function hasActiveChallengeInOtherModes(){
+  var results = await Promise.all([
+    sb.from('duo_challenges').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1),
+    sb.from('duo_combats').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+  ]);
+  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
+}
+
 async function loadMySoloChallenge(){
   var activeZone = document.getElementById('active-zone');
   var pickerZone = document.getElementById('picker-zone');
   var r = await sb.from('solo_challenges').select('*').eq('user_id', USER.id).eq('status','active').order('created_at',{ascending:false}).limit(1);
   if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
   var challenge = (r.data && r.data[0]) || null;
+  // Ne verrouille PAS le sélecteur de mode dans ce cas -- le blocage vient
+  // d'un défi actif SUR une autre page, il faut au contraire pouvoir y
+  // naviguer, pas masquer ce lien.
+  var blockedElsewhere = !challenge && await hasActiveChallengeInOtherModes();
   applyModeLock(!!challenge);
 
   if(!challenge){
-    activeZone.innerHTML = '';
-    pickerZone.style.display = 'block';
-    renderTierTabs();
+    activeZone.innerHTML = blockedElsewhere
+      ? '<div class="empty">Un autre défi (entraide ou duel) est déjà en cours — terminez-le avant d\'en commencer un nouveau.</div>'
+      : '';
+    pickerZone.style.display = blockedElsewhere ? 'none' : 'block';
+    if(!blockedElsewhere) renderTierTabs();
     return;
   }
   pickerZone.style.display = 'none';

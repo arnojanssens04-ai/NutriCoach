@@ -214,7 +214,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
       <div class="code-box" id="new-code-box" style="display:none">
         <div class="code-val" id="new-code-val"></div>
         <button type="button" class="code-copy-btn" onclick="copyInviteCode()">📋 Copier le code</button>
-        <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi.</div>
+        <div class="code-hint">Envoyez ce code à la personne avec qui vous voulez relever ce défi — valable 10 minutes.</div>
       </div>
     </div>
 
@@ -503,7 +503,7 @@ async function joinChallenge(){
     return;
   }
 
-  toast('❌ Code invalide ou défi déjà rejoint');
+  toast('❌ Code invalide, expiré ou défi déjà rejoint');
 }
 
 // Contrairement au Duel (compétitif, "vous avez gagné" a du sens en cas
@@ -933,13 +933,46 @@ function sendCheer(partnerName){
 // Tant qu'un défi n'est pas terminé (réussi/échoué/annulé) pour cet
 // utilisateur, on masque "Créer un défi" et "Rejoindre un défi" -- un seul
 // défi actif ou en attente à la fois, jamais plusieurs en parallèle.
-function updateCreateJoinAvailability(list){
-  var hasBlocking = list.some(function(c){ return c.status === 'pending' || c.status === 'active'; });
+function updateCreateJoinAvailability(hasBlocking){
   var blockedMsg = document.getElementById('blocked-msg');
   var sections = document.getElementById('create-join-sections');
   if(blockedMsg) blockedMsg.style.display = hasBlocking ? 'block' : 'none';
   if(sections) sections.style.display = hasBlocking ? 'none' : 'block';
   applyModeLock(hasBlocking);
+}
+
+// Un code d'invitation "en attente" jamais rejoint restait bloquant pour
+// toujours (voir aussi migration_duo_challenges_finished_at.sql pour le
+// même souci côté affichage) -- au-delà de 10 minutes sans partenaire, on
+// le supprime pour de bon, ce qui libère la création d'un nouveau défi et
+// invalide le code (plus aucune ligne à trouver pour join_duo_challenge).
+var INVITE_EXPIRY_MS = 10*60*1000;
+async function expireStalePendingChallenges(list){
+  var now = Date.now();
+  var stillValid = [];
+  for(var i=0;i<list.length;i++){
+    var c = list[i];
+    if(c.status==='pending' && c.creator_id===USER.id && c.created_at && (now - new Date(c.created_at).getTime()) > INVITE_EXPIRY_MS){
+      await sb.from('duo_challenges').delete().eq('id', c.id);
+      continue;
+    }
+    stillValid.push(c);
+  }
+  return stillValid;
+}
+
+// Un seul défi à la fois, tous modes confondus -- avant, chaque page ne
+// vérifiait que sa PROPRE table (duo_challenges ici), donc un défi solo ou
+// un Duel déjà en cours n'empêchait jamais de créer AUSSI un défi entraide
+// en parallèle (le verrou visuel entre modes, applyModeLock, ne protégeait
+// que contre la navigation via les liens de l'app, pas contre un accès
+// direct à cette page). Bug signalé le 2026-09-05.
+async function hasActiveChallengeInOtherModes(){
+  var results = await Promise.all([
+    sb.from('solo_challenges').select('id').eq('user_id',USER.id).eq('status','active').limit(1),
+    sb.from('duo_combats').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+  ]);
+  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
 }
 
 // Tant qu'un défi entraide est en cours (en attente ou actif), on masque
@@ -974,13 +1007,14 @@ async function loadMyChallenges(){
   var root = document.getElementById('my-challenges');
   var r = await sb.from('duo_challenges').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false});
   if(r.error){ root.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
-  var list = r.data || [];
-  var hasBlocking = list.some(function(c){ return c.status === 'pending' || c.status === 'active'; });
-  var visibleList = list.filter(function(c){ return isChallengeStillVisible(c, hasBlocking); });
+  var list = await expireStalePendingChallenges(r.data || []);
+  var hasBlockingHere = list.some(function(c){ return c.status === 'pending' || c.status === 'active'; });
+  var hasBlocking = hasBlockingHere || await hasActiveChallengeInOtherModes();
+  var visibleList = list.filter(function(c){ return isChallengeStillVisible(c, hasBlockingHere); });
 
   if(!visibleList.length){
     root.innerHTML = '<div class="empty">Aucun défi pour l\'instant — créez-en un ou rejoignez celui d\'un proche avec un code.</div>';
-    updateCreateJoinAvailability(list);
+    updateCreateJoinAvailability(hasBlocking);
     return;
   }
 
@@ -996,7 +1030,7 @@ async function loadMyChallenges(){
     await notifyCreatorIfPartnerJoined(c);
   }
 
-  updateCreateJoinAvailability(list);
+  updateCreateJoinAvailability(hasBlocking);
 }
 
 // Prévient le créateur (une seule fois, à la première ouverture de la

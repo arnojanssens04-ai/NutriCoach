@@ -326,7 +326,7 @@ function renderTierTabs(){
         return '<div class="duration-opt'+(n===selectedDuration?' on':'')+'" onclick="selectDuration('+n+')">'+n+' jours</div>';
       }).join('') + '</div>'
     + '<button class="btn" id="create-btn" onclick="createCombat()" disabled>Créer et obtenir mon code</button>'
-    + '<div class="code-box" id="new-code-box" style="display:none"><div class="code-val" id="new-code-val"></div><div class="code-hint">Envoyez ce code à la personne que vous défiez.</div></div>'
+    + '<div class="code-box" id="new-code-box" style="display:none"><div class="code-val" id="new-code-val"></div><div class="code-hint">Envoyez ce code à la personne que vous défiez — valable 10 minutes.</div></div>'
     + '</div>'
     + '<div class="section-lbl">Rejoindre un combat</div>'
     + '<div class="card"><p style="font-size:.82rem;color:var(--text2)">Vous avez reçu un code ? Entrez-le ici.</p>'
@@ -418,7 +418,7 @@ async function joinCombat(){
       window.location.href = 'defis.html';
       return;
     }
-    toast('❌ Code invalide ou défi déjà rejoint');
+    toast('❌ Code invalide, expiré ou défi déjà rejoint');
     return;
   }
   toast('✅ Combat rejoint !');
@@ -491,18 +491,52 @@ function pickVisibleCombat(list){
   return recentlyFinished || null;
 }
 
+// Un code d'invitation "en attente" jamais rejoint restait bloquant pour
+// toujours -- au-delà de 10 minutes sans adversaire, on le supprime pour de
+// bon, ce qui libère la création d'un nouveau duel et invalide le code.
+var INVITE_EXPIRY_MS = 10*60*1000;
+async function expireStalePendingCombats(list){
+  var now = Date.now();
+  var stillValid = [];
+  for(var i=0;i<list.length;i++){
+    var c = list[i];
+    if(c.status==='pending' && c.creator_id===USER.id && c.created_at && (now - new Date(c.created_at).getTime()) > INVITE_EXPIRY_MS){
+      await sb.from('duo_combats').delete().eq('id', c.id);
+      continue;
+    }
+    stillValid.push(c);
+  }
+  return stillValid;
+}
+
+// Un seul défi à la fois, tous modes confondus -- avant, cette page ne
+// vérifiait que sa PROPRE table (duo_combats), donc un défi solo ou
+// entraide déjà en cours n'empêchait jamais de créer AUSSI un duel en
+// parallèle. Bug signalé le 2026-09-05.
+async function hasActiveChallengeInOtherModes(){
+  var results = await Promise.all([
+    sb.from('solo_challenges').select('id').eq('user_id',USER.id).eq('status','active').limit(1),
+    sb.from('duo_challenges').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+  ]);
+  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
+}
+
 async function loadMyCombat(){
   var activeZone = document.getElementById('active-zone');
   var pickerZone = document.getElementById('picker-zone');
   var r = await sb.from('duo_combats').select('*').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).order('created_at',{ascending:false}).limit(5);
   if(r.error){ activeZone.innerHTML = '<div class="empty">Erreur de chargement</div>'; return; }
-  var combat = pickVisibleCombat(r.data || []);
+  var combatList = await expireStalePendingCombats(r.data || []);
+  var combat = pickVisibleCombat(combatList);
   applyModeLock(!!combat && combat.status !== 'finished');
 
   if(!combat){
-    activeZone.innerHTML = '';
-    pickerZone.style.display = 'block';
-    renderTierTabs();
+    var blockedElsewhere = await hasActiveChallengeInOtherModes();
+    activeZone.innerHTML = blockedElsewhere
+      ? '<div class="empty">Un autre défi (solo ou entraide) est déjà en cours — terminez-le avant d\'en commencer un nouveau.</div>'
+      : '';
+    pickerZone.style.display = blockedElsewhere ? 'none' : 'block';
+    if(!blockedElsewhere) renderTierTabs();
     return;
   }
   pickerZone.style.display = 'none';
