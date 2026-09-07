@@ -1160,7 +1160,7 @@ body {
       <svg class="advanced-chevron" id="advanced-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="advanced-content" id="advanced-content">
-      <div style="text-decoration:none;color:inherit;display:block;cursor:pointer" onclick="onbRestart()">
+      <div id="onb-restart-link" style="display:none;text-decoration:none;color:inherit;cursor:pointer" onclick="onbRestart()">
         <div class="prof-card-body">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#127775; Revoir le tutoriel</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
           <div style="font-size:.78rem;color:var(--text2)">Refaire la visite guidée de l'app (calories, journal, plan, ajouter, coach).</div>
@@ -6706,6 +6706,8 @@ function renderProfile(){
   }
   var autConsentCard = document.getElementById('aut-consent-card');
   if(autConsentCard) autConsentCard.style.display = (p.role==='admin') ? 'flex' : 'none';
+  var onbRestartLink = document.getElementById('onb-restart-link');
+  if(onbRestartLink) onbRestartLink.style.display = (p.role==='admin') ? 'block' : 'none';
 
   var pathos=p.pathologies||[];
   var pEl=document.getElementById('p-pathos');

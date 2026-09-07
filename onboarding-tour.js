@@ -43,6 +43,9 @@ function onbCurrentPage(){
 }
 
 function onbInit(){
+  // Admin-only pour le moment, comme les autres fonctionnalités en cours
+  // de test (défis, AUT, conseils pathologie...).
+  if(!(typeof PROF!=='undefined' && PROF && PROF.role==='admin')) return;
   var status = localStorage.getItem(onbKey('status'));
   if(!status){
     // Jamais vu sur ce compte/navigateur -- on démarre automatiquement,
