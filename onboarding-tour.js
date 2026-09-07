@@ -1,10 +1,11 @@
 // ── Visite guidée pour les nouveaux utilisateurs ──
-// Sept arrêts, chacun ancré sur un vrai élément de l'app (jamais une
-// capture d'écran statique) : calories -> journal -> recherche d'aliment
-// -> démo IA + suppression -> plan -> ajouter -> coach. Toujours possible
-// à quitter ("Passer"), ne se relance jamais automatiquement après la
-// première fois (état par utilisateur dans localStorage) ; relançable à
-// la main depuis "Réglages avancés" du profil (onbRestart()).
+// Chaque arrêt est ancré sur un vrai élément de l'app (jamais une capture
+// d'écran statique) : calories -> journal -> recherche d'aliment -> démo
+// IA + suppression -> retour accueil -> plan -> ajouter -> coach -> écran
+// de fin. Toujours possible à quitter ("Passer"), ne se relance jamais
+// automatiquement après la première fois (état par utilisateur dans
+// localStorage) ; relançable à la main depuis "Réglages avancés" du
+// profil (onbRestart()).
 
 var ONB_STEPS = [
   { page:'dashboard', target:'#kcal-card', mode:'button',
@@ -15,6 +16,8 @@ var ONB_STEPS = [
     text:'Recherchez un aliment ici — vous pouvez entrer absolument n\'importe lequel. Cliquez sur Suivant et l\'IA va en ajouter un pour vous montrer.' },
   { page:'journal', target:null, mode:'click', dynamic:true,
     text:'Voici comment supprimer un aliment — cliquez sur la croix.' },
+  { page:'journal', target:'#nav-dashboard', mode:'click', pulse:true,
+    text:'Retournons à l\'accueil pour la suite de la visite.' },
   { page:'dashboard', target:'#nav-plan', mode:'click', pulse:true,
     text:'Cliquez sur Plan : il s\'adapte à VOS besoins, pas à ceux de vos voisins. Si vous préférez garder votre propre plan alimentaire, entrez d\'abord dans votre profil les aliments que vous consommez chaque jour, puis recliquez sur Plan — tout s\'adaptera à votre objectif personnel.' },
   { page:'*', target:'#nav-add', mode:'click', pulse:true, opensSheet:true,
@@ -84,6 +87,27 @@ function onbFinish(){
   onbActive = false;
   localStorage.setItem(onbKey('status'),'done');
   onbTeardown();
+}
+
+function onbShowClosing(href){
+  onbTeardown();
+  var ov = document.createElement('div');
+  ov.id = 'onb-closing';
+  ov.className = 'onb-closing-ov';
+  ov.innerHTML = '<div class="onb-closing-card">'
+    + '<div class="onb-closing-emoji">&#127881;</div>'
+    + '<div class="onb-closing-title">Bienvenue sur CapSant&#233; !</div>'
+    + '<div class="onb-closing-text">Vous connaissez maintenant l\'essentiel : les calories, le journal, le plan, l\'ajout rapide, et votre coach di&#233;t&#233;ticien juste &#224; c&#244;t&#233;. &#192; vous de jouer.</div>'
+    + '<button class="onb-next" onclick="onbCloseAndGo(\'' + href + '\')">C\'est parti !</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+}
+
+function onbCloseAndGo(href){
+  var ov = document.getElementById('onb-closing');
+  if(ov) ov.remove();
+  onbFinish();
+  if(href) window.location.href = href;
 }
 
 function onbTeardown(){
@@ -195,7 +219,16 @@ function onbRender(){
   onbPosition(target, spot, tip);
 
   if(step.mode==='click'){
-    target.addEventListener('click', onbAdvance, { once:true });
+    if(step.final){
+      // Dernière étape : on n'enchaîne pas directement la navigation vers
+      // Coach, on intercepte le clic pour montrer l'écran de fin d'abord.
+      target.addEventListener('click', function(e){
+        e.preventDefault();
+        onbShowClosing(target.getAttribute('href'));
+      }, { once:true });
+    } else {
+      target.addEventListener('click', onbAdvance, { once:true });
+    }
   }
 
   window.addEventListener('scroll', onbReposition, true);
@@ -245,6 +278,11 @@ function onbPosition(target, spot, tip){
   + '.onb-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}'
   + '.onb-next{background:var(--gold,#c9973f);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.82rem;font-weight:700;cursor:pointer}'
   + '.onb-hint{font-size:.78rem;color:#5b6b60;font-style:italic}'
-  + '.onb-skip{background:none;border:none;color:#8a948d;font-size:.76rem;cursor:pointer;text-decoration:underline}';
+  + '.onb-skip{background:none;border:none;color:#8a948d;font-size:.76rem;cursor:pointer;text-decoration:underline}'
+  + '.onb-closing-ov{position:fixed;inset:0;background:rgba(15,23,20,.68);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}'
+  + '.onb-closing-card{background:#fff;border-radius:18px;padding:28px 24px;max-width:360px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3)}'
+  + '.onb-closing-emoji{font-size:2.2rem;margin-bottom:10px}'
+  + '.onb-closing-title{font-size:1.15rem;font-weight:700;color:#1f2a22;margin-bottom:10px}'
+  + '.onb-closing-text{font-size:.86rem;line-height:1.5;color:#4a564d;margin-bottom:18px}';
   document.head.appendChild(style);
 })();
