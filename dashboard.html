@@ -1160,6 +1160,12 @@ body {
       <svg class="advanced-chevron" id="advanced-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="advanced-content" id="advanced-content">
+      <div style="text-decoration:none;color:inherit;display:block;cursor:pointer" onclick="onbRestart()">
+        <div class="prof-card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#127775; Revoir le tutoriel</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
+          <div style="font-size:.78rem;color:var(--text2)">Refaire la visite guidée de l'app (calories, journal, plan, ajouter, coach).</div>
+        </div>
+      </div>
       <a href="met.html" style="text-decoration:none;color:inherit;display:block">
         <div class="prof-card-body" style="cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-family:'Lora',serif;font-size:.88rem">&#127919; Pr&#233;cision calorique</span><span style="font-size:.75rem;color:var(--gold)">&#8594;</span></div>
@@ -1495,6 +1501,7 @@ body {
 <script src="nutrition-audit.min.js?v=1"></script>
 <script src="nutrition-simulator.min.js?v=3"></script>
 <script src="aut-summary-card.js?v=2"></script>
+<script src="onboarding-tour.js?v=1"></script>
 <script>
 var SURL = 'https://ojzjihzsycsfkcsjptrm.supabase.co';
 var SKEY = 'sb_publishable_OKU12WCtb6kR3PVJL9Sw0A_s1_ocdhl';
@@ -1651,7 +1658,7 @@ sb.auth.getSession().then(function(r){
     initGreeting();
     if(needsSetup())openSetup();
     else if(needsFoodPrefs()){ window.location.href='gouts.html'; }
-    else { refreshDash(); checkChangelog(); }
+    else { refreshDash(); checkChangelog(); onbInit(); }
   });
 });
 sb.auth.onAuthStateChange(function(ev,sess){
@@ -5128,6 +5135,7 @@ function openAddSheet(){
 }
 function closeAddSheet(){
   document.getElementById('add-sheet-ov').style.display='none';
+  if(typeof onbOnAddSheetClose==='function') onbOnAddSheetClose();
 }
 
 function handleScanNav(){
@@ -7196,7 +7204,7 @@ async function finSetup(){
   }
   document.getElementById('ov').classList.remove('on');
   if(needsFoodPrefs()){ window.location.href='gouts.html'; return; }
-  initGreeting(); refreshDash();
+  initGreeting(); refreshDash(); onbInit();
   toast('\u2705 Profil enregistr\u00e9 !');
 }
 
@@ -7224,6 +7232,7 @@ function goPage(p){
   if(p==='profile')renderProfile();
   if(p==='mealplan')renderMealPlan();
   if(p==='journal'){updateMealTabsVisibility();selMeal(activeMeal);}
+  if(typeof onbOnPageChange==='function') onbOnPageChange(p);
 }
 
 async function logout(){
