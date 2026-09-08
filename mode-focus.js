@@ -488,14 +488,43 @@ function classifyPlateEntry(entry){
   return {category:'starch', weight:w, fallback:false};
 }
 
+// Budget calorique r\u00e9el d'un repas \u2014 pas une simple part fixe de
+// l'objectif du jour (25%/30%/... ind\u00e9pendamment de ce qui a d\u00e9j\u00e0 \u00e9t\u00e9
+// mang\u00e9), mais ce qu'il RESTE \u00e0 consommer aujourd'hui, r\u00e9parti entre les
+// repas pas encore enregistr\u00e9s (au prorata de leur part habituelle). Un
+// repas d\u00e9j\u00e0 bien avanc\u00e9 dans la journ\u00e9e (ex: petit-d\u00e9j + d\u00e9jeuner
+// copieux) laisse donc moins de marge pour le souper, et inversement.
+async function mealKcalBudget(mealKey){
+  var tgt = calcTargets();
+  var mealPcts = getMealPcts();
+  var fallback = tgt.kcal * (mealPcts[mealKey]||0.2);
+
+  var entries = await getEntries();
+  var eatenByMeal = {};
+  entries.forEach(function(e){
+    var r = (e.quantite||0)/100;
+    eatenByMeal[e.repas] = (eatenByMeal[e.repas]||0) + pN2(e.food_kcal_100)*r;
+  });
+
+  var dayEatenKcal = 0;
+  Object.keys(eatenByMeal).forEach(function(m){ if(m!==mealKey) dayEatenKcal += eatenByMeal[m]; });
+  var remainingKcal = Math.max(0, tgt.kcal - dayEatenKcal);
+
+  // Repas "restants" = pas encore r\u00e9ellement enregistr\u00e9s aujourd'hui
+  // (celui qu'on est en train de choisir en fait toujours partie).
+  var remainingMeals = Object.keys(mealPcts).filter(function(m){ return m===mealKey || !eatenByMeal[m]; });
+  var sumPct = remainingMeals.reduce(function(s,m){ return s+(mealPcts[m]||0); },0);
+  if(sumPct<=0) return fallback;
+
+  return remainingKcal * ((mealPcts[mealKey]||0.2)/sumPct);
+}
+
 // Ajuste les quantit\u00e9s d'un combo "classique" pour se rapprocher du
 // besoin calorique du repas \u2014 seulement \u00e0 la hausse, seulement sur les
 // aliments qui s'y pr\u00eatent, jamais sur les portions \u00e0 taille naturelle
 // fixe (yaourt, fromage blanc...).
-function adjustClassiqueForGap(items, mealKey){
-  var tgt = calcTargets();
-  var mealPcts = getMealPcts();
-  var mealTarget = tgt.kcal * (mealPcts[mealKey]||0.2);
+async function adjustClassiqueForGap(items, mealKey){
+  var mealTarget = await mealKcalBudget(mealKey);
   var currentKcal = items.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
   var gap = mealTarget - currentKcal;
 
@@ -525,17 +554,18 @@ function adjustClassiqueForGap(items, mealKey){
   return items;
 }
 
-function applyClassique(mealKey, idx){
+async function applyClassique(mealKey, idx){
   var g = window._altClassiques[idx];
   if(!g) return;
   // Les quantit\u00e9s historiques sont le point de d\u00e9part \u2014 c'est le principe
   // d'un "classique" : ce que la personne mange vraiment. On ajuste
-  // seulement les aliments qui s'y pr\u00eatent si le besoin du jour est plus
-  // \u00e9lev\u00e9 que d'habitude pour ce repas.
+  // seulement les aliments qui s'y pr\u00eatent, en visant les calories qu'il
+  // reste R\u00c9ELLEMENT \u00e0 consommer aujourd'hui pour ce repas (voir
+  // mealKcalBudget) plut\u00f4t qu'une part fixe de l'objectif du jour.
   var items = g.entries.map(function(e){
     return { food:{nom:e.aliment, unit:'g', kcal:e.food_kcal_100||0, prot:e.food_prot_100||0, gluc:e.food_gluc_100||0, lip:e.food_lip_100||0, fibres:e.food_fibres_100||0, pot:e.food_pot_100||0, cal:e.food_cal_100||0, fer:e.food_fer_100||0, mg:e.food_mg_100||0, zn:e.food_zn_100||0}, qty:e.quantite };
   });
-  items = adjustClassiqueForGap(items, mealKey);
+  items = await adjustClassiqueForGap(items, mealKey);
   CURRENT_PLAN[mealKey] = { recipeName:'Votre classique', recipeId:null, items:items };
   saveGenericPlan();
   document.getElementById('alt-drawer-ov').remove();
@@ -543,15 +573,10 @@ function applyClassique(mealKey, idx){
   toast('\u2705 Repas remplac\u00e9 par un de vos classiques');
 }
 
-function applyDietitianRecipe(mealKey, idx){
+async function applyDietitianRecipe(mealKey, idx){
   var recipe = window._altEquivalents[idx];
   if(!recipe) return;
-  var tgt = calcTargets();
-  var need2ndSnack = needsSecondSnack();
-  var mealPcts = need2ndSnack
-    ? {breakfast:0.25, lunch:0.30, snack:0.10, dinner:0.25, snack2:0.10}
-    : {breakfast:0.25, lunch:0.35, snack:0.10, dinner:0.30};
-  var mealKcalTarget = tgt.kcal * (mealPcts[mealKey]||0.2);
+  var mealKcalTarget = await mealKcalBudget(mealKey);
   // Adapte le format Supabase (ingredients) au format attendu par
   // scaleRecipe (ing) \u2014 m\u00eame contenu, avec unit:'g' explicite car les
   // vraies recettes n'ont pas ce champ (contrairement au pool statique),
