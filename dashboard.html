@@ -1470,7 +1470,7 @@ body {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="mode-focus.js?v=27"></script>
+<script src="mode-focus.js?v=28"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <!-- R&#232;gles nutritionnelles partag&#233;es (diab&#232;te, c&#339;liaque &#224; venir, FODMAP &#224;
      venir) &#8212; m&#234;me fichier inclus dans plan-fixe.html et recette.html,
@@ -6451,7 +6451,15 @@ function renderMealPlan(){
             return;
           }
 
-          if(recipeFull) gItems = scaleRecipe(recipeFull, mealTarget);
+          if(recipeFull){
+            gItems = scaleRecipe(recipeFull, mealTarget);
+          } else if(!mealData.recipeId && gItems.length && typeof scaleClassiqueToTarget==='function'){
+            // "Votre classique" (mode-focus.js) -- pas de recette à
+            // reproportionner via scaleRecipe, mais les quantités doivent
+            // quand même suivre ce qu'il reste réellement à consommer,
+            // pas rester figées à ce qu'elles étaient au moment du choix.
+            gItems = scaleClassiqueToTarget(gItems, mealTarget, pathos);
+          }
 
           gItems.forEach(function(it){ combinedT.kcal+=it.food.kcal*it.qty/100; combinedT.prot+=it.food.prot*it.qty/100; combinedT.gluc+=it.food.gluc*it.qty/100; combinedT.lip+=it.food.lip*it.qty/100; combinedT.fibres+=pN2(it.food.fibres)*it.qty/100; combinedT.pot+=pN2(it.food.pot)*it.qty/100; combinedT.cal+=pN2(it.food.cal)*it.qty/100; combinedT.fer+=pN2(it.food.fer)*it.qty/100; combinedT.mg+=pN2(it.food.mg)*it.qty/100; combinedT.zn+=pN2(it.food.zn)*it.qty/100; });
           html += '<div class="card mb-12"><div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="card-title">'+meta.i+' '+meta.l

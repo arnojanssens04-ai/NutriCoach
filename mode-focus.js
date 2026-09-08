@@ -519,39 +519,49 @@ async function mealKcalBudget(mealKey){
   return remainingKcal * ((mealPcts[mealKey]||0.2)/sumPct);
 }
 
-// Ajuste les quantit\u00e9s d'un combo "classique" pour se rapprocher du
-// besoin calorique du repas \u2014 seulement \u00e0 la hausse, seulement sur les
-// aliments qui s'y pr\u00eatent, jamais sur les portions \u00e0 taille naturelle
-// fixe (yaourt, fromage blanc...).
-async function adjustClassiqueForGap(items, mealKey){
-  var mealTarget = await mealKcalBudget(mealKey);
-  var currentKcal = items.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
+// Version pure/synchrone du r\u00e9ajustement (pas d'appel r\u00e9seau) \u2014 utilis\u00e9e
+// \u00e0 la fois juste apr\u00e8s le choix d'un "classique" (adjustClassiqueForGap,
+// ci-dessous) ET \u00e0 chaque rendu du plan (renderMealPlan, dashboard.html)
+// pour que les quantit\u00e9s affich\u00e9es restent vraies m\u00eame si le repas n'a
+// pas \u00e9t\u00e9 rouvert depuis le tiroir d'alternatives -- seulement \u00e0 la
+// hausse, seulement sur les aliments qui s'y pr\u00eatent, jamais sur les
+// portions \u00e0 taille naturelle fixe (yaourt, fromage blanc...). Ne modifie
+// jamais le tableau re\u00e7u -- renvoie toujours une copie, pour ne pas
+// alt\u00e9rer silencieusement CURRENT_PLAN au fil des rendus successifs.
+function scaleClassiqueToTarget(items, mealTarget, pathos){
+  var copy = items.map(function(it){ return { food:it.food, qty:it.qty }; });
+  var currentKcal = copy.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
   var gap = mealTarget - currentKcal;
 
   // \u00c9cart trop faible pour justifier d'y toucher, ou d\u00e9j\u00e0 au-dessus \u2014
   // on laisse le classique tel quel (c'est tout le principe de cette
   // alternative : rester fid\u00e8le \u00e0 ce que la personne mange vraiment).
-  if(gap < 80) return items;
+  if(gap < 80) return copy;
 
-  var pathos = (PROF && PROF.pathologies) || [];
-  var avoidDenseSugar = pathos.indexOf('diabetes')>=0;
+  var avoidDenseSugar = ((pathos||[]).indexOf('diabetes'))>=0;
 
   // On identifie quels items du combo peuvent absorber l'\u00e9cart.
-  var flexItems = items.filter(function(it){
+  var flexItems = copy.filter(function(it){
     var n = normalizeTxt(it.food.nom);
     if(FIXED_PORTION_REGEX.test(n)) return false; // jamais ces portions-l\u00e0
     if(DENSE_FLEX_REGEX.test(n) && avoidDenseSugar) return false; // noix/miel \u00e9cart\u00e9s si pathologie concern\u00e9e
     return DENSE_FLEX_REGEX.test(n) || SAFE_FLEX_REGEX.test(n);
   });
 
-  if(!flexItems.length) return items; // rien dans ce combo ne se pr\u00eate \u00e0 l'ajustement, on ne force rien
+  if(!flexItems.length) return copy; // rien dans ce combo ne se pr\u00eate \u00e0 l'ajustement, on ne force rien
 
   var flexKcalTotal = flexItems.reduce(function(s,it){ return s+pN2(it.food.kcal)*it.qty/100; },0);
-  if(flexKcalTotal<=0) return items;
+  if(flexKcalTotal<=0) return copy;
 
   var scaleFactor = Math.min(2.2, (flexKcalTotal+gap)/flexKcalTotal); // jamais plus de 2.2x la quantit\u00e9 d'origine
   flexItems.forEach(function(it){ it.qty = Math.round(it.qty*scaleFactor); });
-  return items;
+  return copy;
+}
+
+async function adjustClassiqueForGap(items, mealKey){
+  var mealTarget = await mealKcalBudget(mealKey);
+  var pathos = (PROF && PROF.pathologies) || [];
+  return scaleClassiqueToTarget(items, mealTarget, pathos);
 }
 
 async function applyClassique(mealKey, idx){
