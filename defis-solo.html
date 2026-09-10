@@ -491,12 +491,24 @@ function applyModeLock(locked){
 // vérifiait que sa PROPRE table (solo_challenges), donc un défi entraide
 // ou un Duel déjà en cours n'empêchait jamais de créer AUSSI un défi solo
 // en parallèle. Bug signalé le 2026-09-05.
+// Un "pending" trop vieux (invitation jamais rejointe, code expiré depuis
+// plus de 10 min) ne doit jamais bloquer indéfiniment la création d'un
+// défi solo -- surtout que le nettoyage automatique de cette ligne
+// n'arrive que si son créateur repasse par SA page d'origine
+// (defis.html/combat.html), ce qui peut ne jamais arriver. Signalé le
+// 2026-09-10.
+function hasFreshBlockingRow(rows){
+  var now = Date.now();
+  return (rows||[]).some(function(r){
+    return r.status==='active' || (now - new Date(r.created_at).getTime()) <= 10*60*1000;
+  });
+}
 async function hasActiveChallengeInOtherModes(){
   var results = await Promise.all([
-    sb.from('duo_challenges').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1),
-    sb.from('duo_combats').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+    sb.from('duo_challenges').select('id,status,created_at').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']),
+    sb.from('duo_combats').select('id,status,created_at').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active'])
   ]);
-  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
+  return hasFreshBlockingRow(results[0].data) || hasFreshBlockingRow(results[1].data);
 }
 
 async function loadMySoloChallenge(){

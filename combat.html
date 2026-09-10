@@ -515,12 +515,23 @@ async function expireStalePendingCombats(list){
 // vérifiait que sa PROPRE table (duo_combats), donc un défi solo ou
 // entraide déjà en cours n'empêchait jamais de créer AUSSI un duel en
 // parallèle. Bug signalé le 2026-09-05.
+// Un "pending" trop vieux (invitation jamais rejointe depuis plus de
+// 10 min) ne doit jamais bloquer indéfiniment -- le nettoyage
+// automatique de cette ligne n'arrive que si son créateur repasse par SA
+// page d'origine (defis.html), ce qui peut ne jamais arriver. Signalé
+// le 2026-09-10.
+function hasFreshBlockingRow(rows){
+  var now = Date.now();
+  return (rows||[]).some(function(r){
+    return r.status==='active' || (now - new Date(r.created_at).getTime()) <= 10*60*1000;
+  });
+}
 async function hasActiveChallengeInOtherModes(){
   var results = await Promise.all([
     sb.from('solo_challenges').select('id').eq('user_id',USER.id).eq('status','active').limit(1),
-    sb.from('duo_challenges').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+    sb.from('duo_challenges').select('id,status,created_at').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active'])
   ]);
-  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
+  return !!(results[0].data && results[0].data.length) || hasFreshBlockingRow(results[1].data);
 }
 
 async function loadMyCombat(){

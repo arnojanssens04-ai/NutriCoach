@@ -912,6 +912,11 @@ async function evaluateAndRender(challenge, container){
     + daysBlockHtml
     + (waitingPartner || isCancelled ? '' : '<button type="button" class="chal-cheer-btn" onclick="sendCheer('+JSON.stringify(partnerName)+')">&#128079; Encourager '+esc(partnerName)+'</button>')
     + (challenge.status==='active' ? '<button type="button" class="chal-abandon" onclick="abandonDuoChallenge(\''+challenge.id+'\')">Abandonner ce défi</button>' : '')
+    // "En attente" ne se débloquait qu'après 10 minutes (expiration
+    // automatique) ou jamais si le créateur ne repasse pas sur CETTE page
+    // précise -- un bouton manuel évite de rester coincé si le partenaire
+    // ne rejoint jamais. Signalé le 2026-09-10.
+    + (waitingPartner ? '<button type="button" class="chal-abandon" onclick="abandonDuoChallenge(\''+challenge.id+'\')">Annuler l\'invitation</button>' : '')
     + (challenge.status==='active' ? renderDuoSimPanel(challenge, tpl, start) : '')
     + '</div>';
 }
@@ -967,12 +972,23 @@ async function expireStalePendingChallenges(list){
 // en parallèle (le verrou visuel entre modes, applyModeLock, ne protégeait
 // que contre la navigation via les liens de l'app, pas contre un accès
 // direct à cette page). Bug signalé le 2026-09-05.
+// Un "pending" trop vieux (invitation jamais rejointe depuis plus de
+// 10 min) ne doit jamais bloquer indéfiniment -- le nettoyage
+// automatique de cette ligne n'arrive que si son créateur repasse par SA
+// page d'origine (combat.html), ce qui peut ne jamais arriver. Signalé
+// le 2026-09-10.
+function hasFreshBlockingRow(rows){
+  var now = Date.now();
+  return (rows||[]).some(function(r){
+    return r.status==='active' || (now - new Date(r.created_at).getTime()) <= 10*60*1000;
+  });
+}
 async function hasActiveChallengeInOtherModes(){
   var results = await Promise.all([
     sb.from('solo_challenges').select('id').eq('user_id',USER.id).eq('status','active').limit(1),
-    sb.from('duo_combats').select('id').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active']).limit(1)
+    sb.from('duo_combats').select('id,status,created_at').or('creator_id.eq.'+USER.id+',partner_id.eq.'+USER.id).in('status',['pending','active'])
   ]);
-  return !!((results[0].data && results[0].data.length) || (results[1].data && results[1].data.length));
+  return !!(results[0].data && results[0].data.length) || hasFreshBlockingRow(results[1].data);
 }
 
 // Tant qu'un défi entraide est en cours (en attente ou actif), on masque
