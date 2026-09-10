@@ -2425,11 +2425,18 @@ function calcNutritionalQuality(entries, tgt){
   // soit leur type) \u2014 sinon un objectif calorique \u00e9lev\u00e9 (ex. 3500kcal)
   // d\u00e9clenchait ce message d\u00e8s le petit-d\u00e9jeuner seul, ce qui n'a rien
   // \u00e0 voir avec "manger moins que d'habitude".
+  // Re-corrig\u00e9 le 2026-09-10 : "au moins 3 repas" restait insuffisant pour
+  // un objectif \u00e9lev\u00e9 (ex. 3542kcal) -- avec breakfast+lunch+snack
+  // enregistr\u00e9s (3 types) mais souper/collation 2 encore \u00e0 venir, le ratio
+  // passe sous 70% en plein milieu de journ\u00e9e normale, avant m\u00eame d'avoir
+  // fini de manger. D\u00e9sormais on exige que TOUS les repas actifs de la
+  // journ\u00e9e soient enregistr\u00e9s (allMealsCovered) avant de conclure \u00e0 un
+  // "moins mang\u00e9 que d'habitude".
   var kcalRatio = tgt.kcal>0 ? T.kcal/tgt.kcal : 1;
   var satietyOk = (typeof SATIETY_TODAY!=='undefined') && SATIETY_TODAY===true;
   var mealTypesLogged = {};
   entries.forEach(function(e){ if(e.repas) mealTypesLogged[e.repas]=true; });
-  var enoughMealsLogged = Object.keys(mealTypesLogged).length >= 3;
+  var enoughMealsLogged = activeMealIds().every(function(m){ return mealTypesLogged[m]; });
   if(!satietyOk && enoughMealsLogged && kcalRatio>0 && kcalRatio<0.7){
     score = Math.min(score, 82);
     tips.push({priority:0, msg:'Vous avez mang\u00e9 nettement moins que d\'habitude aujourd\'hui \u2014 pas de souci si c\'est ponctuel, mais si \u00e7a devient r\u00e9gulier, parlez-en \u00e0 votre di\u00e9t\u00e9ticien.'});
