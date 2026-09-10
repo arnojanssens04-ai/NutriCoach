@@ -2832,6 +2832,12 @@ async function delEntry(id){
   if(r.error){ toast('\u274c Erreur suppression'); console.error(r.error); return; }
   afterJournalChange();
 }
+var JOURNAL_ENTRIES_BY_ID = {};
+function updQtyFromInput(id,val){
+  var e = JOURNAL_ENTRIES_BY_ID[id];
+  if(!e) return;
+  updQty(id, parseFloat(val), e);
+}
 async function updQty(id,qty,e){
   var r = await sb.from('journal').update({quantite:qty,kcal:(e.food_kcal_100||0)*qty/100,proteines:(e.food_prot_100||0)*qty/100,glucides:(e.food_gluc_100||0)*qty/100,lipides:(e.food_lip_100||0)*qty/100}).eq('id',id);
   if(r.error){ toast('\u274c Erreur mise \u00e0 jour'); console.error(r.error); return; }
@@ -4407,10 +4413,18 @@ async function refreshJournal(){
   var entries=await getEntries();
   var mine=entries.filter(function(e){return e.repas===activeMeal;});
   var az=document.getElementById('added-zone');
+  // JOURNAL_ENTRIES_BY_ID sert de table de correspondance pour updQty --
+  // avant, l'entr\u00e9e enti\u00e8re \u00e9tait s\u00e9rialis\u00e9e en JSON directement dans
+  // l'attribut onchange (avec un remplacement " -> ' pour l'imbriquer dans
+  // du HTML), ce qui cassait d\u00e8s qu'un aliment contenait une vraie
+  // apostrophe (ex: "Flocons d'avoine") : celle-ci refermait pr\u00e9matur\u00e9ment
+  // l'attribut, rendant le changement de quantit\u00e9 silencieusement inop\u00e9rant.
+  JOURNAL_ENTRIES_BY_ID = {};
+  mine.forEach(function(e){ JOURNAL_ENTRIES_BY_ID[e.id] = e; });
   if(!mine.length){az.innerHTML='<div class="empty"><p>Aucun aliment \u2014 recherchez ci-dessus</p></div>';}
   else az.innerHTML=mine.map(function(e){
     var kcalPart = (PROF && PROF.hide_exact_kcal===true) ? '' : '<span class="added-kcal">'+e.kcal.toFixed(0)+' kcal</span>';
-    return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'\u2026':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQty(\''+e.id+'\',parseFloat(this.value),'+JSON.stringify(e).replace(/"/g,"'")+')" /><span style="font-size:.67rem;color:var(--text3)">g</span>'+kcalPart+'<button class="added-del" onclick="delEntry(\''+e.id+'\')">\u2715</button></div>';
+    return '<div class="added-item"><span class="added-name">'+esc(e.aliment.length>32?e.aliment.slice(0,32)+'\u2026':e.aliment)+'</span><input class="added-qty" type="number" value="'+e.quantite+'" min="1" max="5000" onchange="updQtyFromInput(\''+e.id+'\',this.value)" /><span style="font-size:.67rem;color:var(--text3)">g</span>'+kcalPart+'<button class="added-del" onclick="delEntry(\''+e.id+'\')">\u2715</button></div>';
   }).join('');
   var glycEl = document.getElementById('journal-glyc-badge');
   if(glycEl) glycEl.innerHTML = (typeof renderMealTagsHTML==='function') ? renderMealTagsHTML(mine, (PROF && PROF.pathologies) || []) : '';
