@@ -81,6 +81,9 @@ body { font-family:'Inter',sans-serif; color:var(--text); -webkit-font-smoothing
 .msg-edit-cancel { background:var(--bg2); color:var(--text2); }
 .msg-edit-save { background:var(--gold); color:#fff; }
 .bubble-sender { font-size:.72rem; color:var(--gold); font-weight:700; margin-bottom:2px; }
+.bubble-sender-auto { color:var(--text2); }
+.bubble-human-btn { display:block; margin-top:6px; background:none; border:1px solid var(--gold); color:var(--gold); font-size:.74rem; font-weight:600; padding:6px 12px; border-radius:999px; cursor:pointer; }
+.bubble-human-btn:hover { background:var(--gold); color:#fff; }
 .read-tick { font-size:.78rem; }
 .read-tick.sent { color:var(--tick-sent); }
 .read-tick.read { color:var(--tick-read); }
@@ -229,7 +232,7 @@ async function loadMessages(){
   document.getElementById('quick-react-chips').style.display = msgs.length ? 'flex' : 'none';
 
   if(!msgs.length){
-    thread.innerHTML = '<div class="empty-hint"><strong>Bienvenue dans votre espace assistance</strong>Une vraie personne vous r\u00e9pond ici \u2014 pas un robot. Posez votre question ou choisissez un sujet ci-dessous.</div>';
+    thread.innerHTML = '<div class="empty-hint"><strong>Bienvenue dans votre espace assistance</strong>Une vraie personne vous r\u00e9pond ici. Quelques rappels automatiques peuvent appara\u00eetre (clairement identifi\u00e9s), le reste vient toujours de l\'\u00e9quipe Cap Sant\u00e9. Posez votre question ou choisissez un sujet ci-dessous.</div>';
     return;
   }
 
@@ -241,6 +244,7 @@ async function loadMessages(){
     var withinEditWindow = isMine && !isDeleted && (Date.now()-parseUTC(m.created_at).getTime()) < 5*60*1000;
     var editedTag = m.edited_at ? '<span class="msg-edited-tag"> \u00b7 modifi\u00e9</span>' : '';
 
+    var isAuto = isAdmin && !!m.is_auto;
     var avatarHtml = isAdmin ? '<div class="bubble-av">&#127793;</div>' : '';
 
     if(isDeleted){
@@ -267,10 +271,22 @@ async function loadMessages(){
       +'</div>'
     ) : '';
 
+    var senderLabelHtml = isAdmin
+      ? (isAuto
+          ? '<div class="bubble-sender bubble-sender-auto">Message automatique</div>'
+          : '<div class="bubble-sender">Support Cap Sant\u00e9</div>')
+      : '';
+    // Bouton "parler \u00e0 un humain" -- uniquement sous un message automatique,
+    // pour offrir une sortie imm\u00e9diate vers un vrai di\u00e9t\u00e9ticien plut\u00f4t que
+    // de laisser croire que la conversation s'arr\u00eate l\u00e0.
+    var humanBtnHtml = isAuto ? '<button class="bubble-human-btn" onclick="requestHuman()">Parler \u00e0 un vrai di\u00e9t\u00e9ticien \u2192</button>' : '';
+
     return '<div class="bubble-row '+(isAdmin?'from-admin':'from-user')+'">'
       +avatarHtml
-      +'<div><div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+(isAdmin?'<div class="bubble-sender">Support Cap Sant\u00e9</div>':'')+esc(m.content)+attachHtml+'</div>'
-      +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+' '+readTick+'</div></div>'
+      +'<div><div class="'+bubbleCls+'" id="bubble-content-'+m.id+'">'+senderLabelHtml+esc(m.content)+attachHtml+'</div>'
+      +'<div class="bubble-time">'+fmtTime(m.created_at)+editedTag+' '+readTick+'</div>'
+      +humanBtnHtml
+      +'</div>'
       +menuHtml
       +'</div>';
   }).join('');
@@ -366,10 +382,18 @@ async function sendAutoMessage(content){
     user_id: USER.id,
     sender_id: '00000000-0000-0000-0000-000000000000',
     is_admin_sender: true,
+    is_auto: true,
     content: content,
     read_by_user: false,
     read_by_admin: true
   });
+}
+
+// Pré-remplit le champ avec une demande explicite plutôt que d'envoyer
+// directement -- la personne garde la main pour ajuster sa question avant
+// d'interpeller un vrai diététicien.
+function requestHuman(){
+  quickReply('Bonjour, je souhaiterais parler à un vrai diététicien.');
 }
 
 function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
