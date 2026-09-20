@@ -37,6 +37,7 @@
   --plan-leg:     #4a7a3a; --plan-leg-l:     rgba(74,122,58,0.1);
   --plan-fruit:   #b3572e; --plan-fruit-l:   rgba(179,87,46,0.1);
   --plan-lip:     #8b7018; --plan-lip-l:     rgba(139,112,24,0.1);
+  --plan-laitier: #5c5c8a; --plan-laitier-l: rgba(92,92,138,0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--bg); }
@@ -705,8 +706,19 @@ body {
 .plan-alt-chip { font-size:.7rem; padding:3px 9px; border-radius:999px; border:1px solid currentColor; background:var(--card); }
 .print-plan-btn { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:14px; padding:10px; border-radius:12px; border:1px solid var(--border2); background:var(--card); font-size:.82rem; font-weight:600; color:var(--text); cursor:pointer; }
 @media print {
-  .bnav, .mp-swap, .mp-recipe-link, .print-plan-btn, .mealplan-diabetes-note, #mealplan-mode-badge { display:none!important; }
-  .plan-cat-row { border:1px solid #999; background:#fff!important; }
+  /* Ne garder que le plan lui-même à l'impression -- pas la nav, pas le
+     bilan chiffré, pas les alertes -- pour que ça tienne sur UNE page
+     plutôt que de déborder sur 2-3 pages avec plein d'éléments qui n'ont
+     aucun intérêt une fois sur papier. */
+  @page { size:auto; margin:10mm; }
+  body * { visibility:hidden; }
+  #pg-mealplan, #pg-mealplan * { visibility:visible; }
+  #pg-mealplan { position:absolute; left:0; top:0; width:100%; }
+  .bnav, .mp-swap, .mp-recipe-link, .print-plan-btn, .mealplan-diabetes-note, #mealplan-mode-badge,
+  .btn-back, #mp-totals-card, #mp-totals-focus-note, #mp-micro-card, #mp-alerts,
+  #mealplan-mode-note, #mp-regen-btn, #mp-day-validated { display:none!important; }
+  .card { box-shadow:none; border:1px solid #ccc; margin-bottom:8px!important; page-break-inside:avoid; }
+  .plan-cat-row { border:1px solid #999; background:#fff!important; padding:6px 8px; margin:3px 0; page-break-inside:avoid; }
   .plan-cat-dot { display:none; }
 }
 .mp-swap:hover { background:rgba(45,79,28,0.15); }
@@ -6348,14 +6360,16 @@ var PLAN_CATEGORY_META = {
   fecul: { label:'Féculents',        color:'var(--plan-fecul)', colorL:'var(--plan-fecul-l)', repere:'1 poing fermé' },
   leg:   { label:'Légumes',          color:'var(--plan-leg)',   colorL:'var(--plan-leg-l)',   repere:'2 poignées' },
   fruit: { label:'Fruits',           color:'var(--plan-fruit)', colorL:'var(--plan-fruit-l)', repere:'1 poignée' },
-  lip:   { label:'Matière grasse',   color:'var(--plan-lip)',   colorL:'var(--plan-lip-l)',   repere:'1 cuillère à soupe' }
+  lip:   { label:'Matière grasse',   color:'var(--plan-lip)',   colorL:'var(--plan-lip-l)',   repere:'1 cuillère à soupe' },
+  laitier: { label:'Laitier',        color:'var(--plan-laitier)', colorL:'var(--plan-laitier-l)', repere:'1 pot ou portion' }
 };
 var PLAN_CATEGORY_ALTS = {
   prot:  ['Poulet','Œufs','Tofu','Saumon','Dinde','Lentilles','Cabillaud','Steak haché 5%'],
   fecul: ['Riz complet','Quinoa','Pâtes complètes','Pomme de terre','Patate douce','Boulgour'],
   leg:   ['Brocoli','Courgette','Épinards','Haricots verts','Poivron','Carotte'],
   fruit: ['Pomme','Banane','Orange','Kiwi','Fraises','Poire'],
-  lip:   ["Huile d'olive",'Avocat','Amandes','Beurre','Noix']
+  lip:   ["Huile d'olive",'Avocat','Amandes','Beurre','Noix'],
+  laitier: ['Yaourt nature','Fromage blanc','Skyr','Petit-suisse','Fromage','Lait']
 };
 function classifyPlanCategory(nom){
   var n = normalizeTxt(String(nom||''));
@@ -6363,6 +6377,7 @@ function classifyPlanCategory(nom){
   if(/pain|pate|riz|quinoa|cereale|flocon|semoule|boulgour|pomme de terre|patate douce/.test(n)) return 'fecul';
   if(/pomme|poire|banane|orange|kiwi|fraise|raisin|peche|abricot|cerise|framboise|myrtille|mangue|ananas|clementine|mandarine|pamplemousse|melon|pasteque/.test(n)) return 'fruit';
   if(/huile|beurre|avocat|noix|amande|noisette/.test(n)) return 'lip';
+  if(/yaourt|yoghourt|yoghurt|fromage blanc|skyr|petit.suisse|fromage|lait(?! d'avoine| d'amande| de soja| de coco)/.test(n)) return 'laitier';
   if(isLegume(nom)) return 'leg';
   return null;
 }
