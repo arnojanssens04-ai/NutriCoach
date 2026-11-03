@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ashwagandha vrai ou faux</title>
+<style>
+@font-face{font-family:'Inter';src:url(fonts/inter.woff2) format('woff2');font-weight:100 900;}
+@font-face{font-family:'Lora';src:url(fonts/lora.woff2) format('woff2');font-weight:400 700;}
+@font-face{font-family:'Lora';src:url(fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+:root{
+  --green:#2D5A43; --green-2:#3E7457; --sage:#4A7A3A; --soft:#EAF2ED;
+  --terra:#E07A5F; --terra-soft:#FBE7E0; --cream:#FBF9F5; --ink:#1A201C;
+  --muted:#65726A; --line:#E6E1D8; --red:#C0392B; --amber:#D9962B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#111;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;color:var(--ink)}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;background:var(--cream);transform-origin:center center;flex:none}
+.abs{position:absolute}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal}
+
+/* background */
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55}
+.b1{width:900px;height:900px;background:radial-gradient(circle,#CFE3D6 0%,rgba(207,227,214,0) 70%);left:-300px;top:-200px}
+.b2{width:800px;height:800px;background:radial-gradient(circle,#F6D5C8 0%,rgba(246,213,200,0) 70%);right:-300px;top:700px}
+.b3{width:900px;height:900px;background:radial-gradient(circle,#DCE9D2 0%,rgba(220,233,210,0) 70%);left:-200px;bottom:-350px}
+#warmth{position:absolute;inset:0;background:linear-gradient(180deg,#FFF1EA 0%,#FBF9F5 60%);opacity:0}
+.grain{position:absolute;inset:0;opacity:.05;background-image:radial-gradient(#000 1px,transparent 1px);background-size:6px 6px}
+
+/* chrome */
+#prog{position:absolute;top:70px;left:60px;right:60px;display:flex;gap:10px;z-index:20}
+#prog div{flex:1;height:8px;border-radius:8px;background:rgba(45,90,67,.15);overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:var(--green);border-radius:8px}
+#brand{position:absolute;top:110px;left:60px;display:flex;align-items:center;gap:14px;font-weight:800;font-size:30px;color:var(--green);z-index:20;letter-spacing:-.5px}
+#brand img{width:54px;height:54px;border-radius:14px}
+#tag{position:absolute;top:116px;right:60px;font-weight:700;font-size:24px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;z-index:20;padding:10px 18px;border:2px solid var(--line);border-radius:30px;background:rgba(255,255,255,.6)}
+
+/* captions */
+#cap{position:absolute;left:70px;right:70px;bottom:300px;display:flex;justify-content:center;z-index:30}
+#capbox{background:var(--ink);color:#fff;font-weight:800;font-size:54px;line-height:1.22;padding:24px 34px;border-radius:28px;text-align:center;max-width:940px;box-shadow:0 20px 50px rgba(0,0,0,.18);letter-spacing:-.5px}
+#capbox span{transition:none;opacity:.55}
+#capbox span.on{opacity:1}
+#capbox span.cur{color:#FFB59E;opacity:1}
+
+/* scenes */
+.scene{position:absolute;left:0;right:0;top:200px;height:1200px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0}
+.serif{font-family:'Lora',serif}
+.chip{display:inline-flex;align-items:center;gap:14px;padding:16px 28px;border-radius:999px;font-weight:800;font-size:38px;background:#fff;border:3px solid var(--line);white-space:nowrap}
+.card{background:#fff;border-radius:44px;border:2px solid var(--line);box-shadow:0 24px 60px rgba(26,32,28,.08)}
+.header{font-weight:900;font-size:34px;letter-spacing:4px;text-transform:uppercase;color:var(--green);display:flex;gap:14px;align-items:center}
+
+/* S1 */
+#s1 h1{font-family:'Lora',serif;font-weight:700;font-size:150px;letter-spacing:-4px;color:var(--green);line-height:1}
+#t1b{margin-top:34px;font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:96px;color:#fff;background:var(--terra);padding:6px 46px 18px;border-radius:30px;transform-origin:center}
+#marq{width:1080px;overflow:hidden;margin-top:90px;height:120px;position:relative}
+#track{position:absolute;left:0;top:10px;display:flex;gap:22px;white-space:nowrap}
+#sprig{width:330px;height:330px;margin-bottom:10px}
+
+/* S2 jars */
+#jars{display:grid;grid-template-columns:repeat(2,330px);gap:44px 70px;margin-top:40px}
+.jar{width:330px;height:400px;position:relative;transform-origin:50% 100%}
+.jar svg{width:100%;height:100%;overflow:visible}
+#study{position:absolute;bottom:40px;left:50%;}
+#study .chip{background:var(--green);color:#fff;border-color:var(--green);font-size:46px;padding:24px 40px;box-shadow:0 20px 50px rgba(45,90,67,.35)}
+
+/* verdict cards */
+.vcard{width:940px;padding:40px 46px;margin:22px 0}
+.vrow{display:flex;align-items:center;gap:28px}
+.vicon{width:118px;height:118px;border-radius:34px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:66px;flex:none}
+.vtitle{font-family:'Lora',serif;font-weight:700;font-size:60px;letter-spacing:-1px;line-height:1.05}
+.gauge{margin-top:34px;height:30px;border-radius:30px;background:#EFEBE4;position:relative;overflow:hidden}
+.gauge i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:30px;background:linear-gradient(90deg,var(--sage),var(--green-2))}
+.gl{display:flex;justify-content:space-between;margin-top:12px;font-size:26px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.verdict{margin-top:26px;display:flex;align-items:center;gap:20px;font-size:46px;font-weight:800}
+.verdict small{display:block;font-size:30px;font-weight:600;color:var(--muted);margin-top:4px}
+.half{width:78px;height:78px;flex:none}
+
+#actifs{margin-top:46px}
+#actifs .chip{font-size:50px;padding:24px 42px;background:var(--terra-soft);border-color:var(--terra);color:#8A3B26}
+
+/* S5 */
+#poidsWrap{position:relative;display:inline-block}
+#poids{font-family:'Lora',serif;font-weight:700;font-size:250px;color:var(--ink);letter-spacing:-6px;line-height:1}
+#strike{position:absolute;left:-20px;top:52%;height:26px;background:var(--red);border-radius:20px;width:0;transform:rotate(-6deg);transform-origin:left center}
+#xstamp{position:absolute;right:-90px;top:-80px;width:200px;height:200px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:150px;font-weight:900;box-shadow:0 20px 50px rgba(192,57,43,.35)}
+#noeff{margin-top:80px;text-align:center}
+#noeff b{display:block;font-size:68px;font-weight:900;letter-spacing:-1px}
+#noeff span{display:inline-block;margin-top:20px;font-size:38px;color:var(--muted);font-weight:600}
+
+/* S6 */
+#att{font-family:'Lora',serif;font-weight:700;font-size:110px;color:var(--amber);letter-spacing:-2px;margin-bottom:50px}
+.crow{width:900px;display:flex;align-items:center;gap:30px;padding:34px 44px;margin:16px 0}
+.crow .emo{font-size:70px}
+.crow b{font-size:58px;font-weight:800;letter-spacing:-1px}
+#c3{border:4px solid var(--terra);background:var(--terra-soft)}
+#c3 b{font-family:'Lora',serif;font-size:80px;color:#8A3B26}
+
+/* S7 */
+#liver{width:940px;padding:34px 40px;display:flex;align-items:center;gap:28px;background:#FDECEA;border:3px solid #F1B3AC;border-radius:40px}
+#liver .emo{font-size:76px}
+#liver b{font-size:52px;font-weight:900;color:var(--red);letter-spacing:-1px;line-height:1.1}
+#anses{width:940px;margin-top:34px;overflow:hidden}
+#anses .top{background:var(--green);color:#fff;padding:28px 44px;display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:40px;letter-spacing:2px}
+#anses .top span{font-weight:700;font-size:30px;opacity:.85;letter-spacing:1px}
+#anses .body{padding:30px 44px 40px}
+#anses h3{font-family:'Lora',serif;font-size:56px;font-weight:700;margin-bottom:14px}
+.li{display:flex;align-items:center;gap:24px;padding:20px 0;border-top:2px solid #F0ECE5;font-size:44px;font-weight:700}
+.li .emo{font-size:56px;width:70px;text-align:center}
+.mini{display:inline-block;padding:8px 22px;border-radius:999px;background:var(--soft);color:var(--green);font-weight:800;font-size:38px;margin-right:12px}
+#doc{margin-top:34px}
+#doc .chip{background:var(--green);color:#fff;border-color:var(--green);font-size:42px;padding:24px 38px;white-space:normal;text-align:left;max-width:940px}
+
+/* S8 */
+#plane{width:260px;height:260px}
+#send{font-weight:900;font-size:80px;letter-spacing:-2px;text-align:center;line-height:1.08;margin-top:20px}
+#send em{font-style:normal;color:var(--terra)}
+#calm{font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:96px;color:var(--green);margin-top:70px;text-align:center;line-height:1.05}
+#bye{margin-top:70px;display:flex;align-items:center;gap:22px;font-weight:800;font-size:46px;color:var(--green)}
+#bye img{width:110px;height:110px;border-radius:28px;box-shadow:0 14px 36px rgba(45,90,67,.25)}
+
+#ctrl{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;align-items:center;padding:10px 16px;background:rgba(0,0,0,.6);color:#fff;font:600 14px Inter,sans-serif;z-index:99}
+#ctrl input{flex:1}
+#ctrl button{background:#fff;border:0;border-radius:8px;padding:6px 14px;font-weight:700;cursor:pointer}
+body.render #ctrl{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div id="warmth"></div>
+  <div class="grain"></div>
+
+  <div id="prog"></div>
+  <div id="brand"><img src="../../logo-capsante.png" alt="">CapSanté</div>
+  <div id="tag">Vrai ou faux</div>
+
+  <!-- S1 hook -->
+  <section class="scene" id="s1">
+    <svg id="sprig" viewBox="0 0 300 300">
+      <path id="stem" d="M150 285 C150 220 148 160 152 60" stroke="#2D5A43" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <g id="leaves">
+        <path class="leaf" d="M150 230 C110 225 70 200 55 160 C95 160 135 185 150 230Z" fill="#4A7A3A"/>
+        <path class="leaf" d="M151 190 C190 185 230 160 245 120 C205 120 165 145 151 190Z" fill="#3E7457"/>
+        <path class="leaf" d="M151 145 C115 140 85 115 75 80 C110 82 140 105 151 145Z" fill="#5E8F4C"/>
+        <path class="leaf" d="M152 105 C180 100 205 80 215 50 C185 52 160 70 152 105Z" fill="#4A7A3A"/>
+      </g>
+      <g id="berry">
+        <path d="M152 62 C130 62 118 82 122 102 C128 128 176 128 182 102 C186 82 174 62 152 62Z" fill="#F3D9A4" opacity=".9"/>
+        <circle cx="152" cy="96" r="22" fill="#E07A5F"/>
+        <circle cx="145" cy="89" r="6" fill="#fff" opacity=".6"/>
+      </g>
+    </svg>
+    <h1 id="t1">Ashwagandha</h1>
+    <div id="t1b">vrai ou faux&nbsp;?</div>
+    <div id="marq"><div id="track"></div></div>
+  </section>
+
+  <!-- S2 jars -->
+  <section class="scene" id="s2">
+    <div class="header" id="h2"><span class="emo">👂</span> Ce qu'on entend</div>
+    <div id="jars"></div>
+    <div id="study"><span class="chip"><span class="emo">📚</span> Ce que disent les études</span></div>
+  </section>
+
+  <!-- S3 stress + sleep -->
+  <section class="scene" id="s3">
+    <div class="header" id="h3"><span class="emo">🔬</span> Verdict des études</div>
+    <div class="card vcard" id="vc1">
+      <div class="vrow"><div class="vicon emo">😰</div><div class="vtitle">Stress &amp; anxiété</div></div>
+      <div class="gauge"><i id="g1"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="verdict" id="vd1"><svg class="half" viewBox="0 0 80 80"></svg><div>Effet modeste<small>sur quelques semaines</small></div></div>
+    </div>
+    <div class="card vcard" id="vc2">
+      <div class="vrow"><div class="vicon emo">😴</div><div class="vtitle">Sommeil</div></div>
+      <div class="gauge"><i id="g2"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="verdict" id="vd2"><svg class="half" viewBox="0 0 80 80"></svg><div>Petit bénéfice possible</div></div>
+    </div>
+  </section>
+
+  <!-- S4 muscle -->
+  <section class="scene" id="s4">
+    <div class="header" id="h4"><span class="emo">🔬</span> Verdict des études</div>
+    <div class="card vcard" id="vc3">
+      <div class="vrow"><div class="vicon emo" id="dumb">💪</div><div class="vtitle">Muscle &amp; force</div></div>
+      <div class="gauge"><i id="g3"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="verdict" id="vd3"><svg class="half" viewBox="0 0 80 80"></svg><div>Un peu plus de force</div></div>
+    </div>
+    <div id="actifs"><span class="chip"><span class="emo">🏃</span> surtout chez les actifs</span></div>
+  </section>
+
+  <!-- S5 weight -->
+  <section class="scene" id="s5">
+    <div class="header" id="h5"><span class="emo">⚖️</span> Et pour maigrir&nbsp;?</div>
+    <div style="height:90px"></div>
+    <div id="poidsWrap"><div id="poids">poids</div><div id="strike"></div><div id="xstamp">✕</div></div>
+    <div id="noeff"><b>Aucun effet significatif</b><span>ni sur le poids, ni sur la graisse</span></div>
+  </section>
+
+  <!-- S6 caveats -->
+  <section class="scene" id="s6">
+    <div id="att">Mais attention</div>
+    <div class="card crow" id="c1"><span class="emo">⏱️</span><b>Essais courts</b></div>
+    <div class="card crow" id="c2"><span class="emo">🧪</span><b>Extraits différents</b></div>
+    <div class="card crow" id="c3"><span class="emo">🔭</span><b>Peu de recul</b></div>
+  </section>
+
+  <!-- S7 safety -->
+  <section class="scene" id="s7">
+    <div id="liver"><span class="emo">⚠️</span><b>Des cas d'atteinte du foie ont été signalés</b></div>
+    <div class="card" id="anses">
+      <div class="top">ANSES <span>juin 2024</span></div>
+      <div class="body">
+        <h3>Déconseillée&nbsp;:</h3>
+        <div class="li" id="l1"><span class="emo">🤰</span>Enceinte ou allaitante</div>
+        <div class="li" id="l2"><span class="emo">🔞</span>Moins de 18 ans</div>
+        <div class="li" id="l3"><span class="emo">🩺</span><div>Souci de <span class="mini" id="m1">thyroïde</span><span class="mini" id="m2">foie</span><span class="mini" id="m3">cœur</span></div></div>
+      </div>
+    </div>
+    <div id="doc"><span class="chip"><span class="emo">💬</span> Parles-en à ton médecin ou ton pharmacien avant</span></div>
+  </section>
+
+  <!-- S8 outro -->
+  <section class="scene" id="s8">
+    <svg id="plane" viewBox="0 0 200 200">
+      <path d="M20 95 L180 25 L130 175 L98 118 Z" fill="#E07A5F"/>
+      <path d="M98 118 L180 25 L80 128 Z" fill="#B85A42"/>
+      <path d="M98 118 L95 160 L118 138 Z" fill="#9C4A35"/>
+    </svg>
+    <div id="send">Envoie ça à quelqu'un<br><em>qui en prend</em></div>
+    <div id="calm">Mange l'esprit<br>tranquille.</div>
+    <div id="bye"><img src="../../logo-capsante.png" alt="">À bientôt <span class="emo">👋</span></div>
+  </section>
+
+  <div id="cap"><div id="capbox"></div></div>
+</div>
+
+<div id="ctrl"><button id="pp">▶︎</button><input id="scrub" type="range" min="0" max="55" step="0.01" value="0"><span id="tc">0.00</span></div>
+
+<script>
+const DUR = 55;
+const SCENES = [[0,3],[3,8],[8,17],[17,25],[25,30],[30,36],[36,48],[48,55]];
+const CAPS = [
+  [0,1.8,"Ashwagandha : stress, sommeil, muscles, mémoire…"],
+  [1.8,3,"une seule plante pour tout ça ?"],
+  [3,5,"On entend qu'elle calme le stress, aide à dormir,"],
+  [5,6.8,"fait gagner du muscle, et même qu'elle fait maigrir."],
+  [6.8,8,"J'ai regardé ce que disent les études."],
+  [8,10,"Pour le stress et l'anxiété :"],
+  [10,12.8,"un effet modeste, sur quelques semaines."],
+  [12.8,14.3,"Pour le sommeil :"],
+  [14.3,17,"un petit bénéfice possible."],
+  [17,19,"Pour le muscle :"],
+  [19,21.5,"un peu plus de force,"],
+  [21.5,25,"surtout chez les gens déjà actifs."],
+  [25,26.8,"Et perdre du poids ?"],
+  [26.8,30,"Aucun effet significatif sur le poids ni sur la graisse."],
+  [30,31.5,"Mais attention :"],
+  [31.5,34,"essais courts, extraits différents,"],
+  [34,36,"et peu de recul."],
+  [36,39,"Et des cas d'atteinte du foie ont été signalés."],
+  [39,41.8,"L'ANSES la déconseille aux femmes enceintes ou allaitantes,"],
+  [41.8,43.2,"aux moins de 18 ans,"],
+  [43.2,45.6,"et en cas de souci de thyroïde, de foie ou de cœur."],
+  [45.6,48,"Parles-en à ton médecin ou à ton pharmacien avant."],
+  [48,50.5,"Envoie ça à quelqu'un qui en prend."],
+  [50.5,53,"Mange l'esprit tranquille."],
+  [53,55,"À bientôt."]
+];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const clamp = (x,a=0,b=1) => Math.min(b,Math.max(a,x));
+const p = (t,a,b) => clamp((t-a)/(b-a));
+const eo = x => 1-Math.pow(1-x,3);
+const eio = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+const eb = x => { const c1=1.9,c3=c1+1; return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2); };
+function tf(el,{o=1,x=0,y=0,s=1,r=0}={}){ el.style.opacity=o; el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; }
+function pop(t,st,d=.5,dy=50){ const k=p(t,st,st+d); return {o:clamp(k*3), s:.7+.3*eb(k), y:(1-eo(k))*dy}; }
+function rise(t,st,d=.6,dy=70){ const k=eo(p(t,st,st+d)); return {o:k, y:(1-k)*dy}; }
+function sceneVis(t,i){ const [a,b]=SCENES[i]; const fin = i===0 ? 1 : p(t,a-.12,a+.25); const fout = i===SCENES.length-1 ? 1 : 1-p(t,b-.18,b+.12); return Math.min(fin,fout); }
+
+/* ---------- build dynamic DOM ---------- */
+const prog = $('#prog');
+SCENES.forEach(()=>{ const d=document.createElement('div'); d.innerHTML='<i></i>'; prog.appendChild(d); });
+const progBars = [...prog.querySelectorAll('i')];
+
+const CHIPS = [["😰","stress"],["😴","sommeil"],["💪","muscles"],["🧠","mémoire"],["⚖️","poids"],["⚡","énergie"],["❤️","libido"],["🧘","anxiété"]];
+const track = $('#track');
+track.innerHTML = [...CHIPS,...CHIPS,...CHIPS].map(([e,l])=>`<span class="chip"><span class="emo">${e}</span>${l}</span>`).join('');
+
+function jarSVG(label,emoji,tint){
+  return `<svg viewBox="0 0 330 400">
+    <ellipse cx="165" cy="388" rx="120" ry="12" fill="rgba(0,0,0,.08)"/>
+    <rect x="75" y="20" width="180" height="58" rx="16" fill="#2D5A43"/>
+    <rect x="75" y="62" width="180" height="10" fill="#244A37"/>
+    <rect x="92" y="72" width="146" height="22" rx="6" fill="#DCE6DF"/>
+    <rect x="45" y="88" width="240" height="295" rx="58" fill="${tint}"/>
+    <rect x="45" y="88" width="240" height="295" rx="58" fill="url(#glass)"/>
+    <rect x="62" y="170" width="206" height="150" rx="22" fill="#fff"/>
+    <text x="165" y="232" text-anchor="middle" font-size="52" class="emo">${emoji}</text>
+    <text x="165" y="292" text-anchor="middle" font-family="Inter" font-weight="900" font-size="36" fill="#1A201C" letter-spacing="1">${label}</text>
+    <rect x="72" y="110" width="22" height="230" rx="11" fill="#fff" opacity=".35"/>
+  </svg>`;
+}
+const JARS=[["STRESS","😰","#E8B9A6"],["SOMMEIL","😴","#B9C9E8"],["MUSCLE","💪","#BFD8B8"],["POIDS","⚖️","#EAD9A8"]];
+$('#jars').innerHTML = `<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".08"/></linearGradient></defs></svg>`
+  + JARS.map((j,i)=>`<div class="jar" id="jar${i}">${jarSVG(...j)}</div>`).join('');
+
+document.querySelectorAll('svg.half').forEach((s,i)=>{
+  s.innerHTML = `<defs><clipPath id="hc${i}"><rect x="0" y="0" width="40" height="80"/></clipPath><clipPath id="hr${i}"><rect x="40" y="0" width="40" height="80"/></clipPath></defs>
+  <circle cx="40" cy="40" r="35" fill="#EAF2ED" stroke="#2D5A43" stroke-width="5"/>
+  <circle cx="40" cy="40" r="35" fill="#2D5A43" clip-path="url(#hc${i})"/>
+  <path d="M24 41 L35 52 L57 29" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#hc${i})"/>
+  <path d="M24 41 L35 52 L57 29" fill="none" stroke="#2D5A43" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#hr${i})"/>`;
+});
+
+/* captions */
+const capbox = $('#capbox'); let capIdx=-1, capSpans=[];
+function renderCaption(t){
+  const i = CAPS.findIndex(c=>t>=c[0] && t<c[1]);
+  const idx = i<0 ? CAPS.length-1 : i;
+  const [a,b,txt] = CAPS[idx];
+  if(idx!==capIdx){ capIdx=idx; capbox.innerHTML = txt.split(' ').map(w=>`<span>${w}</span>`).join(' '); capSpans=[...capbox.children]; }
+  const n = capSpans.length, k = p(t,a,b-.15);
+  const cur = Math.min(n-1, Math.floor(k*n));
+  capSpans.forEach((s,j)=>{ s.className = j<cur ? 'on' : j===cur ? 'cur' : ''; });
+  const kin = p(t,a,a+.18);
+  tf(capbox,{o:clamp(.4+kin), s:.94+.06*eo(kin), y:(1-eo(kin))*14});
+}
+
+/* stroke prep */
+const stem = $('#stem'); const stemLen = stem.getTotalLength(); stem.style.strokeDasharray = stemLen;
+const leaves=[...document.querySelectorAll('.leaf')];
+
+/* ---------- main render ---------- */
+function render(t){
+  // background
+  $('.b1').style.transform=`translate(${Math.sin(t*.35)*60}px,${Math.cos(t*.3)*50}px)`;
+  $('.b2').style.transform=`translate(${Math.cos(t*.28)*70}px,${Math.sin(t*.33)*60}px)`;
+  $('.b3').style.transform=`translate(${Math.sin(t*.25+1)*60}px,${Math.cos(t*.31)*40}px)`;
+  $('#warmth').style.opacity = Math.min(p(t,35.8,36.6), 1-p(t,47.8,48.4));
+
+  // progress
+  SCENES.forEach(([a,b],i)=> progBars[i].style.width = (p(t,a,b)*100)+'%');
+
+  // scene visibility
+  for(let i=0;i<SCENES.length;i++){
+    const el = $('#s'+(i+1)); const v = sceneVis(t,i);
+    el.style.opacity = v; el.style.visibility = v<=0.001 ? 'hidden':'visible';
+    el.style.transform = `scale(${.96+.04*v})`;
+  }
+
+  /* S1 */
+  stem.style.strokeDashoffset = stemLen*(1-eo(p(t,0,.7)));
+  leaves.forEach((l,i)=>{ const k=eb(p(t,.15+i*.12,.6+i*.12)); l.style.transformOrigin='150px 150px'; l.style.transformBox='view-box'; l.style.opacity=clamp(k*2); l.style.transform=`scale(${k})`; });
+  tf($('#berry'),{...pop(t,.6,.5,0)}); $('#berry').style.transformOrigin='152px 96px'; $('#berry').style.transformBox='view-box';
+  tf($('#sprig'),{y:Math.sin(t*2)*6, r:Math.sin(t*1.5)*2});
+  tf($('#t1'),{...rise(t,.05,.55,60)});
+  { const k=p(t,1.8,2.25); tf($('#t1b'),{o:clamp(k*3), s:1.6-.6*eb(k), r:-4+4*eo(k)}); }
+  track.style.transform = `translateX(${-120 - t*260}px)`;
+  $('#marq').style.opacity = p(t,.25,.7);
+
+  /* S2 */
+  tf($('#h2'),{...rise(t,3.05,.5,30)});
+  const jarT=[3.5,4.4,5.2,6.0];
+  const studyK = eo(p(t,6.8,7.3));
+  JARS.forEach((_,i)=>{ const pp=pop(t,jarT[i],.55,80); const wob=Math.sin((t-jarT[i])*5)*2*(1-p(t,jarT[i],jarT[i]+1.2));
+    tf($('#jar'+i),{o:pp.o*(1-.55*studyK), y:pp.y-studyK*60, s:pp.s*(1-.12*studyK), r:wob}); });
+  { const k=p(t,6.8,7.3); tf($('#study'),{o:clamp(k*3), x:-0, s:.6+.4*eb(k), y:0}); $('#study').style.translate='-50% 0'; }
+
+  /* S3 */
+  tf($('#h3'),{...rise(t,8.05,.5,30)});
+  tf($('#vc1'),{...rise(t,8.2,.6,90)});
+  $('#g1').style.width = (eio(p(t,10,11.3))*50)+'%';
+  tf($('#vd1'),{...pop(t,10.6,.5,20)});
+  tf($('#vc2'),{...rise(t,12.8,.6,90)});
+  $('#g2').style.width = (eio(p(t,14.3,15.4))*36)+'%';
+  tf($('#vd2'),{...pop(t,14.6,.5,20)});
+
+  /* S4 */
+  tf($('#h4'),{...rise(t,17.05,.5,30)});
+  tf($('#vc3'),{...rise(t,17.2,.6,90)});
+  $('#g3').style.width = (eio(p(t,19,20.3))*48)+'%';
+  tf($('#vd3'),{...pop(t,19.6,.5,20)});
+  tf($('#dumb'),{y:-Math.abs(Math.sin((t-19)*4))*14*p(t,19,19.3)*(1-p(t,21,21.5)), r:Math.sin(t*4)*4*p(t,19,19.3)});
+  { const pp=pop(t,21.5,.55,60); tf($('#actifs'),{...pp, r:-2*(1-p(t,21.5,22))}); }
+
+  /* S5 */
+  tf($('#h5'),{...rise(t,25.05,.5,30)});
+  { const k=p(t,25.2,25.8); tf($('#poidsWrap'),{o:k, s:.9+.1*eo(k)}); }
+  $('#strike').style.width = (eo(p(t,26.8,27.25))*110)+'%';
+  { const k=p(t,27.1,27.5); const shake = Math.sin(t*60)*8*(1-p(t,27.4,27.8))*(t>27.4?1:0);
+    tf($('#xstamp'),{o:clamp(k*3), s:2-1*eb(k), r:-20+20*eo(k)+shake}); }
+  tf($('#noeff'),{...rise(t,27.5,.6,50)});
+
+  /* S6 */
+  tf($('#att'),{...rise(t,30.05,.5,40)});
+  tf($('#c1'),{...pop(t,31.6,.5,50)});
+  tf($('#c2'),{...pop(t,32.7,.5,50)});
+  { const pp=pop(t,34,.55,50); tf($('#c3'),{...pp, s:pp.s*(1+.03*Math.sin((t-34)*5)*p(t,34.5,35))}); }
+
+  /* S7 */
+  { const k=eo(p(t,36.1,36.6)); const up=eio(p(t,38.7,39.3));
+    tf($('#liver'),{o:k, s:(.85+.15*k)*(1.12-.12*up), y:(1-k)*60 + (1-up)*360}); }
+  tf($('#anses'),{...rise(t,39,.65,160)});
+  tf($('#l1'),{...rise(t,39.5,.45,30)});
+  tf($('#l2'),{...rise(t,41.8,.45,30)});
+  tf($('#l3'),{...rise(t,43.2,.45,30)});
+  tf($('#m1'),{...pop(t,43.9,.4,10)});
+  tf($('#m2'),{...pop(t,44.5,.4,10)});
+  tf($('#m3'),{...pop(t,45.0,.4,10)});
+  tf($('#doc'),{...pop(t,45.6,.55,50)});
+
+  /* S8 */
+  { const k=p(t,48,49.6); const x=-500+eo(k)*500 + p(t,49.6,55)*30; const y=200-eo(k)*200 + Math.sin(t*3)*10;
+    tf($('#plane'),{o:clamp(k*4), x, y, r:-15+15*eo(k)+Math.sin(t*2)*3}); }
+  tf($('#send'),{...rise(t,48.2,.6,60)});
+  tf($('#calm'),{...rise(t,50.5,.7,60)});
+  tf($('#bye'),{...pop(t,53,.6,40)});
+
+  renderCaption(t);
+}
+window.render = render;
+
+/* ---------- player ---------- */
+const stage=$('#stage');
+function fit(){ const s=Math.min(innerWidth/1080, (innerHeight-(document.body.classList.contains('render')?0:44))/1920); stage.style.transform=`scale(${s})`; }
+const params = new URLSearchParams(location.search);
+if(params.has('render')) document.body.classList.add('render');
+addEventListener('resize',fit); fit();
+let playing=false, t0=0, tStart=0, cur=+(params.get('t')||0);
+const scrub=$('#scrub'), tc=$('#tc'), pp=$('#pp');
+function show(t){ cur=t; render(t); scrub.value=t; tc.textContent=t.toFixed(2)+' s'; }
+function loop(now){ if(!playing) return; let t=tStart+(now-t0)/1000; if(t>=DUR){t=DUR;playing=false;pp.textContent='▶︎';} show(t); if(playing) requestAnimationFrame(loop); }
+pp.onclick=()=>{ playing=!playing; pp.textContent=playing?'❚❚':'▶︎'; if(playing){ if(cur>=DUR) cur=0; tStart=cur; t0=performance.now(); requestAnimationFrame(loop);} };
+scrub.oninput=()=>{ playing=false; pp.textContent='▶︎'; show(+scrub.value); };
+document.fonts.ready.then(()=>show(cur));
+show(cur);
+</script>
+</body>
+</html>
