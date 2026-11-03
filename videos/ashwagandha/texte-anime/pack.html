@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pack texte animé</title>
+<style>
+@font-face{font-family:'Inter';src:url(../fonts/inter.woff2) format('woff2');font-weight:100 900;}
+@font-face{font-family:'Lora';src:url(../fonts/lora.woff2) format('woff2');font-weight:400 700;}
+@font-face{font-family:'Lora';src:url(../fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+:root{--green:#2D5A43;--green-2:#3E7457;--sage:#4A7A3A;--soft:#EAF2ED;--terra:#E07A5F;--terra-soft:#FBE7E0;
+  --ink:#1A201C;--muted:#65726A;--red:#C0392B;--amber:#F2B544;--line:#E6E1D8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#111}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;color:var(--ink)}
+html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
+html.green,body.green,body.green #stage{background:#00FF00!important}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;flex:none;transform-origin:center;
+  background:linear-gradient(160deg,#6d7f78 0%,#3c4a45 45%,#222a27 100%)}
+#demo{position:absolute;inset:0}
+#demo .head{position:absolute;left:50%;top:880px;width:520px;height:640px;margin-left:-260px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 45% 35%,#c9a48c,#8c6a57 70%);opacity:.55;filter:blur(6px)}
+#demo .body{position:absolute;left:50%;top:1420px;width:900px;height:700px;margin-left:-450px;border-radius:300px 300px 0 0;background:#2f3d38;opacity:.8;filter:blur(4px)}
+body.alpha #demo,body.green #demo{display:none}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
+
+.clip{position:absolute;inset:0;display:none}
+.blk{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:22px}
+.row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;max-width:960px}
+[data-a]{will-change:transform,opacity}
+
+.box{display:inline-block;background:#fff;color:var(--ink);font-weight:900;font-size:70px;letter-spacing:-1.5px;line-height:1.08;
+  padding:16px 34px 22px;border-radius:26px;box-shadow:0 16px 44px rgba(0,0,0,.28);text-align:center;max-width:960px}
+.box.g{background:var(--green);color:#fff}
+.box.t{background:var(--terra);color:#fff}
+.box.k{background:var(--ink);color:#fff}
+.box.r{background:var(--red);color:#fff}
+.box.a{background:var(--amber);color:var(--ink)}
+.box.s{font-size:44px;letter-spacing:-.5px;padding:12px 26px 16px;border-radius:20px}
+.box.m{font-size:56px}
+.box.xl{font-family:'Lora',serif;font-weight:700;font-size:132px;letter-spacing:-4px;padding:10px 44px 26px;border-radius:34px;color:var(--green)}
+.serif{font-family:'Lora',serif;font-weight:700}
+.it{font-family:'Lora',serif;font-style:italic;font-weight:600}
+.big-emo{font-size:150px;line-height:1;filter:drop-shadow(0 12px 22px rgba(0,0,0,.3))}
+.label{font-size:30px;font-weight:900;letter-spacing:5px;text-transform:uppercase}
+
+.chip{display:inline-flex;align-items:center;gap:12px;background:#fff;color:var(--ink);font-weight:800;font-size:50px;padding:14px 30px 16px;border-radius:999px;box-shadow:0 12px 32px rgba(0,0,0,.25)}
+
+.list{display:flex;flex-direction:column;gap:18px;align-items:center}
+.li{display:flex;align-items:center;gap:22px;background:#fff;border-radius:30px;padding:22px 38px;font-weight:800;font-size:56px;letter-spacing:-1px;box-shadow:0 14px 38px rgba(0,0,0,.25);min-width:760px}
+.li .emo{font-size:64px}
+.li.t{background:var(--terra);color:#fff}
+
+/* verdict card */
+.vc{width:920px;background:#fff;border-radius:44px;padding:40px 46px 44px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.vc .top{display:flex;align-items:center;gap:26px}
+.vc .ic{width:120px;height:120px;border-radius:34px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:70px;flex:none}
+.vc .ttl{font-family:'Lora',serif;font-weight:700;font-size:72px;letter-spacing:-2px;line-height:1}
+.vc .kick{font-size:28px;font-weight:900;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.gauge{margin-top:36px;height:32px;border-radius:32px;background:#EFEBE4;position:relative;overflow:hidden}
+.gauge i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:32px;background:linear-gradient(90deg,var(--sage),var(--green-2))}
+.gl{display:flex;justify-content:space-between;margin-top:12px;font-size:26px;font-weight:800;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.vd{margin-top:28px;display:flex;align-items:center;gap:20px;font-size:54px;font-weight:900;letter-spacing:-1px}
+.vd small{display:block;font-size:34px;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:4px}
+.half{width:84px;height:84px;flex:none}
+
+/* strike */
+.sk{position:relative;display:inline-block}
+.sk .st{position:absolute;left:-4%;top:50%;height:16px;margin-top:-6px;background:var(--red);border-radius:12px;width:0;transform:rotate(-4deg);transform-origin:left center}
+
+/* anses */
+.ans{width:940px;background:#fff;border-radius:44px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.ans .hd{background:var(--green);color:#fff;padding:28px 44px;font-weight:900;font-size:40px;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center}
+.ans .bd{padding:18px 44px 34px}
+.ans .r{display:flex;align-items:center;gap:24px;padding:22px 0;font-size:50px;font-weight:800;letter-spacing:-1px;border-bottom:2px solid #F0ECE5}
+.ans .r:last-child{border-bottom:0}
+.ans .r .emo{font-size:60px;width:76px;text-align:center;flex:none}
+.mini{display:inline-block;padding:8px 24px 10px;border-radius:999px;background:var(--terra-soft);color:#8A3B26;font-weight:900;font-size:44px;margin:6px 10px 0 0}
+
+/* score */
+.score{width:920px;background:#fff;border-radius:44px;padding:20px 44px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.score .r{display:flex;align-items:center;justify-content:space-between;padding:20px 18px;border-bottom:2px solid #F0ECE5;font-size:52px;font-weight:800;letter-spacing:-1px;border-radius:24px}
+.score .r:last-child{border-bottom:0}
+.score .r span.emo{margin-right:18px}
+.score .v{font-size:36px;font-weight:900;padding:8px 22px 10px;border-radius:999px;background:var(--soft);color:var(--green);display:flex;align-items:center;gap:10px}
+.score .v.x{background:#FDECEA;color:var(--red)}
+.score .v svg{width:44px;height:44px}
+
+#ctrl{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;align-items:center;padding:10px 16px;background:rgba(0,0,0,.7);color:#fff;font:600 14px Inter,sans-serif;z-index:99}
+#ctrl select,#ctrl button{border:0;border-radius:8px;padding:6px 12px;font-weight:700}
+#ctrl input{flex:1}
+body.render #ctrl{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="demo"><div class="head"></div><div class="body"></div></div>
+
+<!-- 01 HOOK -->
+<section class="clip" id="c1" data-dur="4.8" data-name="01-hook">
+  <div class="blk" style="top:300px">
+    <div class="box k s label" data-a="stamp" data-t="0" data-r="-3">Vrai ou faux&nbsp;?</div>
+    <div class="box xl" data-a="words" data-t=".15">Ashwagandha</div>
+    <div class="row" style="margin-top:10px">
+      <span class="chip" data-a="pop" data-t=".7"><span class="emo">😰</span>stress</span>
+      <span class="chip" data-a="pop" data-t="1.0"><span class="emo">😴</span>sommeil</span>
+      <span class="chip" data-a="pop" data-t="1.3"><span class="emo">💪</span>muscles</span>
+      <span class="chip" data-a="pop" data-t="1.6"><span class="emo">🧠</span>mémoire</span>
+    </div>
+    <div style="height:14px"></div>
+    <div class="box t" data-a="words" data-t="2.3" data-r="-2">une seule plante</div>
+    <div class="box" data-a="words" data-t="2.9" data-r="1.5">pour tout ça&nbsp;? <span class="emo" data-a="pop" data-t="3.5" data-float="1">🤔</span></div>
+  </div>
+</section>
+
+<!-- 02 ON ENTEND -->
+<section class="clip" id="c2" data-dur="6.6" data-name="02-on-entend">
+  <div class="blk" style="top:320px">
+    <div class="box k s label" data-a="stamp" data-t="0" data-r="-2"><span class="emo">👂</span> On entend qu'elle…</div>
+    <div class="list" style="margin-top:20px">
+      <div class="li" data-a="slide" data-t=".7"><span class="emo">😌</span>calme le stress</div>
+      <div class="li" data-a="slide" data-t="1.8"><span class="emo">😴</span>aide à dormir</div>
+      <div class="li" data-a="slide" data-t="2.9"><span class="emo">💪</span>fait gagner du muscle</div>
+      <div class="li t" data-a="stamp" data-t="4.4" data-r="-2"><span class="emo">🔥</span>et même… fait maigrir</div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ETUDES -->
+<section class="clip" id="c3" data-dur="5" data-name="03-les-etudes">
+  <div class="blk" style="top:380px">
+    <div class="big-emo emo" data-a="pop" data-t="0" data-float="1">📚</div>
+    <div class="box" data-a="words" data-t=".3">J'ai regardé</div>
+    <div class="box g" data-a="words" data-t=".8" data-r="-1.5">ce que disent les études</div>
+    <div style="height:30px"></div>
+    <div class="box t m" data-a="stamp" data-t="2.8" data-r="3"><span class="emo">⚡</span> Résumé express</div>
+  </div>
+</section>
+
+<!-- 04 STRESS -->
+<section class="clip" id="c4" data-dur="4.3" data-name="04-stress">
+  <div class="blk" style="top:420px">
+    <div class="vc" data-a="rise" data-t="0">
+      <div class="top"><div class="ic emo">😰</div><div><div class="kick">Verdict</div><div class="ttl">Stress &amp; anxiété</div></div></div>
+      <div class="gauge"><i data-a="fill" data-t="1.1" data-v="50"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="vd" data-a="pop" data-t="1.4"><svg class="half"></svg><div>Effet modeste<small data-a="rise" data-t="2.4">sur quelques semaines</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 SOMMEIL -->
+<section class="clip" id="c5" data-dur="3.2" data-name="05-sommeil">
+  <div class="blk" style="top:420px">
+    <div class="vc" data-a="rise" data-t="0">
+      <div class="top"><div class="ic emo">😴</div><div><div class="kick">Verdict</div><div class="ttl">Sommeil</div></div></div>
+      <div class="gauge"><i data-a="fill" data-t=".8" data-v="36"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="vd" data-a="pop" data-t="1.0"><svg class="half"></svg><div>Petit bénéfice possible</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 MUSCLE -->
+<section class="clip" id="c6" data-dur="4.8" data-name="06-muscle">
+  <div class="blk" style="top:420px">
+    <div class="vc" data-a="rise" data-t="0">
+      <div class="top"><div class="ic emo" data-float="1">💪</div><div><div class="kick">Verdict</div><div class="ttl">Muscle &amp; force</div></div></div>
+      <div class="gauge"><i data-a="fill" data-t=".8" data-v="46"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="vd" data-a="pop" data-t="1.0"><svg class="half"></svg><div>Un peu plus de force</div></div>
+    </div>
+    <div class="box t m" data-a="stamp" data-t="2.4" data-r="-2" style="margin-top:14px"><span class="emo">🏃</span> surtout chez les actifs</div>
+  </div>
+</section>
+
+<!-- 07 MEMOIRE -->
+<section class="clip" id="c7" data-dur="3.4" data-name="07-memoire">
+  <div class="blk" style="top:420px">
+    <div class="vc" data-a="rise" data-t="0">
+      <div class="top"><div class="ic emo">🧠</div><div><div class="kick">Verdict</div><div class="ttl">Mémoire</div></div></div>
+      <div class="gauge"><i data-a="fill" data-t=".8" data-v="34"></i></div>
+      <div class="gl"><span>aucun</span><span>modeste</span><span>fort</span></div>
+      <div class="vd" data-a="pop" data-t="1.0"><svg class="half"></svg><div>Légère amélioration<small data-a="rise" data-t="1.9">peu d'études, à confirmer</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 POIDS ? -->
+<section class="clip" id="c8" data-dur="2.4" data-name="08-et-pour-maigrir">
+  <div class="blk" style="top:520px">
+    <div class="big-emo emo" data-a="pop" data-t="0" data-float="1">⚖️</div>
+    <div class="box" data-a="words" data-t=".2">Et pour perdre</div>
+    <div class="box t" data-a="words" data-t=".6" data-r="-2">du poids&nbsp;?</div>
+  </div>
+</section>
+
+<!-- 09 AUCUN EFFET -->
+<section class="clip" id="c9" data-dur="6" data-name="09-aucun-effet">
+  <div class="blk" style="top:400px">
+    <div class="big-emo emo" data-a="pop" data-t="0" data-float="1">😬</div>
+    <div class="box s" data-a="words" data-t=".25">désolé de te le dire…</div>
+    <div style="height:16px"></div>
+    <div class="box r" data-a="stamp" data-t="2.2" data-r="-3" style="font-size:96px">AUCUN EFFET</div>
+    <div class="box k s" data-a="rise" data-t="2.6">significatif</div>
+    <div style="height:16px"></div>
+    <div class="row">
+      <div class="box m" data-a="pop" data-t="3.3">ni sur le <span class="sk">poids<i class="st" data-a="strike" data-t="3.8"></i></span></div>
+      <div class="box m" data-a="pop" data-t="4.3">ni sur la <span class="sk">graisse<i class="st" data-a="strike" data-t="4.8"></i></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 FOIE -->
+<section class="clip" id="c10" data-dur="3.9" data-name="10-attention-foie">
+  <div class="blk" style="top:480px">
+    <div class="box a" data-a="stamp" data-t="0" data-r="-3" data-shake="1"><span class="emo">⚠️</span> ATTENTION</div>
+    <div style="height:10px"></div>
+    <div class="box" data-a="words" data-t=".7">Des cas d'atteinte</div>
+    <div class="box r" data-a="words" data-t="1.3" data-r="-1.5">du foie</div>
+    <div class="box" data-a="words" data-t="1.9">ont été signalés</div>
+  </div>
+</section>
+
+<!-- 11 ANSES -->
+<section class="clip" id="c11" data-dur="7.8" data-name="11-anses-deconseillee">
+  <div class="blk" style="top:330px">
+    <div class="ans" data-a="rise" data-t="0">
+      <div class="hd"><span>AVIS ANSES</span><span class="emo">🚫</span></div>
+      <div class="bd">
+        <div class="label" style="color:var(--muted);padding-top:14px" data-a="rise" data-t=".3">Déconseillée si…</div>
+        <div class="r" data-a="slide" data-t="1.0"><span class="emo">🤰</span>Enceinte ou allaitante</div>
+        <div class="r" data-a="slide" data-t="3.0"><span class="emo">🔞</span>Moins de 18 ans</div>
+        <div class="r" data-a="slide" data-t="4.3"><span class="emo">🩺</span><div>Souci de…<br>
+          <span class="mini" data-a="pop" data-t="5.0">thyroïde</span><span class="mini" data-a="pop" data-t="5.7">foie</span><span class="mini" data-a="pop" data-t="6.4">cœur</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 MEDECIN -->
+<section class="clip" id="c12" data-dur="4.2" data-name="12-medecin-pharmacien">
+  <div class="blk" style="top:440px">
+    <div class="big-emo emo" data-a="pop" data-t="0" data-float="1">👩‍⚕️</div>
+    <div class="box g" data-a="words" data-t=".2" data-r="-1.5">Parles-en à ton médecin</div>
+    <div class="box" data-a="words" data-t="1.3">ou ton pharmacien <span class="emo">💊</span></div>
+    <div class="box k s" data-a="stamp" data-t="2.5" data-r="2">avant d'en prendre</div>
+  </div>
+</section>
+
+<!-- 13 RESUME -->
+<section class="clip" id="c13" data-dur="8.6" data-name="13-resume">
+  <div class="blk" style="top:300px">
+    <div class="box k s label" data-a="stamp" data-t="0" data-r="-2">En résumé</div>
+    <div class="score" data-a="rise" data-t=".3">
+      <div class="r" id="hlStress" data-a="slide" data-t=".5"><span><span class="emo">😰</span>Stress</span><span class="v"><svg class="half"></svg>petit effet</span></div>
+      <div class="r" data-a="slide" data-t=".75"><span><span class="emo">😴</span>Sommeil</span><span class="v"><svg class="half"></svg>possible</span></div>
+      <div class="r" data-a="slide" data-t="1.0"><span><span class="emo">💪</span>Muscle</span><span class="v"><svg class="half"></svg>un peu</span></div>
+      <div class="r" data-a="slide" data-t="1.25"><span><span class="emo">🧠</span>Mémoire</span><span class="v"><svg class="half"></svg>léger</span></div>
+      <div class="r" data-a="slide" data-t="1.5"><span><span class="emo">⚖️</span>Poids</span><span class="v x">✕ rien</span></div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="box t m" data-a="words" data-t="4.0" data-r="-2"><span class="emo">📱</span> N'écoute pas tout</div>
+    <div class="box s" data-a="words" data-t="5.0" data-r="1">ce qu'on dit sur les réseaux</div>
+  </div>
+</section>
+
+</div>
+
+<div id="ctrl"><select id="sel"></select><button id="pp">▶︎</button><input id="scrub" type="range" min="0" max="5" step="0.01" value="0"><span id="tc"></span></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const p=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+
+/* half-check icons */
+$$('svg.half').forEach((s,i)=>{ s.setAttribute('viewBox','0 0 80 80'); s.innerHTML=`<defs><clipPath id="hl${i}"><rect width="40" height="80"/></clipPath><clipPath id="hr${i}"><rect x="40" width="40" height="80"/></clipPath></defs>
+<circle cx="40" cy="40" r="35" fill="#EAF2ED" stroke="#2D5A43" stroke-width="5"/><circle cx="40" cy="40" r="35" fill="#2D5A43" clip-path="url(#hl${i})"/>
+<path d="M24 41 L35 52 L57 29" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#hl${i})"/>
+<path d="M24 41 L35 52 L57 29" fill="none" stroke="#2D5A43" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#hr${i})"/>`; });
+
+/* split [data-a=words] into word spans (child elements stay whole) */
+$$('[data-a="words"]').forEach(el=>{
+  const out=[];
+  [...el.childNodes].forEach(n=>{
+    if(n.nodeType===3){ n.textContent.split(/(\s+)/).forEach(part=>{ if(!part) return; if(/^\s+$/.test(part)) out.push(document.createTextNode(' ')); else { const s=document.createElement('span'); s.className='w'; s.textContent=part; out.push(s);} }); }
+    else { if(!n.dataset.a) n.classList.add('w'); out.push(n); }
+  });
+  el.textContent=''; out.forEach(n=>el.appendChild(n));
+  $$('.w',el).forEach(w=>w.style.display='inline-block');
+});
+
+const CLIPS=$$('.clip');
+function tf(el,o,x,y,s,r,blur){ el.style.opacity=o; el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; el.style.filter=blur?`blur(${blur}px)`:''; }
+
+function animate(el,t){
+  const a=el.dataset.a, st=+(el.dataset.t||0), r0=+(el.dataset.r||0);
+  let o=1,x=0,y=0,s=1,r=r0,bl=0;
+  if(a==='rise'){ const k=eo(p(t,st,st+.5)); o=k; y=(1-k)*70; }
+  else if(a==='pop'){ const k=p(t,st,st+.45); o=clamp(k*3); s=.55+.45*eb(k); y=(1-eo(k))*30; }
+  else if(a==='slide'){ const k=p(t,st,st+.45); o=clamp(k*2.5); x=(1-eo(k))*-140; s=.96+.04*eb(k); }
+  else if(a==='stamp'){ const k=p(t,st,st+.32); o=clamp(k*4); s=2-1*eo(k); r=r0+(1-eo(k))*-10;
+    if(el.dataset.shake){ const q=p(t,st+.3,st+.8); r+=Math.sin(t*55)*5*(q>0&&q<1?(1-q):0); } }
+  else if(a==='words'){
+    const ws=$$(':scope > .w',el); const stg=.09;
+    ws.forEach((w,i)=>{ const k=p(t,st+i*stg,st+i*stg+.35); tf(w,clamp(k*2),0,(1-eo(k))*36,.9+.1*eb(k),0,(1-k)*6); });
+    // box itself: quick scale-in
+    const k=p(t,st,st+.3); o=clamp(k*4); s=.85+.15*eb(k);
+  }
+  else if(a==='fill'){ el.style.width=(eio(p(t,st,st+.9))*(+el.dataset.v))+'%'; return; }
+  else if(a==='strike'){ el.style.width=(eo(p(t,st,st+.35))*108)+'%'; return; }
+  if(el.dataset.float && t>st+.45){ y+=Math.sin((t-st)*3.2)*8; r+=Math.sin((t-st)*2.4)*3; }
+  tf(el,o,x,y,s,r,bl);
+}
+
+function render(ci,t){
+  CLIPS.forEach((c,i)=>c.style.display=i===ci?'block':'none');
+  const c=CLIPS[ci], dur=+c.dataset.dur;
+  $$('[data-a]',c).forEach(el=>animate(el,t));
+  $$('[data-float]:not([data-a])',c).forEach(el=>{ el.style.transform=`translateY(${Math.sin(t*3.2)*8}px) rotate(${Math.sin(t*2.4)*4}deg)`; });
+  if(c.id==='c13'){ const hl=$('#hlStress'), k=Math.min(p(t,2.0,2.4),1); hl.style.background=`rgba(234,242,237,${k})`; hl.style.boxShadow=k?`0 0 0 ${4*k}px #2D5A43 inset`:''; }
+  // exit
+  const k=eio(p(t,dur-.35,dur)); const blk=$('.blk',c);
+  blk.style.opacity=1-k; blk.style.transform=`translateY(${-50*k}px) scale(${1-.05*k})`;
+}
+window.render=render;
+window.CLIP_INFO=CLIPS.map(c=>({name:c.dataset.name,dur:+c.dataset.dur}));
+
+/* player */
+const q=new URLSearchParams(location.search);
+['render','alpha','green'].forEach(f=>{ if(q.has(f)){ document.body.classList.add(f); document.documentElement.classList.add(f);} });
+const stage=$('#stage');
+function fit(){ const s=Math.min(innerWidth/1080,(innerHeight-(q.has('render')?0:48))/1920); stage.style.transform=`scale(${s})`; }
+addEventListener('resize',fit); fit();
+const sel=$('#sel'), scrub=$('#scrub'), tc=$('#tc'), pp=$('#pp');
+CLIP_INFO.forEach((c,i)=>sel.add(new Option(c.name,i)));
+let ci=+(q.get('clip')||0), cur=0, playing=false, t0=0, ts=0;
+function show(t){ cur=t; render(ci,t); scrub.value=t; tc.textContent=`${t.toFixed(2)} / ${CLIP_INFO[ci].dur}s`; }
+function setClip(i){ ci=i; sel.value=i; scrub.max=CLIP_INFO[i].dur; show(0); }
+sel.onchange=()=>setClip(+sel.value);
+scrub.oninput=()=>{ playing=false; pp.textContent='▶︎'; show(+scrub.value); };
+function loop(now){ if(!playing) return; let t=ts+(now-t0)/1000; if(t>=CLIP_INFO[ci].dur){ if(ci<CLIPS.length-1){ setClip(ci+1); ts=0; t0=now; t=0; } else { playing=false; pp.textContent='▶︎'; } } show(t); requestAnimationFrame(loop); }
+pp.onclick=()=>{ playing=!playing; pp.textContent=playing?'❚❚':'▶︎'; if(playing){ ts=cur; t0=performance.now(); requestAnimationFrame(loop);} };
+setClip(ci);
+</script>
+</body>
+</html>
