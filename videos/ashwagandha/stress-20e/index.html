@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stress 20 euros</title>
+<style>
+@font-face{font-family:'Inter';src:url(../fonts/inter.woff2) format('woff2');font-weight:100 900;}
+@font-face{font-family:'Lora';src:url(../fonts/lora.woff2) format('woff2');font-weight:400 700;}
+@font-face{font-family:'Lora';src:url(../fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+:root{--green:#2D5A43;--green-2:#3E7457;--soft:#EAF2ED;--terra:#E07A5F;--terra-soft:#FBE7E0;--cream:#FBF9F5;--ink:#1A201C;--muted:#65726A;--line:#E6E1D8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#111}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;color:var(--ink)}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;flex:none;transform-origin:center;background:var(--cream)}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.6}
+.b1{width:900px;height:900px;background:radial-gradient(circle,#CFE3D6,rgba(207,227,214,0) 70%);left:-300px;top:-200px}
+.b2{width:800px;height:800px;background:radial-gradient(circle,#F6D5C8,rgba(246,213,200,0) 70%);right:-300px;top:800px}
+.b3{width:900px;height:900px;background:radial-gradient(circle,#DCE9D2,rgba(220,233,210,0) 70%);left:-200px;bottom:-350px}
+#calm{position:absolute;inset:0;background:linear-gradient(180deg,#E8F1EB 0%,#FBF9F5 70%);opacity:0}
+.grain{position:absolute;inset:0;opacity:.05;background-image:radial-gradient(#000 1px,transparent 1px);background-size:6px 6px}
+.scene{position:absolute;inset:0;opacity:0}
+.blk{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:26px}
+.w{display:inline-block}
+.t{font-family:'Lora',serif;font-weight:700;font-size:104px;letter-spacing:-3px;line-height:1.05;text-align:center;color:var(--ink);max-width:960px}
+.t.big{font-size:126px;letter-spacing:-4px}
+.t.sm{font-size:96px}
+.pill{display:inline-block;background:var(--green);color:#fff;border-radius:30px;padding:8px 40px 20px;font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:132px;letter-spacing:-3px;padding:10px 54px 26px;border-radius:40px}
+.pill.o{background:var(--terra)}
+#price{position:relative;margin-top:110px;width:760px;height:430px}
+#tag{position:absolute;left:50%;top:50%;width:800px;height:360px;margin:-180px 0 0 -400px;background:var(--terra);border-radius:60px;box-shadow:0 36px 80px rgba(224,122,95,.45);display:flex;align-items:center;justify-content:center}
+#tag::before{content:'';position:absolute;left:46px;top:50%;width:46px;height:46px;margin-top:-23px;border-radius:50%;background:var(--cream)}
+#tag b{font-family:'Lora',serif;font-weight:700;font-size:250px;color:#fff;letter-spacing:-6px;margin-left:60px;white-space:nowrap;line-height:1}
+.coin{position:absolute;left:50%;top:50%;font-size:96px}
+.ring{position:absolute;left:50%;top:50%;border-radius:50%;border:10px solid var(--terra);width:200px;height:200px;margin:-100px 0 0 -100px}
+.chips{display:flex;gap:22px;justify-content:center;margin-top:90px}
+.chip{width:210px;height:210px;border-radius:60px;background:#fff;border:3px solid var(--line);box-shadow:0 20px 50px rgba(26,32,28,.1);display:flex;align-items:center;justify-content:center;font-size:116px}
+.leafline{position:absolute;left:50%;top:50%}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div id="calm"></div><div class="grain"></div>
+
+  <section class="scene" id="A">
+    <div class="blk" style="top:400px">
+      <div class="t big" id="a1">ça va dépendre<br>de toi</div>
+      <div class="t sm" id="a2">si tu es prêt<br>à dépenser</div>
+      <div id="price">
+        <div class="ring" id="ring"></div>
+        <div id="tag"><b>20&nbsp;€</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="B">
+    <div class="blk" style="top:400px">
+      <div class="t big" id="b1">Il existe différentes<br>méthodes</div>
+      <div class="t sm" id="b2">pour réduire</div>
+      <div style="height:6px"></div><span class="pill o" id="pl">ton stress</span>
+      <div class="chips" id="chips">
+        <div class="chip emo">🧘</div><div class="chip emo">🚶</div><div class="chip emo">😴</div><div class="chip emo">🎧</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const DUR = 10;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const p=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+
+/* split into word spans */
+function split(el){
+  const out=[];
+  [...el.childNodes].forEach(n=>{
+    if(n.nodeType===3){ n.textContent.split(/(\s+)/).forEach(part=>{ if(!part) return;
+      if(/^\s+$/.test(part)) out.push(document.createTextNode(' '));
+      else{ const s=document.createElement('span'); s.className='w'; s.textContent=part; out.push(s);} }); }
+    else if(n.nodeName==='BR'){ out.push(n); } else{ n.classList.add('w'); out.push(n); }
+  });
+  el.textContent=''; out.forEach(n=>el.appendChild(n)); return $$('#'+el.id+' > .w');
+}
+const W={a1:split($('#a1')),a2:split($('#a2')),b1:split($('#b1')),b2:split($('#b2'))};
+
+/* coins */
+const stage=$('#stage');
+const coins=[]; for(let i=0;i<14;i++){ const c=document.createElement('div'); c.className='coin emo'; c.textContent=i%3?'🪙':'💶'; $('#price').appendChild(c);
+  const a=-0.1*Math.PI+(i/13)*Math.PI*1.2, v=420+((i*97)%7)*50; coins.push({el:c,a,v,r:(i%2?1:-1)*(180+i*20)}); }
+
+function words(list,t,st,gap=.11,rise=40){
+  list.forEach((w,i)=>{ const k=p(t,st+i*gap,st+i*gap+.4);
+    w.style.opacity=clamp(k*2.2); w.style.transform=`translateY(${(1-eo(k))*rise}px) scale(${.88+.12*eb(k)})`; w.style.filter=k<1?`blur(${(1-k)*6}px)`:''; });
+}
+function vis(el,t,a,b,fin=.25,fout=.3){ const v=Math.min(p(t,a,a+fin),1-p(t,b-fout,b)); el.style.opacity=v; el.style.visibility=v<=.001?'hidden':'visible'; return v; }
+
+function render(t){
+  $('.b1').style.transform=`translate(${Math.sin(t*.4)*60}px,${Math.cos(t*.3)*50}px)`;
+  $('.b2').style.transform=`translate(${Math.cos(t*.3)*70}px,${Math.sin(t*.35)*60}px)`;
+  $('#calm').style.opacity=p(t,4.4,5.4);
+
+  /* A : 0 -> 4.5 */
+  const va=vis($('#A'),t,0,4.5,.05,.35);
+  $('#A').style.transform=`translateY(${-60*p(t,4.15,4.5)}px) scale(${1-.04*p(t,4.15,4.5)})`;
+  words(W.a1,t,.3,.12); words(W.a2,t,1.75,.1,30);
+  // price tag slam
+  { const k=p(t,3.0,3.3); const sh=Math.sin(t*70)*10*(1-p(t,3.28,3.75))*(t>3.28?1:0);
+    const tag=$('#tag'); tag.style.opacity=clamp(k*5); tag.style.transform=`scale(${2.3-1.3*eo(k)}) rotate(${-9+9*eo(k)+sh*.5}deg) translateY(${sh}px)`;
+    const r=p(t,3.25,3.9); const ring=$('#ring'); ring.style.opacity=(1-r)*(t>3.2?1:0); ring.style.transform=`scale(${.6+4*eo(r)})`; ring.style.borderWidth=(12*(1-r)+1)+'px';
+    coins.forEach(c=>{ const q=p(t,3.25,4.3); const d=c.v*eo(q); const el=c.el;
+      el.style.opacity=(t>3.25?1:0)*(1-p(t,3.85,4.3)); el.style.transform=`translate(${Math.cos(c.a)*d-48}px,${Math.sin(c.a)*d-48+420*q*q}px) rotate(${c.r*q}deg)`; });
+    if(t>3.5){ tag.style.transform+=` translateY(${Math.sin((t-3.5)*3.4)*7}px)`; } }
+
+  /* B : 4.5 -> 10 */
+  const vb=vis($('#B'),t,4.5,DUR+.1,.05,0);
+  words(W.b1,t,4.7,.1); words(W.b2,t,5.65,.1,40);
+  { const k=p(t,6.1,6.55); const pl=$('#pl'); pl.style.opacity=clamp(k*3); pl.style.transform=`scale(${.6+.4*eb(k)}) rotate(${-2*eo(k)}deg)`; }
+  $$('.chip').forEach((c,i)=>{ const st=7.0+i*.45; const k=p(t,st,st+.45); const f=t>st+.5?Math.sin((t-st)*3)*6:0;
+    c.style.opacity=clamp(k*3); c.style.transform=`translateY(${(1-eo(k))*60+f}px) scale(${.5+.5*eb(k)}) rotate(${(1-eo(k))*-12}deg)`; });
+}
+window.render=render;
+
+/* player */
+const q=new URLSearchParams(location.search);
+function fit(){ const s=Math.min(innerWidth/1080,innerHeight/1920); stage.style.transform=`scale(${s})`; }
+addEventListener('resize',fit); fit();
+document.fonts.ready.then(()=>render(+(q.get('t')||0)));
+render(+(q.get('t')||0));
+if(!q.has('render')){ let t0=performance.now(); (function loop(n){ const t=((n-t0)/1000)%DUR; render(t); requestAnimationFrame(loop); })(t0); }
+</script>
+</body>
+</html>
