@@ -54,6 +54,13 @@ body.land .blk > div[style*="height:6px"]{display:none}
 body.land .chips{position:absolute;left:1370px;top:310px;width:500px;flex-wrap:wrap;gap:36px;margin:0}
 body.land .chip{width:230px;height:230px;font-size:120px}
 body.land #calm{background:linear-gradient(90deg,#E8F1EB 0%,#FBF9F5 70%)}
+
+/* ---- fond supprimé (?alpha = transparent, ?green = vert chroma) ---- */
+html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
+html.green,body.green,body.green #stage{background:#00FF00!important}
+body.alpha .t,body.green .t{color:#fff}
+body.alpha .t{text-shadow:0 4px 28px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35)}
+body.alpha .blob,body.alpha #calm,body.alpha .grain,body.green .blob,body.green #calm,body.green .grain{display:none}
 </style>
 </head>
 <body>
@@ -146,6 +153,7 @@ window.render=render;
 /* player */
 const q=new URLSearchParams(location.search);
 if(q.has('land')) document.body.classList.add('land');
+['alpha','green'].forEach(c=>{ if(q.has(c)){ document.body.classList.add(c); document.documentElement.classList.add(c);} });
 function fit(){ const s=Math.min(innerWidth/stage.offsetWidth,innerHeight/stage.offsetHeight); stage.style.transform=`scale(${s})`; }
 addEventListener('resize',fit); fit();
 document.fonts.ready.then(()=>render(+(q.get('t')||0)));
