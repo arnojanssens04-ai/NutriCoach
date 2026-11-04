@@ -6,6 +6,7 @@ import sys
 import numpy as np
 
 SR = 44100
+MUSIC = False  # True pour remettre la musique de fond
 DUR = 10.0
 N = int(SR * DUR)
 rng = np.random.default_rng(7)
@@ -184,8 +185,9 @@ for i in range(int(DUR / beat)):
 musenv = np.minimum(1, t / 1.2) * np.where(t > DUR - 1.0, np.clip((DUR - t) / 1.0, 0, 1), 1)
 duck = 1 - .35 * np.exp(-np.clip(t - 3.28, 0, None) * 4) * (t > 3.28) * (t < 4.3)
 music = (pad * .22 + arp * .14 + kick * .18 * (t > 3.2)) * musenv * duck
-L += music
-R += np.roll(music, 380) * .98   # léger effet stéréo
+if MUSIC:
+    L += music
+    R += np.roll(music, 380) * .98   # léger effet stéréo
 
 # ---------------- masterisation ----------------
 out = np.stack([L, R], 1)
