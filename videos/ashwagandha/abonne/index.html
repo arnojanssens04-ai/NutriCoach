@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prochaine video abonne</title>
+<style>
+@font-face{font-family:'Inter';src:url(../fonts/inter.woff2) format('woff2');font-weight:100 900;}
+@font-face{font-family:'Lora';src:url(../fonts/lora.woff2) format('woff2');font-weight:400 700;}
+@font-face{font-family:'Lora';src:url(../fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+:root{--green:#2D5A43;--terra:#E07A5F;--ink:#1A201C;--amber:#F2B544}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#2b3a55}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
+html.green,body.green,body.green #stage{background:#00FF00!important}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;flex:none;transform-origin:center;background:linear-gradient(160deg,#6d7f78,#2a3430)}
+body.land #stage{width:1920px;height:1080px}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;opacity:0}
+.w{display:inline-block}
+.box{display:inline-block;font-family:'Lora',serif;font-weight:700;font-size:100px;letter-spacing:-3px;line-height:1.06;text-align:center;padding:14px 44px 26px;border-radius:34px;box-shadow:0 22px 60px rgba(0,0,0,.3);max-width:980px}
+body.land .box{font-size:92px;max-width:1500px}
+.box.c{background:#fff;color:var(--ink)}
+.box.g{background:var(--green);color:#fff}
+.box.t{background:var(--terra);color:#fff}
+.box.it{font-style:italic;font-weight:600}
+.box.big{font-size:124px;padding:16px 56px 32px}
+body.land .box.big{font-size:112px}
+.row{position:relative;display:flex;justify-content:center}
+#clap{position:absolute;right:-24px;top:-104px;font-size:110px!important}
+body.land #clap{right:-60px;top:-76px;font-size:96px!important}
+.big-emo{font-size:150px;line-height:1;filter:drop-shadow(0 12px 22px rgba(0,0,0,.3))}
+body.land .big-emo{font-size:120px}
+#btn{position:relative;display:inline-flex;align-items:center;gap:26px;background:var(--terra);color:#fff;font-weight:900;font-size:78px;letter-spacing:-1px;padding:26px 56px 30px;border-radius:999px;box-shadow:0 24px 60px rgba(224,122,95,.5)}
+#btn .emo{font-size:84px;display:inline-block;transform-origin:50% 10%}
+#ripple{position:absolute;left:50%;top:50%;width:180px;height:180px;margin:-90px 0 0 -90px;border-radius:50%;border:12px solid #fff;opacity:0}
+</style>
+</head>
+<body>
+<div id="stage">
+  <section class="scene" id="A">
+    <div class="box c" id="a1">Si tu es intéressé,</div>
+    <div class="box g" id="a2">ce sera sans doute</div>
+    <div class="row"><div class="box t big it" id="a3">la prochaine vidéo</div><div class="big-emo emo" id="clap">🎬</div></div>
+  </section>
+  <section class="scene" id="B">
+    <div class="box c" id="b1">N'hésite pas à t'abonner</div>
+    <div id="btn"><span class="emo" id="bell">🔔</span>S'abonner<div id="ripple"></div></div>
+    <div class="box g it" id="b2">et mange l'esprit tranquille</div>
+    <div class="big-emo emo" id="leaf">🌿</div>
+  </section>
+</div>
+<script>
+const DUR=10;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const p=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+function split(el){const out=[];[...el.childNodes].forEach(n=>{if(n.nodeType===3){n.textContent.split(/(\s+)/).forEach(part=>{if(!part)return;if(/^\s+$/.test(part))out.push(document.createTextNode(' '));else{const s=document.createElement('span');s.className='w';s.textContent=part;out.push(s);}});}else out.push(n);});el.textContent='';out.forEach(n=>el.appendChild(n));return [...el.querySelectorAll(':scope > .w')];}
+const IDS=['a1','a2','a3','b1','b2'];const W={};IDS.forEach(i=>W[i]=split($('#'+i)));
+function box(id,t,st,rot=0,words=true){
+  const el=$('#'+id),k=p(t,st,st+.35);
+  el.style.opacity=clamp(k*4);el.style.transform=`scale(${.82+.18*eb(k)}) translateY(${(1-eo(k))*50}px) rotate(${rot*eo(k)}deg)`;
+  if(words)W[id].forEach((w,i)=>{const q=p(t,st+i*.1,st+i*.1+.35);w.style.opacity=clamp(q*2.2);w.style.transform=`translateY(${(1-eo(q))*30}px) scale(${.9+.1*eb(q)})`;});
+}
+function pop(el,t,st,fl=true){const k=p(t,st,st+.45);const f=fl&&t>st+.5?Math.sin((t-st)*3)*8:0;el.style.opacity=clamp(k*3);el.style.transform=`translateY(${(1-eo(k))*40+f}px) scale(${.5+.5*eb(k)}) rotate(${fl&&t>st+.5?Math.sin((t-st)*2.4)*4:(1-eo(k))*-14}deg)`;}
+function render(t){
+  const ea=eio(p(t,4.2,4.6)),eb2=eio(p(t,9.6,10));
+  $('#A').style.opacity=t<4.6?Math.min(p(t,0,.05),1-ea):0;$('#A').style.transform=`translateY(${-60*ea}px) scale(${1-.05*ea})`;
+  $('#B').style.opacity=t>=4.6?1-eb2:0;
+  box('a1',t,.3,-1.5);box('a2',t,1.2,1.2);
+  { const k=p(t,2.2,2.5),el=$('#a3');el.style.opacity=clamp(k*4);el.style.transform=`scale(${1.9-.9*eo(k)}) rotate(${-8+8*eo(k)+(t>2.5?Math.sin(t*60)*4*(1-p(t,2.5,2.9)):0)}deg)`;
+    W.a3.forEach((w,i)=>{w.style.opacity=1;w.style.transform='none'}); }
+  pop($('#clap'),t,2.9);
+  box('b1',t,5.0,-1.5);
+  { const k=p(t,5.9,6.4),b=$('#btn');b.style.opacity=clamp(k*3);b.style.transform=`scale(${.6+.4*eb(k)}) translateY(${(1-eo(k))*40}px)`;
+    const press=p(t,6.6,6.7)*(1-p(t,6.7,6.85));b.style.transform+=` scale(${1-.07*press})`;
+    const r=p(t,6.7,7.3);$('#ripple').style.opacity=t>6.7?(1-r)*.85:0;$('#ripple').style.transform=`scale(${.5+1.1*eo(r)})`;
+    const wig=t>6.2&&t<7.0?Math.sin((t-6.2)*38)*22*(1-p(t,6.2,7.0)):0;$('#bell').style.transform=`rotate(${wig}deg)`; }
+  box('b2',t,7.3,1.2);
+  pop($('#leaf'),t,8.6);
+}
+window.render=render;
+const q=new URLSearchParams(location.search);
+['land','alpha','green'].forEach(c=>{if(q.has(c)){document.body.classList.add(c);document.documentElement.classList.add(c);}});
+const stage=$('#stage');
+function fit(){const s=Math.min(innerWidth/stage.offsetWidth,innerHeight/stage.offsetHeight);stage.style.transform=`scale(${s})`;}
+addEventListener('resize',fit);fit();
+document.fonts.ready.then(()=>render(+(q.get('t')||0)));render(+(q.get('t')||0));
+if(!q.has('render')){let t0=performance.now();(function loop(n){render(((n-t0)/1000)%DUR);requestAnimationFrame(loop);})(t0);}
+</script>
+</body>
+</html>
