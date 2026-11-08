@@ -12,6 +12,20 @@ import os
 NODET = json.load(open('out/zones.json')).get('nodet', []) if os.path.exists('out/zones.json') else []
 for t in list(R):
     if not R[t] and any(a <= t <= b for a, b in NODET): R[t] = [0, 0, 1080, 1560]   # gros plan : visage jusqu'à ~1560 px
+# zoom : le visage grossit autour de (zoomCenter) ; début de vidéo : visage non fiable -> on suppose la tête jusqu'à 1180 px
+try:
+    LY = json.load(open('out/layout.json')); ZP = LY['zooms']; ZC = LY['zoomCenter']; INTRO = LY.get('introEnd', 0)
+except Exception: ZP, ZC, INTRO = [], {'x': 540, 'y': 700}, 0
+sm = lambda x: x * x * (3 - 2 * x)
+def zoom(t):
+    s = 1.0
+    for z in ZP:
+        u = min(1, max(0, (t - z['t0']) / z['in'])); v = min(1, max(0, (t - z['t0'] - z['in'] - z['hold']) / z['out'])); s += z['amp'] * sm(u) * (1 - sm(v))
+    return s
+for t in list(R):
+    if t < INTRO + .3: R[t] = [0, 0, 1080, 1180]
+    elif R[t] and R[t] != [0, 0, 1080, 1560]:
+        s = zoom(t); x, y, w, h = R[t]; R[t] = [ZC['x'] + (x - ZC['x']) * s, ZC['y'] + (y - ZC['y']) * s, w * s, h * s]
 ts = [t for t in R if R[t]]
 A = [a | b for a, b in zip(alpha('out/sous-titres_transparent.mov', ts), alpha('out/visuels_transparent.mov', ts))]
 face_hit = []; hair_hit = []; worst = 0

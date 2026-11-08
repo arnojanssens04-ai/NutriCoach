@@ -72,16 +72,14 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
     for (const t of ts) {
       await page.evaluate(t => window.render(t), t);
       const png = path.join(out, `ov-${t}.png`); await page.screenshot({ path: png, omitBackground: true });
-      const f = run(['-ss', String(t), '-i', src, '-i', png, '-filter_complex', '[0:v][1:v]overlay', '-frames:v', '1', path.join(out, `s-${String(t).padStart(5, '0')}.png`)], 'inherit'); await f.done;
+      require('child_process').spawnSync('python3', ['zoom_render.py', '--still', String(t)], { stdio: 'inherit' });
     }
     console.log(ts.length, 'images');
   } else if (cmd === 'compose') {
     // pose les calques transparents sur TA vidéo, en gardant son audio d'origine (aucun son ajouté)
     const src = arg || path.join(__dirname, 'in', 'voix-video.mp4');
     const sub = path.join(out, 'sous-titres_transparent.mov'), vis = path.join(out, 'visuels_transparent.mov');
-    const f = run(['-i', src, '-i', vis, '-i', sub, '-filter_complex', '[0:v][1:v]overlay=shortest=1[a];[a][2:v]overlay=shortest=1,format=yuv420p[v]',
-      '-map', '[v]', '-map', '0:a', '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-c:a', 'copy', '-movflags', '+faststart', path.join(out, 'sur_ta_video.mp4')], 'inherit');
-    await f.done; console.log('ok sur_ta_video.mp4');
+    require('child_process').spawnSync('python3', ['zoom_render.py', path.join(out, 'sur_ta_video_haute_qualite.mp4')], { stdio: 'inherit' });
   }
   await browser.close();
 })();

@@ -9,7 +9,7 @@ import json, re, subprocess, sys, unicodedata, difflib, wave
 import numpy as np
 from faster_whisper import WhisperModel
 
-audio = sys.argv[1]; size = sys.argv[2] if len(sys.argv) > 2 else 'small'
+audio = sys.argv[1]; size = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else 'medium'; REUSE = '--reuse' in sys.argv
 L = json.load(open('out/layout.json')); words = L['words']
 subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', audio, '-vn', '-ac', '1', '-ar', '16000', 'out/voix16.wav'], check=True)
 subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', audio, '-vn', '-ac', '2', '-ar', '44100', 'out/voix.wav'], check=True)
@@ -20,10 +20,12 @@ def norm(s):
     return re.sub(r'[^a-z0-9]', '', s)
 
 prompt = ' '.join(w['raw'] for w in words)
-model = WhisperModel(size, device='cpu', compute_type='int8')
+import os
+REUSE = REUSE and os.path.exists('out/transcription.json')
+model = None if REUSE else WhisperModel(size, device='cpu', compute_type='int8')
 with wave.open('out/voix16.wav') as wf: pcm = np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(np.float32) / 32768
-segs, info = model.transcribe(pcm, language='fr', word_timestamps=True, beam_size=5, condition_on_previous_text=False, temperature=0.0)  # pas d'initial_prompt : un long texte indice fait dérailler Whisper
-heard = [(w.word.strip(), w.start, w.end) for s in segs for w in s.words if norm(w.word)]
+segs, info = ([], None) if REUSE else model.transcribe(pcm, language='fr', word_timestamps=True, beam_size=5, condition_on_previous_text=False, temperature=0.0)  # pas d'initial_prompt : un long texte indice fait dérailler Whisper
+heard = [(w['w'], w['t0'], w['t1']) for w in json.load(open('out/transcription.json'))['words'] if norm(w['w'])] if REUSE else [(w.word.strip(), w.start, w.end) for s in segs for w in s.words if norm(w.word)]
 json.dump([{'w':h[0],'t0':round(h[1],2),'t1':round(h[2],2)} for h in heard], open('out/transcription.json','w'), ensure_ascii=False)
 print('TRANSCRIPTION :', ' '.join(h[0] for h in heard))
 print(f'{len(heard)} mots entendus, {len(words)} dans le script, voix {dur:.1f} s')
