@@ -20,6 +20,8 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: W, height: H } });
+  const wj = path.join(out, 'words.json');
+  if (fs.existsSync(wj) && !process.env.NO_WORDS) { await page.addInitScript(`window.WORDS=${fs.readFileSync(wj, 'utf8')};`); console.log('horaires réels : words.json'); }
   const open = async q => { await page.goto(url(q)); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
 
   if (cmd === 'prep') {
@@ -29,9 +31,9 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
     fs.writeFileSync(path.join(out, 'sous-titres.srt'), L.chunks.map((c, i) => `${i + 1}\n${srtT(c.t0)} --> ${srtT(c.t1)}\n${c.text}\n`).join('\n'));
     const vis = { sc1: 'Étiquette FATIGUE, 😴 + ✓ « correctement », batterie qui se vide, 🥱', sc2: 'Carte Sommeil ✓, carte « Autre piste ? »', sc3: 'Carte « 8 nutriments · allégation européenne », 8 tuiles B2…Mg une à une', sc4: 'Bandeau des 8, « Fatigue réduite », « quand il en manque » ; puis « énergie en plus » barré + ✕', sc5: 'Carte 🏆, projecteur sur les 8 tuiles, tampon « Celui qui te manque »', sc6: 'Bandeau ⚠️ (secousse), carte 👩‍⚕️ « Parles-en à ton médecin » (≥ 3 s)', sc7: 'Cartes ☀️ Le matin / 🌇 L’après-midi, bulle 💬 En commentaire', sc8: 'Carte « Mange l’esprit tranquille » + 🌿, « À bientôt 👋 »' };
     let md = '| Temps | Phrase | Visuel prévu |\n|---|---|---|\n';
-    L.scenes.forEach(s => { const segs = L.segs.filter(g => g.t0 >= s.a && g.t0 < s.b + 1e-6); md += `| ${sec(s.a)} → ${sec(s.b)} | ${segs.map(g => g.text).join(' ')} | ${vis[s.id]} |\n`; });
+    L.scenes.forEach(s => { const segs = L.segs.filter(g => s.segs.includes(g.id)); md += `| ${sec(s.a)} → ${sec(s.b)} | ${segs.map(g => g.text).join(' ')} | ${vis[s.id]} |\n`; });
     fs.writeFileSync(path.join(out, 'tableau.md'), md);
-    console.log('durée', L.total, 's\n' + md);
+    console.log('durée', L.total, 's' + (L.real ? ' (horaires réels)' : ' (estimée)') + '\n' + md); (L.notes || []).forEach(n => console.log('⚠', n));
   } else if (cmd === 'frames') {
     await open('');
     const L = await page.evaluate(() => window.LAYOUT);
@@ -47,7 +49,8 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
     const name = { all: 'video_complete', subs: 'sous-titres', vis: 'visuels' }[layer];
     let ff;
     if (layer === 'all') {
-      ff = run(['-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', '-i', wav, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '17', '-preset', 'medium', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', path.join(out, `${name}.mp4`)]);
+      const voice = path.join(out, 'voix.wav'); const hasVoice = fs.existsSync(voice) && !process.env.NO_WORDS;
+      ff = run(['-f', 'image2pipe', '-framerate', String(FPS), '-i', '-', ...(hasVoice ? ['-i', voice, '-i', wav, '-filter_complex', '[2:a]volume=0.5[s];[1:a][s]amix=inputs=2:normalize=0:duration=longest,alimiter=limit=0.89[m]', '-map', '0:v', '-map', '[m]'] : ['-i', wav]), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '17', '-preset', 'medium', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', path.join(out, `${name}.mp4`)]);
     } else {
       const aud = layer === 'vis' ? ['-i', wav] : [];
       const maps = a => layer === 'vis' ? [...a, '-map', '1:a'] : a;

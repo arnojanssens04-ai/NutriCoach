@@ -244,18 +244,21 @@ const norm=s=>s.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
 const CH=[]; let TOTAL=0; const SEG={};
 (function layout(){
   const fix=s=>s.replace(/ ([?:!])/g,' $1');
-  const all=[]; SEGS.forEach(s=>fix(s.text).split('|').forEach(c=>c.trim().split(/\s+/).forEach(w=>all.push(w.replace(/\*/g,'')))));
+  const all=[]; SEGS.forEach(s=>fix(s.text).split('|').forEach(c=>c.trim().split(/[ \t\n]+/).forEach(w=>all.push(w.replace(/\*/g,'')))));
   const avg=all.reduce((a,w)=>a+w.length,0)/all.length;
-  let t=START;
+  let t=START; let wi=0; const REAL=(window.WORDS&&window.WORDS.words&&window.WORDS.words.length===all.length)?window.WORDS:null;
+  if(window.WORDS&&!REAL) console.warn('WORDS ignoré : '+(window.WORDS.words||[]).length+' mots fournis, '+all.length+' attendus');
   SEGS.forEach(s=>{ s.words=[]; s.chunks=[];
     fix(s.text).split('|').forEach(ct=>{ const ch={seg:s.id,words:[]};
-      ct.trim().split(/\s+/).forEach(raw=>{ const c=raw.replace(/\*/g,''); const d=(c.length+2)/(avg+2)/WPS;
+      ct.trim().split(/[ \t\n]+/).forEach(raw=>{ const c=raw.replace(/\*/g,''); const d=(c.length+2)/(avg+2)/WPS;
         const w={raw:c,norm:norm(c),key:raw.includes('*'),t0:t,t1:t+d}; t+=d; const l=c.slice(-1);
         t+= c.endsWith('…')?.3 : l===','?.15 : l===':'?.2 : (l==='.'||l==='?')?.3 : 0;
+        if(REAL){ w.t0=REAL.words[wi].t0; w.t1=REAL.words[wi].t1; } wi++;
         ch.words.push(w); s.words.push(w); });
       ch.t0=ch.words[0].t0; ch.t1=ch.words[ch.words.length-1].t1; s.chunks.push(ch); CH.push(ch); });
     s.t0=s.words[0].t0; s.t1=s.words[s.words.length-1].t1; t+=(s.after||0); SEG[s.id]=s; });
-  TOTAL=Math.ceil((t+.2)*10)/10;
+  TOTAL=REAL?REAL.total:Math.ceil((t+.2)*10)/10;
+  window.LAYOUT_REAL=!!REAL;
 })();
 const wt=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.norm===k); if(!m[n]) throw new Error('mot introuvable '+id+' '+key); return m[n].t0; };
 const wt1=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.norm===k); return m[n].t1; };
@@ -275,6 +278,8 @@ Q.tile=TILES.map(x=>wt('s3b',x[2]));
 Q.red=wt('s4a','réduire'); Q.cond=wt('s4a','quand'); Q.ils=wt('s4a','ils'); Q.don=wt('s4b','donnent'); Q.ener=wt('s4b','lénergie'); Q.plus=wt('s4b','plus');
 Q.mei=wt('s5a','meilleur'); Q.tu=wt('s5a','tu'); Q.lequel=wt('s5a','lequel'); Q.celui=wt('s5b','celui');
 Q.dure=wt('s6a','dure'); Q.parles=wt('s6b','parlesen'); Q.med=wt('s6b','médecin');
+/* règle santé : la consigne « médecin » reste à l'écran ≥ 3 s, quitte à retarder la scène suivante */
+const NOTES=[]; { const need=Q.parles+3.0+.3; if(WIN.sc7.a<need){ NOTES.push('Scène 7 retardée de '+(need-WIN.sc7.a).toFixed(1)+' s pour garder « Parles-en à ton médecin » 3 s à l’écran.'); WIN.sc7.a=need; WIN.sc6.b=need; } }
 Q.matin=wt('s7a','matin'); Q.pm=wt('s7a','laprèsmidi'); Q.comm=wt('s7b','commentaire'); Q.toi=wt('s7a','toi');
 Q.mange=wt('s8','mange'); Q.abi=wt('s8','à');
 
@@ -401,9 +406,9 @@ function render(t){
         const q=p(t,w.t0,w.t0+.15); s.style.transform=t>=w.t0?`scale(${cur?(.92+.12*Math.sin(Math.min(1,q)*Math.PI*.9)):1})`:'scale(1)'; }); } });
 }
 window.render=render;
-window.LAYOUT={total:TOTAL,segs:SEGS.map(s=>({id:s.id,text:s.text.replace(/[|*]/g,m=>m==='|'?' / ':''),t0:s.t0,t1:s.t1})),
+window.LAYOUT={notes:NOTES,real:window.LAYOUT_REAL,words:SEGS.flatMap(g=>g.words.map(w=>({seg:g.id,raw:w.raw.replace(/\u00A0/g,' ')}))),total:TOTAL,segs:SEGS.map(s=>({id:s.id,text:s.text.replace(/[|*]/g,m=>m==='|'?' / ':''),t0:s.t0,t1:s.t1})),
   chunks:CH.map(c=>({seg:c.seg,t0:c.show0,t1:c.show1,text:c.words.map(w=>w.raw).join(' ').replace(/ /g,' ')})),
-  scenes:SCENES.map(([id])=>({id,a:WIN[id].a,b:WIN[id].b})),events:EV};
+  scenes:SCENES.map(([id,segs])=>({id,segs,a:WIN[id].a,b:WIN[id].b})),events:EV};
 
 /* lecteur */
 const q=new URLSearchParams(location.search);
