@@ -37,6 +37,7 @@ Méthode validée sur les vidéos « fatigue et nutriments » (`videos/fatigue/`
 - **Texte** : sans bandeau (lettres blanches cerclées de noir), 3 à 6 mots, 2 lignes max, mot prononcé en jaune, mots clés en accent et majuscules. Il se place **sous** les animations (bas ≈ 1450 px) et **remonte** quand il n'y a pas d'animation.
 - **Gros plan** (visage qui remplit l'écran) : plus d'animation, le texte descend sous le menton.
 - Zones d'interface Instagram : garder ~250 px libres en haut, ~450 px en bas, ~120 px à droite ; texte et cartes entre x = 100 et 960.
+- **Pas de logo** CapSanté ni de marque ajoutée sur les vidéos (retiré à la demande de l'utilisateur ; ne pas le remettre sans demande).
 - **Aucun effet sonore** : on garde l'audio d'origine tel quel (`-c:a copy`). Les calques transparents sont silencieux.
 - **Animations sobres** : fondus, petit rebond, tampon ; pas de gros effets. Il n'est pas obligatoire de tout illustrer : le texte seul suffit parfois.
 - **Rythme** : viser un événement (carte, zoom, emoji, nouveau texte) toutes les 3 à 4 s, sans surcharger : 1 ou 2 éléments à la fois.
