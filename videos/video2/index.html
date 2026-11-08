@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fatigue et nutriments (compact)</title>
+<style>
+@font-face{font-family:'Inter';src:url(../ashwagandha/fonts/inter.woff2) format('woff2');font-weight:100 900;}
+@font-face{font-family:'Lora';src:url(../ashwagandha/fonts/lora.woff2) format('woff2');font-weight:400 700;}
+@font-face{font-family:'Lora';src:url(../ashwagandha/fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+:root{--green:#2D5A43;--sage:#4A7A3A;--soft:#EAF2ED;--terra:#E07A5F;--terra-soft:#FBE7E0;--ink:#1A201C;--muted:#65726A;--line:#E6E1D8;--red:#C0392B;--amber:#F2B544}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#111}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;color:var(--ink)}
+html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;flex:none;transform-origin:center;background:linear-gradient(160deg,#6d7f78,#2a3430)}
+body.l-subs #anim{display:none} body.l-vis #subs{display:none}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
+
+/* ===== animations : zone compacte sur le pull, juste sous le menton (placée d'après la position du visage) ===== */
+#anim{position:absolute;left:100px;top:0;width:860px;height:210px}
+.cs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:16px;opacity:0;visibility:hidden}
+.cd{position:relative;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:26px;border:2px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.pl{display:inline-block;font-weight:900;font-size:30px;letter-spacing:3px;text-transform:uppercase;padding:9px 24px 11px;border-radius:999px;color:#fff;background:var(--terra);box-shadow:0 10px 24px rgba(224,122,95,.45)}
+.bg{position:absolute;width:50px;height:50px;border-radius:50%;background:var(--sage);color:#fff;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(45,90,67,.45)}
+/* 1 */
+#h-card{width:150px;height:150px} #h-emo{font-size:96px;line-height:1} #h-ok{right:-14px;top:-14px} #h-batt{width:350px;height:130px}
+/* 2 */
+.r2{height:124px;gap:14px;padding:0 24px;white-space:nowrap}
+.r2 .emo{font-size:60px} .r2 b{font-family:'Lora',serif;font-size:42px;font-weight:700;letter-spacing:-1px}
+.r2 .ck{width:46px;height:46px;border-radius:50%;background:var(--sage);color:#fff;font-style:normal;font-size:30px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.r2 .ck.q{background:var(--amber);color:var(--ink)}
+.dsh{border:4px dashed #B9B2A3;box-shadow:none;background:rgba(255,255,255,.92)}
+/* 3 */
+#e-head{width:390px;height:176px;gap:16px;padding:0 20px;justify-content:flex-start}
+#e-head .emo{font-size:86px} #e-head .t1{font-family:'Lora',serif;font-weight:700;font-size:44px;letter-spacing:-1px;line-height:1}
+#e-head .t2{margin-top:8px;font-weight:800;font-size:18px;letter-spacing:1px;text-transform:uppercase;color:var(--terra);white-space:nowrap}
+#e-head .t3{margin-top:3px;font-weight:700;font-size:22px;color:var(--muted)}
+.g3{display:grid;grid-template-columns:repeat(4,84px);gap:10px}
+.c3{width:84px;height:84px;border-radius:22px;border:3px dashed #D9D2C3;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:48px;color:#C9C2B3;background:rgba(255,255,255,.55)}
+/* 4 */
+.sg{display:grid;grid-template-columns:repeat(4,60px);gap:8px}
+.m4{width:60px;height:60px;border-radius:16px;border:3px solid var(--green);background:var(--soft);color:var(--green);font-family:'Lora',serif;font-weight:700;font-size:34px;display:flex;align-items:center;justify-content:center}
+#n-arr{font-size:60px;line-height:1;color:var(--green);font-weight:900;margin:0 4px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+#n-card{width:320px;height:100px;background:var(--green);border-color:var(--green);color:#fff;gap:14px}
+#n-card .emo{font-size:54px} #n-card b{font-family:'Lora',serif;font-size:38px;font-weight:700;letter-spacing:-1px}
+#n-cond{font-size:26px;letter-spacing:0;text-transform:none;padding:7px 22px 9px}
+.sub4{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:16px}
+#n-no{width:470px;height:140px;gap:20px} #n-no .emo{font-size:80px}
+#n-no b{font-family:'Lora',serif;font-size:46px;font-weight:700;line-height:1.05;letter-spacing:-1px;position:relative}
+#n-no .st{position:absolute;left:-2%;top:50%;height:12px;margin-top:-4px;background:var(--red);border-radius:10px;width:0;transform:rotate(-3deg);transform-origin:left center}
+#n-x{width:110px;height:110px;border-radius:50%;background:var(--red);color:#fff;font-size:80px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(192,57,43,.45)}
+/* 5 */
+#l-head{width:320px;height:150px;gap:14px;padding:0 18px;justify-content:flex-start}
+#l-head .emo{font-size:66px} #l-head b{font-family:'Lora',serif;font-size:34px;line-height:1.02;letter-spacing:-1px}
+#l-head small{display:block;margin-top:6px;font-weight:800;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--terra)}
+.g5{display:grid;grid-template-columns:repeat(4,96px);gap:10px}
+.c5{width:96px;height:80px;border-radius:20px;border:3px dashed #D9D2C3;position:relative;background:rgba(255,255,255,.45)}
+.t5{position:absolute;inset:-3px;border-radius:20px;border:3px solid;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:38px;letter-spacing:-1px;box-shadow:0 8px 20px rgba(0,0,0,.28)}
+.t5.g{background:var(--soft);border-color:var(--green);color:var(--green)}
+.t5.a{background:#FFF3D6;border-color:var(--amber);color:#8A5A00}
+.t5.t{background:var(--terra-soft);border-color:var(--terra);color:#8A3B26}
+/* 6 */
+#w-ban{width:380px;height:100px;background:var(--amber);border-color:var(--amber);gap:14px}
+#w-ban .emo{font-size:54px} #w-ban b{font-weight:900;font-size:32px;letter-spacing:-.5px}
+#w-doc{width:440px;height:150px;border:5px solid var(--green);gap:18px;padding:0 20px;justify-content:flex-start}
+#w-doc .emo{font-size:88px} #w-doc b{font-family:'Lora',serif;font-size:40px;line-height:1.05;letter-spacing:-1px}
+/* 7 */
+#e8-card{width:500px;height:150px;background:var(--green);border-color:var(--green);color:#fff;text-align:center}
+#e8-card b{font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:50px;line-height:1.02;letter-spacing:-1.5px}
+#e8-leaf{position:absolute;right:-6px;top:-46px;font-size:70px}
+#e8-bye{width:260px;height:96px;gap:14px;border-radius:999px}
+#e8-bye img{width:60px;height:60px;border-radius:14px} #e8-bye b{font-weight:900;font-size:34px;color:var(--green)}
+
+/* ===== sous-titres : sans bandeau (lettres cerclées), sous les animations ; ils remontent quand il n'y en a pas ===== */
+#subs{position:absolute;left:100px;width:860px;top:0;height:140px}
+.sb{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;opacity:0}
+.sb > div{max-width:860px;text-align:center;font-weight:900;font-size:56px;line-height:1.1;letter-spacing:-1px;word-spacing:.12em;color:#fff;text-wrap:balance;
+  -webkit-text-stroke:11px #14201A;paint-order:stroke fill;text-shadow:0 5px 18px rgba(0,0,0,.55)}
+.sb .w{display:inline-block;color:rgba(255,255,255,.72)}
+.sb .w.k{text-transform:uppercase;color:rgba(255,176,152,.85)}
+.sb .w.done{color:#fff}
+.sb .w.k.done{color:#FF9E85}
+.sb .w.cur,.sb .w.k.cur{color:var(--amber)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="anim">
+    <!-- 1 : hook -->
+    <div class="cs" id="c1">
+      <div class="pl" id="h-label">Fatigue</div>
+      <div class="cd" id="h-card"><div class="emo" id="h-emo">😴</div><div class="bg" id="h-ok">✓</div></div>
+      <div class="cd" id="h-batt"><svg width="320" height="100" viewBox="0 0 600 190"><rect x="8" y="8" width="520" height="174" rx="38" fill="#fff" stroke="#1A201C" stroke-width="12"/><rect x="540" y="55" width="46" height="80" rx="14" fill="#1A201C"/><rect id="h-lvl" x="32" y="32" width="470" height="126" rx="22" fill="#4A7A3A"/></svg></div>
+    </div>
+    <!-- 2 : sommeil / autre piste -->
+    <div class="cs" id="c2">
+      <div class="cd r2" id="p-sleep"><span class="emo">😴</span><b>Sommeil</b><i class="ck" id="p-ok">✓</i></div>
+      <div class="cd r2 dsh" id="p-other"><span class="emo">🧭</span><b>Autre piste</b><i class="ck q">?</i></div>
+    </div>
+    <!-- 3 : nutriments, lesquels ? -->
+    <div class="cs" id="c3">
+      <div class="cd" id="e-head"><span class="emo">🧪</span><div><div class="t1">nutriments</div><div class="t2" id="e-eu">🇪🇺 Allégation européenne</div><div class="t3" id="e-fat">sur la fatigue</div></div></div>
+      <div class="g3" id="g3"></div>
+    </div>
+    <!-- 4 : fatigue réduite / pas d'énergie en plus -->
+    <div class="cs" id="c4">
+      <div class="sub4" id="n-a"><div class="sg" id="n-strip"></div><div id="n-arr">→</div>
+        <div class="col"><div class="cd" id="n-card"><span class="emo">📉</span><b>Fatigue réduite</b></div><div class="pl" id="n-cond">quand il en manque</div></div></div>
+      <div class="sub4" id="n-b" style="opacity:0"><div class="cd" id="n-no"><span class="emo">⚡</span><b>de l’énergie<br>en plus<i class="st" id="n-st"></i></b></div><div id="n-x">✕</div></div>
+    </div>
+    <!-- 5 : la liste -->
+    <div class="cs" id="c5">
+      <div class="cd" id="l-head"><span class="emo">🧪</span><div><b>Les nutriments</b><small>🇪🇺 allégation européenne</small></div></div>
+      <div class="g5" id="g5"></div>
+    </div>
+    <!-- 6 : fatigue qui persiste -> médecin -->
+    <div class="cs" id="c6">
+      <div class="cd" id="w-ban"><span class="emo">⚠️</span><b>Fatigue qui persiste</b></div>
+      <div class="cd" id="w-doc"><span class="emo">👩‍⚕️</span><b>En parler à ton médecin</b></div>
+    </div>
+    <!-- 7 : fin -->
+    <div class="cs" id="c7">
+      <div class="cd" id="e8-card"><b>Mange l’esprit<br>tranquille</b><span class="emo" id="e8-leaf">🌿</span></div>
+      <div class="cd" id="e8-bye"><img src="../../logo-capsante.png" alt=""><b>CapSanté</b></div>
+    </div>
+  </div>
+  <div id="subs"></div>
+</div>
+
+<script>
+const WPS = 2.7, START = 0.45;
+const SEGS = [
+  {id:'s1',  text:'Tu dors à peu près correctement,|mais tu es quand même *fatigué*.'},
+  {id:'s2a', text:'Alors, tu le sais déjà,|le *sommeil* compte.'},
+  {id:'s2b', text:'Mais ce n’est pas|la seule *piste*.'},
+  {id:'s3a', text:'Il existe différents *nutriments*|*ayant* une allégation européenne|ciblée sur la *fatigue*.'},
+  {id:'s3b', text:'Tu veux savoir *lesquels* ?'},
+  {id:'s4a', text:'Ces différents nutriments|vont contribuer à *réduire*|la fatigue quand il t’en manque.'},
+  {id:'s4b', text:'Mais évidemment, c’est pas eux|qui vont te donner de l’*énergie*.'},
+  {id:'s5',  text:'Alors, il s’agit de|la vitamine *B2*, la *B3*,|la *B5*, la *B6*,|la *B9*, la vitamine *B12*,|et enfin, la vitamine *C*,|et le *magnésium*.'},
+  {id:'s6',  text:'Alors si tu sens|qu’une *fatigue* persiste,|eh bien n’hésite pas|à en parler à ton *médecin*|et à te complémenter|dans ce cas-là.', after:1.0},
+  {id:'s7',  text:'Et n’oublie pas,|mange l’esprit *tranquille*.', after:1.0},
+];
+/* scènes : quels segments, quand la scène commence = 1er mot - 0,1 s */
+const SCENES = [['sc1',['s1']],['sc2',['s2a','s2b']],['sc3',['s3a','s3b']],['sc4',['s4a','s4b']],['sc5',['s5']],['sc6',['s6']],['sc7',['s7']]];
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const p=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+const norm=s=>s.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+
+/* ---------- layout des mots ---------- */
+const CH=[]; let TOTAL=0; const SEG={};
+(function layout(){
+  const fix=s=>s.replace(/ ([?:!])/g,' $1');
+  const all=[]; SEGS.forEach(s=>fix(s.text).split('|').forEach(c=>c.trim().split(/[ \t\n]+/).forEach(w=>all.push(w.replace(/\*/g,'')))));
+  const avg=all.reduce((a,w)=>a+w.length,0)/all.length;
+  let t=START; let wi=0; const REAL=(window.WORDS&&window.WORDS.words&&window.WORDS.words.length===all.length)?window.WORDS:null;
+  if(window.WORDS&&!REAL) console.warn('WORDS ignoré : '+(window.WORDS.words||[]).length+' mots fournis, '+all.length+' attendus');
+  SEGS.forEach(s=>{ s.words=[]; s.chunks=[];
+    fix(s.text).split('|').forEach(ct=>{ const ch={seg:s.id,words:[]};
+      ct.trim().split(/[ \t\n]+/).forEach(raw=>{ const c=raw.replace(/\*/g,''); const d=(c.length+2)/(avg+2)/WPS;
+        const w={raw:c,norm:norm(c),key:raw.includes('*'),t0:t,t1:t+d}; t+=d; const l=c.slice(-1);
+        t+= c.endsWith('…')?.3 : l===','?.15 : l===':'?.2 : (l==='.'||l==='?')?.3 : 0;
+        if(REAL){ w.t0=REAL.words[wi].t0; w.t1=REAL.words[wi].t1; } wi++;
+        ch.words.push(w); s.words.push(w); });
+      ch.t0=ch.words[0].t0; ch.t1=ch.words[ch.words.length-1].t1; s.chunks.push(ch); CH.push(ch); });
+    s.t0=s.words[0].t0; s.t1=s.words[s.words.length-1].t1; t+=(s.after||0); SEG[s.id]=s; });
+  TOTAL=REAL?REAL.total:Math.ceil((t+.2)*10)/10;
+  window.LAYOUT_REAL=!!REAL;
+})();
+const wt=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.norm===k); if(!m[n]) throw new Error('mot introuvable '+id+' '+key); return m[n].t0; };
+const wt1=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.norm===k); return m[n].t1; };
+
+
+/* ---------- où est ton visage ? (mesuré dans ta vidéo) : rien ne doit passer dessus ---------- */
+const ZN=Object.assign({closeups:[],faces:[],nodet:[]},window.ZONES||{});
+function fbAt(t){ /* bas du visage (menton + cou) à l'instant t, en px */
+  if(ZN.nodet.some(([a,b])=>t>=a&&t<=b)) return 1630;           /* gros plan : le visage descend jusqu'à ~1560 */
+  let m=0,found=false; ZN.faces.forEach(([ft,x,y,w,h])=>{ if(Math.abs(ft-t)<=.3){ m=Math.max(m,y+h+60); found=true; } });
+  if(found) return m;
+  let best=1630,bd=9; ZN.faces.forEach(([ft,x,y,w,h])=>{ const d=Math.abs(ft-t); if(d<bd){ bd=d; best=y+h+60; } });
+  return bd<=1.0?best:1630; }
+function topLimitAt(t){ let s=0,n=0; for(let d=-.2;d<=.2001;d+=.05){ s+=fbAt(t+d); n++; } return Math.max(1075,s/n+12); }
+
+/* ---------- cues ---------- */
+const EV={subs:[],vis:[]}; const Q={};
+Q.tC=wt('s1','correctement'); Q.tB=wt('s1','quand'); Q.tF=wt('s1','fatigué');
+Q.sleep=wt('s2a','sommeil'); Q.compte=wt('s2a','compte'); Q.compteEnd=wt1('s2a','compte'); Q.seule=wt('s2b','seule'); Q.pisteEnd=wt1('s2b','piste');
+Q.nutr=wt('s3a','nutriments'); Q.eu=wt('s3a','européenne'); Q.fat=wt('s3a','fatigue'); Q.tu=wt('s3b','tu'); Q.lesEnd=wt1('s3b','lesquels');
+const TILES=[['B2','g','b2'],['B3','g','b3'],['B5','g','b5'],['B6','g','b6'],['B9','g','b9'],['B12','g','b12'],['C','a','c'],['Mg','t','magnésium']];
+Q.ces=wt('s4a','ces'); Q.red=wt('s4a','réduire'); Q.cond=wt('s4a','quand'); Q.don=wt('s4b','donner'); Q.ener=wt('s4b','lénergie'); Q.enerEnd=wt1('s4b','lénergie');
+Q.alors5=wt('s5','alors'); Q.tile=TILES.map(x=>wt('s5',x[2])); Q.listEnd=SEG.s5.t1;
+Q.persiste=wt('s6','persiste'); Q.parler=wt('s6','parler'); Q.mange=wt('s7','mange');
+
+/* ---------- fenêtres d'affichage des animations ---------- */
+const SC=[
+ {id:'c1',a:0,b:SEG.s1.t1+.45,desc:'Étiquette FATIGUE, 😴 avec ✓, batterie qui se vide, 🥱',say:'Tu dors à peu près correctement, mais tu es quand même fatigué.'},
+ {id:'c2',a:Q.sleep-.3,b:Q.pisteEnd+.9,desc:'Cartes « Sommeil ✓ » et « Autre piste ? »',say:'…le sommeil compte. Mais ce n’est pas la seule piste.'},
+ {id:'c3',a:SEG.s3a.t0-.1,b:SEG.s3b.t1+.45,desc:'« nutriments · allégation européenne » + 8 cases « ? » avec projecteur',say:'Il existe différents nutriments ayant une allégation européenne… Tu veux savoir lesquels ?'},
+ {id:'c4',a:SEG.s4a.t0-.1,b:SEG.s4b.t1+.45,desc:'8 « ? » → « Fatigue réduite » (quand il en manque) ; puis « énergie en plus » barré + ✕',say:'Ces nutriments vont contribuer à réduire la fatigue… c’est pas eux qui vont te donner de l’énergie.'},
+ {id:'c5',a:SEG.s5.t0-.1,b:Q.listEnd+1.0,desc:'« Les nutriments » + 8 tuiles B2, B3, B5, B6, B9, B12, C, Mg',say:'Alors, il s’agit de la vitamine B2, la B3… et le magnésium.'},
+ {id:'c6',a:SEG.s6.t0-.1,b:Math.max(Q.parler-.1+3.4,SEG.s6.t1+.5),desc:'⚠️ « Fatigue qui persiste » + 👩‍⚕️ « En parler à ton médecin » (au moins 3 s)',say:'Si tu sens qu’une fatigue persiste… en parler à ton médecin…'},
+ {id:'c7',a:SEG.s7.t0-.1,b:TOTAL,desc:'« Mange l’esprit tranquille » 🌿 + logo CapSanté',say:'Et n’oublie pas, mange l’esprit tranquille.'},
+];
+for(let i=0;i<SC.length-1;i++){ if(SC[i].b>SC[i+1].a){ if(SC[i].id==='c6') SC[i+1].a=SC[i].b; else SC[i].b=Math.max(SC[i].a+.7,SC[i+1].a); } }
+/* périodes « avec animation » (les petits trous < 0,5 s sont regroupés pour que le texte ne fasse pas le yoyo) */
+const PRES=[]; SC.forEach(s=>{ const l=PRES[PRES.length-1]; if(l&&s.a-l[1]<.5) l[1]=s.b; else PRES.push([s.a,s.b]); });
+const NOTES=[];
+
+/* ---------- DOM dynamique ---------- */
+$('#g3').innerHTML=TILES.map(()=>'<div class="c3">?</div>').join('');
+$('#g5').innerHTML=TILES.map(c=>`<div class="c5"><div class="t5 ${c[1]}">${c[0]}</div></div>`).join('');
+$('#n-strip').innerHTML=TILES.map(()=>'<div class="m4">?</div>').join('');
+const C3=$$('#g3 .c3'), C5=$$('#g5 .c5'), T5=$$('#g5 .t5'), TM=$$('#n-strip .m4');
+const SB=$('#subs');
+CH.forEach(c=>{ const d=document.createElement('div'); d.className='sb';
+  d.innerHTML='<div>'+c.words.map(w=>`<span class="w${w.key?' k':''}">${w.raw}</span>`).join(' ')+'</div>';
+  SB.appendChild(d); c.el=d; c.ws=[...d.querySelectorAll('.w')]; });
+CH.forEach((c,i)=>{ const nx=CH[i+1]; c.show0=c.t0-.05; c.show1=Math.min(c.t1+.3, nx?nx.t0-.05:1e9); });
+
+/* ---------- helpers d'animation (comme la première version, en plus petit) ---------- */
+function tf(el,{o=1,x=0,y=0,s=1,r=0}={}){ el.style.opacity=o; el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; }
+const K={
+  rise:(t,st)=>{const k=eo(p(t,st,st+.45));return{o:k,y:(1-k)*40};},
+  pop:(t,st)=>{const k=p(t,st,st+.4);return{o:clamp(k*3),s:.55+.45*eb(k),y:(1-eo(k))*20};},
+  slide:(t,st,dir=-1)=>{const k=p(t,st,st+.4);return{o:clamp(k*2.5),x:(1-eo(k))*90*dir,s:.96+.04*eb(k)};},
+  stamp:(t,st)=>{const k=p(t,st,st+.3);return{o:clamp(k*4),s:1.9-.9*eo(k),r:(1-eo(k))*-10};},
+};
+function put(el,t,kind,st,o={}){ const a=K[kind](t,st,o.dir); a.r=(a.r||0)+(o.r||0);
+  if(o.float&&t>st+.5){ a.y=(a.y||0)+Math.sin((t-st)*3)*5; a.r+=Math.sin((t-st)*2.4)*3; }
+  if(o.shake&&t>st+.3){ const q=p(t,st+.3,st+.8); a.x=(a.x||0)+Math.sin(t*60)*7*(1-q)*(q<1?1:0); }
+  tf(el,a); }
+
+/* ---------- rendu ---------- */
+let LASTPOS={};
+function render(t){
+  /* 1. positions : tout est calculé à partir du menton */
+  const top=topLimitAt(t);
+  const allowed=clamp((1180-top)/30,0,1);                       /* trop bas (visage énorme) : plus d'animation, seulement le texte */
+  let pres=0; PRES.forEach(([A,B])=>{ pres=Math.max(pres,Math.min(p(t,A,A+.3),1-p(t,B-.3,B))); });
+  const a=clamp(pres)*allowed;
+  const noAnimBottom=Math.min(top+165,1850), withAnimBottom=Math.max(1450,top+362);
+  const textBottom=noAnimBottom+(withAnimBottom-noAnimBottom)*a;
+  $('#anim').style.transform=`translateY(${top}px)`;
+  SB.style.transform=`translateY(${textBottom-140}px)`;
+  LASTPOS={t,top,textBottom,a};
+
+  /* 2. visibilité des scènes */
+  SC.forEach(s=>{ const el=$('#'+s.id); const v=Math.min(p(t,s.a,s.a+.25),1-p(t,s.b-.25,s.b))*allowed; el.style.opacity=clamp(v); el.style.visibility=v<=.001?'hidden':'visible'; });
+
+  /* 3. animations (anciens effets, version compacte) */
+  { put($('#h-label'),t,'stamp',.05,{r:-3});
+    const x=t>=Q.tF?Math.sin(t*60)*8*(1-p(t,Q.tF,Q.tF+.5)):0; const k=p(t,.35,.8);
+    $('#h-card').style.opacity=clamp(k*3); $('#h-card').style.transform=`translate(${x}px,${(1-eo(k))*24+(t>.9?Math.sin(t*3)*4:0)}px) scale(${.6+.4*eb(k)})`;
+    $('#h-emo').textContent=t>=Q.tF?'🥱':'😴'; put($('#h-ok'),t,'pop',Q.tC); if(t>=Q.tF) $('#h-ok').style.opacity=1-p(t,Q.tF,Q.tF+.2);
+    put($('#h-batt'),t,'rise',Q.tB);
+    const lv=.8-.68*eio(p(t,Q.tF-.55,Q.tF+.5)); const r=$('#h-lvl'); r.setAttribute('width',470*lv); r.setAttribute('fill',lv>.5?'#4A7A3A':lv>.28?'#F2B544':'#C0392B'); }
+  { put($('#p-sleep'),t,'slide',Q.sleep-.1,{dir:-1}); put($('#p-ok'),t,'pop',Q.compte); put($('#p-other'),t,'slide',Q.seule-.1,{dir:1}); }
+  { put($('#e-head'),t,'pop',Q.nutr-.1); put($('#e-eu'),t,'pop',Q.eu-.15); put($('#e-fat'),t,'pop',Q.fat-.1);
+    const run=t>=Q.tu&&t<Q.lesEnd, idx=Math.floor((t-Q.tu)/.17)%8;
+    C3.forEach((el,i)=>{ const k=p(t,Q.eu+i*.08-.1,Q.eu+i*.08+.35), on=run&&i===idx;
+      el.style.opacity=clamp(k*3)*(run&&!on?.55:1); el.style.transform=`scale(${(.6+.4*eb(k))*(on?1.12:1)})`; el.style.borderColor=on?'#E07A5F':''; }); }
+  { const sw=eio(p(t,Q.don-.45,Q.don-.1));
+    $('#n-a').style.opacity=1-sw; $('#n-a').style.transform=`translateY(${-24*sw}px)`; $('#n-b').style.opacity=sw;
+    TM.forEach((el,i)=>put(el,t,'pop',Q.ces+i*.07)); put($('#n-arr'),t,'rise',Q.red-.1); put($('#n-card'),t,'pop',Q.red); put($('#n-cond'),t,'pop',Q.cond);
+    $('#n-no').style.opacity=clamp(p(t,Q.don-.1,Q.don+.3)*3); const kk=p(t,Q.don-.1,Q.don+.4); $('#n-no').style.transform=`scale(${.6+.4*eb(kk)})`;
+    $('#n-st').style.width=(eo(p(t,Q.ener,Q.ener+.45))*104)+'%'; put($('#n-x'),t,'stamp',Math.max(Q.ener+.2,Q.enerEnd-.15),{shake:1}); }
+  { put($('#l-head'),t,'pop',Q.alors5-.05);
+    C5.forEach((c,i)=>{ const k=p(t,Q.alors5+.1+i*.05,Q.alors5+.5+i*.05); c.style.opacity=clamp(k*3); c.style.transform=`scale(${.7+.3*eb(k)})`; });
+    T5.forEach((el,i)=>put(el,t,'pop',Q.tile[i]-.05)); }
+  { const ban=$('#w-ban'); const s0=SC[5].a+.1; const k=p(t,s0,s0+.32); const sh=t>s0+.3?Math.sin(t*60)*6*(1-p(t,s0+.3,s0+.8)):0;
+    ban.style.opacity=clamp(k*4); ban.style.transform=`translateX(${sh}px) scale(${1.9-.9*eo(k)}) rotate(${-4*(1-eo(k))}deg)`;
+    put($('#w-doc'),t,'pop',Q.parler-.1); }
+  { put($('#e8-card'),t,'stamp',SC[6].a+.2); put($('#e8-leaf'),t,'pop',SC[6].a+.7,{float:1}); put($('#e8-bye'),t,'pop',SC[6].a+.9); }
+
+  /* 4. sous-titres */
+  CH.forEach(c=>{ const on=t>=c.show0&&t<c.show1; c.el.style.opacity=on?Math.min(1,p(t,c.show0,c.show0+.1)):0;
+    if(on) c.ws.forEach((s,i)=>{ const w=c.words[i]; const cur=t>=w.t0&&t<w.t1+.08, done=t>=w.t1+.08; s.className='w'+(w.key?' k':'')+(done?' done':'')+(cur?' cur':''); }); });
+}
+window.render=render; window.positionsAt=t=>{ render(t); return LASTPOS; };
+window.LAYOUT={notes:NOTES,real:window.LAYOUT_REAL,words:SEGS.flatMap(g=>g.words.map(w=>({seg:g.id,raw:w.raw.replace(/ /g,' ')}))),total:TOTAL,
+  segs:SEGS.map(s=>({id:s.id,text:s.text.replace(/[|*]/g,m=>m==='|'?' / ':''),t0:s.t0,t1:s.t1})),
+  chunks:CH.map(c=>({seg:c.seg,t0:c.show0,t1:c.show1,text:c.words.map(w=>w.raw).join(' ').replace(/ /g,' ')})),
+  badges:SC.map(s=>({id:s.id,a:s.a,b:s.b,desc:s.desc,say:s.say})),pres:PRES,scenes:[],events:EV};
+
+/* lecteur */
+const q=new URLSearchParams(location.search);
+if(q.has('alpha')){document.body.classList.add('alpha');document.documentElement.classList.add('alpha');}
+if(q.get('layer')==='subs')document.body.classList.add('l-subs'); if(q.get('layer')==='vis')document.body.classList.add('l-vis');
+const stage=$('#stage');
+function fit(){const s=Math.min(innerWidth/1080,innerHeight/1920);stage.style.transform=`scale(${s})`;}
+addEventListener('resize',fit);fit();
+const t0q=+(q.get('t')||0);
+document.fonts.ready.then(()=>render(t0q));render(t0q);
+if(!q.has('render')){let t0=performance.now();(function loop(n){render(((n-t0)/1000)%TOTAL);requestAnimationFrame(loop);})(t0);}
+</script>
+</body>
+</html>
