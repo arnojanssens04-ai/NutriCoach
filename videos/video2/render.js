@@ -11,7 +11,7 @@ const path = require('path'), fs = require('fs');
 const FPS = 30, W = 1080, H = 1920;
 const out = path.join(__dirname, 'out'); fs.mkdirSync(out, { recursive: true });
 const [, , cmd = 'prep', arg] = process.argv;
-const url = q => 'file://' + path.join(__dirname, 'index.html') + '?render=1&' + q;
+const url = q => 'file://' + path.join(__dirname, 'index.html') + '?render=1&' + q + (process.env.STYLE ? '&style=' + process.env.STYLE : '');
 const srtT = s => { const ms = Math.max(0, Math.round(s * 1000)); const p = (n, l = 2) => String(n).padStart(l, '0'); return `${p(Math.floor(ms / 3600000))}:${p(Math.floor(ms / 60000) % 60)}:${p(Math.floor(ms / 1000) % 60)},${p(ms % 1000, 3)}`; };
 const sec = s => s.toFixed(1) + ' s';
 const run = (args, stdio) => { const f = spawn('ffmpeg', ['-y', '-loglevel', 'error', ...args], { stdio: stdio || ['pipe', 'inherit', 'inherit'] }); f.done = new Promise(r => f.on('close', r)); return f; };

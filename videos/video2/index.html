@@ -17,77 +17,81 @@ html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
 body.l-subs #anim{display:none} body.l-vis #subs{display:none}
 .emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
 
-/* ===== animations : zone compacte sur la chemise, juste sous le menton (placée d'après la position du visage) ===== */
+/* ===== animations : petits dessins animés (sans cartes), sur la chemise sous le menton ===== */
 #anim{position:absolute;left:100px;top:0;width:860px;height:210px}
-.cs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:16px;opacity:0;visibility:hidden}
-.cd{position:relative;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:26px;border:2px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.3)}
-.pl{display:inline-block;font-weight:900;font-size:30px;letter-spacing:3px;text-transform:uppercase;padding:9px 24px 11px;border-radius:999px;color:#fff;background:var(--terra);box-shadow:0 10px 24px rgba(224,122,95,.45)}
-.stk{position:absolute;font-size:56px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
-.tt{font-family:'Lora',serif;font-weight:700;letter-spacing:-1px;line-height:1}
-.sm{font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--terra)}
-/* 3 résidus */
-#r-card{width:520px;height:150px;gap:20px;padding:0 26px;justify-content:flex-start} #r-card .emo{font-size:92px}
-#r-card .tt{font-size:54px} #r-card .sm{font-size:22px;margin-top:8px}
-/* 4 limites */
-#l-card{width:600px;height:150px;gap:20px;padding:0 26px;justify-content:flex-start} #l-card .emo{font-size:76px}
-#l-col{display:flex;flex-direction:column;gap:8px;width:420px}
-#l-col .sm{font-size:20px;display:flex;justify-content:space-between}
-#l-bar{position:relative;height:30px;border-radius:15px;background:#EFEBE4;overflow:visible}
-#l-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:15px;background:linear-gradient(90deg,var(--sage),#7FA86C)}
-#l-mark{position:absolute;right:0;top:-10px;bottom:-10px;width:6px;border-radius:3px;background:var(--red);opacity:0}
-/* 5 EFSA */
-#f-card{width:700px;height:180px;gap:20px;padding:0 24px;justify-content:flex-start} #f-card .emo{font-size:84px}
-#f-card .tt{font-size:58px} #f-card .cap{font-weight:700;font-size:20px;color:var(--muted);margin-top:4px;white-space:nowrap}
-#f-gauge{display:flex;align-items:center;gap:12px;margin-top:10px} #f-bar{position:relative;width:200px;height:16px;border-radius:8px;background:#EFEBE4}
-#f-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:8px;background:var(--sage)} #f-gauge b{font-weight:900;font-size:26px;color:var(--green);letter-spacing:-.5px}
-/* 6 arrêter ? */
-#a-card{width:430px;height:130px;gap:18px;padding:0 24px;white-space:nowrap} #a-card .emo{font-size:76px} #a-card .tt{font-size:58px}
-/* 7 pas du tout + balance */
-#y-card{width:340px;height:110px;background:var(--green);border-color:var(--green);color:#fff;gap:12px;white-space:nowrap} #y-card .emo{font-size:52px} #y-card .tt{font-size:42px}
-#b-card{width:420px;height:184px}
-/* 9 rinçage */
-#w-card{width:520px;height:140px;gap:18px;padding:0 24px;justify-content:flex-start} #w-card .emo{font-size:84px} #w-card .tt{font-size:46px;line-height:1.05}
-#w-drops{position:absolute;left:56px;top:96px;font-size:30px;white-space:nowrap}
-/* 10 un tiers */
-#t-card{width:720px;height:170px;gap:22px;padding:0 26px;justify-content:flex-start} #t-card .emo{font-size:78px}
-#t-frac{display:flex;align-items:center;gap:10px;color:var(--green)} #t-frac .tt{font-size:92px;line-height:.9}
-.fr{display:flex;flex-direction:column;align-items:center;font-family:'Lora',serif;font-weight:700;font-size:62px;line-height:1}
-.fr i{font-style:normal;display:block;padding:0 12px}.fr i:first-child{border-bottom:6px solid var(--green);padding-bottom:4px}.fr i:last-child{padding-top:2px}
-#t-txt .tt{font-size:36px;line-height:1.08} #t-txt .sm{font-size:19px;margin-top:10px;color:var(--muted)}
-/* 11 fin */
-#s-pill{font-size:28px;padding:14px 26px 16px;display:flex;gap:10px;align-items:center} #s-pill .emo{font-size:36px}
-#e-card{width:470px;height:130px;background:var(--green);border-color:var(--green);color:#fff;text-align:center} #e-card .tt{font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:46px;line-height:1.02;letter-spacing:-1.5px}
-#e-leaf{position:absolute;right:-8px;top:-42px;font-size:62px}
+.cs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden}
+.cs svg{overflow:visible;filter:drop-shadow(0 8px 14px rgba(0,0,0,.38))}
+#v10,#v11{transform:scale(1.12)} #v3,#v8{transform:scale(1.05)}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
+svg .tx{font-family:'Inter',sans-serif;font-weight:900;fill:#fff;paint-order:stroke;stroke:#14201A;stroke-width:7px;stroke-linejoin:round;letter-spacing:-.5px}
+svg .lo{font-family:'Lora',serif;font-weight:700;fill:#fff;paint-order:stroke;stroke:#14201A;stroke-width:8px;stroke-linejoin:round}
 
-/* ===== sous-titres : sans bandeau (lettres cerclées), sous les animations ; ils remontent quand il n'y en a pas ===== */
+/* ===== sous-titres : sans bandeau, un seul accent de couleur, sous les animations (ils remontent sans animation) ===== */
 #subs{position:absolute;left:100px;width:860px;top:0;height:140px}
 .sb{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;opacity:0}
 .sb > div{max-width:860px;text-align:center;font-weight:900;font-size:56px;line-height:1.1;letter-spacing:-1px;word-spacing:.12em;color:#fff;text-wrap:balance;
-  -webkit-text-stroke:11px #14201A;paint-order:stroke fill;text-shadow:0 5px 18px rgba(0,0,0,.55)}
-.sb .w{display:inline-block;color:rgba(255,255,255,.72)}
-.sb .w.k{text-transform:uppercase;color:rgba(255,176,152,.85)}
+  -webkit-text-stroke:7px rgba(10,20,16,.92);paint-order:stroke fill;text-shadow:0 4px 14px rgba(0,0,0,.4)}
+.sb .w{display:inline-block;color:rgba(255,255,255,.74)}
 .sb .w.done{color:#fff}
-.sb .w.k.done{color:#FF9E85}
-.sb .w.cur,.sb .w.k.cur{color:var(--amber)}
+.sb .w.k{text-transform:uppercase}
+body.ss3 .sb .w.cur{color:#7DF2B8}                                   /* style 3 (par défaut) : accent menthe */
+body.ss2 .sb .w.cur{color:#FFE14D}                                   /* style 2 : accent jaune doux */
+body.ss1 .sb .w.cur{color:#14201A;background:#FFE14D;border-radius:14px;padding:0 .14em;margin:0 -.06em;-webkit-text-stroke:0;text-shadow:none}  /* style 1 : karaoké, mot sur fond jaune */
 .sb .em{display:inline-block;opacity:0;-webkit-text-stroke:0;paint-order:normal;font-family:'Noto Color Emoji','Apple Color Emoji',sans-serif;font-weight:400;font-size:.92em;margin-left:.1em;vertical-align:-.04em}
 </style>
 </head>
 <body>
 <div id="stage">
   <div id="anim">
-    <div class="cs" id="c3"><div class="cd" id="r-card"><span class="emo">🍎</span><div><div class="tt">Résidus</div><div class="sm">de pesticides</div></div><span class="stk emo" id="r-stk" style="right:-14px;top:-30px">🧪</span></div></div>
-    <div class="cs" id="c4"><div class="cd" id="l-card"><span class="emo">📏</span><div id="l-col"><div class="sm"><span>résidus</span><span id="l-lab" style="opacity:0">limite</span></div><div id="l-bar"><div id="l-fill"></div><div id="l-mark"></div></div></div></div></div>
-    <div class="cs" id="c5"><div class="cd" id="f-card"><span class="emo">🛡️</span><div><div class="tt">EFSA</div><div class="cap">Autorité européenne de sécurité des aliments</div><div id="f-gauge"><div id="f-bar"><div id="f-fill"></div></div><b id="f-lab" style="opacity:0">risque très faible</b></div></div></div></div>
-    <div class="cs" id="c6"><div class="cd" id="a-card"><span class="emo">🍎</span><div class="tt">Arrêter ?</div><span class="stk emo" id="a-stk" style="right:-14px;top:-30px">🤔</span></div></div>
-    <div class="cs" id="c7"><div class="cd" id="y-card"><span class="emo">✅</span><div class="tt">Pas du tout</div></div>
-      <div class="cd" id="b-card"><svg width="400" height="176" viewBox="0 0 400 176"><polygon points="200,60 176,150 224,150" fill="#CFC7B8"/><rect x="150" y="150" width="100" height="10" rx="5" fill="#B9B2A3"/>
-        <g id="b-beam"><rect x="40" y="54" width="320" height="10" rx="5" fill="#1A201C"/><circle cx="200" cy="59" r="9" fill="#E07A5F"/>
-          <g id="b-l"><line x1="60" y1="64" x2="30" y2="104" stroke="#1A201C" stroke-width="3"/><line x1="60" y1="64" x2="90" y2="104" stroke="#1A201C" stroke-width="3"/><path d="M20 104 H100 Q95 128 60 130 Q25 128 20 104Z" fill="#4A7A3A"/><text x="60" y="122" text-anchor="middle" font-family="Inter" font-weight="900" font-size="22" fill="#fff">+</text></g>
-          <g id="b-r"><line x1="340" y1="64" x2="310" y2="104" stroke="#1A201C" stroke-width="3"/><line x1="340" y1="64" x2="370" y2="104" stroke="#1A201C" stroke-width="3"/><path d="M300 104 H380 Q375 128 340 130 Q305 128 300 104Z" fill="#C0392B"/><text x="340" y="122" text-anchor="middle" font-family="Inter" font-weight="900" font-size="22" fill="#fff">−</text></g></g>
-        <text x="60" y="170" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#4A7A3A" id="b-lt">POSITIFS</text><text x="340" y="170" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#C0392B" id="b-rt">NÉGATIFS</text></svg></div></div>
-    <div class="cs" id="c9"><div class="cd" id="w-card"><span class="emo">🚿</span><div class="tt">Rincer<br>sous l’eau</div><span id="w-drops" class="emo">💧 💧 💧</span></div></div>
-    <div class="cs" id="c10"><div class="cd" id="t-card"><span class="emo">💧</span><div id="t-frac"><span class="tt">−</span><span class="fr"><i>1</i><i>3</i></span></div><div id="t-txt"><div class="tt">de résidus<br>supplémentaires</div><div class="sm" id="t-rev">selon une revue</div></div></div></div>
-    <div class="cs" id="c11"><div class="pl" id="s-pill"><span class="emo">🔔</span>S’abonner</div><div class="cd" id="e-card"><div class="tt">Mange l’esprit<br>tranquille</div><span class="emo" id="e-leaf">🌿</span></div></div>
+    <!-- 3 : résidus de pesticides -->
+    <div class="cs" id="c3"><svg id="v3" width="380" height="190" viewBox="0 0 380 190"><g id="v3-dots"></g><text id="v3-apple" class="emo" x="190" y="142" text-anchor="middle" font-size="124">🍎</text></svg></div>
+    <!-- 4 : limites (jauge) -->
+    <div class="cs" id="c4"><svg id="v4" width="380" height="200" viewBox="0 0 380 200">
+      <path d="M50 165 A140 140 0 0 1 330 165" pathLength="100" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="28" stroke-linecap="round"/>
+      <path id="g-ok" d="M50 165 A140 140 0 0 1 330 165" pathLength="100" fill="none" stroke="#6FCF7A" stroke-width="28" stroke-linecap="round" stroke-dasharray="70 100"/>
+      <path id="g-lim" d="M50 165 A140 140 0 0 1 330 165" pathLength="100" fill="none" stroke="#E8544A" stroke-width="28" stroke-dasharray="0 100" stroke-dashoffset="-86"/>
+      <g id="g-needle"><line x1="190" y1="165" x2="190" y2="66" stroke="#fff" stroke-width="11" stroke-linecap="round"/><circle cx="190" cy="165" r="15" fill="#fff" stroke="#14201A" stroke-width="4"/></g>
+      <text id="g-lab" class="tx" x="316" y="70" text-anchor="middle" font-size="30" opacity="0">limite</text></svg></div>
+    <!-- 5 : EFSA, risque très faible -->
+    <div class="cs" id="c5"><svg id="v5" width="470" height="190" viewBox="0 0 470 190">
+      <g id="e-shield"><path d="M100 12 L172 40 V94 C172 138 134 166 100 178 C66 166 28 138 28 94 V40 Z" fill="#2D5A43" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+        <text class="tx" x="100" y="86" text-anchor="middle" font-size="38">EFSA</text>
+        <path id="e-check" d="M70 120 L92 142 L134 100" pathLength="100" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="100"/></g>
+      <g id="e-risk"><text class="tx" x="330" y="62" text-anchor="middle" font-size="26">RISQUE</text>
+        <g id="e-seg"></g><text id="e-lab" class="tx" x="330" y="150" text-anchor="middle" font-size="32" opacity="0">très faible</text></g></svg></div>
+    <!-- 6 : arrêter ? -->
+    <div class="cs" id="c6"><svg id="v6" width="320" height="190" viewBox="0 0 320 190"><text id="v6-apple" class="emo" x="110" y="146" text-anchor="middle" font-size="120">🍎</text>
+      <g id="v6-q"><circle cx="236" cy="70" r="48" fill="#fff" stroke="#14201A" stroke-width="5"/><text class="lo" x="236" y="96" text-anchor="middle" font-size="76" style="fill:#14201A;stroke:none">?</text></g></svg></div>
+    <!-- 7 : pas du tout (✓) -->
+    <div class="cs" id="c7"><svg id="v7" width="200" height="190" viewBox="0 0 200 190">
+      <circle id="y-ring" cx="100" cy="95" r="72" pathLength="100" fill="rgba(20,32,26,.35)" stroke="#4FD27A" stroke-width="14" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 100 95)"/>
+      <path id="y-chk" d="M60 98 L90 128 L142 68" pathLength="100" fill="none" stroke="#fff" stroke-width="17" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="100"/></svg></div>
+    <!-- 7b : balance positifs / négatifs -->
+    <div class="cs" id="c7b"><svg id="v7b" width="400" height="180" viewBox="0 0 400 180"><polygon points="200,62 176,152 224,152" fill="#E6E1D8" stroke="#14201A" stroke-width="3"/><rect x="146" y="152" width="108" height="12" rx="6" fill="#E6E1D8" stroke="#14201A" stroke-width="3"/>
+      <g id="b-beam"><rect x="40" y="56" width="320" height="12" rx="6" fill="#fff" stroke="#14201A" stroke-width="3"/><circle cx="200" cy="62" r="10" fill="#E07A5F" stroke="#14201A" stroke-width="3"/>
+        <g id="b-l"><line x1="60" y1="68" x2="30" y2="108" stroke="#fff" stroke-width="4"/><line x1="60" y1="68" x2="90" y2="108" stroke="#fff" stroke-width="4"/><path d="M18 108 H102 Q97 134 60 136 Q23 134 18 108Z" fill="#4A7A3A" stroke="#fff" stroke-width="4"/><text class="tx" x="60" y="128" text-anchor="middle" font-size="26" style="stroke-width:0">+</text></g>
+        <g id="b-r"><line x1="340" y1="68" x2="310" y2="108" stroke="#fff" stroke-width="4"/><line x1="340" y1="68" x2="370" y2="108" stroke="#fff" stroke-width="4"/><path d="M298 108 H382 Q377 134 340 136 Q303 134 298 108Z" fill="#C0392B" stroke="#fff" stroke-width="4"/><text class="tx" x="340" y="128" text-anchor="middle" font-size="26" style="stroke-width:0">−</text></g></g></svg></div>
+    <!-- 8 : réduire les résidus -->
+    <div class="cs" id="c8"><svg id="v8" width="380" height="190" viewBox="0 0 380 190"><g id="v8-dots"></g><text id="v8-apple" class="emo" x="190" y="142" text-anchor="middle" font-size="124">🍎</text><text id="v8-spark" class="emo" x="282" y="58" text-anchor="middle" font-size="64" opacity="0">✨</text></svg></div>
+    <!-- 9 : rinçage -->
+    <div class="cs" id="c9"><svg id="v9" width="300" height="200" viewBox="0 0 300 200">
+      <rect x="40" y="8" width="150" height="24" rx="12" fill="#C9D1D6" stroke="#fff" stroke-width="4"/><rect x="164" y="8" width="26" height="50" rx="8" fill="#C9D1D6" stroke="#fff" stroke-width="4"/>
+      <line id="w-stream" x1="177" y1="62" x2="177" y2="118" stroke="#5CC8FF" stroke-width="14" stroke-linecap="round" stroke-dasharray="14 12"/>
+      <text id="w-apple" class="emo" x="177" y="180" text-anchor="middle" font-size="92">🍎</text><g id="w-drops"></g></svg></div>
+    <!-- 10 : un tiers (camembert) -->
+    <div class="cs" id="c10"><svg id="v10" width="440" height="190" viewBox="0 0 440 190">
+      <circle cx="105" cy="95" r="64" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="30"/>
+      <circle id="t-arc" cx="105" cy="95" r="64" pathLength="100" fill="none" stroke="#6FCF7A" stroke-width="30" stroke-dasharray="0 100" transform="rotate(-90 105 95)"/>
+      <text id="t-frac" class="lo" x="105" y="112" text-anchor="middle" font-size="48" opacity="0">1/3</text>
+      <text class="tx" x="290" y="84" text-anchor="middle" font-size="31">résidus</text><text class="tx" x="290" y="122" text-anchor="middle" font-size="31">en moins</text>
+      <g id="t-rev" opacity="0"><rect x="212" y="138" width="156" height="34" rx="17" fill="rgba(20,32,26,.78)"/><text x="290" y="162" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#fff">selon une revue</text></g></svg></div>
+    <!-- 11 : s'abonner -->
+    <div class="cs" id="c11"><svg id="v11" width="440" height="190" viewBox="0 0 440 190">
+      <circle id="n-r1" cx="110" cy="100" r="40" fill="none" stroke="#fff" stroke-width="6" opacity="0"/><circle id="n-r2" cx="110" cy="100" r="40" fill="none" stroke="#fff" stroke-width="6" opacity="0"/>
+      <g id="n-bell"><text class="emo" x="110" y="136" text-anchor="middle" font-size="112">🔔</text></g>
+      <g id="n-pill"><rect x="190" y="68" width="230" height="64" rx="32" fill="#E07A5F" stroke="#fff" stroke-width="5"/><text x="305" y="110" text-anchor="middle" font-family="Inter" font-weight="900" font-size="30" fill="#fff" letter-spacing="1">S’ABONNER</text></g></svg></div>
+    <!-- 12 : fin -->
+    <div class="cs" id="c12"><svg id="v12" width="240" height="190" viewBox="0 0 240 190"><text id="l-leaf" class="emo" x="120" y="144" text-anchor="middle" font-size="130">🌿</text><text id="l-sp1" class="emo" x="36" y="60" text-anchor="middle" font-size="40" opacity="0">✨</text><text id="l-sp2" class="emo" x="206" y="92" text-anchor="middle" font-size="34" opacity="0">✨</text></svg></div>
   </div>
   <div id="subs"></div>
 </div>
@@ -142,18 +146,21 @@ const wt=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.no
 const wt1=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.norm===k); return m[n].t1; };
 
 
+/* style des sous-titres : ?style=1 (karaoké jaune), 2 (accent jaune), 3 (accent menthe, par défaut) */
+document.body.classList.add('ss'+((new URLSearchParams(location.search)).get('style')||'3'));
+
 /* ---------- où est ton visage ? (mesuré dans ta vidéo) : rien ne doit passer dessus ---------- */
 const ZN=Object.assign({closeups:[],faces:[],nodet:[]},window.ZONES||{});
-const ZC={x:540,y:700}, INTRO_END=9.0;               /* zoom centré sur le visage ; début de vidéo = sous-titres seuls */
+const ZC={x:540,y:700}, INTRO_END=9.0;
 const ZP=[]; const smooth=x=>x*x*(3-2*x);
 function zoomAt(t){ let s=1; ZP.forEach(z=>{ const u=clamp((t-z.t0)/z.in), v=clamp((t-z.t0-z.in-z.hold)/z.out); s+=z.amp*smooth(u)*(1-smooth(v)); }); return s; }
-function fbAt(t){ /* bas du visage (menton + cou) à l'instant t, en px dans l'image finale (zoom compris) */
+function fbAt(t){
   let v;
   if(ZN.nodet.some(([a,b])=>t>=a&&t<=b)) v=1630;
   else{ let m=0,found=false; ZN.faces.forEach(([ft,x,y,w,h])=>{ if(Math.abs(ft-t)<=.3){ m=Math.max(m,y+h+60); found=true; } });
     if(found) v=m; else{ let best=1630,bd=9; ZN.faces.forEach(([ft,x,y,w,h])=>{ const d=Math.abs(ft-t); if(d<bd){ bd=d; best=y+h+60; } }); v=bd<=1.0?best:1630; } }
-  v=ZC.y+(v-ZC.y)*zoomAt(t);                          /* le zoom fait descendre un peu le menton */
-  if(t<INTRO_END+.3) v=Math.max(v,1260);              /* début : tu tournes la tête, pomme près du visage -> prudence, texte seul */
+  v=ZC.y+(v-ZC.y)*zoomAt(t);
+  if(t<INTRO_END+.3) v=Math.max(v,1260);
   return v; }
 function topLimitAt(t){ let s=0,n=0; for(let d=-.2;d<=.2001;d+=.05){ s+=fbAt(t+d); n++; } return Math.max(1075,s/n+12); }
 
@@ -162,63 +169,58 @@ const EV={subs:[],vis:[]}; const Q={};
 Q.res3=wt('s3','résidus'); Q.pest3=wt('s3','pesticides');
 Q.res4=wt('s4','résidus'); Q.enc=wt('s4','encadrés'); Q.lim=wt('s4','limites');
 Q.efsa=wt('s5','lefsa'); Q.tres=wt('s5','très'); Q.faible=wt('s5','faible');
-Q.arret=wt('s6','arrêter'); Q.pest6=wt('s6','pesticides');
-Q.pas=wt('s7','pas'); Q.beau=wt('s7','beaucoup'); Q.posi=wt('s7','positifs'); Q.nega=wt('s7','négatifs');
-Q.rinc=wt('s9','rinçant'); Q.tiers=wt('s10','tiers'); Q.revue=wt('s10','revue');
+Q.arret=wt('s6','arrêter');
+Q.pas=wt('s7','pas'); Q.beau=wt('s7','beaucoup'); Q.posi=wt('s7','positifs');
+Q.red8=wt('s8','réduire'); Q.res8=wt('s8','résidus');
+Q.tiers=wt('s10','tiers'); Q.revue=wt('s10','revue');
 Q.abo=wt('s11','tabonner'); Q.mange=wt('s11','mange');
 
-/* ---------- zooms rapides sur la vidéo : un petit coup de zoom au début de chaque idée, jamais pendant l'intro ---------- */
-{ const AMP=[.07,.06,.08,.07]; const Zt=[];
-  SEGS.forEach(s=>{ if(s.t0>=INTRO_END+.1) Zt.push({id:s.id,t:s.t0-.05,amp:AMP[Zt.length%4]}); });
-  const anchor=(id,key,amp)=>{ const z=Zt.find(z=>z.id===id); if(z){ z.t=wt(id,key)-.05; z.amp=amp; } };
-  anchor('s5','lefsa',.09); anchor('s7','pas',.10);
-  Zt.sort((a,b)=>a.t-b.t);
-  Zt.forEach(z=>ZP.push({t0:z.t,in:.15,hold:.9,out:.4,amp:z.amp})); }
+/* ---------- zooms : seulement aux vrais moments « étonnants » ---------- */
+[ ['s1','stop',.07,'« Stop ! » : l’accroche'], ['s5','faible',.08,'« risque très faible » : la bonne nouvelle'],
+  ['s7','pas',.10,'« pas du tout » : la réponse qui surprend'], ['s10','tiers',.08,'« d’un tiers » : le chiffre' ] ]
+  .forEach(([id,key,amp,why])=>ZP.push({t0:wt(id,key)-.05,in:.15,hold:.9,out:.4,amp,why}));
 
-/* ---------- fenêtres d'affichage des cartes ---------- */
+/* ---------- fenêtres d'affichage des animations ---------- */
 const SC=[
- {id:'c3', a:Q.res3-.3, b:SEG.s3.t1+.5, desc:'🍎 « Résidus de pesticides »', say:'…il y a des résidus de pesticides.'},
- {id:'c4', a:Q.res4-.3, b:SEG.s4.t1+.5, desc:'📏 jauge : résidus sous la « limite »', say:'…ces résidus sont encadrés par des limites.'},
- {id:'c5', a:Q.efsa-.3, b:SEG.s5.t1+.5, desc:'🛡️ « EFSA » + « risque très faible »', say:'…l’EFSA juge le risque très faible pour sa santé.'},
- {id:'c6', a:Q.arret-.3, b:SEG.s6.t1+.5, desc:'🍎 « Arrêter ? » + 🤔', say:'…est-ce que tu devrais arrêter de consommer cette pomme ?'},
- {id:'c7', a:Q.pas-.3,   b:SEG.s7.t1+.6, desc:'✅ « Pas du tout » + balance penchée côté positifs', say:'Eh bien pas du tout… beaucoup plus d’aspects positifs que négatifs.'},
- {id:'c9', a:SEG.s9.t0-.1, b:SEG.s9.t1+.6, desc:'🚿 « Rincer sous l’eau »', say:'Tout simplement en rinçant le fruit sous l’eau.'},
- {id:'c10',a:Q.tiers-.4, b:SEG.s10.t1+.6, desc:'💧 « −1/3 de résidus supplémentaires · selon une revue »', say:'…réduire déjà d’un tiers les résidus supplémentaires selon une revue.'},
- {id:'c11',a:Q.abo-.4,   b:TOTAL,        desc:'🔔 S’abonner + « Mange l’esprit tranquille » 🌿', say:'…n’hésite pas à t’abonner et mange l’esprit tranquille.'},
+ {id:'c3', a:Q.res3-.3, b:SEG.s3.t1+.5, desc:'🍎 + petits points qui apparaissent (les résidus)', say:'…il y a des résidus de pesticides.'},
+ {id:'c4', a:Q.res4-.3, b:SEG.s4.t1+.5, desc:'Jauge : l’aiguille reste dans le vert, sous la zone rouge « limite »', say:'…ces résidus sont encadrés par des limites.'},
+ {id:'c5', a:Q.efsa-.3, b:SEG.s5.t1+.5, desc:'Bouclier « EFSA » qui se coche + barre de risque « très faible »', say:'…l’EFSA juge le risque très faible.'},
+ {id:'c6', a:Q.arret-.3, b:SEG.s6.t1+.5, desc:'🍎 + bulle « ? » qui rebondit', say:'…est-ce que tu devrais arrêter de consommer cette pomme ?'},
+ {id:'c7', a:Q.pas-.3,   b:Q.beau-.15,    desc:'✓ vert qui se dessine', say:'Eh bien pas du tout…'},
+ {id:'c7b',a:Q.beau-.2,  b:SEG.s7.t1+.6,  desc:'Balance qui penche du côté positif', say:'…beaucoup plus d’aspects positifs que négatifs.'},
+ {id:'c8', a:Q.red8-.7,  b:Q.res8+1.2,    desc:'Les points s’envolent, ✨', say:'…réduire ces résidus.'},
+ {id:'c9', a:SEG.s9.t0-.1, b:SEG.s9.t1+.6, desc:'Robinet, eau qui coule sur la pomme', say:'Tout simplement en rinçant le fruit sous l’eau.'},
+ {id:'c10',a:Q.tiers-.4, b:SEG.s10.t1+.6, desc:'Camembert qui se remplit à 1/3 « résidus en moins » · selon une revue', say:'…réduire déjà d’un tiers les résidus supplémentaires selon une revue.'},
+ {id:'c11',a:Q.abo-.4,   b:Q.mange-.12,   desc:'🔔 qui sonne + « S’abonner »', say:'…n’hésite pas à t’abonner…'},
+ {id:'c12',a:Q.mange-.1, b:TOTAL,         desc:'🌿 qui pousse', say:'…et mange l’esprit tranquille.'},
 ];
 for(let i=0;i<SC.length-1;i++){ if(SC[i].b>SC[i+1].a) SC[i].b=Math.max(SC[i].a+.7,SC[i+1].a); }
-const PRES=[]; SC.forEach(s=>{ const l=PRES[PRES.length-1]; if(l&&s.a-l[1]<.5) l[1]=s.b; else PRES.push([s.a,s.b]); });
+/* le texte ne remonte que pendant de vrais temps sans animation (les trous < 1,5 s sont ignorés : pas de yoyo) */
+const PRES=[]; SC.forEach(s=>{ const l=PRES[PRES.length-1]; if(l&&s.a-l[1]<1.5) l[1]=s.b; else PRES.push([s.a,s.b]); });
 const NOTES=[];
 
-/* ---------- rythme : quelque chose (carte, zoom, emoji) toutes les 3-4 s ---------- */
+/* ---------- rythme ---------- */
 const EMOT=[]; SEGS.forEach(s=>s.words.forEach(w=>{ if(w.emo) EMOT.push(w.t0); }));
-/* compléter le rythme : si deux événements (zoom, carte, emoji) sont séparés de plus de 3,8 s, on ajoute un petit zoom au milieu */
-for(let k=0;k<12;k++){
-  const ev=[...ZP.map(z=>z.t0),...SC.map(s=>s.a),...EMOT].filter(t=>t>=INTRO_END).sort((a,b)=>a-b);
-  let gi=-1,mg=0; for(let i=1;i<ev.length;i++){ if(ev[i]-ev[i-1]>mg){ mg=ev[i]-ev[i-1]; gi=i; } }
-  if(mg<=3.8) break;
-  const mid=(ev[gi]+ev[gi-1])/2; if(ZP.some(z=>Math.abs(z.t0-mid)<1.8)) break;
-  ZP.push({t0:mid,in:.15,hold:.9,out:.4,amp:.06}); }
-ZP.sort((a,b)=>a.t0-b.t0);
-const RYTHME=(()=>{ const ev=[...ZP.map(z=>z.t0),...SC.map(s=>s.a),...EMOT].filter(t=>t>=INTRO_END).sort((a,b)=>a-b); let mg=0,at=0; for(let i=1;i<ev.length;i++){ if(ev[i]-ev[i-1]>mg){ mg=ev[i]-ev[i-1]; at=ev[i-1]; } }
+const RYTHME=(()=>{ const ev=[...ZP.map(z=>z.t0),...SC.map(s=>s.a),...EMOT,Q.pest3,Q.enc,Q.lim,Q.tres,Q.faible,Q.posi,Q.revue].filter(t=>t>=INTRO_END).sort((a,b)=>a-b); let mg=0,at=0; for(let i=1;i<ev.length;i++){ if(ev[i]-ev[i-1]>mg){ mg=ev[i]-ev[i-1]; at=ev[i-1]; } }
   return {events:ev.map(x=>+x.toFixed(2)),maxGap:+mg.toFixed(2),maxGapAt:+at.toFixed(2),count:ev.length}; })();
 
 /* ---------- DOM ---------- */
+const SVGNS='http://www.w3.org/2000/svg';
+function mk(parent,tag,attrs){ const e=document.createElementNS(SVGNS,tag); Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v)); parent.appendChild(e); return e; }
+const DOTS=Array.from({length:10},(_,i)=>{ const a=(i*36+12)*Math.PI/180, r=92+(i%3)*14; return {x:190+Math.cos(a)*r*1.25,y:100+Math.sin(a)*r*.8,r:6+(i%3)*2.2,ph:i*.7,a}; });
+const D3=DOTS.map(d=>mk($('#v3-dots'),'circle',{r:d.r,fill:'#EFE9DC',stroke:'#14201A','stroke-width':3}));
+const D8=DOTS.map(d=>mk($('#v8-dots'),'circle',{r:d.r,fill:'#EFE9DC',stroke:'#14201A','stroke-width':3}));
+const SEGR=[0,1,2,3,4].map(i=>mk($('#e-seg'),'rect',{x:236+i*50,y:82,width:42,height:34,rx:10,fill:i===0?'#6FCF7A':'rgba(255,255,255,.4)',stroke:'#fff','stroke-width':3,opacity:i===0?0:1}));
+const DR=[0,1,2].map(i=>mk($('#w-drops'),'circle',{r:7,fill:'#5CC8FF',stroke:'#fff','stroke-width':2}));
 const SB=$('#subs');
 CH.forEach(c=>{ const d=document.createElement('div'); d.className='sb';
   d.innerHTML='<div>'+c.words.map(w=>`<span class="w${w.key?' k':''}">${w.raw}${w.emo?`<span class="em">${w.emo}</span>`:''}</span>`).join(' ')+'</div>';
   SB.appendChild(d); c.el=d; c.ws=[...d.querySelectorAll('.w')]; c.ems=c.ws.map(s=>s.querySelector('.em')); });
 CH.forEach((c,i)=>{ const nx=CH[i+1]; c.show0=c.t0-.05; c.show1=Math.min(c.t1+.3, nx?nx.t0-.05:1e9); });
 
-/* ---------- helpers d'animation ---------- */
-function tf(el,{o=1,x=0,y=0,s=1,r=0}={}){ el.style.opacity=o; el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; }
-const K={
-  pop:(t,st)=>{const k=p(t,st,st+.4);return{o:clamp(k*3),s:.55+.45*eb(k),y:(1-eo(k))*20};},
-  stamp:(t,st)=>{const k=p(t,st,st+.3);return{o:clamp(k*4),s:1.9-.9*eo(k),r:(1-eo(k))*-10};},
-};
-function put(el,t,kind,st,o={}){ const a=K[kind](t,st); a.r=(a.r||0)+(o.r||0);
-  if(o.float&&t>st+.5){ a.y=(a.y||0)+Math.sin((t-st)*3)*4; a.r+=Math.sin((t-st)*2.4)*3; }
-  tf(el,a); }
+/* ---------- helpers ---------- */
+function sc(el,t,st,ox,oy,{d=.4,rot=0,dy=0}={}){ const k=p(t,st,st+d); el.style.opacity=clamp(k*3); el.style.transformOrigin=`${ox}px ${oy}px`; el.style.transform=`translateY(${(1-eo(k))*20+dy}px) scale(${.5+.5*eb(k)}) rotate(${rot}deg)`; return k; }
+function setp(el,attrs){ Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v)); }
 
 /* ---------- rendu ---------- */
 let LASTPOS={};
@@ -234,18 +236,46 @@ function render(t){
   LASTPOS={t,top,textBottom,a,zoom:zoomAt(t)};
   SC.forEach(s=>{ const el=$('#'+s.id); const v=Math.min(p(t,s.a,s.a+.25),1-p(t,s.b-.25,s.b))*allowed; el.style.opacity=clamp(v); el.style.visibility=v<=.001?'hidden':'visible'; });
 
-  put($('#r-card'),t,'pop',Q.res3-.1); put($('#r-stk'),t,'pop',Q.pest3,{float:1});
-  { put($('#l-card'),t,'pop',Q.res4-.1); $('#l-fill').style.width=(eo(p(t,Q.res4,Q.res4+.6))*32)+'%';
-    $('#l-mark').style.opacity=clamp(p(t,Q.enc,Q.enc+.3)); $('#l-lab').style.opacity=clamp(p(t,Q.lim,Q.lim+.25)); }
-  { put($('#f-card'),t,'pop',Q.efsa-.1); $('#f-fill').style.width=(eo(p(t,Q.tres,Q.tres+.5))*14)+'%'; $('#f-lab').style.opacity=clamp(p(t,Q.faible,Q.faible+.25)); }
-  put($('#a-card'),t,'stamp',Q.arret-.1); put($('#a-stk'),t,'pop',Q.pest6,{float:1});
-  { put($('#y-card'),t,'stamp',Q.pas-.1); put($('#b-card'),t,'pop',Q.beau-.1);
+  /* 3 : résidus = petits points autour de la pomme */
+  { sc($('#v3-apple'),t,Q.res3-.25,190,100,{rot:Math.sin(t*3)*2});
+    DOTS.forEach((d,i)=>{ const k=p(t,Q.res3+i*.07,Q.res3+i*.07+.35), pulse=t>Q.pest3?1+.18*Math.sin((t-Q.pest3)*9-i):1;
+      setp(D3[i],{cx:d.x,cy:d.y+Math.sin(t*2+d.ph)*3,opacity:clamp(k*3),transform:`translate(${d.x} ${d.y}) scale(${(.3+.7*eb(k))*pulse}) translate(${-d.x} ${-d.y})`}); }); }
+  /* 4 : jauge, l'aiguille reste dans le vert */
+  { const k=p(t,Q.res4-.25,Q.res4+.15), pct=.27*eo(p(t,Q.res4,Q.res4+.7))+(t>Q.res4+.7?Math.sin((t-Q.res4)*3)*.012:0);
+    $('#v4').style.opacity=clamp(k*3); setp($('#g-needle'),{transform:`rotate(${-90+180*pct} 190 165)`});
+    $('#g-lim').setAttribute('stroke-dasharray',`${14*eo(p(t,Q.enc,Q.enc+.4))} 100`); $('#g-lab').setAttribute('opacity',clamp(p(t,Q.lim,Q.lim+.25))); }
+  /* 5 : bouclier EFSA + barre de risque */
+  { sc($('#e-shield'),t,Q.efsa-.25,100,95); $('#e-check').setAttribute('stroke-dashoffset',100*(1-eo(p(t,Q.efsa+.25,Q.efsa+.75))));
+    $('#e-risk').style.opacity=clamp(p(t,Q.tres-.2,Q.tres+.2)); SEGR[0].setAttribute('opacity',clamp(p(t,Q.tres,Q.tres+.3)));
+    $('#e-lab').setAttribute('opacity',clamp(p(t,Q.faible,Q.faible+.25))); }
+  /* 6 : arrêter ? */
+  { sc($('#v6-apple'),t,Q.arret-.2,110,100,{rot:Math.sin(t*6)*4*p(t,Q.arret,Q.arret+.3)}); sc($('#v6-q'),t,Q.arret,236,70,{dy:t>Q.arret+.4?-Math.abs(Math.sin((t-Q.arret)*3.5))*14:0}); }
+  /* 7 : ✓ qui se dessine */
+  { $('#y-ring').setAttribute('stroke-dashoffset',100*(1-eo(p(t,Q.pas-.1,Q.pas+.35)))); $('#y-chk').setAttribute('stroke-dashoffset',100*(1-eo(p(t,Q.pas+.2,Q.pas+.55))));
+    const k=p(t,Q.pas+.5,Q.pas+.85); $('#v7').style.transform=`scale(${1+.12*Math.sin(k*Math.PI)})`; }
+  /* 7b : balance */
+  { const k=p(t,Q.beau-.25,Q.beau+.1); $('#v7b').style.opacity=clamp(k*3);
     const ang=-15*eo(p(t,Q.posi-.1,Q.posi+.55))+(t<Q.posi?Math.sin((t-Q.beau)*5)*4*p(t,Q.beau,Q.beau+.3):0);
-    $('#b-beam').setAttribute('transform',`rotate(${ang} 200 59)`); $('#b-l').setAttribute('transform',`rotate(${-ang} 60 64)`); $('#b-r').setAttribute('transform',`rotate(${-ang} 340 64)`); }
-  { put($('#w-card'),t,'pop',SEG.s9.t0-.05); const dr=$('#w-drops'); dr.style.opacity=.55+.4*Math.sin(t*7); dr.style.transform=`translateY(${(t*34)%14}px)`; }
-  { put($('#t-card'),t,'pop',Q.tiers-.15); $('#t-rev').style.opacity=clamp(p(t,Q.revue-.1,Q.revue+.25)); }
-  { put($('#s-pill'),t,'stamp',Q.abo-.1); put($('#e-card'),t,'stamp',Q.mange-.1); put($('#e-leaf'),t,'pop',Q.mange+.3,{float:1}); }
+    $('#b-beam').setAttribute('transform',`rotate(${ang} 200 62)`); $('#b-l').setAttribute('transform',`rotate(${-ang} 60 68)`); $('#b-r').setAttribute('transform',`rotate(${-ang} 340 68)`); }
+  /* 8 : les points s'envolent */
+  { const u=p(t,Q.red8,Q.red8+.9); sc($('#v8-apple'),t,Q.red8-.75,190,100);
+    DOTS.forEach((d,i)=>{ const k=p(t,Q.red8-.7+i*.04,Q.red8-.7+i*.04+.3), fly=1+2.2*eo(u), x=190+(d.x-190)*fly, y=100+(d.y-100)*fly-60*eo(u);
+      setp(D8[i],{cx:x,cy:y,opacity:clamp(k*3)*(1-eo(u)),transform:`translate(${x} ${y}) scale(${(1-eo(u))}) translate(${-x} ${-y})`}); });
+    sc($('#v8-spark'),t,Q.red8+.3,282,58,{rot:Math.sin(t*5)*8}); }
+  /* 9 : rinçage */
+  { $('#w-stream').setAttribute('stroke-dashoffset',-(t*95)); sc($('#w-apple'),t,SEG.s9.t0-.05,177,150);
+    DR.forEach((c,i)=>{ const ph=(t*2.2+i*.34)%1; setp(c,{cx:177+(i-1)*34*(.4+ph),cy:128+ph*36,opacity:1-ph*.9}); }); }
+  /* 10 : camembert 1/3 */
+  { $('#t-arc').setAttribute('stroke-dasharray',`${33.3*eo(p(t,Q.tiers-.1,Q.tiers+.9))} 100`); $('#t-frac').setAttribute('opacity',clamp(p(t,Q.tiers+.5,Q.tiers+.8))); $('#t-rev').setAttribute('opacity',clamp(p(t,Q.revue-.1,Q.revue+.25))); }
+  /* 11 : cloche */
+  { const u=t-Q.abo, sw=u>0?24*Math.exp(-2.6*u)*Math.sin(15*u):0; setp($('#n-bell'),{transform:`rotate(${sw} 110 50)`}); $('#n-bell').style.opacity=clamp(p(t,Q.abo-.35,Q.abo-.05));
+    [$('#n-r1'),$('#n-r2')].forEach((r,i)=>{ const ph=((t-Q.abo)*1.4+i*.5)%1; if(u>0){ setp(r,{r:40+ph*60,opacity:.7*(1-ph)}); } });
+    sc($('#n-pill'),t,Q.abo-.1,305,100); }
+  /* 12 : feuille qui pousse */
+  { const k=p(t,Q.mange-.05,Q.mange+.5); const el=$('#l-leaf'); el.style.opacity=clamp(k*3); el.style.transformOrigin='120px 150px'; el.style.transform=`scale(${.3+.7*eb(k)}) rotate(${Math.sin(t*2.2)*3}deg)`;
+    $('#l-sp1').setAttribute('opacity',clamp(p(t,Q.mange+.4,Q.mange+.6))*(.5+.5*Math.sin(t*6))); $('#l-sp2').setAttribute('opacity',clamp(p(t,Q.mange+.6,Q.mange+.8))*(.5+.5*Math.sin(t*6+2))); }
 
+  /* sous-titres */
   CH.forEach(c=>{ const on=t>=c.show0&&t<c.show1; const k=p(t,c.show0,c.show0+.14); c.el.style.opacity=on?clamp(k*1.5):0; c.el.style.transform=`translateY(${(1-eo(k))*10}px)`;
     if(on) c.ws.forEach((s,i)=>{ const w=c.words[i]; const cur=t>=w.t0&&t<w.t1+.08, done=t>=w.t1+.08; s.className='w'+(w.key?' k':'')+(done?' done':'')+(cur?' cur':'');
       const em=c.ems[i]; if(em){ const q=p(t,w.t0,w.t0+.3); em.style.opacity=clamp(q*3); em.style.transform=`scale(${.4+.6*eb(q)})`; } }); });
