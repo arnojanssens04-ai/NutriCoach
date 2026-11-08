@@ -17,17 +17,24 @@ body.l-subs #vis{display:none} body.l-vis #subs{display:none}
 .emo{font-family:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji',sans-serif;font-style:normal;font-weight:400}
 
 /* ===== petits visuels : une seule bande basse, juste au-dessus du texte (y 1275-1375) ===== */
-.bd{position:absolute;left:50%;top:1275px;height:96px;opacity:0;background:#fff;border-radius:48px;border:2px solid var(--line);box-shadow:0 10px 28px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:14px;padding:0 30px;white-space:nowrap;font-weight:800;font-size:40px;letter-spacing:-.5px;margin-left:var(--mx,-150px)}
+.bd{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;top:1275px;height:96px;opacity:0;background:#fff;border-radius:48px;border:2px solid var(--line);box-shadow:0 10px 28px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:14px;padding:0 30px;white-space:nowrap;font-weight:800;font-size:40px;letter-spacing:-.5px}
 .bd .emo{font-size:56px}
-#b-eu{--mx:-250px}
-#b-nrj{--mx:-70px;padding:0 24px}
+#b-nrj{padding:0 24px}
 #b-nrj .x{position:absolute;right:-12px;top:-14px;width:44px;height:44px;border-radius:50%;background:var(--red);color:#fff;font-size:30px;font-weight:900;display:flex;align-items:center;justify-content:center}
-#b-doc{--mx:-185px;border:3px solid var(--green);color:var(--green);text-transform:uppercase;letter-spacing:1px;font-weight:900}
+#b-doc{border:3px solid var(--green);color:var(--green);text-transform:uppercase;letter-spacing:1px;font-weight:900}
 #tiles{position:absolute;left:121px;top:1279px;width:838px;height:88px}
 .tl{position:absolute;top:0;width:96px;height:88px;opacity:0;border-radius:22px;border:3px solid;box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:40px;letter-spacing:-1px}
 .tl.g{background:var(--soft);border-color:var(--green);color:var(--green)}
 .tl.a{background:#FFF3D6;border-color:var(--amber);color:#8A5A00}
 .tl.t{background:var(--terra-soft);border-color:var(--terra);color:#8A3B26}
+
+@font-face{font-family:'Lora';src:url(../ashwagandha/fonts/lora-italic.woff2) format('woff2');font-weight:400 700;font-style:italic;}
+#b-sleep .ok{width:52px;height:52px;border-radius:50%;background:var(--sage);color:#fff;font-style:normal;font-size:34px;font-weight:900;display:flex;align-items:center;justify-content:center}
+#b-other{border:3px dashed #B9B2A3;background:rgba(255,255,255,.92)}
+#b-other .q{width:52px;height:52px;border-radius:50%;background:var(--amber);color:var(--ink);font-style:normal;font-size:34px;font-weight:900;display:flex;align-items:center;justify-content:center}
+#b-red{background:var(--green);border-color:var(--green);color:#fff}
+#b-persist{background:var(--amber);border-color:var(--amber);color:var(--ink);font-weight:900}
+#b-end{background:var(--green);border-color:var(--green);color:#fff;font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:44px;letter-spacing:-1px}
 
 /* ===== sous-titres : en bas, SANS bandeau (lettres cerclées) pour laisser voir les mains ===== */
 #subs{position:absolute;left:100px;width:860px;bottom:400px;height:140px}
@@ -47,6 +54,11 @@ body.l-subs #vis{display:none} body.l-vis #subs{display:none}
     <div class="bd" id="b-eu"><span class="emo">🇪🇺</span>Allégation européenne</div>
     <div class="bd" id="b-nrj"><span class="emo">⚡</span><i class="x">✕</i></div>
     <div class="bd" id="b-doc"><span class="emo">👩‍⚕️</span>Médecin</div>
+    <div class="bd" id="b-sleep"><span class="emo">😴</span>Sommeil<i class="ok">✓</i></div>
+    <div class="bd" id="b-other"><span class="emo">🧭</span>Autre piste<i class="q">?</i></div>
+    <div class="bd" id="b-red"><span class="emo">📉</span>Fatigue réduite</div>
+    <div class="bd" id="b-persist"><span class="emo">⚠️</span>Fatigue qui persiste</div>
+    <div class="bd" id="b-end"><span class="emo">🌿</span>Mange l’esprit tranquille</div>
     <div id="tiles"></div>
   </div>
   <div id="subs"></div>
@@ -116,6 +128,8 @@ Q.ener=wt('s4b','lénergie'); Q.enerEnd=wt1('s4b','lénergie');
 const TILES=[['B2','g','b2'],['B3','g','b3'],['B5','g','b5'],['B6','g','b6'],['B9','g','b9'],['B12','g','b12'],['C','a','c'],['Mg','t','magnésium']];
 Q.tile=TILES.map(x=>wt('s5',x[2])); Q.listEnd=SEG.s5.t1;
 Q.parler=wt('s6','parler');
+Q.sleep=wt('s2a','sommeil'); Q.compteEnd=wt1('s2a','compte'); Q.seule=wt('s2b','seule'); Q.pisteEnd=wt1('s2b','piste');
+Q.red=wt('s4a','réduire'); Q.persiste=wt('s6','persiste'); Q.mange=wt('s7','mange');
 /* fenêtres d'affichage des petits visuels (a = début, b = fin) */
 const BADGES={
   eu:{a:Q.eu-.15,b:Q.lesEnd+.5,desc:'Pastille « 🇪🇺 Allégation européenne »',say:'…allégation européenne ciblée sur la fatigue. Tu veux savoir lesquels ?'},
@@ -123,9 +137,17 @@ const BADGES={
   tiles:{a:Q.tile[0]-.1,b:Q.listEnd+1.2,desc:'Rangée de 8 petites tuiles B2, B3, B5, B6, B9, B12, C, Mg',say:'…la vitamine B2, la B3 … et le magnésium.'},
   doc:{a:Q.parler-.1,b:Math.max(Q.parler-.1+3.4,SEG.s6.t1+.6),desc:'👩‍⚕️ Médecin (au moins 3 s)',say:'…n’hésite pas à en parler à ton médecin…'},
 };
+BADGES.sleep={a:Q.sleep-.15,b:Q.compteEnd+.5,desc:'😴 Sommeil ✓',say:'…le sommeil compte.'};
+BADGES.other={a:Q.seule-.2,b:Q.pisteEnd+1.0,desc:'🧭 Autre piste ?',say:'…pas la seule piste.'};
+BADGES.red={a:Q.red-.15,b:SEG.s4a.t1+.4,desc:'📉 Fatigue réduite',say:'…vont contribuer à réduire la fatigue quand il t’en manque.'};
+BADGES.persist={a:Q.persiste-.15,b:Q.parler-.05,desc:'⚠️ Fatigue qui persiste',say:'…si tu sens qu’une fatigue persiste…'};
+BADGES.end={a:Q.mange-.1,b:TOTAL,desc:'🌿 Mange l’esprit tranquille',say:'…mange l’esprit tranquille.'};
+/* une seule pastille à la fois dans la bande : la précédente se termine avant la suivante (le médecin garde ses 3,4 s) */
+{ const O=Object.values(BADGES).sort((x,y)=>x.a-y.a);
+  for(let i=0;i<O.length-1;i++){ const A=O[i],B=O[i+1]; if(A.b>B.a-.05){ if(A===BADGES.doc) B.a=Math.max(B.a,A.b+.05); else A.b=Math.max(A.a+.7,B.a-.05); } } }
 const NOTES=[];
 /* rectangles (pour ne jamais recouvrir ta tête en gros plan) */
-const PLACE={eu:{rect:[110,1275,830,1371]},nrj:{rect:[470,1275,610,1371]},doc:{rect:[355,1275,725,1371]}};
+const R0=[250,1275,830,1371]; const PLACE={eu:{rect:R0},nrj:{rect:R0},doc:{rect:R0},sleep:{rect:R0},other:{rect:R0},red:{rect:R0},persist:{rect:R0},end:{rect:R0}};
 
 /* ---------- DOM ---------- */
 const TL=[]; TILES.forEach((c,i)=>{ const d=document.createElement('div'); d.className='tl '+c[1]; d.textContent=c[0]; d.style.left=(i*(96+10))+'px'; $('#tiles').appendChild(d); TL.push(d); });
@@ -137,11 +159,16 @@ CH.forEach((c,i)=>{ const nx=CH[i+1]; c.show0=c.t0-.05; c.show1=Math.min(c.t1+.3
 
 /* ---------- rendu : animations réduites (fondu + léger glissement) ---------- */
 function vis(el,t,a,b,rect,fin=.25){ const k=Math.min(p(t,a,a+fin),1-p(t,b-.3,b)); const f=free(rect,t); const v=clamp(k)*f;
-  el.style.opacity=v; el.style.transform=`translateY(${(1-eo(clamp(k)))*14}px)`; return v; }
+  el.style.opacity=v; el.style.transform=`translateY(${(1-eo(clamp(k)))*14}px) scale(${.94+.06*eb(clamp(k))})`; return v; }
 function render(t){
   vis($('#b-eu'),t,BADGES.eu.a,BADGES.eu.b,PLACE.eu.rect);
   vis($('#b-nrj'),t,BADGES.nrj.a,BADGES.nrj.b,PLACE.nrj.rect);
   vis($('#b-doc'),t,BADGES.doc.a,BADGES.doc.b,PLACE.doc.rect);
+  vis($('#b-sleep'),t,BADGES.sleep.a,BADGES.sleep.b,PLACE.sleep.rect);
+  vis($('#b-other'),t,BADGES.other.a,BADGES.other.b,PLACE.other.rect);
+  vis($('#b-red'),t,BADGES.red.a,BADGES.red.b,PLACE.red.rect);
+  vis($('#b-persist'),t,BADGES.persist.a,BADGES.persist.b,PLACE.persist.rect);
+  vis($('#b-end'),t,BADGES.end.a,BADGES.end.b,PLACE.end.rect);
   TL.forEach((d,i)=>{ const x=121+i*106;
     const k=Math.min(p(t,Q.tile[i]-.05,Q.tile[i]+.25),1-p(t,BADGES.tiles.b-.3,BADGES.tiles.b)); const f=free([x,1275,x+96,1371],t);
     d.style.opacity=clamp(k)*f; d.style.transform=`translateY(${(1-eo(clamp(k)))*14}px)`; });
