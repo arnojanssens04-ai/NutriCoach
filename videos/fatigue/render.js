@@ -20,6 +20,8 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: W, height: H } });
+  const zj = path.join(out, 'zones.json');
+  if (fs.existsSync(zj)) await page.addInitScript(`window.ZONES=${fs.readFileSync(zj, 'utf8')};`);
   const wj = path.join(out, 'words.json');
   if (fs.existsSync(wj) && !process.env.NO_WORDS) { await page.addInitScript(`window.WORDS=${fs.readFileSync(wj, 'utf8')};`); console.log('horaires réels : words.json'); }
   const open = async q => { await page.goto(url(q)); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
@@ -29,9 +31,9 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
     const L = await page.evaluate(() => window.LAYOUT);
     fs.writeFileSync(path.join(out, 'layout.json'), JSON.stringify(L, null, 1));
     fs.writeFileSync(path.join(out, 'sous-titres.srt'), L.chunks.map((c, i) => `${i + 1}\n${srtT(c.t0)} --> ${srtT(c.t1)}\n${c.text}\n`).join('\n'));
-    const vis = { sc1: 'Étiquette FATIGUE, 😴 + ✓ « correctement », batterie qui se vide, 🥱', sc2: 'Carte Sommeil ✓, carte « Autre piste ? »', sc3: 'Carte « nutriments · allégation européenne », 8 cases « ? » avec projecteur sur « lesquels ? »', sc4: 'Bandeau de 8 « ? », « Fatigue réduite » + « quand il en manque » ; puis « de l’énergie en plus » barré + ✕', sc5: 'Carte « Les nutriments », 8 tuiles B2, B3, B5, B6, B9, B12, C, Mg une à une', sc6: 'Bandeau ⚠️ « Fatigue qui persiste », carte 👩‍⚕️ « En parler à ton médecin » (≥ 3 s)', sc7: 'Carte « Mange l’esprit tranquille » + 🌿, logo CapSanté' };
-    let md = '| Temps | Phrase | Visuel prévu |\n|---|---|---|\n';
-    L.scenes.forEach(s => { const segs = L.segs.filter(g => s.segs.includes(g.id)); md += `| ${sec(s.a)} → ${sec(s.b)} | ${segs.map(g => g.text).join(' ')} | ${vis[s.id]} |\n`; });
+    let md = 'Sous-titres : en bas, sans bandeau (lettres cerclées, tes mains restent visibles), tout le long de la vidéo.\n\n| Temps | Quand tu dis | Petit visuel (juste au-dessus du texte) |\n|---|---|---|\n';
+    L.badges.sort((x, y) => x.a - y.a).forEach(b => { md += `| ${sec(Math.max(0, b.a))} → ${sec(b.b)} | ${b.say} | ${b.desc} |\n`; });
+    md += '\nTout le reste : texte seul.\n';
     fs.writeFileSync(path.join(out, 'tableau.md'), md);
     console.log('durée', L.total, 's' + (L.real ? ' (horaires réels)' : ' (estimée)') + '\n' + md); (L.notes || []).forEach(n => console.log('⚠', n));
   } else if (cmd === 'frames') {
@@ -63,13 +65,23 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
       if (i % 150 === 0) process.stdout.write(`${layer}:${(i / FPS).toFixed(0)}s `);
     }
     ff.stdin.end(); await ff.done; console.log('\nok', layer);
+  } else if (cmd === 'stills') {
+    // images de contrôle : calques posés sur ta vidéo à des instants choisis (ex. node render.js stills 2,9,20)
+    const src = path.join(__dirname, 'in', 'voix-video.mp4'); await open('alpha=1');
+    const ts = (arg || '2,10,12,19,20,23,27,32,34,36').split(',').map(Number);
+    for (const t of ts) {
+      await page.evaluate(t => window.render(t), t);
+      const png = path.join(out, `ov-${t}.png`); await page.screenshot({ path: png, omitBackground: true });
+      const f = run(['-ss', String(t), '-i', src, '-i', png, '-filter_complex', '[0:v][1:v]overlay', '-frames:v', '1', path.join(out, `s-${String(t).padStart(5, '0')}.png`)], 'inherit'); await f.done;
+    }
+    console.log(ts.length, 'images');
   } else if (cmd === 'compose') {
     // pose les calques transparents sur TA vidéo, en gardant son audio d'origine (aucun son ajouté)
     const src = arg || path.join(__dirname, 'in', 'voix-video.mp4');
     const sub = path.join(out, 'sous-titres_transparent.mov'), vis = path.join(out, 'visuels_transparent.mov');
-    const jobs = [['sous-titres_sur_ta_video.mp4', ['-i', src, '-i', sub, '-filter_complex', '[0:v][1:v]overlay=shortest=1,format=yuv420p[v]']],
-                  ['visuels_et_sous-titres_sur_ta_video.mp4', ['-i', src, '-i', vis, '-i', sub, '-filter_complex', '[0:v][1:v]overlay=shortest=1[a];[a][2:v]overlay=shortest=1,format=yuv420p[v]']]];
-    for (const [name, a] of jobs) { const f = run([...a, '-map', '[v]', '-map', '0:a', '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-c:a', 'copy', '-movflags', '+faststart', path.join(out, name)], 'inherit'); await f.done; console.log('ok', name); }
+    const f = run(['-i', src, '-i', vis, '-i', sub, '-filter_complex', '[0:v][1:v]overlay=shortest=1[a];[a][2:v]overlay=shortest=1,format=yuv420p[v]',
+      '-map', '[v]', '-map', '0:a', '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-c:a', 'copy', '-movflags', '+faststart', path.join(out, 'sur_ta_video.mp4')], 'inherit');
+    await f.done; console.log('ok sur_ta_video.mp4');
   }
   await browser.close();
 })();
