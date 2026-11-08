@@ -41,7 +41,7 @@ const SC=[
  {id:'c7', a:Q.pas-.3,   b:SEG.s7.t1+.6, desc:'✅ « Pas du tout » + balance penchée côté positifs', say:'Eh bien pas du tout… beaucoup plus d’aspects positifs que négatifs.'},
  {id:'c9', a:SEG.s9.t0-.1, b:SEG.s9.t1+.6, desc:'🚿 « Rincer sous l’eau »', say:'Tout simplement en rinçant le fruit sous l’eau.'},
  {id:'c10',a:Q.tiers-.4, b:SEG.s10.t1+.6, desc:'💧 « −1/3 de résidus supplémentaires · selon une revue »', say:'…réduire déjà d’un tiers les résidus supplémentaires selon une revue.'},
- {id:'c11',a:Q.abo-.4,   b:TOTAL,        desc:'🔔 S’abonner + « Mange l’esprit tranquille » 🌿 + logo', say:'…n’hésite pas à t’abonner et mange l’esprit tranquille.'},
+ {id:'c11',a:Q.abo-.4,   b:TOTAL,        desc:'🔔 S’abonner + « Mange l’esprit tranquille » 🌿', say:'…n’hésite pas à t’abonner et mange l’esprit tranquille.'},
 ];
 for(let i=0;i<SC.length-1;i++){ if(SC[i].b>SC[i+1].a) SC[i].b=Math.max(SC[i].a+.7,SC[i+1].a); }
 const PRES=[]; SC.forEach(s=>{ const l=PRES[PRES.length-1]; if(l&&s.a-l[1]<.5) l[1]=s.b; else PRES.push([s.a,s.b]); });
@@ -101,7 +101,7 @@ function render(t){
     $('#b-beam').setAttribute('transform',`rotate(${ang} 200 59)`); $('#b-l').setAttribute('transform',`rotate(${-ang} 60 64)`); $('#b-r').setAttribute('transform',`rotate(${-ang} 340 64)`); }
   { put($('#w-card'),t,'pop',SEG.s9.t0-.05); const dr=$('#w-drops'); dr.style.opacity=.55+.4*Math.sin(t*7); dr.style.transform=`translateY(${(t*34)%14}px)`; }
   { put($('#t-card'),t,'pop',Q.tiers-.15); $('#t-rev').style.opacity=clamp(p(t,Q.revue-.1,Q.revue+.25)); }
-  { put($('#s-pill'),t,'stamp',Q.abo-.1); put($('#e-card'),t,'stamp',Q.mange-.1); put($('#e-leaf'),t,'pop',Q.mange+.3,{float:1}); put($('#e-logo'),t,'pop',Q.mange+.5); }
+  { put($('#s-pill'),t,'stamp',Q.abo-.1); put($('#e-card'),t,'stamp',Q.mange-.1); put($('#e-leaf'),t,'pop',Q.mange+.3,{float:1}); }
 
   CH.forEach(c=>{ const on=t>=c.show0&&t<c.show1; const k=p(t,c.show0,c.show0+.14); c.el.style.opacity=on?clamp(k*1.5):0; c.el.style.transform=`translateY(${(1-eo(k))*10}px)`;
     if(on) c.ws.forEach((s,i)=>{ const w=c.words[i]; const cur=t>=w.t0&&t<w.t1+.08, done=t>=w.t1+.08; s.className='w'+(w.key?' k':'')+(done?' done':'')+(cur?' cur':'');
