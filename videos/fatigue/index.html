@@ -123,13 +123,21 @@ body.l-vis #subs{display:none}
 /* sous-titres : zone y 1230-1500, x 60-960 */
 #subs{position:absolute;left:60px;width:900px;bottom:420px;display:flex;justify-content:center}
 .sb{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;opacity:0}
-.sb > div{background:rgba(26,32,28,.86);border-radius:36px;padding:22px 38px 30px;max-width:840px;text-align:center;font-weight:800;font-size:60px;line-height:1.16;letter-spacing:-1px;color:#fff;text-wrap:balance;box-shadow:0 18px 44px rgba(0,0,0,.28)}
+.sb > div{background:rgba(26,32,28,.86);border-radius:36px;padding:22px 38px 30px;max-width:840px;text-align:center;font-weight:800;font-size:60px;line-height:1.16;letter-spacing:-1px;word-spacing:.14em;color:#fff;text-wrap:balance;box-shadow:0 18px 44px rgba(0,0,0,.28)}
 .sb .w{display:inline-block;color:rgba(255,255,255,.5)}
 .sb .w.k{text-transform:uppercase;color:rgba(255,158,133,.6)}
 .sb .w.done{color:#fff}
 .sb .w.k.done{color:#FF9E85}
 .sb .w.cur{color:var(--amber)}
 .sb .w.k.cur{color:var(--amber)}
+.cell .qm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-weight:700;font-size:110px;color:#C9C2B3}
+#g5{--ts:200px;--tg:33px}
+#l-head{width:900px;height:210px;display:flex;align-items:center;gap:36px;padding:0 50px}
+#l-head .emo{font-size:120px}
+#l-head b{font-family:'Lora',serif;font-size:76px;letter-spacing:-2px;line-height:1}
+#l-head small{display:block;font-weight:800;font-size:32px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);margin-top:12px}
+#w-ban b{font-size:62px}
+#w-doc b{font-size:78px}
 </style>
 </head>
 <body>
@@ -151,9 +159,9 @@ body.l-vis #subs{display:none}
       <div class="card row2 dashed" id="p-other"><span class="emo">🧭</span><b>Autre piste</b><i class="chk q">?</i></div>
     </div></section>
 
-    <!-- 3 : huit nutriments -->
+    <!-- 3 : nutriments à allégation européenne, "lesquels ?" -->
     <section class="sc" id="sc3"><div class="sub">
-      <div class="card" id="e-head"><div class="num">8</div><div><div class="t1">nutriments</div><div class="t2" id="e-eu">🇪🇺 Allégation européenne</div><div class="t3" id="e-fat">sur la fatigue</div></div></div>
+      <div class="card" id="e-head"><div class="num emo" style="font-size:150px">🧪</div><div><div class="t1">nutriments</div><div class="t2" id="e-eu">🇪🇺 Allégation européenne</div><div class="t3" id="e-fat">sur la fatigue</div></div></div>
       <div class="grid" id="g3"></div>
     </div></section>
 
@@ -171,33 +179,22 @@ body.l-vis #subs{display:none}
       </div>
     </section>
 
-    <!-- 5 : le meilleur nutriment -->
+    <!-- 5 : la liste -->
     <section class="sc" id="sc5"><div class="sub">
-      <div class="card" id="q-card"><span class="emo">🏆</span><div><b>Le meilleur nutriment</b><small>contre la fatigue</small></div></div>
+      <div class="card" id="l-head"><span class="emo">🧪</span><div><b>Les nutriments</b><small>🇪🇺 allégation européenne</small></div></div>
       <div class="grid" id="g5"></div>
-      <div class="card" id="q-ans"><span class="emo">🎯</span><b>Celui qui te manque</b></div>
     </div></section>
 
-    <!-- 6 : médecin -->
+    <!-- 6 : fatigue qui persiste -> médecin -->
     <section class="sc" id="sc6"><div class="sub">
-      <div class="card" id="w-ban"><span class="emo">⚠️</span><b>Une fatigue qui dure ?</b></div>
-      <div class="card" id="w-doc"><span class="emo">👩‍⚕️</span><b>Parles-en à ton médecin</b></div>
+      <div class="card" id="w-ban"><span class="emo">⚠️</span><b>Fatigue qui persiste</b></div>
+      <div class="card" id="w-doc"><span class="emo">👩‍⚕️</span><b>En parler à ton médecin</b></div>
     </div></section>
 
-    <!-- 7 : commentaire -->
+    <!-- 7 : fin -->
     <section class="sc" id="sc7"><div class="sub">
-      <div class="pill" id="c-q" style="font-size:72px;letter-spacing:0;text-transform:none;background:var(--green);box-shadow:0 16px 40px rgba(45,90,67,.35)"><span class="emo">🙋</span> Et toi ?</div>
-      <div id="c-row">
-        <div class="card pollc" id="c-am"><span class="emo">☀️</span><b>Le matin</b></div>
-        <div class="card pollc" id="c-pm"><span class="emo">🌇</span><b>L’après-midi</b></div>
-      </div>
-      <div class="card" id="c-bub"><span class="emo">💬</span><b>En commentaire</b><div class="dots"><i></i><i></i><i></i></div></div>
-    </div></section>
-
-    <!-- 8 : fin -->
-    <section class="sc" id="sc8"><div class="sub">
       <div class="card" id="e8-card"><b>Mange l’esprit<br>tranquille</b><span class="emo" id="e8-leaf">🌿</span></div>
-      <div class="card" id="e8-bye"><img src="../../logo-capsante.png" alt=""><b>À bientôt</b><span class="emo">👋</span></div>
+      <div class="card" id="e8-bye"><img src="../../logo-capsante.png" alt=""><b>CapSanté</b></div>
     </div></section>
   </div>
 
@@ -214,23 +211,19 @@ body.l-vis #subs{display:none}
    ===================================================================== */
 const WPS = 2.7, START = 0.45;
 const SEGS = [
-  {id:'s1',  text:'Tu dors à peu près correctement…|et tu es quand même *fatigué* ?'},
-  {id:'s2a', text:'Le *sommeil* compte, évidemment.'},
+  {id:'s1',  text:'Tu dors à peu près correctement,|mais tu es quand même *fatigué*.'},
+  {id:'s2a', text:'Alors, tu le sais déjà,|le *sommeil* compte.'},
   {id:'s2b', text:'Mais ce n’est pas|la seule *piste*.'},
-  {id:'s3a', text:'*Huit* nutriments ont une allégation|*européenne* sur la fatigue :'},
-  {id:'s3b', text:'les vitamines *B2*, *B3*, *B5*,|*B6*, *B9*, *B12*,|la vitamine *C*,|et le *magnésium*.'},
-  {id:'s4a', text:'Ils contribuent à réduire|la fatigue quand il en manque.'},
-  {id:'s4b', text:'Ils ne te donnent pas|de l’énergie en plus.'},
-  {id:'s5a', text:'Alors, le meilleur nutriment|contre la fatigue,|tu sais c’est lequel ?', after:.4},
-  {id:'s5b', text:'*Celui* *qui* *te* *manque.*'},
-  {id:'s6a', text:'Une *fatigue* qui dure ?'},
-  {id:'s6b', text:'Parles-en à ton *médecin*.', after:1.5},
-  {id:'s7a', text:'Et toi, ta fatigue :|plutôt le *matin* ou l’*après-midi* ?'},
-  {id:'s7b', text:'Dis-le-moi en *commentaire*.'},
-  {id:'s8',  text:'Mange l’esprit tranquille. À bientôt.', after:1.4},
+  {id:'s3a', text:'Il existe différents *nutriments*|*ayant* une allégation européenne|ciblée sur la *fatigue*.'},
+  {id:'s3b', text:'Tu veux savoir *lesquels* ?'},
+  {id:'s4a', text:'Ces différents nutriments|vont contribuer à *réduire*|la fatigue quand il t’en manque.'},
+  {id:'s4b', text:'Mais évidemment, c’est pas eux|qui vont te donner de l’*énergie*.'},
+  {id:'s5',  text:'Alors, il s’agit de|la vitamine *B2*, la *B3*,|la *B5*, la *B6*,|la *B9*, la vitamine *B12*,|et enfin, la vitamine *C*,|et le *magnésium*.'},
+  {id:'s6',  text:'Alors si tu sens|qu’une *fatigue* persiste,|eh bien n’hésite pas|à en parler à ton *médecin*|et à te complémenter|dans ce cas-là.', after:1.0},
+  {id:'s7',  text:'Et n’oublie pas,|mange l’esprit *tranquille*.', after:1.0},
 ];
 /* scènes : quels segments, quand la scène commence = 1er mot - 0,1 s */
-const SCENES = [['sc1',['s1']],['sc2',['s2a','s2b']],['sc3',['s3a','s3b']],['sc4',['s4a','s4b']],['sc5',['s5a','s5b']],['sc6',['s6a','s6b']],['sc7',['s7a','s7b']],['sc8',['s8']]];
+const SCENES = [['sc1',['s1']],['sc2',['s2a','s2b']],['sc3',['s3a','s3b']],['sc4',['s4a','s4b']],['sc5',['s5']],['sc6',['s6']],['sc7',['s7']]];
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -267,52 +260,27 @@ const wt1=(id,key,n=0)=>{ const k=norm(key); const m=SEG[id].words.filter(w=>w.n
 const WIN={}; SCENES.forEach(([id,segs],i)=>{ const a=i===0?0:SEG[segs[0]].t0-.1; WIN[id]={a}; });
 SCENES.forEach(([id],i)=>{ WIN[id].b = i<SCENES.length-1 ? WIN[SCENES[i+1][0]].a : TOTAL; });
 
-/* ---------- cues + événements sonores ---------- */
-const EV={subs:[],vis:[]}; const ev=(layer,type,t,o={})=>EV[layer].push(Object.assign({type,t},o));
-const Q={};
+/* ---------- cues (aucun effet sonore) ---------- */
+const EV={subs:[],vis:[]}; const Q={};
 Q.tC=wt('s1','correctement'); Q.tB=wt('s1','quand'); Q.tF=wt('s1','fatigué');
 Q.sleep=wt('s2a','sommeil'); Q.compte=wt('s2a','compte'); Q.mais=wt('s2b','mais'); Q.piste=wt('s2b','seule');
-Q.huit=wt('s3a','huit'); Q.eu=wt('s3a','européenne'); Q.fat=wt('s3a','fatigue');
+Q.nutr=wt('s3a','nutriments'); Q.eu=wt('s3a','européenne'); Q.fat=wt('s3a','fatigue'); Q.tu=wt('s3b','tu'); Q.lesEnd=wt1('s3b','lesquels');
 const TILES=[['B2','vitamine','b2','g'],['B3','vitamine','b3','g'],['B5','vitamine','b5','g'],['B6','vitamine','b6','g'],['B9','vitamine','b9','g'],['B12','vitamine','b12','g'],['C','vitamine','c','a'],['Mg','magnésium','magnésium','t']];
-Q.tile=TILES.map(x=>wt('s3b',x[2]));
-Q.red=wt('s4a','réduire'); Q.cond=wt('s4a','quand'); Q.ils=wt('s4a','ils'); Q.don=wt('s4b','donnent'); Q.ener=wt('s4b','lénergie'); Q.plus=wt('s4b','plus');
-Q.mei=wt('s5a','meilleur'); Q.tu=wt('s5a','tu'); Q.lequel=wt('s5a','lequel'); Q.celui=wt('s5b','celui');
-Q.dure=wt('s6a','dure'); Q.parles=wt('s6b','parlesen'); Q.med=wt('s6b','médecin');
+Q.ces=wt('s4a','ces'); Q.red=wt('s4a','réduire'); Q.cond=wt('s4a','quand'); Q.don=wt('s4b','donner'); Q.ener=wt('s4b','lénergie'); Q.enerEnd=wt1('s4b','lénergie');
+Q.alors5=wt('s5','alors'); Q.tile=TILES.map(x=>wt('s5',x[2]));
+Q.persiste=wt('s6','persiste'); Q.parler=wt('s6','parler');
 /* règle santé : la consigne « médecin » reste à l'écran ≥ 3 s, quitte à retarder la scène suivante */
-const NOTES=[]; { const need=Q.parles+3.0+.3; if(WIN.sc7.a<need){ NOTES.push('Scène 7 retardée de '+(need-WIN.sc7.a).toFixed(1)+' s pour garder « Parles-en à ton médecin » 3 s à l’écran.'); WIN.sc7.a=need; WIN.sc6.b=need; } }
-Q.matin=wt('s7a','matin'); Q.pm=wt('s7a','laprèsmidi'); Q.comm=wt('s7b','commentaire'); Q.toi=wt('s7a','toi');
-Q.mange=wt('s8','mange'); Q.abi=wt('s8','à');
-
-ev('vis','stamp',0.0,{g:.5}); ev('vis','pop',.4,{f:620,g:.35});
-ev('vis','bell',Q.tC,{f:1568,g:.22}); ev('vis','whoosh',Q.tB-.1,{dur:.45,f0:250,f1:2500,g:.3});
-ev('vis','notes',Q.tF,{fs:[784,622,494],gap:.14,g:.2});
-ev('vis','whoosh',Q.sleep-.2,{dur:.4,f0:300,f1:3200,g:.4}); ev('vis','pop',Q.sleep,{f:600,g:.35}); ev('vis','bell',Q.compte,{f:1320,g:.2});
-ev('vis','whoosh',Q.piste-.2,{dur:.45,f0:250,f1:3600,g:.4}); ev('vis','pop',Q.piste,{f:700,g:.4});
-ev('vis','whoosh',Q.huit-.3,{dur:.5,f0:250,f1:3800,g:.45}); ev('vis','stamp',Q.huit,{g:.45}); ev('vis','bell',Q.eu,{f:1318,g:.18});
-Q.tile.forEach((t,i)=>{ ev('vis','pop',t,{f:520*Math.pow(1.07,i),g:.4}); ev('vis','bell',t+.02,{f:784*Math.pow(1.07,i),g:.1}); });
-ev('vis','sparkle',Q.tile[7]+.1,{f0:1200,n:6,g:.1});
-ev('vis','whoosh',Q.ils-.2,{dur:.4,f0:300,f1:3000,g:.35}); ev('vis','pop',Q.ils,{f:560,g:.3});
-ev('vis','whoosh',Q.red-.2,{dur:.45,f0:250,f1:3600,g:.4}); ev('vis','bell',Q.red+.1,{f:1175,g:.22}); ev('vis','bell',Q.red+.2,{f:1568,g:.22}); ev('vis','pop',Q.cond,{f:640,g:.4});
-ev('vis','whoosh',Q.don-.2,{dur:.4,f0:300,f1:3200,g:.4}); ev('vis','pop',Q.don,{f:600,g:.4}); ev('vis','stamp',Q.plus,{g:.8});
-ev('vis','whoosh',Q.mei-.3,{dur:.5,f0:250,f1:3600,g:.4}); ev('vis','pop',Q.mei,{f:620,g:.35});
-for(let t=Q.tu,i=0;t<Q.celui-.1;t+=.17,i++) ev('vis','pop',t,{f:i%2?900:760,g:.12,dur:.07});
-ev('vis','notes',Q.lequel,{fs:[880,660],gap:.14,g:.22});
-ev('vis','whoosh',Q.celui-.2,{dur:.5,f0:300,f1:6500,g:.55}); ev('vis','stamp',Q.celui,{g:.8}); ev('vis','bell',Q.celui+.02,{f:1318,g:.24}); ev('vis','bell',Q.celui+.12,{f:1760,g:.28}); ev('vis','sparkle',Q.celui+.1,{f0:1100,n:6,g:.1});
-ev('vis','stamp',WIN.sc6.a+.1,{g:.7}); ev('vis','bell',WIN.sc6.a+.12,{f:988,g:.2});
-ev('vis','whoosh',Q.parles-.25,{dur:.45,f0:250,f1:3600,g:.45}); ev('vis','pop',Q.parles,{f:620,g:.4}); ev('vis','bell',Q.parles+.15,{f:1175,g:.2});
-ev('vis','whoosh',Q.matin-.3,{dur:.4,f0:300,f1:3200,g:.4}); ev('vis','pop',Q.matin,{f:640,g:.4});
-ev('vis','pop',Q.pm,{f:760,g:.4}); ev('vis','whoosh',Q.comm-.3,{dur:.45,f0:300,f1:3800,g:.4});
-ev('vis','pop',Q.comm,{f:900,g:.35}); ev('vis','bell',Q.comm+.05,{f:1320,g:.2}); ev('vis','bell',Q.comm+.14,{f:1980,g:.2});
-ev('vis','whoosh',Q.mange-.3,{dur:.5,f0:250,f1:4200,g:.5}); ev('vis','sparkle',Q.mange+.1,{f0:900,n:7,g:.12});
-[784,988,1175,1568].forEach((f,i)=>ev('vis','bell',Q.mange+.15+i*.09,{f,g:.14})); ev('vis','pop',Q.abi,{f:700,g:.35});
-CH.forEach(c=>ev('subs','whoosh',c.t0-.1,{dur:.28,f0:400,f1:2600,g:.16}));
+const NOTES=[]; { const need=Q.parler+3.0+.3; if(WIN.sc7.a<need){ NOTES.push('Scène 7 retardée de '+(need-WIN.sc7.a).toFixed(1)+' s pour garder « En parler à ton médecin » 3 s à l’écran.'); WIN.sc7.a=need; WIN.sc6.b=need; } }
+Q.mange=wt('s7','mange');
+/* sortie d'une scène : après la fin du dernier mot dit (+0,35 s), sans dépasser l'entrée de la suivante de plus de 0,1 s */
+SCENES.forEach(([id,segs],i)=>{ const last=SEG[segs[segs.length-1]].t1; WIN[id].x=clamp(last+.35,WIN[id].b-.3,WIN[id].b+.1); });
 
 /* ---------- DOM dynamique ---------- */
 function tileHTML(c,cls){ return `<div class="tile ${cls}"><b>${c[0]}</b><small>${c[1]}</small></div>`; }
-$('#g3').innerHTML=TILES.map(c=>'<div class="cell">'+tileHTML(c,c[3])+'</div>').join('');
-$('#g5').innerHTML=TILES.map(c=>tileHTML(c,c[3])).join('');
-$('#n-strip').innerHTML=TILES.map(c=>`<div class="mini ${c[3]}">${c[0]}</div>`).join('');
-const T3=$$('#g3 .tile'), T5=$$('#g5 .tile'), TM=$$('#n-strip .mini');
+$('#g3').innerHTML=TILES.map(()=>'<div class="cell"><div class="qm">?</div></div>').join('');
+$('#g5').innerHTML=TILES.map(c=>'<div class="cell">'+tileHTML(c,c[3])+'</div>').join('');
+$('#n-strip').innerHTML=TILES.map(()=>'<div class="mini g">?</div>').join('');
+const C3=$$('#g3 .cell'), C5=$$('#g5 .cell'), T5=$$('#g5 .tile'), TM=$$('#n-strip .mini');
 
 const SB=$('#subs');
 CH.forEach(c=>{ const d=document.createElement('div'); d.className='sb';
@@ -340,7 +308,7 @@ function render(t){
   $('.b2').style.transform=`translate(${Math.cos(t*.28)*70}px,${Math.sin(t*.33)*60}px)`;
   /* visibilité des scènes */
   SCENES.forEach(([id],i)=>{ const w=WIN[id]; const el=$('#'+id);
-    const fin=i===0?1:p(t,w.a,w.a+.25), fout=i===SCENES.length-1?1-p(t,TOTAL-.5,TOTAL):1-eio(p(t,w.b-.3,w.b));
+    const fin=i===0?1:p(t,w.a,w.a+.25), fout=i===SCENES.length-1?1-p(t,TOTAL-.5,TOTAL):1-eio(p(t,w.x,w.x+.3));
     const v=Math.min(fin,fout); el.style.opacity=v; el.style.visibility=v<=.001?'hidden':'visible';
     el.style.transform=`translateY(${-50*(1-fout)}px) scale(${1-.04*(1-fout)})`; });
 
@@ -358,44 +326,34 @@ function render(t){
   { put($('#p-sleep'),t,'slide',Q.sleep-.1,{dir:-1}); put($('#p-ok'),t,'pop',Q.compte);
     put($('#p-other'),t,'slide',Q.piste-.1,{dir:1}); }
 
-  /* 3 */
-  { put($('#e-head'),t,'pop',Q.huit-.1); put($('#e-eu'),t,'pop',Q.eu-.15); put($('#e-fat'),t,'pop',Q.fat-.1);
-    T3.forEach((el,i)=>{ put(el,t,'pop',Q.tile[i]-.05); }); }
+  /* 3 : nutriments + « lesquels ? » */
+  { put($('#e-head'),t,'pop',Q.nutr-.1); put($('#e-eu'),t,'pop',Q.eu-.15); put($('#e-fat'),t,'pop',Q.fat-.1);
+    const run=t>=Q.tu&&t<Q.lesEnd, idx=Math.floor((t-Q.tu)/.17)%8;
+    C3.forEach((el,i)=>{ const k=p(t,Q.eu+i*.08-.1,Q.eu+i*.08+.35), on=run&&i===idx;
+      el.style.opacity=clamp(k*3)*(run&&!on?.55:1); el.style.transform=`scale(${(.6+.4*eb(k))*(on?1.12:1)})`; el.style.borderColor=on?'#E07A5F':''; }); }
 
-  /* 4 */
+  /* 4 : réduire la fatigue / pas d'énergie en plus */
   { const sw=eio(p(t,Q.don-.45,Q.don-.1));
     $('#n-a').style.opacity=1-sw; $('#n-a').style.transform=`translateY(${-40*sw}px)`;
-    $('#n-b').style.opacity=sw; $('#n-b').style.pointerEvents='none';
-    TM.forEach((el,i)=>put(el,t,'pop',Q.ils+i*.07));
+    $('#n-b').style.opacity=sw;
+    TM.forEach((el,i)=>put(el,t,'pop',Q.ces+i*.07));
     put($('#n-arr'),t,'rise',Q.red-.1); put($('#n-card'),t,'pop',Q.red); put($('#n-cond'),t,'pop',Q.cond);
     $('#n-no').style.opacity=clamp(p(t,Q.don-.1,Q.don+.3)*3); const kk=p(t,Q.don-.1,Q.don+.4); $('#n-no').style.transform=`scale(${.6+.4*eb(kk)})`;
     $('#n-st').style.width=(eo(p(t,Q.ener,Q.ener+.45))*104)+'%';
-    put($('#n-x'),t,'stamp',Q.plus,{shake:1}); }
+    put($('#n-x'),t,'stamp',Math.max(Q.ener+.2,Q.enerEnd-.15),{shake:1}); }
 
-  /* 5 */
-  { put($('#q-card'),t,'pop',Q.mei-.1);
-    const kS=p(t,Q.mei+.2,Q.mei+.6), run=t>=Q.tu&&t<Q.celui-.1, idx=Math.floor((t-Q.tu)/.17)%8;
-    T5.forEach((el,i)=>{ const k=p(t,Q.mei+.1+i*.06,Q.mei+.55+i*.06);
-      const on=run&&i===idx; const dim=t>=Q.celui-.1;
-      el.style.opacity=clamp(k*3)*(dim?.35:(run&&!on?.6:1)); el.style.transform=`scale(${(.6+.4*eb(k))*(on?1.14:1)})`;
-      el.style.boxShadow=on?'0 0 0 8px #E07A5F, 0 14px 34px rgba(26,32,28,.14)':''; });
-    put($('#q-ans'),t,'stamp',Q.celui); }
+  /* 5 : la liste */
+  { put($('#l-head'),t,'pop',Q.alors5-.05);
+    C5.forEach((cell,i)=>{ const k=p(t,Q.alors5+.1+i*.05,Q.alors5+.5+i*.05); cell.style.opacity=clamp(k*3); cell.style.transform=`scale(${.7+.3*eb(k)})`; });
+    T5.forEach((el,i)=>put(el,t,'pop',Q.tile[i]-.05)); }
 
-  /* 6 */
+  /* 6 : fatigue qui persiste -> médecin */
   { const ban=$('#w-ban'); const k=p(t,WIN.sc6.a+.1,WIN.sc6.a+.42); const sh=t>WIN.sc6.a+.4?Math.sin(t*60)*8*(1-p(t,WIN.sc6.a+.4,WIN.sc6.a+.9)):0;
     ban.style.opacity=clamp(k*4); ban.style.transform=`translateX(${sh}px) scale(${2-eo(k)}) rotate(${-4*(1-eo(k))}deg)`;
-    put($('#w-doc'),t,'pop',Q.parles); }
+    put($('#w-doc'),t,'pop',Q.parler-.1); }
 
-  /* 7 */
-  { put($('#c-q'),t,'stamp',WIN.sc7.a+.15,{r:-2});
-    const pulse=(st,a)=>t>st+.6?1+.04*Math.sin((t-st)*5+a):1;
-    const am=K.pop(t,Q.matin), pm=K.pop(t,Q.pm);
-    tf($('#c-am'),{o:am.o,y:am.y,s:am.s*pulse(Q.matin,0)}); tf($('#c-pm'),{o:pm.o,y:pm.y,s:pm.s*pulse(Q.pm,2)});
-    put($('#c-bub'),t,'stamp',Q.comm);
-    $$('.dots i').forEach((d,i)=>d.style.opacity=.35+.65*Math.max(0,Math.sin(t*7-i*.9))); }
-
-  /* 8 */
-  { put($('#e8-card'),t,'stamp',Q.mange); put($('#e8-leaf'),t,'pop',Q.mange+.5,{float:1}); put($('#e8-bye'),t,'pop',Q.abi); }
+  /* 7 : fin */
+  { put($('#e8-card'),t,'stamp',WIN.sc7.a+.2); put($('#e8-leaf'),t,'pop',WIN.sc7.a+.7,{float:1}); put($('#e8-bye'),t,'pop',WIN.sc7.a+.9); }
 
   /* sous-titres */
   CH.forEach(c=>{ const on=t>=c.show0&&t<c.show1; const k=p(t,c.show0,c.show0+.15);
@@ -403,7 +361,7 @@ function render(t){
     if(on){ const inner=c.el.firstChild; inner.style.transform=`translateY(${(1-eo(k))*18}px) scale(${.94+.06*eo(k)})`;
       c.ws.forEach((s,i)=>{ const w=c.words[i]; const cur=t>=w.t0&&t<w.t1+.08, done=t>=w.t1+.08;
         s.className='w'+(w.key?' k':'')+(done?' done':'')+(cur?' cur':'');
-        const q=p(t,w.t0,w.t0+.15); s.style.transform=t>=w.t0?`scale(${cur?(.92+.12*Math.sin(Math.min(1,q)*Math.PI*.9)):1})`:'scale(1)'; }); } });
+        const q=p(t,w.t0,w.t0+.15); s.style.transform=t>=w.t0?`scale(${cur?(1+.07*Math.sin(Math.min(1,q)*Math.PI)):1})`:'scale(1)'; }); } });
 }
 window.render=render;
 window.LAYOUT={notes:NOTES,real:window.LAYOUT_REAL,words:SEGS.flatMap(g=>g.words.map(w=>({seg:g.id,raw:w.raw.replace(/\u00A0/g,' ')}))),total:TOTAL,segs:SEGS.map(s=>({id:s.id,text:s.text.replace(/[|*]/g,m=>m==='|'?' / ':''),t0:s.t0,t1:s.t1})),

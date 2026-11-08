@@ -22,7 +22,7 @@ def norm(s):
 prompt = ' '.join(w['raw'] for w in words)
 model = WhisperModel(size, device='cpu', compute_type='int8')
 with wave.open('out/voix16.wav') as wf: pcm = np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(np.float32) / 32768
-segs, info = model.transcribe(pcm, language='fr', word_timestamps=True, initial_prompt=prompt, beam_size=5, condition_on_previous_text=False)
+segs, info = model.transcribe(pcm, language='fr', word_timestamps=True, beam_size=5, condition_on_previous_text=False, temperature=0.0)  # pas d'initial_prompt : un long texte indice fait dérailler Whisper
 heard = [(w.word.strip(), w.start, w.end) for s in segs for w in s.words if norm(w.word)]
 json.dump([{'w':h[0],'t0':round(h[1],2),'t1':round(h[2],2)} for h in heard], open('out/transcription.json','w'), ensure_ascii=False)
 print('TRANSCRIPTION :', ' '.join(h[0] for h in heard))
