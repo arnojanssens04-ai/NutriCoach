@@ -8,6 +8,10 @@ def alpha(f, ts):
         raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', str(t), '-i', f, '-frames:v', '1', '-vf', 'alphaextract,scale=270:480,format=gray', '-f', 'rawvideo', '-'], capture_output=True).stdout
         out.append(np.frombuffer(raw, np.uint8).reshape(480, 270) > 20 if len(raw) == 270 * 480 else np.zeros((480, 270), bool))
     return out
+import os
+NODET = json.load(open('out/zones.json')).get('nodet', []) if os.path.exists('out/zones.json') else []
+for t in list(R):
+    if not R[t] and any(a <= t <= b for a, b in NODET): R[t] = [0, 0, 1080, 1560]   # gros plan : visage jusqu'à ~1560 px
 ts = [t for t in R if R[t]]
 A = [a | b for a, b in zip(alpha('out/sous-titres_transparent.mov', ts), alpha('out/visuels_transparent.mov', ts))]
 face_hit = []; hair_hit = []; worst = 0

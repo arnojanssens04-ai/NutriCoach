@@ -31,9 +31,9 @@ const write = async (ff, b) => { if (!ff.stdin.write(b)) await new Promise(r => 
     const L = await page.evaluate(() => window.LAYOUT);
     fs.writeFileSync(path.join(out, 'layout.json'), JSON.stringify(L, null, 1));
     fs.writeFileSync(path.join(out, 'sous-titres.srt'), L.chunks.map((c, i) => `${i + 1}\n${srtT(c.t0)} --> ${srtT(c.t1)}\n${c.text}\n`).join('\n'));
-    let md = 'Sous-titres : en bas, sans bandeau (lettres cerclées, tes mains restent visibles), tout le long de la vidéo.\n\n| Temps | Quand tu dis | Petit visuel (juste au-dessus du texte) |\n|---|---|---|\n';
+    let md = 'Sous-titres : sans bandeau, sur le pull sous le menton ; ils remontent quand il n’y a pas d’animation.\n\nAnimations (version compacte, sur le pull, jamais sur le visage) :\n\n| Temps | Quand tu dis | Animation |\n|---|---|---|\n';
     L.badges.sort((x, y) => x.a - y.a).forEach(b => { md += `| ${sec(Math.max(0, b.a))} → ${sec(b.b)} | ${b.say} | ${b.desc} |\n`; });
-    md += '\nTout le reste : texte seul.\n';
+    md += '\nPériodes avec animation (le texte descend) : ' + L.pres.map(p => sec(Math.max(0, p[0])) + ' → ' + sec(p[1])).join(' ; ') + '\nEn dehors : texte seul, remonté.\n';
     fs.writeFileSync(path.join(out, 'tableau.md'), md);
     console.log('durée', L.total, 's' + (L.real ? ' (horaires réels)' : ' (estimée)') + '\n' + md); (L.notes || []).forEach(n => console.log('⚠', n));
   } else if (cmd === 'frames') {

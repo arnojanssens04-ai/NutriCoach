@@ -34,5 +34,20 @@ for t in bad:
     p = t
 if s is not None: iv.append([s, p])
 iv = [[round(max(0, a - .35), 2), round(b + .45, 2)] for a, b in iv]
-json.dump({'closeups': iv, 'faces': [[r['t']] + r['face'] for r in rows if r['face']]}, open('out/zones.json', 'w'))
+# 'nodet' : visage introuvable (gros plan réel : le visage remplit l'écran jusqu'à ~1560 px).
+# Séries d'au moins 3 mesures sans visage, regroupées si elles sont séparées de moins de 0,6 s.
+runs = []; cur = []
+for r in rows:
+    if not r['face']: cur.append(r['t'])
+    else:
+        if len(cur) >= 3: runs.append([cur[0], cur[-1]])
+        cur = []
+if len(cur) >= 3: runs.append([cur[0], cur[-1]])
+nodet = []
+for a_, b_ in runs:
+    if nodet and a_ - nodet[-1][1] <= .6: nodet[-1][1] = b_
+    else: nodet.append([a_, b_])
+nodet = [[round(max(0, a_ - .35), 2), round(b_ + .45, 2)] for a_, b_ in nodet]
+json.dump({'closeups': iv, 'nodet': nodet, 'faces': [[r['t']] + r['face'] for r in rows if r['face']]}, open('out/zones.json', 'w'))
+print('visage introuvable (vrai gros plan) :', nodet or 'aucun')
 print('gros plans (visage énorme ou non détecté) :', iv or 'aucun')
