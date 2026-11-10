@@ -61,6 +61,51 @@ Livrables : cette vidéo, `sous-titres_transparent.mov` + `visuels_transparent.m
 - Les chiffres de zones de sécurité viennent de blogs tiers et varient : toujours vérifier l'aperçu sur téléphone.
 - Whisper entend parfois mal (« ayant » → « quand une ») : l'alignement interpole ces mots, le texte affiché reste celui validé.
 
+## Écriture des scripts : grille et tests (croissance : vues + abonnés)
+
+### Constat de départ (vidéo « fatigue », version avec animations)
+- Instagram : **200 vues, dont 159 de non-abonnés (≈ 80 %)**, **72 % d'abandon** avant 3 s (« skip rate »), **24 % encore là à 4 s**, **8 % à 36 s** (la fin). Facebook : 205 vues.
+- Lecture : sur les gens qui passent l'accroche, environ **un sur trois va jusqu'à la fin** → la fuite est presque entièrement **dans les 4 premières secondes**. J'aime, enregistrements et relectures légèrement au-dessus de la moyenne : ceux qui restent apprécient.
+- 80 % de non-abonnés = la vidéo est montrée à des inconnus : **l'accroche doit convaincre seule**.
+- Audience Instagram : surtout 25-40 ans. Audience Facebook : surtout 50-69 ans.
+- Limites : une seule vidéo, 400 vues, aucun repère officiel de « bon » taux (Meta n'en publie pas ; comparer à ses propres vidéos). Les conseils ci-dessous viennent de blogs marketing, pas d'une source officielle d'Instagram : ce sont des **hypothèses à tester**, pas des règles prouvées.
+
+### Grille d'écriture (à appliquer avant chaque script)
+1. **Accroche (0-3 s)** : une phrase qui tient seule, qui surprend, contredit ou donne un enjeu. Pas de « Alors », pas de présentation. Texte à l'écran de 3 à 6 mots dès 0,5 s (beaucoup regardent sans le son). Première image en mouvement.
+2. **Une seule promesse.** La réponse se garde pour la fin (boucle ouverte). Pas de liste longue sans tension (au-delà de 6-7 s, les gens décrochent).
+3. **Durée : 25 à 40 s.** Couper tout ce qui ne sert pas la promesse.
+4. **Fin : une seule action**, avec une raison précise, et une **phrase de série** (ex. « Chaque semaine, je vérifie une idée reçue sur ce que tu manges »). Garder la signature « mange l'esprit tranquille ».
+5. **Public** (hypothèses) : Instagram 25-40 → énergie/fatigue, sommeil, stress, protéines, mythes alimentaires, compléments « vrai ou faux », repas rapides. Facebook 50-69 → cholestérol, tension, os et articulations, mémoire, sommeil ; rythme plus posé, texte plus grand, thème « envoie à quelqu'un qui… ». Ne pas publier la même vidéo partout sans adapter l'accroche et le ton.
+6. **Rigueur santé** : aucun chiffre, source, date ou nom d'organisation inventé ; chaque affirmation de santé a une source à vérifier ; garder les nuances ; « parles-en à ton médecin » sur tout ce qui touche médicaments, maladies, symptômes persistants. Liste « À vérifier » à la fin.
+7. **Emballage** : première image/couverture lisible, légende courte avec le mot-clé du sujet, une question épinglée en commentaire.
+
+### Plan de test (à partir du prochain script)
+- **Types d'accroche à alterner** : A contradiction · B avertissement (« Stop », « Avant de… ») · C chiffre intrigant · D question à enjeu · E mini-scène / gag. Noter le type de chaque vidéo dans `SUIVI.md`.
+- **Une seule variable à la fois** quand c'est possible : même format visuel, même durée, même fin ; ne changer que l'accroche (puis, plus tard, que la fin).
+- **Juger sur 5 à 6 vidéos**, jamais sur une seule. Comparer à **ses propres** vidéos (médiane), pas à des repères trouvés en ligne.
+- **Indicateurs** : taux d'abandon, % à 4 s, % à la fin, temps de visionnage moyen, partages, enregistrements, abonnés gagnés, part de non-abonnés. Instagram et Facebook **séparés**.
+- **Décision** : garder un type d'accroche si son taux d'abandon est plus bas ET que partages/abonnés ne baissent pas ; l'abandonner s'il est moins bon sur 2 vidéos ; retester ensuite.
+- À chaque nouvelle vidéo publiée : remplir une ligne de `SUIVI.md` (24 h puis 7 jours après).
+
+### Prompt à copier pour écrire un script
+
+```text
+Écris le script de ma prochaine vidéo en suivant la grille d'écriture de videos/METHODE.md (section « Écriture des scripts ») et le journal videos/SUIVI.md.
+
+SUJET : [SUJET]
+PUBLIC VISÉ : [Instagram 25-40 / Facebook 50-69 / les deux]
+TYPE D'ACCROCHE À TESTER : [A contradiction / B avertissement / C chiffre / D question à enjeu / E mini-scène, ou « choisis d'après SUIVI.md »]
+
+CE QUE TU ME LIVRES
+1. Trois accroches de types différents (ma voix, 2 phrases maximum, plus un texte d'écran de 3 à 6 mots). Tu recommandes celle à tester et tu expliques pourquoi.
+2. Le script complet (25 à 40 s) : une seule promesse, la réponse gardée pour la fin, une seule action finale avec la phrase de série, et ma signature « mange l'esprit tranquille ».
+3. Pour chaque affirmation de santé : la source à vérifier. N'invente aucun chiffre, aucune date, aucun nom d'organisation. Garde les nuances. Ajoute « parles-en à ton médecin » quand c'est pertinent. Termine par « À vérifier ».
+4. L'emballage : texte de couverture, légende courte, question à épingler en commentaire.
+5. Les lignes à ajouter dans SUIVI.md (type d'accroche, durée, public).
+
+Ensuite, on enchaîne avec le prompt de montage (ci-dessous) quand j'aurai enregistré la vidéo.
+```
+
 ## Prompt à copier pour une nouvelle vidéo
 
 ```text
