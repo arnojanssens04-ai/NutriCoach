@@ -114,7 +114,7 @@ Boîte à outils :
 - `videos/effets/` : `fx.js` + `fx.css` (titre 2 bandes, sous-titres éditoriaux, cartes chat, tampon, étiquette, barre de progression ; les effets « craie/tableau » existent mais sont abandonnés) ; démo `demo.html` ; `render_demo.js` pour les images .
 - `videos/sfx/` : `fetch_sfx.py` (télécharge le SFX Kit CC0), `roles.json` (effet → son), `sfx_mix.py` (place chaque son à l'instant visé, `début = moment − sync.at`, baisse sous la voix, mix −14 LUFS). Les effets de `fx.js` exportent `window.FX_SFX` → `events.json` → `sfx_mix.py`.
 - **Bruitages : OUI par défaut depuis le 11/11/2026** (demande de l'utilisateur après la vidéo de référence n° 2), sobres et **voix devant** : règles, niveaux mesurés, correspondance effet→son et commandes dans `MODELE_HOOK_ET_CTA.md` §7. Toujours livrer aussi la version sans sons.
-- **Gros titres en haut** (serif capitales, 2-4 mots, un par idée) + **CTA animé de fin** (dossier + mot en jaune) : implémentés dans `videos/video3/index.html` (`TITLES`, carte `cG`) ; **jamais pendant un zoom** ni sur le visage (`check_overlap.py`).
+- **Gros titres en haut** (Jost capitales espacées, dégradé émeraude + reflet, 1-3 mots, un par idée) ; **CTA animé de fin** (dossier + mot en jaune) seulement si le script en contient un : implémentés dans `videos/video3/index.html` (`TITLES`) ; **style validé le 11/11/2026 : police Jost, icônes au trait fin sur plaque verre sombre, un texte n'apparaît qu'une fois** ; **jamais pendant un zoom** ni sur le visage (`check_overlap.py`).
 
 Voir aussi : `videos/MODELE_HOOK_ET_CTA.md` (hook, CTA, boucle, bruitages) et `CLAUDE.md` à la racine.
 

@@ -15,9 +15,9 @@ html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
 /* sous-titres éditoriaux : italique à empattements, groupes de 2 à 5 mots, changement sec */
 #subs{position:absolute;left:90px;width:900px;height:150px}
 .sb{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;opacity:0;text-align:center}
-.sb > div{font-family:'Playfair',serif;font-style:italic;font-weight:700;font-size:60px;line-height:1.1;color:#fff;text-wrap:balance;
-  -webkit-text-stroke:9px rgba(12,22,17,.92);paint-order:stroke fill;text-shadow:0 4px 14px rgba(0,0,0,.45)}
-.sb b{font-weight:700;color:#BFF3D6}
+.sb > div{font-family:'Jost',sans-serif;font-style:normal;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:.015em;color:#fff;text-wrap:balance;
+  -webkit-text-stroke:8px rgba(12,22,17,.92);paint-order:stroke fill;text-shadow:0 4px 14px rgba(0,0,0,.45)}
+.sb b{font-weight:700;color:#F6DDA6}
 /* animations : petits dessins sur la chemise, sous le menton */
 #anim{position:absolute;left:100px;width:860px;height:210px}
 .cs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden}
@@ -26,50 +26,48 @@ svg .tx{font-family:'Inter',sans-serif;font-weight:900;fill:#fff;paint-order:str
 svg .ar{font-family:'Archivo',sans-serif;fill:#B8923A;letter-spacing:.14em}
 /* gros titres en haut (inspirés de la vidéo virale) : serif capitales, derrière rien, jamais pendant un zoom */
 #titles{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none}
-.tt{position:absolute;left:40px;width:1000px;top:215px;text-align:center;opacity:0;font-family:'Playfair',serif;font-style:normal;font-weight:700;text-transform:uppercase;font-size:84px;line-height:1.0;color:#fff;letter-spacing:.01em;
-  -webkit-text-stroke:10px rgba(12,22,17,.9);paint-order:stroke fill;text-shadow:0 6px 18px rgba(0,0,0,.4)}
-.tt small{display:block;font-size:56px;margin-top:6px;color:#BFF3D6}
+.tt{position:absolute;left:40px;width:1000px;top:218px;text-align:center;opacity:0;font-family:'Jost',sans-serif;font-weight:600;text-transform:uppercase;font-size:92px;font-weight:700;line-height:1;letter-spacing:.18em;padding-left:.18em}
+.tt span{display:inline-block;background:linear-gradient(105deg,#17372A 0%,#2D5A43 30%,#F8F1D6 46%,#2D5A43 58%,#17372A 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(255,255,255,.55)) drop-shadow(0 6px 14px rgba(0,0,0,.28))}
+.tt i{display:block;height:3px;margin:14px auto 0;width:0;background:linear-gradient(90deg,transparent,#C9A25A,transparent)}
+@font-face{font-family:'Jost';src:url(../effets/fonts/jost-latin-500-normal.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'Jost';src:url(../effets/fonts/jost-latin-600-normal.woff2) format('woff2');font-weight:600}
+@font-face{font-family:'Jost';src:url(../effets/fonts/jost-latin-700-normal.woff2) format('woff2');font-weight:700}
+.cs svg{box-sizing:content-box;padding:14px 20px;border-radius:30px;background:rgba(18,32,25,.62);border:1.5px solid rgba(255,255,255,.4);overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 </style>
 </head>
 <body>
 <div id="stage">
  <div id="anim">
-  <!-- A : étiquette « à une condition » -->
-  <div class="cs" id="cA"><svg id="vA" width="560" height="150" viewBox="0 0 560 150"><g id="vA-g" transform="rotate(-4 280 75)">
-    <rect x="10" y="12" width="540" height="126" rx="10" fill="#EFEDE4" stroke="#B8923A" stroke-width="5"/><rect x="24" y="26" width="512" height="98" rx="5" fill="none" stroke="#B8923A" stroke-width="2.5"/>
-    <text class="ar" x="280" y="87" font-size="33" text-anchor="middle">SI TU EN MANQUES</text></g></svg></div>
-  <!-- B : jauge « taux très faible » -->
-  <div class="cs" id="cB"><svg id="vB" width="420" height="200" viewBox="0 0 420 200">
-    <path d="M40 170 A170 170 0 0 1 380 170" fill="none" stroke="#fff" stroke-width="36" stroke-linecap="round" opacity=".28"/>
-    <path id="vB-arc" d="M40 170 A170 170 0 0 1 380 170" fill="none" stroke="#E86A4F" stroke-width="30" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
-    <g id="vB-n" transform="translate(210 170) rotate(60)"><path d="M-9 0 L0 -150 L9 0Z" fill="#fff" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/><circle r="16" fill="#fff" stroke="#14201A" stroke-width="5"/></g>
-    <text class="tx" x="210" y="40" font-size="42" text-anchor="middle" id="vB-t" opacity="0">taux très faible</text></svg></div>
+  <!-- A : batterie faible (« si tu en manques ») -->
+  <div class="cs" id="cA"><svg id="vA" width="300" height="120" viewBox="0 0 300 120"><g id="vA-g">
+    <rect x="14" y="20" width="240" height="80" rx="20" fill="none" stroke="#fff" stroke-width="5"/><rect x="258" y="42" width="16" height="36" rx="6" fill="#fff"/>
+    <rect id="vA-bar" x="26" y="32" width="0" height="56" rx="12" fill="#E8957A"/></g></svg></div>
+  <!-- B : jauge -->
+  <div class="cs" id="cB"><svg id="vB" width="330" height="150" viewBox="0 0 330 150">
+    <path d="M30 132 A135 135 0 0 1 300 132" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".35"/>
+    <path id="vB-arc" d="M30 132 A135 135 0 0 1 300 132" fill="none" stroke="#E8957A" stroke-width="11" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+    <g id="vB-n" transform="translate(165 132) rotate(60)"><path d="M-5 0 L0 -112 L5 0Z" fill="#fff"/><circle r="10" fill="#fff"/></g></svg></div>
   <!-- C : stress et fatigue qui baissent -->
-  <div class="cs" id="cC"><svg id="vC" width="520" height="180" viewBox="0 0 520 180">
-    <text class="tx" x="10" y="52" font-size="40">stress</text><rect id="vC-b1" x="190" y="22" width="300" height="40" rx="20" fill="#E86A4F"/>
-    <text class="tx" x="10" y="132" font-size="40">fatigue</text><rect id="vC-b2" x="190" y="102" width="300" height="40" rx="20" fill="#F2B84B"/>
-    <path id="vC-ar" d="M505 150 l0 24 m-13 -12 l13 14 l13 -14" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0"/></svg></div>
-  <!-- D : gélule au hasard -->
-  <div class="cs" id="cD"><svg id="vD" width="440" height="190" viewBox="0 0 440 190">
-    <g id="vD-p" transform="translate(220 100) rotate(-28)"><rect x="-100" y="-38" width="200" height="76" rx="38" fill="#fff" stroke="#14201A" stroke-width="5"/><path d="M0 -38 H62 A38 38 0 0 1 62 38 H0Z" fill="#E86A4F" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/></g>
-    <path id="vD-sp" d="M20 40 l18 -26 l14 34 l22 -42 l16 40" fill="none" stroke="#F2B84B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="0 100"/>
-    <g id="vD-x" opacity="0"><circle cx="360" cy="95" r="52" fill="#E86A4F" stroke="#fff" stroke-width="6"/><path d="M338 73 L382 117 M382 73 L338 117" stroke="#fff" stroke-width="12" stroke-linecap="round"/></g></svg></div>
+  <div class="cs" id="cC"><svg id="vC" width="360" height="120" viewBox="0 0 360 120">
+    <rect x="10" y="22" width="300" height="24" rx="12" fill="#fff" opacity=".18"/><rect id="vC-b1" x="10" y="22" width="300" height="24" rx="12" fill="#E8957A"/>
+    <rect x="10" y="74" width="300" height="24" rx="12" fill="#fff" opacity=".18"/><rect id="vC-b2" x="10" y="74" width="300" height="24" rx="12" fill="#F3D9A0"/>
+    <path id="vC-ar" d="M338 40 v36 m-12 -12 l12 13 l12 -13" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0"/></svg></div>
+  <!-- D : gélule -->
+  <div class="cs" id="cD"><svg id="vD" width="360" height="130" viewBox="0 0 360 130">
+    <g id="vD-p" transform="translate(130 70) rotate(-28)"><rect x="-82" y="-30" width="164" height="60" rx="30" fill="none" stroke="#fff" stroke-width="5"/><path d="M0 -30 H52 A30 30 0 0 1 52 30 H0Z" fill="#F3D9A0"/></g>
+    <path id="vD-sp" d="M12 34 l16 -22 l12 28 l18 -34 l14 32" fill="none" stroke="#F3D9A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="0 100"/>
+    <g id="vD-x" opacity="0"><circle cx="292" cy="65" r="40" fill="none" stroke="#E8957A" stroke-width="6"/><path d="M274 47 L310 83 M310 47 L274 83" stroke="#E8957A" stroke-width="8" stroke-linecap="round"/></g></svg></div>
   <!-- E : assiette -->
-  <div class="cs" id="cE"><svg id="vE" width="560" height="190" viewBox="0 0 560 190">
-    <g id="vE-pl"><ellipse cx="280" cy="102" rx="270" ry="78" fill="#fff" opacity=".96"/><ellipse cx="280" cy="102" rx="220" ry="58" fill="#EEF1EF"/></g>
-    <text id="vE-1" class="emo" x="130" y="128" font-size="86" text-anchor="middle" opacity="0">🥜</text>
-    <text id="vE-2" class="emo" x="280" y="128" font-size="86" text-anchor="middle" opacity="0">🫘</text>
-    <text id="vE-3" class="emo" x="430" y="128" font-size="86" text-anchor="middle" opacity="0">🌾</text></svg></div>
-  <!-- F : calendrier 4 à 8 semaines -->
-  <div class="cs" id="cF"><svg id="vF" width="430" height="157" viewBox="0 0 520 190">
-    <g id="vF-g"><rect x="40" y="20" width="440" height="160" rx="22" fill="#FBFAF7" stroke="#14201A" stroke-width="5"/><path d="M40 42 a22 22 0 0 1 22 -22 H458 a22 22 0 0 1 22 22 V70 H40Z" fill="#E07A5F" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/>
-    <text id="vF-n" x="170" y="150" font-family="Archivo" font-size="78" fill="#14201A" text-anchor="middle">4–8</text><text class="" x="340" y="142" font-family="Inter" font-weight="800" font-size="40" fill="#14201A" text-anchor="middle">semaines</text></g></svg></div>
-  <!-- G : appel à l'action (commente le mot) -->
-  <div class="cs" id="cG"><svg id="vG" width="800" height="200" viewBox="0 0 800 200">
-    <g id="vG-f" transform="translate(40 40)"><path d="M0 24 q0 -14 14 -14 h52 l16 20 h86 q14 0 14 14 v96 q0 14 -14 14 h-154 q-14 0 -14 -14z" fill="#5BB8F5" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/><path d="M0 52 h182 v80 q0 14 -14 14 h-154 q-14 0 -14 -14z" fill="#8AD0FA" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/></g>
-    <text class="tx" x="260" y="58" font-size="34" letter-spacing="3">COMMENTE</text>
-    <text id="vG-w" x="260" y="138" font-family="Archivo" font-size="80" fill="#FFD84D" stroke="#14201A" stroke-width="9" paint-order="stroke" stroke-linejoin="round">MAGNÉSIUM</text>
-    <text class="tx" x="260" y="184" font-size="30">+ ABONNE-TOI</text></svg></div>
+  <div class="cs" id="cE"><svg id="vE" width="460" height="130" viewBox="0 0 460 130">
+    <g id="vE-pl"><ellipse cx="230" cy="70" rx="222" ry="52" fill="#fff" opacity=".12" stroke="#fff" stroke-width="4"/><ellipse cx="230" cy="70" rx="176" ry="36" fill="none" stroke="#fff" stroke-width="2.5" opacity=".6"/></g>
+    <text id="vE-1" class="emo" x="105" y="92" font-size="70" text-anchor="middle" opacity="0">🥜</text>
+    <text id="vE-2" class="emo" x="230" y="92" font-size="70" text-anchor="middle" opacity="0">🫘</text>
+    <text id="vE-3" class="emo" x="355" y="92" font-size="70" text-anchor="middle" opacity="0">🌾</text></svg></div>
+  <!-- F : calendrier (4 à 8 semaines) -->
+  <div class="cs" id="cF"><svg id="vF" width="330" height="130" viewBox="0 0 330 130"><g id="vF-g">
+    <rect x="10" y="12" width="310" height="108" rx="18" fill="none" stroke="#fff" stroke-width="5"/><path d="M10 30 a18 18 0 0 1 18 -18 H302 a18 18 0 0 1 18 18 V46 H10Z" fill="#F3D9A0"/>
+    <g id="vF-n" opacity="0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M44 84 l9 9 l17 -19"/><path d="M104 84 l9 9 l17 -19"/><path d="M164 84 l9 9 l17 -19"/><path d="M224 84 l9 9 l17 -19"/></g></g></svg></div>
  </div>
  <div id="titles"></div>
  <div id="subs"></div>
@@ -112,10 +110,9 @@ const CARDS=[
  {id:'cC',a:word(50)-.1,b:word(56)-.05},
  {id:'cD',a:word(58)-.1,b:word(75)-.5},
  {id:'cE',a:word(100)-.2,b:word(116)-.25},
- {id:'cF',a:word(131)-.2,b:word(136)-.1},
- {id:'cG',a:word(139)-.15,b:TOTAL+1}];
-const TITLES=[{a:.15,b:2.5,l:'Pas un antistress'},{a:word(94)-.2,b:word(97)+.35,l:'Dès ce soir'}];
-TITLES.forEach((t,i)=>{const d=document.createElement('div');d.className='tt';d.innerHTML=t.l;$('#titles').appendChild(d);t.el=d;});
+ {id:'cF',a:word(131)-.2,b:word(136)-.1}];
+const TITLES=[{a:.15,b:2.5,l:'Magnésium'},{a:word(94)-.2,b:word(97)+.35,l:'Dès ce soir'}];
+TITLES.forEach((t,i)=>{const d=document.createElement('div');d.className='tt';d.innerHTML='<span>'+t.l+'</span><i></i>';$('#titles').appendChild(d);t.el=d;});
 /* bruitages : chaque événement vise le MOMENT exact de l'image (sfx_mix.py retire le point de synchro du son) */
 window.FX_SFX=[
  {t:TITLES[0].a+.08,role:'stamp',gain_db:-10},{t:TITLES[1].a+.05,role:'sticker_in',gain_db:-1},
@@ -125,8 +122,8 @@ window.FX_SFX=[
  {t:word(50)-.1+.25,role:'progress',dur:1.2,gain_db:-5},
  {t:word(58)-.1,role:'pop_in',gain_db:2},{t:word(73),role:'stamp',gain_db:-9},
  {t:word(108)-.05,role:'pop_in',gain_db:2},{t:word(110)-.05,role:'pop_in',gain_db:2},{t:word(113)-.05,role:'pop_in',gain_db:2},
- {t:word(131)-.2,role:'sticker_in',gain_db:-1},{t:word(132),role:'pop_in',gain_db:2},
- {t:word(139)-.15,role:'sticker_in',gain_db:-1},{t:word(139)-.15+.35,role:'ding',gain_db:-5}];
+ {t:word(131)-.2,role:'sticker_in',gain_db:-1},{t:word(132)+.3,role:'pop_in',gain_db:2},{t:word(133)+.3,role:'pop_in',gain_db:2},
+];
 const FADE=.28;
 function cardP(c,t){return p(t,c.a,c.a+FADE)*(1-p(t,c.b-FADE,c.b));}
 /* ---------- rendu ---------- */
@@ -134,15 +131,15 @@ const subs=$('#subs'); CH.forEach(c=>{const d=document.createElement('div');d.cl
 const anim=$('#anim'); const hide=el=>{el.style.opacity=0;el.style.visibility='hidden';};
 function cardAnim(id,t){
   const set=(s,a)=>{const e=$(s);if(e)e.setAttribute('transform',a);}, op=(s,v)=>{const e=$(s);if(e)e.setAttribute('opacity',v);};
-  if(id==='cA'){const u=eb(p(t,CARDS[0].a,CARDS[0].a+.4)); $('#vA-g').setAttribute('transform','rotate(-4 280 75) translate(280 75) scale('+(.55+.45*u)+') translate(-280 -75)');}
-  if(id==='cB'){const c=CARDS[1];const k=eo(p(t,c.a+.1,c.a+1.1));$('#vB-n').setAttribute('transform','translate(210 170) rotate('+(70-k*142)+')');
-    $('#vB-arc').setAttribute('stroke-dasharray',(k*28)+' 100'); $('#vB-t').setAttribute('opacity',p(t,word(40),word(40)+.3));}
-  if(id==='cC'){const c=CARDS[2];const k=eo(p(t,c.a+.25,c.a+1.5));const w=300-k*190;$('#vC-b1').setAttribute('width',w);$('#vC-b2').setAttribute('width',300-k*170);$('#vC-ar').setAttribute('opacity',p(t,c.a+.6,c.a+1)*(1));}
-  if(id==='cD'){const c=CARDS[3];const u=eb(p(t,c.a,c.a+.45));$('#vD-p').setAttribute('transform','translate(220 100) rotate(-28) scale('+u+')');
-    $('#vD-sp').setAttribute('stroke-dasharray',(100*p(t,word(63),word(66)))+' 100'); const x=eb(p(t,word(73)-.05,word(73)+.3)); $('#vD-x').setAttribute('opacity',p(t,word(73)-.05,word(73)+.1)); $('#vD-x').setAttribute('transform','translate(360 95) scale('+(.4+.6*x)+') translate(-360 -95)');}
+  if(id==='cA'){const c=CARDS[0];const u=eb(p(t,c.a,c.a+.4));$('#vA-g').setAttribute('transform','translate(150 60) scale('+(.7+.3*u)+') translate(-150 -60)');$('#vA-bar').setAttribute('width',60*eo(p(t,c.a+.15,c.a+.8)));}
+  if(id==='cB'){const c=CARDS[1];const k=eo(p(t,c.a+.1,c.a+1.1));$('#vB-n').setAttribute('transform','translate(165 132) rotate('+(70-k*142)+')');
+    $('#vB-arc').setAttribute('stroke-dasharray',(k*28)+' 100');}
+  if(id==='cC'){const c=CARDS[2];const k=eo(p(t,c.a+.25,c.a+1.5));const w=300-k*200;$('#vC-b1').setAttribute('width',w);$('#vC-b2').setAttribute('width',300-k*170);$('#vC-ar').setAttribute('opacity',p(t,c.a+.6,c.a+1)*(1));}
+  if(id==='cD'){const c=CARDS[3];const u=eb(p(t,c.a,c.a+.45));$('#vD-p').setAttribute('transform','translate(130 70) rotate(-28) scale('+u+')');
+    $('#vD-sp').setAttribute('stroke-dasharray',(100*p(t,word(63),word(66)))+' 100'); const x=eb(p(t,word(73)-.05,word(73)+.3)); $('#vD-x').setAttribute('opacity',p(t,word(73)-.05,word(73)+.1)); $('#vD-x').setAttribute('transform','translate(292 65) scale('+(.4+.6*x)+') translate(-292 -65)');}
   if(id==='cE'){const o=(s,w)=>{const e=$(s);const u=eb(p(t,w,w+.35));e.setAttribute('opacity',p(t,w,w+.12));e.setAttribute('transform','translate(0 '+(1-u)*-30+')');};o('#vE-1',word(108)-.05);o('#vE-2',word(110)-.05);o('#vE-3',word(113)-.05);}
-  if(id==='cG'){const c=CARDS[6];const u=eb(p(t,c.a,c.a+.4));$('#vG-f').setAttribute('transform','translate(40 40) scale('+(.5+.5*u)+')');$('#vG-w').setAttribute('transform','translate(0 '+((1-u)*14)+')');}
-  if(id==='cF'){const c=CARDS[5];const u=eb(p(t,c.a,c.a+.4));$('#vF-g').setAttribute('transform','translate(260 100) scale('+(.6+.4*u)+') translate(-260 -100)');$('#vF-n').setAttribute('opacity',p(t,word(132)-.05,word(132)+.2));}
+  if(id==='cF'){const c=CARDS[5];const u=eb(p(t,c.a,c.a+.4));$('#vF-g').setAttribute('transform','translate(165 66) scale('+(.7+.3*u)+') translate(-165 -66)');$('#vF-n').setAttribute('opacity',1);
+    [...$('#vF-n').children].forEach((e,i)=>{const k=p(t,word(132)+.3+.28*i,word(132)+.3+.28*i+.25);e.setAttribute('opacity',k);e.setAttribute('pathLength',100);e.setAttribute('stroke-dasharray',(100*k)+' 100');});}
 }
 window.render=function(t){
   const T=topAt(t); const present=Math.max(...CARDS.map(c=>cardP(c,t))); const zoomed=zoomAt(t)>1.02;
@@ -150,11 +147,13 @@ window.render=function(t){
   CARDS.forEach(c=>{const pp=zoomed||T>1260?0:cardP(c,t);const el=$('#'+c.id);tmax=Math.max(tmax,pp);
     if(pp<=0.001){hide(el);return;}
     el.style.visibility='visible';el.style.opacity=pp;el.style.transform='translateY('+((1-pp)*24)+'px) scale('+(.96+.04*pp)+')';cardAnim(c.id,t);});
-  TITLES.forEach(tt=>{const u=zoomed?0:p(t,tt.a,tt.a+.14)*(1-p(t,tt.b-.14,tt.b));tt.el.style.opacity=u;tt.el.style.transform='scale('+(.9+.1*eb(p(t,tt.a,tt.a+.3)))+')';});
+  let titleOn=false;
+  TITLES.forEach(tt=>{const u=zoomed?0:p(t,tt.a,tt.a+.14)*(1-p(t,tt.b-.14,tt.b));if(u>.02)titleOn=true;tt.el.style.opacity=u;tt.el.style.transform='scale('+(.94+.06*eb(p(t,tt.a,tt.a+.35)))+')';
+    tt.el.firstChild.style.backgroundPosition=(110-110*p(t,tt.a,tt.b))+'% 0';tt.el.lastChild.style.width=(520*eo(p(t,tt.a+.1,tt.a+.7)))+'px';});
   anim.style.top=T+'px';
   const pres=zoomed||T>1260?0:present;
   const top=Math.min(T+14+pres*246,1480-140+0); subs.style.top=top+'px';
-  CH.forEach(c=>{const on=t>=c.t0&&t<c.t1;const o=on?Math.min(1,(t-c.t0)/.07)*(1-clamp((t-(c.t1-.12))/.12)*(c.t1<TOTAL-.01?1:0)):0;c.el.style.opacity=o;});
+  CH.forEach(c=>{const on=t>=c.t0&&t<c.t1;const o=on?Math.min(1,(t-c.t0)/.07)*(1-clamp((t-(c.t1-.12))/.12)*(c.t1<TOTAL-.01?1:0)):0;c.el.style.opacity=(titleOn&&(c.i===0||c.i===25))?0:o;});
 };
 window.LAYOUT={total:TOTAL,zooms:ZOOMS,zoomCenter:ZC,chunks:CH.map(c=>({t0:c.t0,t1:c.t1,text:c.text.replace(/\*/g,'')})),cards:CARDS.map(c=>({id:c.id,a:c.a,b:c.b}))};
 render(0);

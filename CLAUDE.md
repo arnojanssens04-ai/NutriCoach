@@ -15,5 +15,7 @@
 4. **Bruitages : oui par défaut**, sobres, voix devant (6-16 dB sous la voix), un son par événement visuel, calés avec `videos/sfx/sfx_mix.py`. Toujours livrer aussi la version sans sons.
 5. **Pas de tableau / décor de classe / texte à la craie** (abandonné le 11/11/2026). Pas de logo CapSanté. Peu de zooms (3-4, sur les moments qui surprennent).
 6. **Santé** : aucun chiffre, source, date ou organisation inventés ; nuances gardées ; « parles-en à ton médecin » si pertinent ; liste « À vérifier » ; pas de peur gratuite.
-7. Signature : « mange l'esprit tranquille ». Voix de l'utilisateur = référence (la transcription fait foi, validation du texte avant de construire).
-8. Ne jamais commiter les vidéos ni les modèles (dossiers `in/`, `out/`, `*.onnx`, `kit/sounds/` ignorés par git). Rappeler à l'utilisateur de repasser le partage Drive en « Restreint ».
+7. **Style visuel (11/11/2026)** : police **Jost** (sans-serif élégante, pas de serif) ; titres en capitales espacées avec dégradé émeraude + reflet qui glisse + filet doré ; sous-titres Jost 600 contour foncé, mot clé en champagne `#F6DDA6` ; animations = **icônes au trait fin blanc/champagne sur plaque verre sombre**, pas de dessins cartoon colorés. **Un texte n'apparaît qu'une seule fois** (si un titre dit « dès ce soir », le sous-titre correspondant est masqué ; pas de libellé dans une icône qui répète le sous-titre).
+8. **CTA seulement s'il y en a un dans la voix/le script** : ne pas en ajouter à l'écran sur une vidéo qui n'en a pas (cas du montage magnésium).
+9. Signature : « mange l'esprit tranquille ». Voix de l'utilisateur = référence (la transcription fait foi, validation du texte avant de construire).
+10. Ne jamais commiter les vidéos ni les modèles (dossiers `in/`, `out/`, `*.onnx`, `kit/sounds/` ignorés par git). Rappeler à l'utilisateur de repasser le partage Drive en « Restreint ».

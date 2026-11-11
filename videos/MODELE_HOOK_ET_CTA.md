@@ -110,7 +110,7 @@ Toutes suivent « **un repère connu → mais → un verdict net → une promess
 
 ### Exemple appliqué à la vidéo « magnésium » (version test)
 - Voix existante : « Le magnésium n'est pas un antistress, **mais** il peut t'aider à une condition. » = **déjà un F1** (verdict puis « mais »). On a ajouté le **titre d'écran « MAGNÉSIUM / pas un antistress »** dès 0,15 s.
-- CTA ajouté à l'écran (39,3-42,4 s) : dossier + « COMMENTE MAGNÉSIUM + ABONNE-TOI » (C1) ; **à confirmer : la ressource promise doit exister** ; à dire à voix haute lors du prochain tournage.
+- **CTA retiré de la version finale** (décision de l'utilisateur, 11/11/2026) : la voix n'en contient pas, on n'en affiche pas. Le composant « dossier + mot-clé » reste décrit au §4 pour une vidéo dont le script prévoit un CTA parlé.
 
 ---
 
@@ -118,8 +118,8 @@ Toutes suivent « **un repère connu → mais → un verdict net → une promess
 
 | Élément de la référence | Verdict pour nos vidéos |
 |---|---|
-| **Gros titre serif en capitales en haut** (2 à 4 mots, un par idée) | **Oui** : implémenté (`.tt` dans `videos/video3/index.html`) ; **jamais pendant un zoom** (la tête monte) et vérifier les cheveux avec `check_overlap.py` |
-| Sous-titres serif petits, groupes de 2-4 mots | **Oui** (déjà en place) ; lisibilité sur pull clair : contour foncé obligatoire |
+| **Gros titre en haut** (1 à 3 mots, un par idée) | **Oui, en Jost (sans-serif élégante) capitales espacées, dégradé émeraude + reflet + filet doré** (le serif a été jugé « pas beau » par l'utilisateur) : implémenté (`.tt` dans `videos/video3/index.html`) ; **jamais pendant un zoom** (la tête monte) et vérifier les cheveux avec `check_overlap.py` |
+| Sous-titres petits, groupes de 2-4 mots | **Oui, en Jost 600** (pas de serif) ; lisibilité sur pull clair : contour foncé obligatoire |
 | Coupe à chaque début de phrase | **Oui** (cadence ~2-3 s) : coupe-zoom sèche OU nouveau visuel ; max 3-4 zooms, validé par l'utilisateur |
 | Capture d'écran / « preuve » en haut | **Oui, adapté** : photo d'étiquette, emballage, schéma, jamais sur le visage ; sources réelles uniquement |
 | **Scène illustrée plein écran** (fond sombre, icônes qui apparaissent une à une) | **Non par défaut** : cache le visage (règle « on doit toujours voir mon visage »). Variante autorisée : **petit dessin SVG sous le menton**, même logique (éléments qui apparaissent un à un) |
