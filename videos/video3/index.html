@@ -24,6 +24,11 @@ html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
 .cs svg{overflow:visible;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
 svg .tx{font-family:'Inter',sans-serif;font-weight:900;fill:#fff;paint-order:stroke;stroke:#14201A;stroke-width:7px;stroke-linejoin:round}
 svg .ar{font-family:'Archivo',sans-serif;fill:#B8923A;letter-spacing:.14em}
+/* gros titres en haut (inspirés de la vidéo virale) : serif capitales, derrière rien, jamais pendant un zoom */
+#titles{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none}
+.tt{position:absolute;left:40px;width:1000px;top:215px;text-align:center;opacity:0;font-family:'Playfair',serif;font-style:normal;font-weight:700;text-transform:uppercase;font-size:84px;line-height:1.0;color:#fff;letter-spacing:.01em;
+  -webkit-text-stroke:10px rgba(12,22,17,.9);paint-order:stroke fill;text-shadow:0 6px 18px rgba(0,0,0,.4)}
+.tt small{display:block;font-size:56px;margin-top:6px;color:#BFF3D6}
 </style>
 </head>
 <body>
@@ -32,7 +37,7 @@ svg .ar{font-family:'Archivo',sans-serif;fill:#B8923A;letter-spacing:.14em}
   <!-- A : étiquette « à une condition » -->
   <div class="cs" id="cA"><svg id="vA" width="560" height="150" viewBox="0 0 560 150"><g id="vA-g" transform="rotate(-4 280 75)">
     <rect x="10" y="12" width="540" height="126" rx="10" fill="#EFEDE4" stroke="#B8923A" stroke-width="5"/><rect x="24" y="26" width="512" height="98" rx="5" fill="none" stroke="#B8923A" stroke-width="2.5"/>
-    <text class="ar" x="280" y="88" font-size="46" text-anchor="middle">UNE CONDITION</text></g></svg></div>
+    <text class="ar" x="280" y="87" font-size="33" text-anchor="middle">SI TU EN MANQUES</text></g></svg></div>
   <!-- B : jauge « taux très faible » -->
   <div class="cs" id="cB"><svg id="vB" width="420" height="200" viewBox="0 0 420 200">
     <path d="M40 170 A170 170 0 0 1 380 170" fill="none" stroke="#fff" stroke-width="36" stroke-linecap="round" opacity=".28"/>
@@ -59,7 +64,14 @@ svg .ar{font-family:'Archivo',sans-serif;fill:#B8923A;letter-spacing:.14em}
   <div class="cs" id="cF"><svg id="vF" width="430" height="157" viewBox="0 0 520 190">
     <g id="vF-g"><rect x="40" y="20" width="440" height="160" rx="22" fill="#FBFAF7" stroke="#14201A" stroke-width="5"/><path d="M40 42 a22 22 0 0 1 22 -22 H458 a22 22 0 0 1 22 22 V70 H40Z" fill="#E07A5F" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/>
     <text id="vF-n" x="170" y="150" font-family="Archivo" font-size="78" fill="#14201A" text-anchor="middle">4–8</text><text class="" x="340" y="142" font-family="Inter" font-weight="800" font-size="40" fill="#14201A" text-anchor="middle">semaines</text></g></svg></div>
+  <!-- G : appel à l'action (commente le mot) -->
+  <div class="cs" id="cG"><svg id="vG" width="800" height="200" viewBox="0 0 800 200">
+    <g id="vG-f" transform="translate(40 40)"><path d="M0 24 q0 -14 14 -14 h52 l16 20 h86 q14 0 14 14 v96 q0 14 -14 14 h-154 q-14 0 -14 -14z" fill="#5BB8F5" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/><path d="M0 52 h182 v80 q0 14 -14 14 h-154 q-14 0 -14 -14z" fill="#8AD0FA" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/></g>
+    <text class="tx" x="260" y="58" font-size="34" letter-spacing="3">COMMENTE</text>
+    <text id="vG-w" x="260" y="138" font-family="Archivo" font-size="80" fill="#FFD84D" stroke="#14201A" stroke-width="9" paint-order="stroke" stroke-linejoin="round">MAGNÉSIUM</text>
+    <text class="tx" x="260" y="184" font-size="30">+ ABONNE-TOI</text></svg></div>
  </div>
+ <div id="titles"></div>
  <div id="subs"></div>
 </div>
 <script>
@@ -83,7 +95,7 @@ const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),p=(t,a,b)=>clamp((t-a)/(b-a))
 const $=s=>document.querySelector(s);
 /* ---------- coupes-zoom sèches (zoom_render.py les applique à la vidéo seule) ---------- */
 const ZC={x:540,y:600};
-const ZOOMS=[{t0:1.55,d:1.9},{t0:21.75,d:2.3},{t0:34.25,d:2.0},{t0:41.35,d:1.05}].map(z=>({t0:z.t0,in:.06,hold:z.d-.12,out:.06,amp:.45}));
+const ZOOMS=[{t0:3.55,d:1.8},{t0:21.75,d:2.3},{t0:34.25,d:2.0}].map(z=>({t0:z.t0,in:.06,hold:z.d-.12,out:.06,amp:.45}));
 function zoomAt(t){let s=1;ZOOMS.forEach(z=>{const u=clamp((t-z.t0)/z.in),v=clamp((t-z.t0-z.in-z.hold)/z.out);s+=z.amp*sm(u)*(1-sm(v));});return s;}
 /* ---------- où est le visage (mesuré) ---------- */
 const ZN=Object.assign({closeups:[],faces:[],nodet:[]},window.ZONES||{});
@@ -95,12 +107,26 @@ function fbAt(t){let v;
 function topAt(t){let s=0,n=0;for(let d=-.2;d<=.2001;d+=.05){s+=fbAt(t+d);n++;}return Math.max(1075,s/n+12);}
 /* ---------- événements visuels : carte, début, fin ---------- */
 const CARDS=[
- {id:'cA',a:word(12)-.1,b:word(15)+.2},
+ {id:'cA',a:word(17)-.1,b:word(21)+.1},
  {id:'cB',a:word(40)-.55,b:word(42)+.5},
  {id:'cC',a:word(50)-.1,b:word(56)-.05},
  {id:'cD',a:word(58)-.1,b:word(75)-.5},
  {id:'cE',a:word(100)-.2,b:word(116)-.25},
- {id:'cF',a:word(131)-.2,b:word(136)-.1}];
+ {id:'cF',a:word(131)-.2,b:word(136)-.1},
+ {id:'cG',a:word(139)-.15,b:TOTAL+1}];
+const TITLES=[{a:.15,b:2.5,l:'Pas un antistress'},{a:word(94)-.2,b:word(97)+.35,l:'Dès ce soir'}];
+TITLES.forEach((t,i)=>{const d=document.createElement('div');d.className='tt';d.innerHTML=t.l;$('#titles').appendChild(d);t.el=d;});
+/* bruitages : chaque événement vise le MOMENT exact de l'image (sfx_mix.py retire le point de synchro du son) */
+window.FX_SFX=[
+ {t:TITLES[0].a+.08,role:'stamp',gain_db:-10},{t:TITLES[1].a+.05,role:'sticker_in',gain_db:-1},
+ ...ZOOMS.map(z=>({t:z.t0,role:'zoom_cut',gain_db:-8})),
+ {t:word(17)-.1+.1,role:'sticker_in',gain_db:-1},
+ {t:word(40)-.55+.1,role:'progress',dur:1.0,gain_db:-4},
+ {t:word(50)-.1+.25,role:'progress',dur:1.2,gain_db:-5},
+ {t:word(58)-.1,role:'pop_in',gain_db:2},{t:word(73),role:'stamp',gain_db:-9},
+ {t:word(108)-.05,role:'pop_in',gain_db:2},{t:word(110)-.05,role:'pop_in',gain_db:2},{t:word(113)-.05,role:'pop_in',gain_db:2},
+ {t:word(131)-.2,role:'sticker_in',gain_db:-1},{t:word(132),role:'pop_in',gain_db:2},
+ {t:word(139)-.15,role:'sticker_in',gain_db:-1},{t:word(139)-.15+.35,role:'ding',gain_db:-5}];
 const FADE=.28;
 function cardP(c,t){return p(t,c.a,c.a+FADE)*(1-p(t,c.b-FADE,c.b));}
 /* ---------- rendu ---------- */
@@ -115,6 +141,7 @@ function cardAnim(id,t){
   if(id==='cD'){const c=CARDS[3];const u=eb(p(t,c.a,c.a+.45));$('#vD-p').setAttribute('transform','translate(220 100) rotate(-28) scale('+u+')');
     $('#vD-sp').setAttribute('stroke-dasharray',(100*p(t,word(63),word(66)))+' 100'); const x=eb(p(t,word(73)-.05,word(73)+.3)); $('#vD-x').setAttribute('opacity',p(t,word(73)-.05,word(73)+.1)); $('#vD-x').setAttribute('transform','translate(360 95) scale('+(.4+.6*x)+') translate(-360 -95)');}
   if(id==='cE'){const o=(s,w)=>{const e=$(s);const u=eb(p(t,w,w+.35));e.setAttribute('opacity',p(t,w,w+.12));e.setAttribute('transform','translate(0 '+(1-u)*-30+')');};o('#vE-1',word(108)-.05);o('#vE-2',word(110)-.05);o('#vE-3',word(113)-.05);}
+  if(id==='cG'){const c=CARDS[6];const u=eb(p(t,c.a,c.a+.4));$('#vG-f').setAttribute('transform','translate(40 40) scale('+(.5+.5*u)+')');$('#vG-w').setAttribute('transform','translate(0 '+((1-u)*14)+')');}
   if(id==='cF'){const c=CARDS[5];const u=eb(p(t,c.a,c.a+.4));$('#vF-g').setAttribute('transform','translate(260 100) scale('+(.6+.4*u)+') translate(-260 -100)');$('#vF-n').setAttribute('opacity',p(t,word(132)-.05,word(132)+.2));}
 }
 window.render=function(t){
@@ -123,6 +150,7 @@ window.render=function(t){
   CARDS.forEach(c=>{const pp=zoomed||T>1260?0:cardP(c,t);const el=$('#'+c.id);tmax=Math.max(tmax,pp);
     if(pp<=0.001){hide(el);return;}
     el.style.visibility='visible';el.style.opacity=pp;el.style.transform='translateY('+((1-pp)*24)+'px) scale('+(.96+.04*pp)+')';cardAnim(c.id,t);});
+  TITLES.forEach(tt=>{const u=zoomed?0:p(t,tt.a,tt.a+.14)*(1-p(t,tt.b-.14,tt.b));tt.el.style.opacity=u;tt.el.style.transform='scale('+(.9+.1*eb(p(t,tt.a,tt.a+.3)))+')';});
   anim.style.top=T+'px';
   const pres=zoomed||T>1260?0:present;
   const top=Math.min(T+14+pres*246,1480-140+0); subs.style.top=top+'px';

@@ -40,7 +40,7 @@ Méthode validée sur les vidéos « fatigue et nutriments » (`videos/fatigue/`
 - **Gros plan** (visage qui remplit l'écran) : plus d'animation, le texte descend sous le menton.
 - Zones d'interface Instagram : garder ~250 px libres en haut, ~450 px en bas, ~120 px à droite ; texte et cartes entre x = 100 et 960.
 - **Pas de logo** CapSanté ni de marque ajoutée sur les vidéos (retiré à la demande de l'utilisateur ; ne pas le remettre sans demande).
-- **Aucun effet sonore** : on garde l'audio d'origine tel quel (`-c:a copy`). Les calques transparents sont silencieux.
+- **Son** : version sans sons = audio d'origine tel quel (`-c:a copy`) ; version avec bruitages sobres (voix devant, via `videos/sfx/sfx_mix.py`, audio AAC 256 kbit/s) : voir `MODELE_HOOK_ET_CTA.md` §7. Les calques transparents sont silencieux.
 - **Animations sobres** : fondus, petit rebond, tampon ; pas de gros effets. Il n'est pas obligatoire de tout illustrer : le texte seul suffit parfois.
 - **Rythme** : viser un événement (carte, zoom, emoji, nouveau texte) toutes les 3 à 4 s, sans surcharger : 1 ou 2 éléments à la fois.
 - **Santé** : aucun chiffre, aucune source, aucune date inventés ; garder les nuances (« possible », « modeste ») ; consigne « parles-en à ton médecin » affichée ≥ 3 s ; lister ce qui est à vérifier.
@@ -71,16 +71,16 @@ Livrables : cette vidéo, `sous-titres_transparent.mov` + `visuels_transparent.m
 - Limites : une seule vidéo, 400 vues, aucun repère officiel de « bon » taux (Meta n'en publie pas ; comparer à ses propres vidéos). Les conseils ci-dessous viennent de blogs marketing, pas d'une source officielle d'Instagram : ce sont des **hypothèses à tester**, pas des règles prouvées.
 
 ### Grille d'écriture (à appliquer avant chaque script)
-1. **Accroche (0-3 s)** : une phrase qui tient seule, qui surprend, contredit ou donne un enjeu. Pas de « Alors », pas de présentation. Texte à l'écran de 3 à 6 mots dès 0,5 s (beaucoup regardent sans le son). Première image en mouvement.
+1. **Accroche (0-3 s)** : voir aussi `MODELE_HOOK_ET_CTA.md` (§1 et §5 : formule **éloge → mais → verdict → promesse chiffrée**, types F1 à F5). Une phrase qui tient seule, qui surprend, contredit ou donne un enjeu. Pas de « Alors », pas de présentation. Texte à l'écran de 3 à 6 mots dès 0,5 s (beaucoup regardent sans le son). Première image en mouvement.
 2. **Une seule promesse.** La réponse se garde pour la fin (boucle ouverte). Pas de liste longue sans tension (au-delà de 6-7 s, les gens décrochent).
 3. **Durée : 25 à 40 s.** Couper tout ce qui ne sert pas la promesse.
-4. **Fin : une seule action**, avec une raison précise, et une **phrase de série** (ex. « Chaque semaine, je vérifie une idée reçue sur ce que tu manges »). Garder la signature « mange l'esprit tranquille ».
+4. **Fin : un appel à l'action OBLIGATOIRE** (un principal, dit à voix haute ET écrit à l'écran ; codes C1 à C5 de `MODELE_HOOK_ET_CTA.md`, §4 ; le plus puissant observé : **C1 = « commente <MOT> et je t'envoie <ressource> en message »**), une **raison précise**, et une **phrase de série** (ex. « Chaque semaine, je vérifie une idée reçue sur ce que tu manges »). Garder la signature « mange l'esprit tranquille ».
 5. **Public** (hypothèses) : Instagram 25-40 → énergie/fatigue, sommeil, stress, protéines, mythes alimentaires, compléments « vrai ou faux », repas rapides. Facebook 50-69 → cholestérol, tension, os et articulations, mémoire, sommeil ; rythme plus posé, texte plus grand, thème « envoie à quelqu'un qui… ». Ne pas publier la même vidéo partout sans adapter l'accroche et le ton.
 6. **Rigueur santé** : aucun chiffre, source, date ou nom d'organisation inventé ; chaque affirmation de santé a une source à vérifier ; garder les nuances ; « parles-en à ton médecin » sur tout ce qui touche médicaments, maladies, symptômes persistants. Liste « À vérifier » à la fin.
 7. **Emballage** : première image/couverture lisible, légende courte avec le mot-clé du sujet, une question épinglée en commentaire.
 
 ### Plan de test (à partir du prochain script)
-- **Types d'accroche à alterner** : A contradiction · B avertissement (« Stop », « Avant de… ») · C chiffre intrigant · D question à enjeu · E mini-scène / gag. Noter le type de chaque vidéo dans `SUIVI.md`.
+- **Types d'accroche à alterner** : A contradiction · B avertissement (« Stop », « Avant de… ») · C chiffre intrigant · D question à enjeu · E mini-scène / gag · **F éloge → mais → verdict (F1), objet familier (F2), promesse chiffrée (F3), bénéfice d'abord (F4), gag visuel (F5)**. Noter aussi le **code du CTA (C1-C5)** et si la **boucle** (fin qui se prolonge dans le début) était utilisée. Noter le type de chaque vidéo dans `SUIVI.md`.
 - **Une seule variable à la fois** quand c'est possible : même format visuel, même durée, même fin ; ne changer que l'accroche (puis, plus tard, que la fin).
 - **Juger sur 5 à 6 vidéos**, jamais sur une seule. Comparer à **ses propres** vidéos (médiane), pas à des repères trouvés en ligne.
 - **Indicateurs** : taux d'abandon, % à 4 s, % à la fin, temps de visionnage moyen, partages, enregistrements, abonnés gagnés, part de non-abonnés. Instagram et Facebook **séparés**.
@@ -100,8 +100,9 @@ CE QUE TU ME LIVRES
 1. Trois accroches de types différents (ma voix, 2 phrases maximum, plus un texte d'écran de 3 à 6 mots). Tu recommandes celle à tester et tu expliques pourquoi.
 2. Le script complet (25 à 40 s) : une seule promesse, la réponse gardée pour la fin, une seule action finale avec la phrase de série, et ma signature « mange l'esprit tranquille ».
 3. Pour chaque affirmation de santé : la source à vérifier. N'invente aucun chiffre, aucune date, aucun nom d'organisation. Garde les nuances. Ajoute « parles-en à ton médecin » quand c'est pertinent. Termine par « À vérifier ».
-4. L'emballage : texte de couverture, légende courte, question à épingler en commentaire.
-5. Les lignes à ajouter dans SUIVI.md (type d'accroche, durée, public).
+4. L'appel à l'action (code C1 à C5, phrase parlée exacte + texte d'écran) et, si possible, une **dernière phrase qui se prolonge dans la première** (boucle). Si c'est C1 : le nom de la ressource offerte à créer/confirmer.
+5. L'emballage : texte de couverture, légende courte, question à épingler en commentaire.
+6. Les lignes à ajouter dans SUIVI.md (type d'accroche, code du CTA, boucle oui/non, durée, public).
 
 Ensuite, on enchaîne avec le prompt de montage (ci-dessous) quand j'aurai enregistré la vidéo.
 ```
@@ -112,7 +113,10 @@ Analyse seconde par seconde d'une vidéo de référence + recettes : **`videos/M
 Boîte à outils :
 - `videos/effets/` : `fx.js` + `fx.css` (titre 2 bandes, sous-titres éditoriaux, cartes chat, tampon, étiquette, barre de progression ; les effets « craie/tableau » existent mais sont abandonnés) ; démo `demo.html` ; `render_demo.js` pour les images .
 - `videos/sfx/` : `fetch_sfx.py` (télécharge le SFX Kit CC0), `roles.json` (effet → son), `sfx_mix.py` (place chaque son à l'instant visé, `début = moment − sync.at`, baisse sous la voix, mix −14 LUFS). Les effets de `fx.js` exportent `window.FX_SFX` → `events.json` → `sfx_mix.py`.
-- Les bruitages restent **optionnels** : à confirmer à chaque vidéo (la vidéo « pomme » était sans son ajouté).
+- **Bruitages : OUI par défaut depuis le 11/11/2026** (demande de l'utilisateur après la vidéo de référence n° 2), sobres et **voix devant** : règles, niveaux mesurés, correspondance effet→son et commandes dans `MODELE_HOOK_ET_CTA.md` §7. Toujours livrer aussi la version sans sons.
+- **Gros titres en haut** (serif capitales, 2-4 mots, un par idée) + **CTA animé de fin** (dossier + mot en jaune) : implémentés dans `videos/video3/index.html` (`TITLES`, carte `cG`) ; **jamais pendant un zoom** ni sur le visage (`check_overlap.py`).
+
+Voir aussi : `videos/MODELE_HOOK_ET_CTA.md` (hook, CTA, boucle, bruitages) et `CLAUDE.md` à la racine.
 
 ## Prompt à copier pour une nouvelle vidéo
 
@@ -137,7 +141,8 @@ RÈGLES DE MISE EN PAGE
 - Texte sans bandeau (lettres cerclées), 3 à 6 mots, 2 lignes max, mot prononcé en couleur, sous les animations ; il remonte quand il n'y a pas d'animation.
 - Pendant un gros plan : pas d'animation, le texte passe sous le menton.
 - Garde ~250 px libres en haut, ~450 px en bas, ~120 px à droite (interface Instagram).
-- AUCUN effet sonore : garde mon audio d'origine tel quel.
+- BRUITAGES sobres, voix devant (règles de videos/MODELE_HOOK_ET_CTA.md §7), calés avec videos/sfx/sfx_mix.py ; livre aussi la version sans sons (audio d'origine copié à l'identique).
+- APPEL À L'ACTION : prévois-le (code C1 à C5, voir videos/MODELE_HOOK_ET_CTA.md §4), affiché et, si ma voix le dit, calé sur la phrase ; gros titres en haut (2-4 mots) sur les idées fortes, jamais pendant un zoom.
 - Animations sobres (fondu, petit rebond, tampon), pas d'effets criards.
 - Garde mon attention : quelque chose toutes les 3-4 s (carte, petit zoom rapide sur la vidéo, emoji, texte), mais jamais trop d'éléments à la fois. Donne-moi l'écart le plus long entre deux événements.
 - Très peu de zooms (3 à 4 maximum) et seulement sur les moments qui font réagir ; pas pendant l'intro. Beaucoup d'animations visuelles (petits dessins animés), sans cartes blanches, avec très peu de texte. Les sous-titres et cartes restent fixes et suivent mon menton.

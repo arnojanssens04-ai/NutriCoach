@@ -7,6 +7,7 @@ const FPS = 30, W = 1080, H = 1920, out = path.join(__dirname, 'out'); const [, 
   const zj = path.join(out, 'zones.json'); if (fs.existsSync(zj)) await page.addInitScript(`window.ZONES=${fs.readFileSync(zj, 'utf8')};`);
   const open = async q => { await page.goto('file://' + path.join(__dirname, 'index.html') + '?' + q); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
   if (cmd === 'prep') { await open(''); fs.writeFileSync(path.join(out, 'layout.json'), JSON.stringify(await page.evaluate(() => window.LAYOUT), null, 1)); console.log('layout ok'); }
+  else if (cmd === 'events') { await open(''); fs.writeFileSync(path.join(out, 'events.json'), JSON.stringify(await page.evaluate(() => window.FX_SFX), null, 1)); console.log('events ok'); }
   else if (cmd === 'frames') { await open('alpha=1'); for (const t of arg.split(',').map(Number)) { await page.evaluate(t => window.render(t), t); await page.screenshot({ path: path.join(out, `ov-${t}.png`), omitBackground: true }); spawnSync('python3', ['zoom_render.py', '--still', String(t)], { stdio: 'inherit' }); } }
   else if (cmd === 'pass') {
     await open('alpha=1'); const L = await page.evaluate(() => window.LAYOUT); const n = Math.round(L.total * FPS);

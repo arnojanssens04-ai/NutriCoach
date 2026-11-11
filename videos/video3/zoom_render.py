@@ -3,7 +3,8 @@ Usage : python3 zoom_render.py out/sur_ta_video_haute_qualite.mp4        (vidéo
         python3 zoom_render.py --still 9.2                                (image de contrôle : out/s-9.2.png, avec out/ov-9.2.png)
 Les zooms viennent de out/layout.json. Le zoom ne touche QUE la vidéo : sous-titres et cartes restent fixes.
 Couleurs : décodage et ré-encodage en BT.709, comme la source."""
-import json, subprocess, sys
+import json, subprocess, sys, os
+AUD = os.environ.get('AUDIO')   # wav voix + bruitages (sinon : audio d'origine copié tel quel)
 import numpy as np, cv2
 W, H, FPS = 1080, 1920, 30
 SRC = 'in/src.mp4'
@@ -31,10 +32,10 @@ if sys.argv[1] == '--still':
 OUT = sys.argv[1]
 dec = subprocess.Popen(['ffmpeg', '-v', 'error', '-i', SRC, '-vf', DEC, '-f', 'rawvideo', '-'], stdout=subprocess.PIPE)
 enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
-    '-i', 'out/calque_transparent.mov', '-i', SRC,
+    '-i', 'out/calque_transparent.mov', '-i', SRC] + (['-i', AUD] if AUD else []) + [
     '-filter_complex', '[0:v]scale=out_color_matrix=bt709:out_range=tv:flags=accurate_rnd+full_chroma_int,format=yuv420p[b];[b][1:v]overlay=shortest=1,format=yuv420p[v]',
-    '-map', '[v]', '-map', '2:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', '12', '-profile:v', 'high',
-    '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv', '-c:a', 'copy', '-movflags', '+faststart', OUT], stdin=subprocess.PIPE)
+    '-map', '[v]', '-map', '3:a' if AUD else '2:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', '12', '-profile:v', 'high',
+    '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv', *(['-c:a', 'aac', '-b:a', '256k'] if AUD else ['-c:a', 'copy']), '-movflags', '+faststart', OUT], stdin=subprocess.PIPE)
 n = 0
 while True:
     buf = dec.stdout.read(W * H * 3)

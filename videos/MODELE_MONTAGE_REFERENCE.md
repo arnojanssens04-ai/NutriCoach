@@ -215,7 +215,8 @@ Règles inchangées : visage jamais recouvert, audio d'origine, aucune donnée d
 - **Règle de calage** : `début du son = moment visé − sync.at` (÷ vitesse si le son est ralenti/accéléré). Implémentée dans `videos/sfx/sfx_mix.py`. **Validation sur la référence** : ding posé à +1 ms de l'instant visé, impact à −5 ms, hauteur du ding 2 640 Hz pour 2 638 Hz mesuré (rôle `ding` = `tone-ding-high` joué une octave plus haut).
 - **Correspondance effet → son** : `videos/sfx/roles.json` (rôles : `chalk_write`, `chalk_draw`, `chalk_tick`, `typing_*`, `ding`, `chat_reply`, `stamp`, `stamp_big`, `sticker_in`, `pop_in`, `card_slide`, `scene_slide`, `zoom_cut`, `countup`, `number_land`, `progress`, `clock`, `sparkle`, `erase`).
 - **Mixage** : le moteur baisse chaque son de `under_voiceover_db` (−1 à −8 dB) là où il recouvre la voix ; sortie voix + sons à −14 LUFS, pic ≤ −1 dBFS (testé sur la voix de la référence : −14,0 LUFS).
-- **Réserve** : d'après nos règles précédentes, l'utilisateur ne voulait **aucun bruitage** pour la vidéo « pomme » ; les sons sont donc **optionnels** et à confirmer à chaque vidéo.
+- **Mise à jour 11/11/2026** : l'utilisateur veut désormais des **bruitages dans tous les montages** (vidéo « magnésium » et suivantes). Règles et réglages : **`MODELE_HOOK_ET_CTA.md` §7**. La vidéo « pomme » reste sans son ajouté.
+- **Référence n° 2** (analyse du hook, du CTA, de la boucle et des gros titres) : **`MODELE_HOOK_ET_CTA.md`**.
 
 ---
 
