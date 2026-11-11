@@ -3,6 +3,8 @@
 Source : vidéo de référence fournie par l'utilisateur (11/11/2026), **enregistrement d'écran d'une publicité Instagram** (compte `thuan.aime.academy`, « Apprends à monter tes vidéos avec Claude »), 74,7 s, 592×1280, 30 i/s, stéréo 44,1 kHz.
 Fichier de travail : `videos/reference/` (vidéo dans `in/`, ignorée par git). Analyse faite par mesures (coupes, zoom, spectrogramme, transcription Whisper) et lecture d'images.
 
+> **DÉCISION DE L'UTILISATEUR (11/11/2026) : l'idée du « tableau » est abandonnée.** On ne garde **ni** le décor de tableau/classe virtuel, **ni** le détourage (texte derrière la personne), **ni** le texte et les dessins « à la craie », **ni** la carte « tableau d'effets », **ni** le cadre « leçons/interro ». Les sections T1, T4, T5, T6 (version craie), T9 (tableau) et T13 ci-dessous sont **conservées pour mémoire seulement : ne pas les utiliser**. Ce qu'on garde : sous-titres éditoriaux (T3), titre 2 bandes (T2), coupes-zoom sèches (T7), transition (T8), carte chat (T9), tampon (T10), étiquette (T11), barre de progression (T12), rythme, sons optionnels. Le texte reste directement sur la vidéo, sous le menton, jamais sur le visage.
+
 > **À lire d'abord**
 > - **L'interface n'est pas du montage** : barre d'état de l'iPhone, icônes à droite, « En savoir plus », profil, barre « Ajouter un commentaire », et la fenêtre « Limite de temps » d'iOS de 16,4 s à 19,6 s (le son est coupé pendant ce passage). Tout le reste est le montage.
 > - **On reprend des techniques, pas une marque** : ne pas copier le personnage (institutrice en costume), le décor exact, les textes ni le logo. Le but est un langage de montage réutilisable avec **notre** palette (vert, crème, terracotta) et **nos** contenus.
@@ -32,7 +34,7 @@ Correspondance avec notre palette : vert `#2D5A43` ≈ tableau ; crème `#FBF9F5
 
 Chaque effet existe sous forme de fonction dans `videos/effets/fx.js` (+ `fx.css`) et déclare ses événements sonores (rôles de `videos/sfx/roles.json`). Démo : `videos/effets/demo.html`.
 
-### T1. Décor virtuel + détourage (texte DERRIÈRE la personne)
+### T1. ~~Décor virtuel + détourage~~ (ABANDONNÉ)
 - **Observé** : la présentatrice est découpée (contour de cheveux visible à 25,3 s) et placée devant un décor de tableau vert en perspective (texture de craie légèrement animée). Le texte du tableau passe **derrière** sa tête et son bras ; la règle (accessoire) passe devant.
 - **Pourquoi c'est fort** : le texte fait partie de la scène, la personne reste toujours visible, rien ne la recouvre.
 - **Reproduire** : `videos/effets/matting/matte.py` (MODNet, Apache-2.0, `onnxruntime`) → masque alpha par image ; composition : `image = personne × masque + décor × (1 − masque)`, avec le texte dessiné **dans le décor**. Essai sur ta vidéo « pomme » : masque propre, 0,7 s par image sur le processeur → **≈ 17 min** pour 48 s (à lancer en tâche de fond ; possible à 384 px pour aller ~2× plus vite).
@@ -47,12 +49,12 @@ Chaque effet existe sous forme de fonction dans `videos/effets/fx.js` (+ `fx.css
 - **Groupes de 2 à 4 mots** (« Alors aujourd'hui, » / « on se retrouve pour »), ~0,9-1,1 s chacun, **changement sec** (pas d'animation, pas de mot-à-mot, pas de couleur d'accent).
 - Calage : le groupe apparaît ~0,15-0,2 s avant son premier mot et laisse sa place au suivant ~0,15 s après le premier mot du groupe suivant. Fonction `fx.subtitles`.
 
-### T4. Texte « écrit au tableau » (machine à écrire)
+### T4. ~~Texte « écrit au tableau »~~ (ABANDONNÉ)
 - Lettre par lettre, **vitesse ≈ 15-25 caractères/s**, démarre juste avant le mot prononcé et se termine à la fin de la phrase. Police ~Cormorant Garamond Italic 500 (corps ≈ 44-46 px), craie crème `#EDE8C8`, léger bruit/flou (effet craie : filtre `feTurbulence` + `feDisplacementMap`, flou 0,35).
 - **Titres de leçon** (« LEÇON N°1 ») : majuscules grasses couleur `#D9D58C`, tapés en ~0,9 s. Date en petit en haut à gauche du tableau (« Jeudi 29 octobre »).
 - Listes : puces « – », une ligne par idée, tapée au moment où l'idée est dite. Fonction `fx.typed`.
 
-### T5. Annotations à la craie
+### T5. ~~Annotations à la craie~~ (ABANDONNÉ)
 - **Cercle/ovale** tracé autour d'un mot-clé (0,5 s, dépasse un peu son point de départ, s'estompe ~0,5 s après) ; **coche** (✓) et **croix** (✗) dessinées en 0,22 s ; **dessins** (horloge, voiture « Lambo », palmier « Bali », courbe qui descend) tracés trait par trait. Technique : tracé SVG à longueur normalisée (`pathLength=100`, `stroke-dashoffset` de 100 → 0, easing in-out) + même filtre craie. Fonctions `fx.ellipse`, `fx.mark`.
 
 ### T6. Compteur qui monte
@@ -82,7 +84,7 @@ Chaque effet existe sous forme de fonction dans `videos/effets/fx.js` (+ `fx.css
 ### T12. Barre de progression « EN COURS… → TERMINÉ ✓ »
 - Rectangle noir `#1C1A17` aux coins arrondis, liseré doré, texte blanc en majuscules espacées ; remplissage doré sur ~1,2 s (71,9-73,0 s) ; puis le texte devient « MONTAGE TERMINÉ ✓ » avec **ding aigu** (73,05 s). Fonction `fx.progress`.
 
-### T13. Clôture
+### T13. ~~Clôture~~ (ABANDONNÉ : tableau effacé)
 - 73,4 s : coupe-arrière + **tableau effacé en balayage vertical** ; nouveau titre « INTERRO SURPRISE » (craie orangée) tapé ; phrase finale « Maintenant, petite interro surprise ! » : la vidéo s'arrête sur la question (boucle ouverte).
 
 ---
@@ -187,8 +189,8 @@ Remarques de lecture : (1) les instants de coupe (colonne Plan) viennent de la d
 ## 5. Appliquer le modèle à une nouvelle vidéo (marche à suivre)
 
 1. **Récupérer, transcrire, valider le texte** (étapes habituelles de `METHODE.md`).
-2. **Concevoir le plan d'effets** : écrire d'abord le tableau « temps / phrase / effet » (comme le « tableau d'effets » de la référence), en choisissant un **cadre** (leçons, vrai ou faux, étapes) et **un événement visuel léger toutes les 1 à 3 s, toujours ancré sur un mot**. L'utilisateur valide.
-3. **Choisir le niveau** : (a) *léger* (sans détourage) = sous-titres éditoriaux + cartes/tampon/étiquette/barre sur la chemise sous le menton + coupes-zoom ; (b) *complet* = décor virtuel + détourage + texte derrière la personne (calcul long).
+2. **Concevoir le plan d'effets** : écrire d'abord la liste « temps / phrase / effet » (comme le « tableau d'effets » de la référence), en choisissant un **cadre** (leçons, vrai ou faux, étapes) et **un événement visuel léger toutes les 1 à 3 s, toujours ancré sur un mot**. L'utilisateur valide.
+3. **Choisir le niveau** : (a) *léger* (sans détourage) = sous-titres éditoriaux + cartes/tampon/étiquette/barre sur la chemise sous le menton + coupes-zoom ; (b) ~~complet = décor + détourage~~ : abandonné.
 4. **Construire** avec `fx.js` ; exporter la chronologie sonore `window.FX_SFX`.
 5. **Sons (si l'utilisateur les veut)** : `python3 videos/sfx/sfx_mix.py events.json --voice voix.wav --speech words.json --out out/sfx` ; mixer avec la voix (−13,9 LUFS visés, pic ≤ −1 dBFS).
 6. **Contrôles** : visage jamais recouvert (`check_overlap.py`), audio original intact, images clés, rythme (plus long écart sans événement ≤ 3 s).
@@ -199,7 +201,7 @@ Prompt prêt à copier (à ajouter au prompt habituel) :
 STYLE : applique le modèle de montage de référence (videos/MODELE_MONTAGE_REFERENCE.md), niveau [léger / complet].
 Cadre narratif : [leçons / vrai ou faux / étapes / autre].
 Sons : [oui, sobres (voix d'abord, quelques sons précis) / non].
-Donne-moi d'abord le tableau « temps / phrase / effet » (un événement léger toutes les 1 à 3 s, toujours ancré sur un mot) et attends ma validation.
+Donne-moi d'abord la liste « temps / phrase / effet » (un événement léger toutes les 1 à 3 s, toujours ancré sur un mot) et attends ma validation.
 Règles inchangées : visage jamais recouvert, audio d'origine, aucune donnée de santé inventée, pas de logo.
 ```
 

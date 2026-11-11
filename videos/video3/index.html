@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magnésium et stress (montage test)</title>
+<link rel="stylesheet" href="../effets/fx.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#111}
+body{display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+html.alpha,body.alpha,body.alpha #stage{background:transparent!important}
+#stage{width:1080px;height:1920px;position:relative;overflow:hidden;flex:none;background:linear-gradient(160deg,#6d7f78,#2a3430)}
+.emo{font-family:'Noto Color Emoji','Apple Color Emoji',sans-serif;font-style:normal}
+/* sous-titres éditoriaux : italique à empattements, groupes de 2 à 5 mots, changement sec */
+#subs{position:absolute;left:90px;width:900px;height:150px}
+.sb{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;opacity:0;text-align:center}
+.sb > div{font-family:'Playfair',serif;font-style:italic;font-weight:700;font-size:60px;line-height:1.1;color:#fff;text-wrap:balance;
+  -webkit-text-stroke:9px rgba(12,22,17,.92);paint-order:stroke fill;text-shadow:0 4px 14px rgba(0,0,0,.45)}
+.sb b{font-weight:700;color:#BFF3D6}
+/* animations : petits dessins sur la chemise, sous le menton */
+#anim{position:absolute;left:100px;width:860px;height:210px}
+.cs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden}
+.cs svg{overflow:visible;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+svg .tx{font-family:'Inter',sans-serif;font-weight:900;fill:#fff;paint-order:stroke;stroke:#14201A;stroke-width:7px;stroke-linejoin:round}
+svg .ar{font-family:'Archivo',sans-serif;fill:#B8923A;letter-spacing:.14em}
+</style>
+</head>
+<body>
+<div id="stage">
+ <div id="anim">
+  <!-- A : étiquette « à une condition » -->
+  <div class="cs" id="cA"><svg id="vA" width="560" height="150" viewBox="0 0 560 150"><g id="vA-g" transform="rotate(-4 280 75)">
+    <rect x="10" y="12" width="540" height="126" rx="10" fill="#EFEDE4" stroke="#B8923A" stroke-width="5"/><rect x="24" y="26" width="512" height="98" rx="5" fill="none" stroke="#B8923A" stroke-width="2.5"/>
+    <text class="ar" x="280" y="88" font-size="46" text-anchor="middle">UNE CONDITION</text></g></svg></div>
+  <!-- B : jauge « taux très faible » -->
+  <div class="cs" id="cB"><svg id="vB" width="420" height="200" viewBox="0 0 420 200">
+    <path d="M40 170 A170 170 0 0 1 380 170" fill="none" stroke="#fff" stroke-width="36" stroke-linecap="round" opacity=".28"/>
+    <path id="vB-arc" d="M40 170 A170 170 0 0 1 380 170" fill="none" stroke="#E86A4F" stroke-width="30" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+    <g id="vB-n" transform="translate(210 170) rotate(60)"><path d="M-9 0 L0 -150 L9 0Z" fill="#fff" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/><circle r="16" fill="#fff" stroke="#14201A" stroke-width="5"/></g>
+    <text class="tx" x="210" y="40" font-size="42" text-anchor="middle" id="vB-t" opacity="0">taux très faible</text></svg></div>
+  <!-- C : stress et fatigue qui baissent -->
+  <div class="cs" id="cC"><svg id="vC" width="520" height="180" viewBox="0 0 520 180">
+    <text class="tx" x="10" y="52" font-size="40">stress</text><rect id="vC-b1" x="190" y="22" width="300" height="40" rx="20" fill="#E86A4F"/>
+    <text class="tx" x="10" y="132" font-size="40">fatigue</text><rect id="vC-b2" x="190" y="102" width="300" height="40" rx="20" fill="#F2B84B"/>
+    <path id="vC-ar" d="M505 150 l0 24 m-13 -12 l13 14 l13 -14" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity="0"/></svg></div>
+  <!-- D : gélule au hasard -->
+  <div class="cs" id="cD"><svg id="vD" width="440" height="190" viewBox="0 0 440 190">
+    <g id="vD-p" transform="translate(220 100) rotate(-28)"><rect x="-100" y="-38" width="200" height="76" rx="38" fill="#fff" stroke="#14201A" stroke-width="5"/><path d="M0 -38 H62 A38 38 0 0 1 62 38 H0Z" fill="#E86A4F" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/></g>
+    <path id="vD-sp" d="M20 40 l18 -26 l14 34 l22 -42 l16 40" fill="none" stroke="#F2B84B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="0 100"/>
+    <g id="vD-x" opacity="0"><circle cx="360" cy="95" r="52" fill="#E86A4F" stroke="#fff" stroke-width="6"/><path d="M338 73 L382 117 M382 73 L338 117" stroke="#fff" stroke-width="12" stroke-linecap="round"/></g></svg></div>
+  <!-- E : assiette -->
+  <div class="cs" id="cE"><svg id="vE" width="560" height="190" viewBox="0 0 560 190">
+    <g id="vE-pl"><ellipse cx="280" cy="102" rx="270" ry="78" fill="#fff" opacity=".96"/><ellipse cx="280" cy="102" rx="220" ry="58" fill="#EEF1EF"/></g>
+    <text id="vE-1" class="emo" x="130" y="128" font-size="86" text-anchor="middle" opacity="0">🥜</text>
+    <text id="vE-2" class="emo" x="280" y="128" font-size="86" text-anchor="middle" opacity="0">🫘</text>
+    <text id="vE-3" class="emo" x="430" y="128" font-size="86" text-anchor="middle" opacity="0">🌾</text></svg></div>
+  <!-- F : calendrier 4 à 8 semaines -->
+  <div class="cs" id="cF"><svg id="vF" width="430" height="157" viewBox="0 0 520 190">
+    <g id="vF-g"><rect x="40" y="20" width="440" height="160" rx="22" fill="#FBFAF7" stroke="#14201A" stroke-width="5"/><path d="M40 42 a22 22 0 0 1 22 -22 H458 a22 22 0 0 1 22 22 V70 H40Z" fill="#E07A5F" stroke="#14201A" stroke-width="5" stroke-linejoin="round"/>
+    <text id="vF-n" x="170" y="150" font-family="Archivo" font-size="78" fill="#14201A" text-anchor="middle">4–8</text><text class="" x="340" y="142" font-family="Inter" font-weight="800" font-size="40" fill="#14201A" text-anchor="middle">semaines</text></g></svg></div>
+ </div>
+ <div id="subs"></div>
+</div>
+<script>
+/* ---------- texte : groupes d'indices de mots (words.json de Whisper) ---------- */
+const P=new URLSearchParams(location.search); const ALPHA=P.get('alpha')==='1';
+if(ALPHA){document.documentElement.classList.add('alpha');document.body.classList.add('alpha');}
+const W=window.WORDS.words, TOTAL=window.WORDS.total||42.4;
+/* [premier mot, dernier mot, texte affiché (*mot clé*)] */
+const CHUNKS=[[0,1,'Le *magnésium*'],[2,6,'n’est pas un *antistress*,'],[7,11,'mais il peut t’aider'],[12,14,'à une *condition*.'],[15,16,'La condition'],[17,20,'que tu en *manques*.'],
+[21,23,'Dans les études'],[24,28,'qui ont donc été effectuées'],[29,31,'sur le sujet,'],[32,36,'ce sont surtout les personnes'],[37,41,'avec un taux *très faible*'],[42,46,'qui profitent de l’effet'],[47,50,'du *magnésium* pour réduire'],[51,52,'leur *stress*'],[53,55,'et leur *fatigue*.'],
+[56,58,'Donc une *gélule*'],[59,61,'prise au hasard'],[62,66,'pendant un pic de stress,'],[67,71,'ce n’est pas forcément'],[72,74,'la bonne idée.'],
+[75,79,'Mais ça ne veut pas'],[80,83,'dire non plus que'],[84,86,'c’est *inutile*.'],[87,90,'Alors voici ce que'],[91,93,'tu peux faire'],[94,96,'*dès ce soir*.'],
+[97,100,'Vérifie que ton assiette'],[101,103,'apporte du *magnésium*,'],[104,107,'que ce soit avec'],[108,109,'des *noix*,'],[110,111,'des *légumineuses*'],[112,115,'et des *céréales complètes*.'],
+[116,119,'Et si tu prends'],[120,123,'quand même des gélules'],[124,125,'de magnésium,'],[126,130,'fais-le sur une durée'],[131,135,'de *4 à 8 semaines*.'],
+[136,138,'Alors maintenant que'],[139,142,'tu sais tout ça,'],[143,145,'n’oublie pas,'],[146,149,'mange l’esprit *tranquille*.']];
+const CH=CHUNKS.map(([a,b,tx],i)=>({t0:W[a].t0-.1,tw:W[b].t1,text:tx,i}));
+CH.forEach((c,i)=>{ const nx=CH[i+1]; c.t1=nx?Math.min(nx.t0,c.tw+.9):TOTAL; if(nx&&nx.t0-c.tw>.9) c.t1=c.tw+.5; });
+const word=i=>W[i].t0;
+/* ---------- maths ---------- */
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),p=(t,a,b)=>clamp((t-a)/(b-a)),eo=x=>1-Math.pow(1-x,3),eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);},sm=x=>x*x*(3-2*x);
+const $=s=>document.querySelector(s);
+/* ---------- coupes-zoom sèches (zoom_render.py les applique à la vidéo seule) ---------- */
+const ZC={x:540,y:600};
+const ZOOMS=[{t0:1.55,d:1.9},{t0:21.75,d:2.3},{t0:34.25,d:2.0},{t0:41.35,d:1.05}].map(z=>({t0:z.t0,in:.06,hold:z.d-.12,out:.06,amp:.45}));
+function zoomAt(t){let s=1;ZOOMS.forEach(z=>{const u=clamp((t-z.t0)/z.in),v=clamp((t-z.t0-z.in-z.hold)/z.out);s+=z.amp*sm(u)*(1-sm(v));});return s;}
+/* ---------- où est le visage (mesuré) ---------- */
+const ZN=Object.assign({closeups:[],faces:[],nodet:[]},window.ZONES||{});
+function fbAt(t){let v;
+  if(ZN.nodet.some(([a,b])=>t>=a&&t<=b))v=1630;
+  else{let m=0,f=false;ZN.faces.forEach(([ft,x,y,w,h])=>{if(Math.abs(ft-t)<=.3){m=Math.max(m,y+h+60);f=true;}});
+    if(f)v=m;else{let best=1630,bd=9;ZN.faces.forEach(([ft,x,y,w,h])=>{const d=Math.abs(ft-t);if(d<bd){bd=d;best=y+h+60;}});v=bd<=1?best:1630;}}
+  return ZC.y+(v-ZC.y)*zoomAt(t);}
+function topAt(t){let s=0,n=0;for(let d=-.2;d<=.2001;d+=.05){s+=fbAt(t+d);n++;}return Math.max(1075,s/n+12);}
+/* ---------- événements visuels : carte, début, fin ---------- */
+const CARDS=[
+ {id:'cA',a:word(12)-.1,b:word(15)+.2},
+ {id:'cB',a:word(40)-.55,b:word(42)+.5},
+ {id:'cC',a:word(50)-.1,b:word(56)-.05},
+ {id:'cD',a:word(58)-.1,b:word(75)-.5},
+ {id:'cE',a:word(100)-.2,b:word(116)-.25},
+ {id:'cF',a:word(131)-.2,b:word(136)-.1}];
+const FADE=.28;
+function cardP(c,t){return p(t,c.a,c.a+FADE)*(1-p(t,c.b-FADE,c.b));}
+/* ---------- rendu ---------- */
+const subs=$('#subs'); CH.forEach(c=>{const d=document.createElement('div');d.className='sb';d.id='sb'+c.i;d.innerHTML='<div>'+c.text.replace(/\*([^*]+)\*/g,'<b>$1</b>')+'</div>';subs.appendChild(d);c.el=d;});
+const anim=$('#anim'); const hide=el=>{el.style.opacity=0;el.style.visibility='hidden';};
+function cardAnim(id,t){
+  const set=(s,a)=>{const e=$(s);if(e)e.setAttribute('transform',a);}, op=(s,v)=>{const e=$(s);if(e)e.setAttribute('opacity',v);};
+  if(id==='cA'){const u=eb(p(t,CARDS[0].a,CARDS[0].a+.4)); $('#vA-g').setAttribute('transform','rotate(-4 280 75) translate(280 75) scale('+(.55+.45*u)+') translate(-280 -75)');}
+  if(id==='cB'){const c=CARDS[1];const k=eo(p(t,c.a+.1,c.a+1.1));$('#vB-n').setAttribute('transform','translate(210 170) rotate('+(70-k*142)+')');
+    $('#vB-arc').setAttribute('stroke-dasharray',(k*28)+' 100'); $('#vB-t').setAttribute('opacity',p(t,word(40),word(40)+.3));}
+  if(id==='cC'){const c=CARDS[2];const k=eo(p(t,c.a+.25,c.a+1.5));const w=300-k*190;$('#vC-b1').setAttribute('width',w);$('#vC-b2').setAttribute('width',300-k*170);$('#vC-ar').setAttribute('opacity',p(t,c.a+.6,c.a+1)*(1));}
+  if(id==='cD'){const c=CARDS[3];const u=eb(p(t,c.a,c.a+.45));$('#vD-p').setAttribute('transform','translate(220 100) rotate(-28) scale('+u+')');
+    $('#vD-sp').setAttribute('stroke-dasharray',(100*p(t,word(63),word(66)))+' 100'); const x=eb(p(t,word(73)-.05,word(73)+.3)); $('#vD-x').setAttribute('opacity',p(t,word(73)-.05,word(73)+.1)); $('#vD-x').setAttribute('transform','translate(360 95) scale('+(.4+.6*x)+') translate(-360 -95)');}
+  if(id==='cE'){const o=(s,w)=>{const e=$(s);const u=eb(p(t,w,w+.35));e.setAttribute('opacity',p(t,w,w+.12));e.setAttribute('transform','translate(0 '+(1-u)*-30+')');};o('#vE-1',word(108)-.05);o('#vE-2',word(110)-.05);o('#vE-3',word(113)-.05);}
+  if(id==='cF'){const c=CARDS[5];const u=eb(p(t,c.a,c.a+.4));$('#vF-g').setAttribute('transform','translate(260 100) scale('+(.6+.4*u)+') translate(-260 -100)');$('#vF-n').setAttribute('opacity',p(t,word(132)-.05,word(132)+.2));}
+}
+window.render=function(t){
+  const T=topAt(t); const present=Math.max(...CARDS.map(c=>cardP(c,t))); const zoomed=zoomAt(t)>1.02;
+  let tmax=0;
+  CARDS.forEach(c=>{const pp=zoomed||T>1260?0:cardP(c,t);const el=$('#'+c.id);tmax=Math.max(tmax,pp);
+    if(pp<=0.001){hide(el);return;}
+    el.style.visibility='visible';el.style.opacity=pp;el.style.transform='translateY('+((1-pp)*24)+'px) scale('+(.96+.04*pp)+')';cardAnim(c.id,t);});
+  anim.style.top=T+'px';
+  const pres=zoomed||T>1260?0:present;
+  const top=Math.min(T+14+pres*246,1480-140+0); subs.style.top=top+'px';
+  CH.forEach(c=>{const on=t>=c.t0&&t<c.t1;const o=on?Math.min(1,(t-c.t0)/.07)*(1-clamp((t-(c.t1-.12))/.12)*(c.t1<TOTAL-.01?1:0)):0;c.el.style.opacity=o;});
+};
+window.LAYOUT={total:TOTAL,zooms:ZOOMS,zoomCenter:ZC,chunks:CH.map(c=>({t0:c.t0,t1:c.t1,text:c.text.replace(/\*/g,'')})),cards:CARDS.map(c=>({id:c.id,a:c.a,b:c.b}))};
+render(0);
+</script>
+</body>
+</html>
