@@ -1,0 +1,50 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Stories pomme</title>
+<style>
+@font-face{font-family:'Jost';src:url(../../effets/fonts/jost-latin-500-normal.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'Jost';src:url(../../effets/fonts/jost-latin-600-normal.woff2) format('woff2');font-weight:600}
+@font-face{font-family:'Jost';src:url(../../effets/fonts/jost-latin-700-normal.woff2) format('woff2');font-weight:700}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;font-family:'Jost',sans-serif;color:#F8F1E4;overflow:hidden;position:relative;background:linear-gradient(165deg,#1E4333 0%,#2D5A43 55%,#18372A 100%)}
+.grain{position:absolute;inset:0;background:radial-gradient(900px 700px at 80% 12%,rgba(246,221,166,.16),transparent 70%),radial-gradient(800px 800px at 10% 95%,rgba(232,149,122,.14),transparent 70%)}
+.k{position:absolute;left:90px;right:90px;text-align:center}
+.lab{top:300px;font-size:34px;letter-spacing:.34em;text-transform:uppercase;font-weight:600;color:#F6DDA6}
+.lab::after{content:'';display:block;width:150px;height:3px;margin:22px auto 0;background:linear-gradient(90deg,transparent,#C9A25A,transparent)}
+.big{font-size:104px;font-weight:700;line-height:1.06;letter-spacing:.01em}
+.big em{font-style:normal;color:#F6DDA6}
+.mid{font-size:54px;font-weight:500;line-height:1.25;color:#EDE6D4}
+.sign{bottom:340px;font-size:34px;letter-spacing:.22em;text-transform:uppercase;color:#F6DDA6;font-weight:500}
+.zone{display:none;position:absolute;left:110px;right:110px;border:2px dashed rgba(246,221,166,.5);border-radius:36px;text-align:center;color:rgba(246,221,166,.85);font-size:30px;letter-spacing:.2em;text-transform:uppercase;display:flex;align-items:center;justify-content:center}
+.card{position:absolute;left:100px;right:100px;background:rgba(251,250,247,.1);border:1.5px solid rgba(255,255,255,.35);border-radius:34px;padding:34px 40px;font-size:50px;line-height:1.22;font-weight:500}
+.card b{color:#F6DDA6;font-weight:700}
+.n{display:inline-block;width:64px;height:64px;border-radius:50%;border:3px solid #F6DDA6;color:#F6DDA6;text-align:center;line-height:58px;font-weight:700;margin-right:22px;font-size:38px}
+#bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,30,22,.82) 0%,rgba(14,30,22,.2) 30%,rgba(14,30,22,.1) 60%,rgba(14,30,22,.86) 100%)}
+.zone{display:none!important}
+</style></head><body>
+<div id="app"></div>
+<script>
+const S=new URLSearchParams(location.search).get('s');
+const T={
+1:`<div class="grain"></div><div class="k lab">Question du jour</div>
+<div class="k big" style="top:520px">Une pomme<br><em>pas lavée</em>,<br>tu la manges ?</div>
+<div class="zone" style="top:1130px;height:230px">sticker sondage : Oui / Non</div>
+<div class="k sign">mange l'esprit tranquille</div>`,
+2:`<div class="grain"></div><div class="k lab">Nouvelle vidéo</div>
+<div class="k big" style="top:500px;font-size:100px">Ta pomme<br>est-elle<br><em>vraiment</em><br>cancérogène&nbsp;?</div>
+<div class="k sign" style="bottom:330px">regarde jusqu'au bout</div>`,
+3:`<div class="grain"></div><div class="k lab">Quiz</div>
+<div class="k big" style="top:500px;font-size:92px">Rincer une pomme<br>sous l'eau,<br>ça sert à…&nbsp;?</div>
+<div class="zone" style="top:1090px;height:300px">sticker quiz : 3 réponses</div>
+<div class="k sign">la réponse est dans le Reel</div>`,
+4:`<div class="grain"></div><div class="k lab">Pose-moi ta question</div>
+<div class="k big" style="top:500px;font-size:96px">Fruits &amp; légumes :<br><em>bio, lavage,<br>épluchage…</em></div>
+<div class="k mid" style="top:1010px">Qu'est-ce que tu veux<br>que je vérifie ?</div>
+<div class="zone" style="top:1260px;height:230px">sticker « Pose-moi une question »</div>`,
+5:`<div class="grain"></div><div class="k lab">À retenir</div>
+<div class="card" style="top:480px"><span class="n">1</span>Les résidus sont <b>encadrés par des limites</b></div>
+<div class="card" style="top:760px"><span class="n">2</span>L'EFSA juge le risque pour le consommateur <b>très faible</b></div>
+<div class="card" style="top:1090px"><span class="n">3</span>Rincer le fruit sous l'eau : <b>déjà un tiers de résidus en moins</b> <span style="font-size:36px;color:#CFC8B6">(selon une revue)</span></div>
+<div class="k sign" style="bottom:330px">mange l'esprit tranquille</div>`};
+document.getElementById('app').innerHTML=T[S];
+document.fonts.ready.then(()=>document.title='ready');
+</script></body></html>

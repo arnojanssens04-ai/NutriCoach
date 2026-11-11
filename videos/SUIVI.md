@@ -12,7 +12,7 @@ CTA : **C1** mot-clé → ressource · **C2** abonnement + prochaine vidéo · *
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | fatigue | (à compléter) | Fatigue et nutriments | « Tu dors à peu près correctement… et tu es quand même fatigué ? » (texte du script, à confirmer) | D (peu d'enjeu) | 36 s | 200 | 80 % (159) | 72 % | 24 % | 8 % (à 36 s) | | | légèrement > moyenne | | Version avec animations. J'aime / enreg. / relectures légèrement au-dessus de la moyenne |
 | magnésium (test montage) | à publier | Magnésium et stress | « Le magnésium n'est pas un antistress, mais il peut t'aider à une condition. » + titre « Pas un antistress » | F1 | 42 s | | | | | | | | | | CTA C1 « MAGNÉSIUM » (ressource à confirmer), pas de boucle, bruitages sobres |
-| pomme | 2026-11-11 (à publier) | Pomme et pesticides | « Stop ! Mange pas cette pomme, elle est cancérogène ! » | B + E | 48 s | | | | | | | | | | À comparer à « fatigue » |
+| pomme | 2026-11-11 (à publier) ; légende et stories : `video2/publication.md` | Pomme et pesticides | « Stop ! Mange pas cette pomme, elle est cancérogène ! » | B + E | 48 s | | | | | | | | | | À comparer à « fatigue » |
 
 ## Facebook
 
