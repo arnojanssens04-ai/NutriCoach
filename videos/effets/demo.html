@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Démo des effets</title>
+<link rel="stylesheet" href="fx.css">
+<style>
+html,body{margin:0;background:#111;width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;flex:none;transform-origin:center;background:#444 center/cover}
+#board{position:absolute;left:70px;top:520px;width:640px;height:420px;background:var(--fx-board);border:14px solid #8A5A3A;border-radius:6px;box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+</style></head><body>
+<div id="stage"><div id="board"></div></div>
+<script src="fx.js"></script>
+<script>
+const q=new URLSearchParams(location.search); const stage=document.getElementById('stage');
+if(q.get('bg')) stage.style.backgroundImage='url('+q.get('bg')+')'; if(q.has('alpha')){ stage.style.background='transparent'; document.getElementById('board').style.display='none'; }
+const fx=new FX(stage);
+/* 0-5 s : titre en deux bandes + sous-titres éditoriaux (petits, italiques, changement sec) */
+fx.titleBars({t0:0,t1:5.2,lines:['VRAI OU FAUX ?','LA POMME ET LES PESTICIDES'],y:270});
+fx.subtitles({chunks:[{t0:.6,t1:1.7,text:'Alors oui effectivement,'},{t0:1.7,t1:2.6,text:'sur cette pomme,'},{t0:2.6,t1:3.7,text:'il y a des résidus'},{t0:3.7,t1:4.8,text:'de pesticides.'},{t0:6,t1:7.2,text:'Première règle :'},{t0:7.2,t1:8.6,text:'on rince le fruit.'}],y:1190,size:38});
+/* 5.8-9 s : texte de tableau tapé (craie), cercle, coche */
+fx.typed({t0:5.8,dur:.9,text:'LEÇON N°1',x:110,y:560,size:64,heading:true});
+fx.typed({t0:7.0,dur:1.3,text:'– rincer le fruit sous l’eau',x:110,y:680,size:46});
+fx.ellipse({t0:8.5,dur:.5,cx:330,cy:700,rx:262,ry:42,fadeAt:11});
+fx.mark({t0:9.1,kind:'check',x:640,y:668,size:54});
+/* 9.6-11 s : compteur */
+fx.countup({t0:9.8,dur:.9,from:3968,to:15000,x:110,y:790,size:84});
+/* 11.8-15.6 s : chat question / réponse */
+fx.chat({t0:11.8,t1:15.6,y:1420,user:'Est-ce dangereux ?',reply:'Risque très faible ✓',name:'Assistant',tag:'ASSISTANT'});
+/* 16-20.2 s : tableau + tampon */
+fx.table({t0:16,t1:20.4,y:1360,title:'À RETENIR',status:'à valider',rows:[['0:00','Rincer sous l’eau'],['0:10','Éplucher si besoin'],['0:20','Varier les fruits']]});
+fx.stamp({t0:18.2,t1:20.4,text:'VALIDÉ ✓',x:640,y:1590,rot:-8});
+/* 20.8-23.5 s : étiquette */
+fx.sticker({t0:20.8,t1:23.6,text:'À RETENIR',x:80,y:300,rot:-4});
+/* 24-28.4 s : barre de progression */
+fx.progress({t0:24,dur:2.2,t1:28.4,y:1500,label:'ANALYSE EN COURS…',done:'ANALYSE TERMINÉE ✓'});
+window.render=t=>fx.render(t); window.FX_SFX=fx.sfx; window.DEMO_TOTAL=28.6;
+function fit(){stage.style.transform='scale('+Math.min(innerWidth/1080,innerHeight/1920)+')'} addEventListener('resize',fit); fit();
+document.fonts.ready.then(()=>render(+(q.get('t')||0)));
+if(!q.has('render')){let t0=performance.now();(function loop(n){render(((n-t0)/1000)%DEMO_TOTAL);requestAnimationFrame(loop)})(t0)}
+</script></body></html>

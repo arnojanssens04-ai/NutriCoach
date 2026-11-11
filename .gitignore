@@ -1,2 +1,6 @@
 videos/**/out/
 videos/**/in/
+videos/sfx/kit/sounds/
+videos/effets/matting/*.onnx
+videos/reference/in/
+videos/reference/out/

@@ -106,6 +106,14 @@ CE QUE TU ME LIVRES
 Ensuite, on enchaîne avec le prompt de montage (ci-dessous) quand j'aurai enregistré la vidéo.
 ```
 
+## Modèle de montage de référence (effets, sons, détourage)
+
+Analyse seconde par seconde d'une vidéo de référence + recettes : **`videos/MODELE_MONTAGE_REFERENCE.md`** (à lire avant toute nouvelle vidéo « niveau pro »).
+Boîte à outils :
+- `videos/effets/` : `fx.js` + `fx.css` (titre 2 bandes, sous-titres éditoriaux, texte tapé à la craie, cercles/coches, compteur, cartes chat/tableau, tampon, étiquette, barre de progression) ; démo `demo.html` ; `render_demo.js` pour les images ; `matting/matte.py` (détourage MODNet : texte derrière la personne, ≈ 0,7 s/image sur CPU).
+- `videos/sfx/` : `fetch_sfx.py` (télécharge le SFX Kit CC0), `roles.json` (effet → son), `sfx_mix.py` (place chaque son à l'instant visé, `début = moment − sync.at`, baisse sous la voix, mix −14 LUFS). Les effets de `fx.js` exportent `window.FX_SFX` → `events.json` → `sfx_mix.py`.
+- Les bruitages restent **optionnels** : à confirmer à chaque vidéo (la vidéo « pomme » était sans son ajouté).
+
 ## Prompt à copier pour une nouvelle vidéo
 
 ```text

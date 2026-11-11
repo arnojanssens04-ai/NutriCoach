@@ -1,0 +1,55 @@
+/* Bibliothèque d'effets (inspirée du montage de référence) : palette, polices, composants.
+   Repère : écran 1080x1920. Tous les composants sont positionnés en coordonnées de cet écran. */
+@font-face{font-family:'Playfair';src:url(fonts/playfair-display-latin-400-italic.woff2) format('woff2');font-weight:400;font-style:italic}
+@font-face{font-family:'Playfair';src:url(fonts/playfair-display-latin-500-italic.woff2) format('woff2');font-weight:500;font-style:italic}
+@font-face{font-family:'Playfair';src:url(fonts/playfair-display-latin-700-italic.woff2) format('woff2');font-weight:700;font-style:italic}
+@font-face{font-family:'Cormorant';src:url(fonts/cormorant-garamond-latin-500-italic.woff2) format('woff2');font-weight:500;font-style:italic}
+@font-face{font-family:'Cormorant';src:url(fonts/cormorant-garamond-latin-600-italic.woff2) format('woff2');font-weight:600;font-style:italic}
+@font-face{font-family:'Archivo';src:url(fonts/archivo-black-latin-400-normal.woff2) format('woff2');font-weight:400}
+@font-face{font-family:'Mono';src:url(fonts/dm-mono-latin-400-normal.woff2) format('woff2');font-weight:400}
+@font-face{font-family:'Mono';src:url(fonts/dm-mono-latin-500-normal.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'Caveat';src:url(fonts/caveat-latin-500-normal.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'Caveat';src:url(fonts/caveat-latin-700-normal.woff2) format('woff2');font-weight:700}
+@font-face{font-family:'Inter';src:url(fonts/inter.woff2) format('woff2');font-weight:100 900}
+:root{
+  --fx-board:#2F4A38;      /* vert tableau (référence : #304836) */
+  --fx-chalk:#EDE8C8;      /* craie crème */
+  --fx-chalk-h:#D9D58C;    /* craie des titres */
+  --fx-card:#FBFAF7;       /* cartes crème */
+  --fx-gold:#B8923A;       /* accent doré */
+  --fx-gold-d:#8A6D2F;
+  --fx-ink:#201C1A;        /* noir chaud */
+  --fx-white:#EDEFED;
+  --fx-stamp:#2F7D4F;      /* tampon vert */
+  --fx-accent:#D9694F;     /* orange (astérisque) */
+}
+.fx{position:absolute;left:0;top:0;opacity:0;will-change:transform,opacity;transform-origin:0 0}
+.fx *{box-sizing:border-box}
+/* barres de titre : deux bandes blanches, texte noir, majuscules très grasses */
+.fx-bar{position:absolute;left:0;background:var(--fx-white);color:var(--fx-ink);font-family:'Archivo',Inter,sans-serif;text-transform:uppercase;white-space:nowrap;letter-spacing:-.01em;line-height:1;display:flex;align-items:center;padding:0 18px}
+/* sous-titres éditoriaux : italique à empattements, petit, blanc, ombre douce ; groupes de 2 à 4 mots, changement sec */
+.fx-sub{position:absolute;left:0;width:1080px;text-align:center;font-family:'Playfair',serif;font-style:italic;font-weight:400;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5),0 0 2px rgba(0,0,0,.35);letter-spacing:.01em}
+/* texte de tableau (craie) */
+.fx-chalk{position:absolute;white-space:pre;color:var(--fx-chalk);font-family:'Cormorant',serif;font-style:italic;font-weight:500;filter:url(#fx-rough);opacity:.95}
+.fx-chalk.h{font-family:'Archivo',sans-serif;font-style:normal;color:var(--fx-chalk-h);text-transform:uppercase;letter-spacing:.01em}
+/* cartes crème (chat, tableau d'effets) */
+.fx-card{position:absolute;background:var(--fx-card);border-radius:30px;box-shadow:0 18px 50px rgba(0,0,0,.28);color:var(--fx-ink);font-family:Inter,sans-serif;overflow:hidden}
+.fx-card .hd{display:flex;align-items:center;gap:12px;padding:18px 26px;border-bottom:2px solid #EEE9DD;font-weight:800;font-size:28px}
+.fx-card .hd .tag{margin-left:auto;font-family:'Mono',monospace;font-weight:500;font-size:18px;letter-spacing:.14em;text-transform:uppercase;color:var(--fx-gold)}
+.fx-ast{display:inline-block;width:28px;height:28px;color:var(--fx-accent)}
+.fx-card .row{display:flex;gap:26px;padding:13px 26px;border-bottom:1.5px solid #F0EBDF;font-size:30px;font-weight:700;align-items:baseline}
+.fx-card .row .ts{font-family:'Mono',monospace;font-weight:500;color:var(--fx-gold);font-size:24px;min-width:70px}
+.fx-bubble{display:inline-block;background:#EAE3D2;border-radius:24px;padding:14px 24px;font-size:30px;font-weight:500;max-width:78%}
+.fx-dots i{display:inline-block;width:12px;height:12px;border-radius:50%;background:#B9B2A3;margin-right:8px}
+/* étiquette « À RETENIR » : crème, double filet doré, lettres espacées */
+.fx-sticker{position:absolute;background:#EFEDE4;color:var(--fx-gold);font-family:'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.14em;border:3px solid var(--fx-gold);outline:2px solid #EFEDE4;outline-offset:-9px;box-shadow:0 10px 24px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;padding:0 38px}
+/* tampon */
+.fx-stamp{position:absolute;color:var(--fx-stamp);border:6px double var(--fx-stamp);font-family:'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:6px 26px;border-radius:8px;display:flex;align-items:center;gap:12px;background:rgba(251,250,247,.55)}
+/* barre de progression : noir, liseré doré, remplissage doré */
+.fx-prog{position:absolute;background:#1C1A17;border:2px solid var(--fx-gold);border-radius:22px;color:#fff;font-family:'Archivo',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:20px 28px;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.fx-prog .tr{margin-top:14px;height:12px;border-radius:6px;background:#0C0B09;overflow:hidden}
+.fx-prog .fl{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--fx-gold-d),#E0C078);width:0}
+/* nombre qui monte, craie */
+.fx-num{position:absolute;color:var(--fx-chalk);font-family:'Cormorant',serif;font-style:italic;font-weight:600;white-space:pre;filter:url(#fx-rough)}
+svg.fx-svg{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:visible;pointer-events:none}
+svg.fx-svg .ch{fill:none;stroke:var(--fx-chalk);stroke-linecap:round;stroke-linejoin:round;filter:url(#fx-rough)}

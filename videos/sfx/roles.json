@@ -1,0 +1,114 @@
+{
+ "_aide": "Rôle = ce qui se passe à l'écran. 'sound' = identifiant du SFX Kit (voir kit/catalogue.md). 'fit' = adapter la durée au moment (action avec une durée). 'gain_db' = réglage fin. Le moment visé (t) correspond au point de synchronisation du son (règle du kit : début = t - sync.at).",
+ "roles": {
+  "chalk_write": {
+   "sound": "writing-chalk-write",
+   "fit": true,
+   "why": "texte qui s'écrit sur le tableau (durée = durée de l'apparition)"
+  },
+  "chalk_draw": {
+   "sound": "writing-chalk-draw",
+   "fit": true,
+   "why": "cercle, flèche, courbe, dessin à la craie"
+  },
+  "chalk_tick": {
+   "sound": "writing-chalk-tick",
+   "why": "coche ou croix dessinée"
+  },
+  "typing_short": {
+   "sound": "keyboard-typing-steady-short",
+   "fit": true,
+   "why": "un ou deux mots tapés"
+  },
+  "typing_medium": {
+   "sound": "keyboard-typing-steady-medium",
+   "fit": true,
+   "why": "une courte phrase tapée (fenêtre de chat)"
+  },
+  "typing_long": {
+   "sound": "keyboard-typing-steady-long",
+   "fit": true,
+   "why": "une ligne entière tapée"
+  },
+  "ding": {
+   "sound": "tone-ding-high",
+   "rate": 2.0,
+   "why": "réponse reçue, étape terminée : ding aigu (la référence : ~2 640 Hz = une octave au-dessus du ding du kit, d'où rate 2)"
+  },
+  "chat_reply": {
+   "sound": "notification-message-in-soft",
+   "why": "réponse d'un assistant qui arrive"
+  },
+  "chat_send": {
+   "sound": "notification-message-out-soft",
+   "why": "message envoyé"
+  },
+  "success": {
+   "sound": "notification-success-soft",
+   "why": "validation douce"
+  },
+  "stamp": {
+   "sound": "impact-heavy-firm",
+   "why": "tampon qui s'abat (VALIDÉ), titre qui tombe"
+  },
+  "stamp_big": {
+   "sound": "impact-deep-hard",
+   "why": "impact fort : révélation, gros titre"
+  },
+  "sticker_in": {
+   "sound": "pop-medium-in",
+   "why": "autocollant ou étiquette qui apparaît"
+  },
+  "pop_in": {
+   "sound": "pop-small-in",
+   "why": "petit élément qui apparaît"
+  },
+  "pop_out": {
+   "sound": "pop-small-out",
+   "why": "petit élément qui disparaît"
+  },
+  "card_slide": {
+   "sound": "whoosh-fast-soft",
+   "why": "carte qui glisse depuis le bas, transition rapide"
+  },
+  "scene_slide": {
+   "sound": "whoosh-medium-soft",
+   "why": "glissement vertical entre deux plans"
+  },
+  "zoom_cut": {
+   "sound": "swish-medium",
+   "why": "coupe-zoom (optionnel : la référence n'en a pas de détectable)"
+  },
+  "countup": {
+   "sound": "data-countup-short",
+   "fit": true,
+   "why": "compteur qui monte"
+  },
+  "number_land": {
+   "sound": "data-number-land",
+   "why": "le chiffre se pose"
+  },
+  "progress": {
+   "sound": "data-progress-short",
+   "fit": true,
+   "why": "barre de progression qui se remplit"
+  },
+  "clock": {
+   "sound": "time-clock",
+   "fit": true,
+   "why": "horloge dessinée"
+  },
+  "sparkle": {
+   "sound": "shimmer-short-soft",
+   "why": "petit éclat positif"
+  },
+  "erase": {
+   "sound": "writing-wipe",
+   "why": "tableau effacé (transition)"
+  },
+  "ding_soft": {
+   "sound": "tone-ding-high",
+   "why": "ding plus grave et plus long (1 320 Hz), pour un moment calme"
+  }
+ }
+}
